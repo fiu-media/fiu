@@ -117,7 +117,9 @@ class SceneBoundary extends Component<{ onError: () => void; children: ReactNode
   static getDerivedStateFromError() {
     return { failed: true };
   }
-  componentDidCatch() {
+  componentDidCatch(error: unknown) {
+    // The PNG fallback hides the failure visually, so leave a trace for debugging.
+    console.error("[HomeHero] live logo failed, showing PNG fallback:", error);
     this.props.onError();
   }
   render() {
