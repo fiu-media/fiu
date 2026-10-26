@@ -72,9 +72,32 @@ glass_mat = glass("Glass", IOR)
 gem_mat = glass("GemGlass", IOR, colour=(0.82, 0.90, 0.98, 1.0))
 
 # --- Strokes ------------------------------------------------------------------
-# Each stroke becomes a smooth NURBS sweep with a round profile. Blunt ends get flat caps;
-# pointed ends already taper to ~0 radius in strokes.json.
+# Each stroke becomes a smooth NURBS sweep with a round profile. Blunt ends get flat
+# caps; pointed ends already taper to ~0 radius in strokes.json. Flat-cap rims get a
+# light fillet later — just enough to soften the cut, not a bulb.
+def flat_tip_rims(points, caps):
+    """(centre, outward_tangent, radius) for each flat-capped end, in Blender space."""
+    caps = caps or ["flat", "flat"]
+    tips = []
+    for at_start, cap in ((True, caps[0]), (False, caps[-1])):
+        if cap != "flat":
+            continue
+        p0 = points[0] if at_start else points[-1]
+        p1 = points[min(3, len(points) - 1)] if at_start else points[max(0, len(points) - 4)]
+        direction = Vector((p0[0] - p1[0], p0[1] - p1[1], 0.0))
+        if direction.length < 1e-6:
+            continue
+        tangent_2d = direction.normalized()
+        r0 = max(p0[2], 0.02)
+        centre = to3d(p0[0], p0[1])
+        # Outward along the stroke in XZ (Blender): 2D (dx,dy) → (dx, 0, dy)
+        tangent = Vector((tangent_2d.x, 0.0, tangent_2d.y))
+        tips.append((centre, tangent, r0))
+    return tips
+
+
 tubes = []
+tip_rims = []
 for k, stroke in enumerate(data["strokes"]):
     curve_data = bpy.data.curves.new(f"Stroke{k}", "CURVE")
     curve_data.dimensions = "3D"
@@ -85,6 +108,8 @@ for k, stroke in enumerate(data["strokes"]):
     curve_data.twist_mode = "MINIMUM"
     curve_data.use_fill_caps = True
     pts = stroke["points"]
+    if not stroke.get("closed"):
+        tip_rims.extend(flat_tip_rims(pts, stroke.get("caps")))
     spline = curve_data.splines.new("NURBS")
     spline.points.add(len(pts) - 1)
     for sp, (x, y, r) in zip(spline.points, pts):
@@ -116,40 +141,48 @@ bpy.ops.mesh.select_all(action="SELECT")
 bpy.ops.mesh.normals_make_consistent(inside=False)
 bpy.ops.object.mode_set(mode="OBJECT")
 
-# Facet the flat bar ends like cut glass rods: inset each near-planar end cap and poke a
-# centre vertex so the end reads as a small radial facet cluster instead of a flat disc.
+# Light fillet on flat end-cap rims (f crossbar, stem, ü upright). Boolean triangulates
+# the discs, so select by proximity to known tip centres instead of n-gon detection.
 bm = bmesh.new()
 bm.from_mesh(strokes.data)
-bm.faces.ensure_lookup_table()
-end_faces = []
-for f in bm.faces:
-    # Cap faces sit roughly in a plane whose normal is along the tube (in XY of the
-    # logo → XZ here). They're nearly circular and face mostly along ±X/±Z, not ±Y.
-    n = f.normal
-    if abs(n.y) > 0.55:
-        continue
-    # End caps are small discs; crossings produce longer thin faces we leave alone.
-    if not (0.15 < f.calc_area() < 1.2):
-        continue
-    # Prefer faces whose verts lie near a plane (planar cap).
-    if len(f.verts) < 8:
-        continue
-    end_faces.append(f)
-for f in list(end_faces):
-    ret = bmesh.ops.inset_individual(bm, faces=[f], thickness=0.07, depth=0.0)
-    inset = ret["faces"]
-    if inset:
-        bmesh.ops.poke(bm, faces=inset)
+bm.edges.ensure_lookup_table()
+rim_edges = set()
+for centre, tangent, radius in tip_rims:
+    for e in bm.edges:
+        if len(e.link_faces) != 2:
+            continue
+        # Prefer the sharp lip between tube wall and flat cap.
+        if e.calc_face_angle() < math.radians(50):
+            continue
+        mid = (e.verts[0].co + e.verts[1].co) * 0.5
+        along = (mid - centre).dot(tangent)
+        if abs(along) > radius * 0.12:
+            continue
+        radial = (mid - centre) - tangent * along
+        if abs(radial.length - radius) > radius * 0.18:
+            continue
+        rim_edges.add(e)
+print(f"softening {len(rim_edges)} end-cap rim edges across {len(tip_rims)} flat tips")
+if rim_edges:
+    # Small fillet only — knock off the sharp lip, keep the flat face.
+    offset = min(0.022, tip_rims[0][2] * 0.1)
+    bmesh.ops.bevel(
+        bm,
+        geom=list(rim_edges),
+        offset=offset,
+        segments=2,
+        profile=0.5,
+        affect="EDGES",
+    )
 bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
 bm.to_mesh(strokes.data)
 bm.free()
 
-# Wider multi-segment chamfer on hard edges: crossings become gem-like facets and the
-# cut ends catch dark refractive rims the way Canva's do.
+# Mild chamfer on remaining hard edges (crossings).
 bevel = strokes.modifiers.new("Chamfer", "BEVEL")
 bevel.limit_method = "ANGLE"
 bevel.angle_limit = math.radians(40)
-bevel.width = 0.055
+bevel.width = 0.04
 bevel.segments = 3
 bevel.profile = 0.55
 bevel.harden_normals = True
@@ -170,37 +203,87 @@ def bridge(bm, a, b):
         bm.faces.new((a[i], a[j], b[j], b[i]))
 
 
-def square(side, phase=0.0):
-    """Axis-aligned square corners, optionally pre-rotated in 2D by phase."""
-    h = side / 2
-    corners = [(-h, -h), (h, -h), (h, h), (-h, h)]
-    if not phase:
-        return corners
-    c, s = math.cos(phase), math.sin(phase)
-    return [(x * c - z * s, x * s + z * c) for x, z in corners]
+def f_tip_cut():
+    """Flat tip of the f beside the diamonds: unit cut direction + side length.
 
-
-def diamond_prism(name, side):
-    """Shallow square step-cut, point-up in the logo plane. Matches the flat mark's
-    diamond umlauts. Table faces the viewer (-Y); depth stays shallow so the gems
-    read as clear glass instead of trapping light like a deep pavilion."""
-    bm = bmesh.new()
-    # Built as a square; the object is rotated 45° about Y so it reads as a rhombus.
-    rings = [
-        (0.62, -0.14),  # table
-        (0.84, -0.07),
-        (1.0, -0.02),  # girdle
-        (1.0, 0.02),
-        (0.78, 0.09),
-        (0.48, 0.14),  # keel
+    Prefer the sheared cut measured from white.png (`tip_cut` in strokes.json). Falling
+    back to ⊥-to-centreline is wrong for this mark — the artwork cut is not square to
+    the stroke, and the diamonds share that sheared angle.
+    """
+    if "tip_cut" in data:
+        ang = data["tip_cut"]["angle"]
+        flat = Vector((math.cos(ang), math.sin(ang), 0.0))
+        return flat, float(data["tip_cut"]["length"])
+    # Fallback: ⊥ to the crossbar tip tangent.
+    dots = sorted(data["dots"], key=lambda d: d["center"][0])
+    dot_cx = sum(d["center"][0] for d in dots) / len(dots)
+    stroke = max(data["strokes"], key=lambda s: len(s["points"]))
+    pts = stroke["points"]
+    ends = [
+        (pts[0], pts[min(3, len(pts) - 1)]),
+        (pts[-1], pts[max(0, len(pts) - 4)]),
     ]
+    tip, prev = min(ends, key=lambda e: abs(e[0][0] - dot_cx))
+    tangent = Vector((tip[0] - prev[0], tip[1] - prev[1], 0.0)).normalized()
+    flat = Vector((-tangent.y, tangent.x, 0.0))
+    if flat.y < 0:
+        flat = -flat
+    return flat, 2.0 * max(tip[2], 0.02)
+
+
+def rhombus_from_tip(side, flat_dir, acute_deg=73.0):
+    """Logo-plane rhombus: one side = f tip cut (length + angle); acute ≈ white.png.
+
+    white.png: each diamond's near side matches the f crossbar tip — same length and
+    sheared angle — so the tip and diamond read as a sliced pair.
+    """
+    a = math.radians(acute_deg)
+    cos_a, sin_a = math.cos(a), math.sin(a)
+    base = flat_dir.normalized()
+    best_span, best = -1.0, None
+    for sn in (1.0, -1.0):
+        u = base * side
+        v = Vector((base.x * cos_a - sn * base.y * sin_a, sn * base.x * sin_a + base.y * cos_a, 0.0)) * side
+        corners = [0.5 * (u + v), 0.5 * (u - v), 0.5 * (-u - v), 0.5 * (-u + v)]
+        span = max(p.x for p in corners) - min(p.x for p in corners)
+        if span > best_span:
+            best_span, best = span, corners
+    # Return as (x, z) pairs for ring() — logo y → Blender z.
+    return [(p.x, p.y) for p in best]
+
+
+def diamond_prism(name, side, flat_dir):
+    """Step-cut prism whose silhouette matches the tip-aligned rhombus."""
+    bm = bmesh.new()
+    depth_scale = side
+    rings = [
+        (0.58, -0.16),  # table
+        (0.82, -0.08),
+        (1.0, -0.025),  # girdle
+        (1.0, 0.025),
+        (0.78, 0.10),
+        (0.50, 0.16),  # keel
+    ]
+    base = rhombus_from_tip(side, flat_dir)
     built = []
     for scale, d in rings:
-        built.append(ring(bm, square(side * scale), d * side))
+        verts2d = [(x * scale, z * scale) for x, z in base]
+        built.append(ring(bm, verts2d, d * depth_scale))
     bm.faces.new(built[0][::-1])
     for a, b in zip(built, built[1:]):
         bridge(bm, a, b)
     bm.faces.new(built[-1])
+    bm.edges.ensure_lookup_table()
+    corner_edges = [e for e in bm.edges if abs(((e.verts[0].co + e.verts[1].co) / 2).y) < depth_scale * 0.04]
+    if corner_edges:
+        bmesh.ops.bevel(
+            bm,
+            geom=corner_edges,
+            offset=side * 0.035,
+            segments=2,
+            profile=0.5,
+            affect="EDGES",
+        )
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
     mesh = bpy.data.meshes.new(name)
     bm.to_mesh(mesh)
@@ -208,23 +291,21 @@ def diamond_prism(name, side):
     return mesh
 
 
-# Two equal diamonds from design/refs/white.png. major≈diagonal of the rhombus;
-# square side before the 45° yaw is diagonal/√2. Match liquid-glass: gems ≈ stroke thick.
+# Diamonds sized/angled off the f crossbar tip cut beside them (white.png).
 dots = sorted(data["dots"], key=lambda d: d["center"][0])
-# major≈point-to-point diagonal on the flat mark; square side = diagonal/√2.
-diag = sum(sum(d["size"]) / 2 for d in dots) / len(dots)
-side = diag / math.sqrt(2)
-# Point-up diamond + the mark's slight up-right slant (liquid-glass / white refs).
-diamond_yaw = math.radians(45)
-slant = math.radians(10)
+tip_flat, tip_side = f_tip_cut()
+print(
+    f"diamonds: side={tip_side:.3f} (= f tip), "
+    f"flat angle={math.degrees(math.atan2(tip_flat.y, tip_flat.x)):.1f}° (from artwork cut)"
+)
 
 gems = []
 for i, dot in enumerate(dots):
     name = ("GemLeft", "GemRight")[i]
-    obj = bpy.data.objects.new(name, diamond_prism(name, side))
+    obj = bpy.data.objects.new(name, diamond_prism(name, tip_side, tip_flat))
     obj.location = to3d(*dot["center"])
-    # Y = view-axis spin (diamond orientation); small tip toward camera.
-    obj.rotation_euler = (math.radians(8), -(diamond_yaw + slant), math.radians(-4 if i else 4))
+    # No object rotation — tip-matching orientation is baked into the mesh.
+    obj.rotation_euler = (0.0, 0.0, 0.0)
     obj.data.materials.append(gem_mat)
     scene.collection.objects.link(obj)
     gems.append(obj)

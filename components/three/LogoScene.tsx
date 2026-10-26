@@ -40,15 +40,16 @@ export default function LogoScene({
     >
       <Backdrop stills={stills} index={index} />
       <Logo onReady={onReady} />
-      {/* Studio for the glass to reflect: white softboxes plus the warm/cool accents of
-          the Canva render. Rendered once into an env map. */}
+      {/* Studio matching design/refs/liquid-glass.jpg: deep red field, warm white/copper
+          keys, thin cool rim. Rendered once into an env map for glass reflections. */}
       <Environment resolution={256} frames={1}>
-        <Lightformer form="rect" intensity={6} position={[0, 6, 2]} rotation-x={Math.PI / 2} scale={[16, 3, 1]} />
-        <Lightformer form="rect" intensity={4} position={[-8, 1, 4]} rotation-y={Math.PI / 2} scale={[10, 3, 1]} />
-        <Lightformer form="rect" intensity={5} color="#ff9a45" position={[8, -1, 3]} rotation-y={-Math.PI / 2} scale={[8, 1.5, 1]} />
-        <Lightformer form="rect" intensity={4} color="#7fb0ff" position={[0, -6, 3]} rotation-x={-Math.PI / 2} scale={[14, 2, 1]} />
-        <Lightformer form="rect" intensity={3} position={[0, 0, 10]} scale={[10, 10, 1]} />
-        <Lightformer form="ring" intensity={8} position={[4, 4, 8]} scale={1.5} />
+        <Lightformer form="rect" intensity={2.2} color="#3a0010" position={[0, 0, -6]} scale={[20, 14, 1]} />
+        <Lightformer form="rect" intensity={7} position={[0, 5.5, 3]} rotation-x={Math.PI / 2} scale={[14, 2.5, 1]} />
+        <Lightformer form="rect" intensity={5} color="#ffe8d0" position={[-7, 2, 5]} rotation-y={Math.PI / 2} scale={[8, 3, 1]} />
+        <Lightformer form="rect" intensity={6} color="#ff6020" position={[7, -0.5, 4]} rotation-y={-Math.PI / 2} scale={[7, 1.8, 1]} />
+        <Lightformer form="rect" intensity={3.5} color="#a8c8ff" position={[0, -5.5, 4]} rotation-x={-Math.PI / 2} scale={[12, 2, 1]} />
+        <Lightformer form="rect" intensity={4} position={[0, 1, 9]} scale={[8, 8, 1]} />
+        <Lightformer form="ring" intensity={10} color="#fff5ee" position={[3.5, 3.5, 7]} scale={1.4} />
       </Environment>
     </Canvas>
   );
@@ -265,21 +266,25 @@ function Logo({ onReady }: { onReady: () => void }) {
     <group ref={group} position={[x, 0, 0]} scale={scale}>
       <mesh geometry={geometry}>
         <MeshTransmissionMaterial
-          samples={6}
+          samples={8}
           resolution={1024}
           backside
-          backsideThickness={1.2}
-          thickness={1.6}
-          ior={1.6}
-          chromaticAberration={0.14}
-          anisotropicBlur={0.04}
-          distortion={0}
-          roughness={0}
+          backsideThickness={1.6}
+          thickness={2.2}
+          ior={1.52}
+          chromaticAberration={0.22}
+          anisotropicBlur={0.08}
+          distortion={0.08}
+          distortionScale={0.25}
+          temporalDistortion={0}
+          roughness={0.04}
           clearcoat={1}
           clearcoatRoughness={0}
           specularIntensity={1}
-          envMapIntensity={2.6}
+          envMapIntensity={3.2}
           color="#ffffff"
+          attenuationColor="#ffd0c0"
+          attenuationDistance={4}
         />
       </mesh>
     </group>
