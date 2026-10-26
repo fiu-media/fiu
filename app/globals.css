@@ -1,26 +1,232 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+/*
+ * Surfaces
+ * --------
+ * Pages opt into a surface on their wrapper:
+ *   data-surface="cinematic"  always dark (Home, About, Work, Talent)
+ *   data-surface="adaptive"   follows the OS light/dark setting (Rentals, Contact, forms)
+ * Tokens use light-dark(), so components adapt without any JS or flash.
+ *
+ * Two Lightning CSS constraints (Tailwind compiles light-dark() down to
+ * --lightningcss-light/--lightningcss-dark switches):
+ *   - color-scheme must be a literal value; a var() never sets the switches.
+ *   - custom properties resolve where they are declared, so the token block is
+ *     re-declared on every element that changes scheme, otherwise nested surfaces
+ *     would inherit the parent's already-resolved colours.
+ */
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    color-scheme: light dark;
+  }
+
+  [data-surface="cinematic"] {
+    color-scheme: dark;
+  }
+
+  [data-surface="adaptive"] {
+    color-scheme: light dark;
+  }
+
+  /* Pin the adaptive surfaces to one scheme (specimen switcher, future site toggle). */
+  :root[data-force-scheme="light"],
+  :root[data-force-scheme="light"] [data-surface="adaptive"] {
+    color-scheme: light;
+  }
+  :root[data-force-scheme="dark"],
+  :root[data-force-scheme="dark"] [data-surface="adaptive"] {
+    color-scheme: dark;
+  }
+
+  :root,
+  [data-surface],
+  .glass-on-image {
+    --paper: #f4f1ec;
+    --ink: #0c0b0d;
+
+    --bg: light-dark(#f4f1ec, #0c0b0d);
+    --bg-raised: light-dark(#ffffff, #17151a);
+    --fg: light-dark(#151316, #f2eee8);
+    --fg-muted: light-dark(#5f5a63, #a39da8);
+    --line: light-dark(rgb(21 19 22 / 0.12), rgb(255 255 255 / 0.12));
+    --accent: light-dark(#a3122a, #ff5a6e);
+    --focus: light-dark(#1d4ed8, #8ab4ff);
+
+    /* Liquid glass */
+    --glass-tint: light-dark(rgb(255 255 255 / 0.22), rgb(255 255 255 / 0.04));
+    --glass-tint-strong: light-dark(rgb(255 255 255 / 0.55), rgb(255 255 255 / 0.14));
+    --glass-spec: light-dark(rgb(255 255 255 / 1), rgb(255 255 255 / 0.75));
+    --glass-spec-soft: light-dark(rgb(255 255 255 / 0.7), rgb(255 255 255 / 0.28));
+    --glass-hairline: light-dark(rgb(0 0 0 / 0.07), rgb(255 255 255 / 0.1));
+    --glass-glow: light-dark(rgb(255 255 255 / 0.55), rgb(255 255 255 / 0.07));
+    --glass-shade: light-dark(rgb(16 12 20 / 0.12), rgb(0 0 0 / 0.32));
+    --glass-text: var(--fg);
   }
 }
 
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-raised: var(--bg-raised);
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-paper: var(--paper);
+  --color-ink: var(--ink);
+
+  --font-sans: var(--font-text), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-display-face, var(--font-text)), ui-sans-serif, system-ui, sans-serif;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+
+/*
+ * Liquid glass
+ * ------------
+ * Modelled on Apple's Liquid Glass: nearly clear, lightly blurred, with thin specular
+ * rims, a soft inner glow, a pointer-following glint and springy motion.
+ *
+ * In Chromium, useLiquidGlass() also generates a per-element lens (SVG displacement map)
+ * and exposes it as --lens, so the backdrop visibly bends and magnifies at the rounded
+ * rim, with a touch of chromatic aberration. Other browsers keep the clean frosted
+ * fallback, slightly more blurred for legibility.
+ */
+@layer components {
+  .glass {
+    --glass-blur: 6px;
+    --glass-sat: 1.6;
+    --glass-dim: 1;
+    --spring: linear(
+      0, 0.009, 0.035 2.1%, 0.141, 0.281 6.7%, 0.723 12.9%, 0.938 16.7%, 1.017, 1.077, 1.121,
+      1.149 24.3%, 1.159, 1.163, 1.161, 1.154 29.9%, 1.129 32.8%, 1.051 39.6%, 1.017 43.1%,
+      0.991, 0.977 51%, 0.974 53.8%, 0.975 57.1%, 0.997 69.8%, 1.003 76.9%, 1
+    );
+    position: relative;
+    isolation: isolate;
+    color: var(--glass-text);
+    background: var(--glass-tint);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat)) brightness(var(--glass-dim));
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat)) brightness(var(--glass-dim));
+    box-shadow:
+      inset 0 0 0 0.5px var(--glass-hairline),
+      inset 1px 1.5px 0.5px -0.5px var(--glass-spec),
+      inset -1px -1.5px 0.5px -0.5px var(--glass-spec-soft),
+      inset 0 0 16px 0 var(--glass-glow),
+      0 6px 24px -6px var(--glass-shade);
+    transition:
+      transform 600ms var(--spring),
+      background-color 250ms ease,
+      box-shadow 250ms ease;
+  }
+
+  :root[data-glass-refract] .glass {
+    --glass-blur: 1.5px;
+    -webkit-backdrop-filter: var(--lens,) blur(var(--glass-blur)) saturate(var(--glass-sat))
+      brightness(var(--glass-dim));
+    backdrop-filter: var(--lens,) blur(var(--glass-blur)) saturate(var(--glass-sat))
+      brightness(var(--glass-dim));
+  }
+
+  /* Specular glint that follows the pointer (position set by useLiquidGlass). */
+  .glass::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background: radial-gradient(
+      90px circle at var(--mx, 50%) var(--my, -20%),
+      rgb(255 255 255 / 0.3),
+      transparent 70%
+    );
+    mix-blend-mode: plus-lighter;
+    opacity: 0;
+    transition: opacity 300ms ease;
+  }
+
+  .glass-interactive:hover::after,
+  .glass-nav:hover::after {
+    opacity: 1;
+  }
+
+  .glass-interactive:hover {
+    --glass-tint: var(--glass-tint-strong);
+  }
+
+  .glass-interactive:active {
+    transform: scale(1.06);
+    transition-duration: 250ms;
+  }
+
+  .glass-interactive[aria-current="page"],
+  .glass-interactive[aria-pressed="true"] {
+    --glass-tint: var(--glass-tint-strong);
+  }
+
+  /* The lighter lens that springs between items inside a GlassNav. */
+  .glass-nav-indicator {
+    position: absolute;
+    top: 4px;
+    bottom: 4px;
+    left: 0;
+    border-radius: 9999px;
+    background: var(--glass-tint-strong);
+    box-shadow:
+      inset 1px 1px 0.5px -0.5px var(--glass-spec),
+      inset -1px -1px 0.5px -0.5px var(--glass-spec-soft),
+      0 2px 10px -2px var(--glass-shade);
+    transition:
+      transform 550ms var(--spring),
+      width 550ms var(--spring),
+      opacity 200ms ease;
+  }
+
+  .glass-nav:active .glass-nav-indicator {
+    scale: 1.06;
+  }
+
+  /* Larger surfaces (drawers, forms) carry text, so they get more frost and tint. */
+  .glass-panel {
+    --glass-blur: 18px;
+    --glass-tint: light-dark(rgb(255 255 255 / 0.5), rgb(28 26 32 / 0.42));
+  }
+  :root[data-glass-refract] .glass-panel {
+    --glass-blur: 14px;
+  }
+
+  /* Glass over photography is always light-on-dark, whatever the surface. The backdrop
+     is dimmed a touch so white labels survive bright highlights. */
+  .glass-on-image {
+    color-scheme: dark;
+    --glass-text: #fff;
+    --glass-dim: 0.85;
+    text-shadow: 0 1px 6px rgb(0 0 0 / 0.3);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glass,
+  .glass-nav-indicator {
+    transition: none;
+  }
+  .glass-interactive:active {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .glass,
+  :root[data-glass-refract] .glass {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: light-dark(rgb(255 255 255 / 0.92), rgb(24 22 27 / 0.92));
+  }
 }
