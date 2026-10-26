@@ -1,33 +1,33 @@
 # Logo pipeline
 
-Rebuilds the Fíu glass logo from the Canva design pack and exports the web assets. The silhouette comes straight from the Canva home mockup's alpha channel. From it the pipeline builds:
-- round glass tubes, swept along traced centrelines
-- crossings that weld cleanly (exact boolean union)
-- a round brilliant gem and an emerald-cut baguette, both in the same glass as the strokes
+Rebuilds the Fíu glass logo and exports the web assets. Silhouette authority is the HQ flat mark in `design/refs/white.png` (alpha): the f (with inner crescent), two u strokes, and two diamond umlauts. Lighting targets `design/refs/liquid-glass.jpg`.
 
-The Canva render's look comes from a procedural high-key studio plus dispersion. Blender 5.2's glass has no dispersion input, so the dispersion is rendered as three refraction passes at slightly different IORs, recombined as R, G and B.
+From that the pipeline builds:
+- round glass tubes along traced centrelines (variable width from the distance transform)
+- crossings welded with an exact boolean union
+- two shallow diamond (rhombus) prisms sized to the flat mark
+- a red→black liquid-glass studio (for GLB / stills)
 
-Steps 01, 02 and 05 need `numpy scipy scikit-image skan pillow`, e.g. `python3 -m venv /tmp/fiu-py && /tmp/fiu-py/bin/pip install numpy scipy scikit-image skan pillow`.
+Blender 5.2's glass has no dispersion input, so stills (optional) recombine three IOR passes as R/G/B.
+
+Needs `numpy scipy scikit-image skan pillow`, e.g. `python3 -m venv /tmp/fiu-py && /tmp/fiu-py/bin/pip install numpy scipy scikit-image skan pillow`.
 
 ```sh
 W=/tmp/fiu-logo
-# 1. Silhouette from the Canva mockup (https://fiumockups.my.canva.site, "Home Screen Desktop Mockup 2", white variant)
-/tmp/fiu-py/bin/python scripts/logo/01_canva_mask.py path/to/canva-home-white.png $W
-# 2. Stroke centrelines + radii, and dot positions. Check $W/debug.png
-/tmp/fiu-py/bin/python scripts/logo/02_centerlines.py $W
-# 3. Tubes, gems, material, studio, camera, spin animation
+# 1–2. Strokes + diamonds from the HQ white mark
+/tmp/fiu-py/bin/python scripts/logo/02b_from_white.py design/refs/white.png $W
+# 3. Tubes, gems, liquid-glass studio, camera, spin
 blender -b --factory-startup --python scripts/logo/03_build.py -- $W design/fiu-logo-glass.blend
-# 4. GLB + render passes
+# 4. GLB (+ optional Cycles passes if you still want rendered PNGs)
 blender -b design/fiu-logo-glass.blend --python scripts/logo/04_export.py -- $W public/brand
-# 5. PNGs — either recombine the Blender passes, or lift straight from Canva (closest match)
-/tmp/fiu-py/bin/python scripts/logo/05_fallback_png.py $W public/brand
-# /tmp/fiu-py/bin/python scripts/logo/05b_canva_png.py path/to/canva-home-white.png public/brand
+# 5. Brand PNGs = flat white mark (not a Blender still)
+/tmp/fiu-py/bin/python scripts/logo/05_white_png.py design/refs/white.png public/brand
 ```
 
-Outputs:
-- `design/fiu-logo-glass.blend`: the editable logo, with the original spin animation on the `FiuLogo` empty.
-- `public/brand/fiu-logo.glb`: the mesh for the live WebGL logo.
-- `public/brand/fiu-logo-solid.png`: the Canva look (opaque glass). Use it on light backgrounds and for the OG image.
-- `public/brand/fiu-logo.png`: the transparent fallback for use over photography.
+HQ refs: `design/refs/{white,liquid-glass,sticker*}.png|jpg`.
 
-For static brand assets that must match Canva pixel-for-pixel, prefer `05b_canva_png.py`. Steps 03–04 still own the GLB and the editable `.blend` (material tuning for Phase 3 WebGL happens against real stills). To tweak the shape or look by hand, edit `design/fiu-logo-glass.blend` and rerun steps 4–5 only.
+Outputs:
+- `design/fiu-logo-glass.blend` / `public/brand/fiu-logo.glb` — editable 3D + WebGL mesh
+- `public/brand/fiu-logo.png` / `fiu-logo-solid.png` — flat white mark with alpha
+
+To tweak the 3D by hand, edit the `.blend` and rerun step 4.
