@@ -25,7 +25,8 @@ import bmesh
 import bpy
 from mathutils import Vector
 
-IOR = 1.6
+# Slightly above crown glass: stronger Fresnel darkens the tube rims the way Canva does.
+IOR = 1.72
 
 args = sys.argv[sys.argv.index("--") + 1 :]
 work, out_blend = args[0], os.path.abspath(args[1])
@@ -46,8 +47,8 @@ def to3d(x, y, depth=0.0):
 
 
 # --- Materials ----------------------------------------------------------------
-def glass(name, ior):
-    """Plain clear glass. Blender 5.2's glass shaders have no dispersion input, so
+def glass(name, ior, colour=(1.0, 1.0, 1.0, 1.0)):
+    """Clear glass. Blender 5.2's glass shaders have no dispersion input, so
     04_export.py renders the refraction three times at slightly different IORs and
     05_fallback_png.py recombines them as red, green and blue."""
     mat = bpy.data.materials.new(name)
@@ -56,17 +57,17 @@ def glass(name, ior):
     nodes.remove(nodes["Principled BSDF"])
     g = nodes.new("ShaderNodeBsdfGlass")
     g.name = "Glass BSDF"
+    g.inputs["Color"].default_value = colour
     g.inputs["Roughness"].default_value = 0.0
     g.inputs["IOR"].default_value = ior
     links.new(g.outputs[0], nodes["Material Output"].inputs["Surface"])
     return mat
 
 
-# The gems use the same glass as the strokes. It's a separate datablock only so 04_export.py
-# can give them less dispersion: across many small facets the per-channel IOR split
-# otherwise turns them into rainbows, where the Canva gems read as clear glass.
+# Strokes: untinted. Gems: a light blue tint so they read clear-blue like Canva, instead of
+# soaking up the orange/navy studio bands across every facet.
 glass_mat = glass("Glass", IOR)
-gem_mat = glass("GemGlass", IOR)
+gem_mat = glass("GemGlass", IOR, colour=(0.82, 0.90, 0.98, 1.0))
 
 # --- Strokes ------------------------------------------------------------------
 # Each stroke becomes a smooth NURBS sweep with a round profile. Blunt ends get flat caps;
@@ -78,7 +79,7 @@ for k, stroke in enumerate(data["strokes"]):
     curve_data.bevel_mode = "ROUND"
     curve_data.bevel_depth = 1.0
     curve_data.bevel_resolution = 12
-    curve_data.resolution_u = 3
+    curve_data.resolution_u = 4
     curve_data.twist_mode = "MINIMUM"
     curve_data.use_fill_caps = True
     pts = stroke["points"]
@@ -112,16 +113,46 @@ bpy.ops.mesh.intersect_boolean(operation="UNION", use_self=True, solver="EXACT")
 bpy.ops.mesh.select_all(action="SELECT")
 bpy.ops.mesh.normals_make_consistent(inside=False)
 bpy.ops.object.mode_set(mode="OBJECT")
-# A fine chamfer on the hard edges (flat bar ends, crossing seams) gives the cut-glass
-# glints seen in the Canva render.
+
+# Facet the flat bar ends like cut glass rods: inset each near-planar end cap and poke a
+# centre vertex so the end reads as a small radial facet cluster instead of a flat disc.
+bm = bmesh.new()
+bm.from_mesh(strokes.data)
+bm.faces.ensure_lookup_table()
+end_faces = []
+for f in bm.faces:
+    # Cap faces sit roughly in a plane whose normal is along the tube (in XY of the
+    # logo → XZ here). They're nearly circular and face mostly along ±X/±Z, not ±Y.
+    n = f.normal
+    if abs(n.y) > 0.55:
+        continue
+    # End caps are small discs; crossings produce longer thin faces we leave alone.
+    if not (0.15 < f.calc_area() < 1.2):
+        continue
+    # Prefer faces whose verts lie near a plane (planar cap).
+    if len(f.verts) < 8:
+        continue
+    end_faces.append(f)
+for f in list(end_faces):
+    ret = bmesh.ops.inset_individual(bm, faces=[f], thickness=0.07, depth=0.0)
+    inset = ret["faces"]
+    if inset:
+        bmesh.ops.poke(bm, faces=inset)
+bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+bm.to_mesh(strokes.data)
+bm.free()
+
+# Wider multi-segment chamfer on hard edges: crossings become gem-like facets and the
+# cut ends catch dark refractive rims the way Canva's do.
 bevel = strokes.modifiers.new("Chamfer", "BEVEL")
 bevel.limit_method = "ANGLE"
-bevel.angle_limit = math.radians(50)
-bevel.width = 0.035
-bevel.segments = 2
+bevel.angle_limit = math.radians(40)
+bevel.width = 0.055
+bevel.segments = 3
+bevel.profile = 0.55
 bevel.harden_normals = True
 bpy.ops.object.modifier_apply(modifier=bevel.name)
-bpy.ops.object.shade_smooth_by_angle(angle=math.radians(50))
+bpy.ops.object.shade_smooth_by_angle(angle=math.radians(40))
 strokes.data.materials.append(glass_mat)
 
 
@@ -143,7 +174,6 @@ def bridge_uneven(bm, small, big):
     for i in range(n):
         bm.faces.new((small[i], big[(2 * i + 1) % (2 * n)], small[(i + 1) % n]))
         bm.faces.new((small[i], big[2 * i], big[(2 * i + 1) % (2 * n)]))
-    # big[2*i] connects back to small[i-1] side
     for i in range(n):
         bm.faces.new((small[i], big[(2 * i - 1) % (2 * n)], big[2 * i]))
 
@@ -218,12 +248,19 @@ def emerald_cut(name, length, width):
 round_dot = next(d for d in data["dots"] if d["round"])
 bag_dot = next(d for d in data["dots"] if not d["round"])
 
+# Canva's baguette reads slightly longer and more tilted than the silhouette alone suggests.
+bag_len, bag_wid = bag_dot["size"]
+bag_len *= 1.12
+bag_angle = bag_dot["angle"] - math.radians(8)
+
 gem_round = bpy.data.objects.new("GemRound", round_brilliant("GemRound", sum(round_dot["size"]) / 4))
 gem_round.location = to3d(*round_dot["center"])
-gem_bag = bpy.data.objects.new("GemBaguette", emerald_cut("GemBaguette", *bag_dot["size"]))
+gem_bag = bpy.data.objects.new("GemBaguette", emerald_cut("GemBaguette", bag_len, bag_wid))
 gem_bag.location = to3d(*bag_dot["center"])
 # Rotation about the view axis; Blender's -Y-facing front view flips the sign.
-gem_bag.rotation_euler = (0, -bag_dot["angle"], 0)
+# A small tip toward camera matches Canva's slight perspective on the baguette.
+gem_bag.rotation_euler = (math.radians(6), -bag_angle, math.radians(-4))
+gem_round.rotation_euler = (math.radians(4), 0, math.radians(3))
 for g in (gem_round, gem_bag):
     g.data.materials.append(gem_mat)
     scene.collection.objects.link(g)
@@ -241,20 +278,26 @@ scene.frame_start, scene.frame_end = 1, 192
 scene.frame_set(1)
 
 # --- Camera, world -----------------------------------------------------------------
+# Canva uses a mild perspective/tilt rather than a dead-on telephoto. A shorter lens
+# plus a few degrees of orbit gets the same foreshortening on the tubes and baguette.
 cam_data = bpy.data.cameras.new("Camera")
-cam_data.lens = 85
+cam_data.lens = 65
 cam = bpy.data.objects.new("Camera", cam_data)
 scene.collection.objects.link(cam)
-cam.location = (0, -62, 0)
-cam.rotation_euler = (math.radians(90), 0, 0)
+cam.location = (2.4, -52, 1.8)
+# Track the origin so the tilt stays framed.
+track = cam.constraints.new("TRACK_TO")
+track.target = rig
+track.track_axis = "TRACK_NEGATIVE_Z"
+track.up_axis = "UP_Y"
 scene.camera = cam
 
 world = bpy.data.worlds.new("World")
 scene.world = world
 world.use_nodes = True
 # Procedural high-key studio: mostly white, with thin navy, blue and orange bands laid out
-# by low-frequency noise over the sky sphere. Refracted through the tubes, they become
-# the white body, dark rims and warm/cool streaks of the Canva render.
+# by low-frequency noise over the sky sphere. Tuned hotter/darker than a neutral studio so
+# refraction yields Canva's deep navy rims and warm orange glints instead of silvery pastel.
 wn, wl = world.node_tree.nodes, world.node_tree.links
 
 
@@ -265,15 +308,27 @@ def srgb(hex_colour):
 
 coord = wn.new("ShaderNodeTexCoord")
 noise = wn.new("ShaderNodeTexNoise")
-noise.inputs["Scale"].default_value = 2.4
-noise.inputs["Detail"].default_value = 1.5
-noise.inputs["Distortion"].default_value = 0.4
+# Lower scale + more distortion → soft organic caustic blobs instead of regular ribs.
+noise.inputs["Scale"].default_value = 1.6
+noise.inputs["Detail"].default_value = 1.2
+noise.inputs["Distortion"].default_value = 0.85
 wl.new(coord.outputs["Generated"], noise.inputs["Vector"])
 bands = wn.new("ShaderNodeValToRGB")
 wl.new(noise.outputs["Fac"], bands.inputs[0])
+# Hot orange + deep navy accents on a high-key white body — Canva's rim contrast.
 stops = [
-    (0.0, "#ffffff"), (0.35, "#ffffff"), (0.39, "#6c9fff"), (0.42, "#ffffff"), (0.45, "#0c1426"),
-    (0.49, "#ffffff"), (0.54, "#ff8526"), (0.565, "#ffffff"), (0.62, "#b4ceff"), (0.66, "#ffffff"),
+    (0.0, "#fffaf4"),
+    (0.30, "#ffffff"),
+    (0.34, "#6a9cff"),
+    (0.365, "#ffffff"),
+    (0.41, "#071018"),
+    (0.44, "#ffffff"),
+    (0.49, "#ff7a18"),
+    (0.515, "#ff4a00"),
+    (0.54, "#ffffff"),
+    (0.59, "#ffd0a0"),
+    (0.62, "#a8c8ff"),
+    (0.66, "#ffffff"),
     (1.0, "#ffffff"),
 ]
 els = bands.color_ramp.elements
@@ -282,7 +337,7 @@ els[1].position, els[1].color = stops[-1][0], srgb(stops[-1][1])
 for pos, colour in stops[1:-1]:
     els.new(pos).color = srgb(colour)
 wl.new(bands.outputs[0], wn["Background"].inputs["Color"])
-wn["Background"].inputs["Strength"].default_value = 1.0
+wn["Background"].inputs["Strength"].default_value = 1.15
 
 scene.view_settings.view_transform = "Standard"  # AgX greys out glass on a bright set
 scene.cycles.transmission_bounces = 24
@@ -291,6 +346,6 @@ scene.cycles.max_bounces = 32
 scene.render.resolution_x, scene.render.resolution_y = 1920, 1440
 scene.render.engine = "CYCLES"
 
-os.makedirs(os.path.dirname(out_blend), exist_ok=True)
+os.makedirs(os.path.dirname(out_blend) or ".", exist_ok=True)
 bpy.ops.wm.save_as_mainfile(filepath=out_blend)
 print(f"Built {out_blend}: strokes {len(strokes.data.polygons)} faces")

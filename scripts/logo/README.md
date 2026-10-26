@@ -19,8 +19,9 @@ W=/tmp/fiu-logo
 blender -b --factory-startup --python scripts/logo/03_build.py -- $W design/fiu-logo-glass.blend
 # 4. GLB + render passes
 blender -b design/fiu-logo-glass.blend --python scripts/logo/04_export.py -- $W public/brand
-# 5. PNGs
+# 5. PNGs — either recombine the Blender passes, or lift straight from Canva (closest match)
 /tmp/fiu-py/bin/python scripts/logo/05_fallback_png.py $W public/brand
+# /tmp/fiu-py/bin/python scripts/logo/05b_canva_png.py path/to/canva-home-white.png public/brand
 ```
 
 Outputs:
@@ -29,4 +30,4 @@ Outputs:
 - `public/brand/fiu-logo-solid.png`: the Canva look (opaque glass). Use it on light backgrounds and for the OG image.
 - `public/brand/fiu-logo.png`: the transparent fallback for use over photography.
 
-To tweak the shape or look by hand, edit `design/fiu-logo-glass.blend` and rerun steps 4–5 only.
+For static brand assets that must match Canva pixel-for-pixel, prefer `05b_canva_png.py`. Steps 03–04 still own the GLB and the editable `.blend` (material tuning for Phase 3 WebGL happens against real stills). To tweak the shape or look by hand, edit `design/fiu-logo-glass.blend` and rerun steps 4–5 only.
