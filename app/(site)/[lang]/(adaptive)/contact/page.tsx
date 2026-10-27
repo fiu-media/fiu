@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { FormSkeleton } from "@/components/forms/FormSkeleton";
-import { isLocale, languageAlternates, type Locale } from "@/lib/i18n/config";
+import { defaultLocale, isLocale, languageAlternates, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
 import { getPageText } from "@/sanity/lib/pageText";
@@ -42,7 +42,7 @@ export default async function ContactPage({ params }: PageProps<"/[lang]/contact
 async function DirectContact({ lang }: { lang: Locale }) {
   const { contact } = await getDictionary(lang);
   const { perspective, variant } = await getDynamicFetchOptions();
-  const { data } = await cachedSanity({ query: CONTACT_SETTINGS_QUERY, params: { lang }, perspective, variant, stega: false });
+  const { data } = await cachedSanity({ query: CONTACT_SETTINGS_QUERY, params: { lang, fallbackLang: defaultLocale }, perspective, variant, stega: false });
   const settings = data as { contactEmail: string | null; instagram: string | null } | null;
   if (!settings?.contactEmail && !settings?.instagram) return null;
 

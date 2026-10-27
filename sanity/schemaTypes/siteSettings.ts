@@ -14,8 +14,20 @@ export const siteSettings = defineType({
   ],
   fields: [
     languageField,
-    defineField({ name: "slogan", title: "Slogan (Irish)", type: "string", group: "home" }),
-    defineField({ name: "sloganGloss", title: "Slogan (English gloss)", type: "string", group: "home" }),
+    defineField({
+      name: "slogan",
+      title: "Slogan",
+      type: "string",
+      group: "home",
+      description: "The brand line. Keep it in Irish in every language.",
+    }),
+    defineField({
+      name: "sloganGloss",
+      title: "Slogan translation",
+      type: "string",
+      group: "home",
+      description: "Optional, in this document's language. Leave empty for Irish.",
+    }),
     defineField({
       name: "homeStills",
       title: "Home stills",
