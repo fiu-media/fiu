@@ -147,19 +147,21 @@ function SparkLights({ logoPose }: { logoPose: MutableRefObject<{ x: number; y: 
   });
   return (
     <group ref={group}>
-      <pointLight position={[-1.8, 3.8, 7]} intensity={8} distance={16} decay={2.2} color="#fff8f0" />
-      <pointLight position={[2.2, 2.5, 6.5]} intensity={6} distance={14} decay={2.2} color="#ffffff" />
+      <pointLight position={[-1.8, 3.8, 7]} intensity={28} distance={16} decay={2.2} color="#fff8f0" />
+      {/* Kept left/top — a right-side key was catching the ü tip at rest */}
+      <pointLight position={[-0.4, 2.8, 6.5]} intensity={18} distance={14} decay={2.2} color="#ffffff" />
+      <pointLight position={[0.5, -1.8, 6]} intensity={16} distance={12} decay={2.2} color="#ffffff" />
     </group>
   );
 }
 
-/** Very soft bloom so streaks glow without round flares. */
+/** Bloom pops the hot specular cores into sparkle without huge flares. */
 function SparkBloom() {
   const { size } = useThree();
   const res = useMemo(() => new THREE.Vector2(size.width, size.height), [size.width, size.height]);
   return (
     <Effects multisamping={0} disableGamma>
-      <unrealBloomPass args={[res, 0.08, 0.75, 0.94]} />
+      <unrealBloomPass args={[res, 0.28, 0.35, 0.88]} />
     </Effects>
   );
 }
@@ -322,9 +324,30 @@ function Backdrop({
   );
 }
 
+/** Radial alpha falloff so softboxes don't hard-cut at the rim. */
+function useFeatherMap() {
+  return useMemo(() => {
+    const size = 128;
+    const canvas = document.createElement("canvas");
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext("2d")!;
+    const g = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+    g.addColorStop(0, "rgba(255,255,255,1)");
+    g.addColorStop(0.45, "rgba(255,255,255,0.85)");
+    g.addColorStop(0.75, "rgba(255,255,255,0.35)");
+    g.addColorStop(1, "rgba(255,255,255,0)");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, size, size);
+    const map = new THREE.CanvasTexture(canvas);
+    map.colorSpace = THREE.NoColorSpace;
+    return map;
+  }, []);
+}
+
 /**
- * Dual-key front studio like liquid-glass.jpg: warm still-tinted fill, plus clean
- * white rim/keys for the bright edge catchlights that define the glass.
+ * Dual-key front studio: large feathered softboxes (upper-left key + lower-right fill),
+ * still-tinted, plus lagged white streak lights for sparkle lines inside the glass.
  */
 function Studio({
   tint,
@@ -334,6 +357,7 @@ function Studio({
   logoPose: MutableRefObject<{ x: number; y: number }>;
 }) {
   const follow = useRef<THREE.Group>(null);
+  const feather = useFeatherMap();
   useFrame((_, delta) => {
     const g = follow.current;
     if (!g) return;
@@ -342,19 +366,33 @@ function Studio({
   });
   return (
     <Environment resolution={256} frames={Infinity}>
-      <SoftLight tint={tint} mixWhite={0} intensity={1} lift={0.4} position={[0, 0, -7]} scale={14} />
-      {/* Still-tinted wrap — world-fixed so body colour stays stable */}
-      <SoftLight tint={tint} mixWhite={0.15} intensity={3.2} position={[-2.8, 3.2, 9]} scale={5.5} />
-      <SoftLight tint={tint} mixWhite={0.1} intensity={2.6} position={[3, -2, 8.5]} scale={5} />
-      <SoftLight tint={tint} mixWhite={0.12} intensity={2.2} position={[0.8, 1.2, 10]} scale={4.5} />
-      <SoftLight tint={tint} mixWhite={0.1} intensity={1.6} position={[0, -4, 6.5]} scale={5} />
-      {/* Elongated white streak lights — lag with spin; refract as lines inside the tubes */}
+      <SoftLight tint={tint} mixWhite={0} intensity={0.8} lift={0.35} position={[0, 0, -7]} scale={14} />
+      {/* Key + fill — oversized + feathered so falloff stays soft across the mark */}
+      <SoftLight
+        tint={tint}
+        mixWhite={0.35}
+        intensity={5}
+        position={[-2.2, 3, 9.5]}
+        scale={13}
+        feather={feather}
+      />
+      <SoftLight
+        tint={tint}
+        mixWhite={0.25}
+        intensity={3.6}
+        position={[2.6, -2, 9]}
+        scale={12}
+        feather={feather}
+      />
+      {/* Bright streaks + compact hot cores — biased left/top so the ü tip stays quiet at rest */}
       <group ref={follow}>
-        <SoftLight tint={tint} mixWhite={1} intensity={3.2} position={[-1.5, 4, 9.5]} scale={[7, 0.35, 1]} streak roll={0.4} />
-        <SoftLight tint={tint} mixWhite={1} intensity={2.6} position={[2, 3.2, 9]} scale={[6, 0.3, 1]} streak roll={-0.5} />
-        <SoftLight tint={tint} mixWhite={1} intensity={2.4} position={[0.3, 4.6, 8.5]} scale={[5.5, 0.28, 1]} streak roll={0.15} />
-        <SoftLight tint={tint} mixWhite={1} intensity={2.2} position={[-2.4, 1.2, 9]} scale={[5, 0.28, 1]} streak roll={1.1} />
-        <SoftLight tint={tint} mixWhite={1} intensity={2.0} position={[1.2, -2.2, 8.8]} scale={[4.5, 0.25, 1]} streak roll={-0.9} />
+        <SoftLight tint={tint} mixWhite={1} intensity={7} position={[-1.5, 4, 9.5]} scale={[6, 0.55, 1]} streak roll={0.4} />
+        <SoftLight tint={tint} mixWhite={1} intensity={5.5} position={[0.3, 4.6, 8.5]} scale={[5, 0.45, 1]} streak roll={0.15} />
+        <SoftLight tint={tint} mixWhite={1} intensity={5} position={[-2.4, 1.2, 9]} scale={[4.5, 0.45, 1]} streak roll={1.1} />
+        <SoftLight tint={tint} mixWhite={1} intensity={4.5} position={[1.2, 4.2, 8.8]} scale={[4, 0.4, 1]} streak roll={-0.35} />
+        <SoftLight tint={tint} mixWhite={1} intensity={14} position={[-1.2, 3.5, 10]} scale={0.7} />
+        <SoftLight tint={tint} mixWhite={1} intensity={11} position={[0.6, 4.2, 9.8]} scale={0.5} />
+        <SoftLight tint={tint} mixWhite={1} intensity={10} position={[-2.0, 0.6, 9.2]} scale={0.45} />
       </group>
     </Environment>
   );
@@ -370,6 +408,7 @@ function SoftLight({
   ring = false,
   streak = false,
   roll = 0,
+  feather,
 }: {
   tint: MutableRefObject<THREE.Color>;
   mixWhite: number;
@@ -382,6 +421,8 @@ function SoftLight({
   streak?: boolean;
   /** Twist around the look-at axis (radians). */
   roll?: number;
+  /** Optional radial alpha map for soft falloff. */
+  feather?: THREE.Texture;
 }) {
   const mesh = useRef<THREE.Mesh>(null);
   const mat = useRef<THREE.MeshBasicMaterial>(null);
@@ -414,7 +455,14 @@ function SoftLight({
       ) : (
         <ringGeometry args={[0, 0.5, 64]} />
       )}
-      <meshBasicMaterial ref={mat} side={THREE.DoubleSide} toneMapped={false} />
+      <meshBasicMaterial
+        ref={mat}
+        side={THREE.DoubleSide}
+        toneMapped={false}
+        map={feather}
+        transparent={Boolean(feather)}
+        depthWrite={false}
+      />
     </mesh>
   );
 }
@@ -445,6 +493,20 @@ function spinAt(t: number) {
 const DRAG_SENSITIVITY = 0.005;
 const HOVER_TILT_X = 0.12;
 const HOVER_TILT_Y = 0.18;
+/** Velocity decay after release (higher = stops sooner). */
+const DRAG_FRICTION = 2.4;
+/** Underdamped return spring — low damping so it overshoots once, then settles. */
+const DRAG_SPRING = 55;
+const DRAG_SPRING_DAMP = 4.2;
+/** Start the return spring once coasting has nearly stopped (not exactly 0). */
+const DRAG_VELOCITY_EPS = 0.08;
+const DRAG_ANGLE_EPS = 0.0015;
+
+/** Wrap to (-π, π] so return takes the shortest way home. */
+function shortestAngle(radians: number) {
+  const wrapped = ((radians + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) - Math.PI;
+  return wrapped === -Math.PI ? Math.PI : wrapped;
+}
 
 function Logo({
   onReady,
@@ -466,10 +528,14 @@ function Logo({
   const tilt = useRef({ x: 0, y: 0 });
   const drag = useRef({
     active: false,
+    returning: false,
     lastX: 0,
     lastY: 0,
+    lastT: 0,
     rotX: 0,
     rotY: 0,
+    velX: 0,
+    velY: 0,
   });
   const intro = useRef({ frames: 0, time: 0 });
   const invalidate = useThree((s) => s.invalidate);
@@ -506,17 +572,28 @@ function Logo({
     const onMove = (e: PointerEvent) => {
       const d = drag.current;
       if (!d.active) return;
-      d.rotY += (e.clientX - d.lastX) * DRAG_SENSITIVITY;
-      d.rotX += (e.clientY - d.lastY) * DRAG_SENSITIVITY;
-      d.rotX = THREE.MathUtils.clamp(d.rotX, -Math.PI / 2, Math.PI / 2);
+      const now = performance.now();
+      const dt = Math.max((now - d.lastT) / 1000, 1 / 120);
+      const dX = (e.clientY - d.lastY) * DRAG_SENSITIVITY;
+      const dY = (e.clientX - d.lastX) * DRAG_SENSITIVITY;
+      d.rotX = THREE.MathUtils.clamp(d.rotX + dX, -Math.PI / 2, Math.PI / 2);
+      d.rotY += dY;
+      // Exponential moving average of angular velocity (rad/s).
+      const vx = dX / dt;
+      const vy = dY / dt;
+      d.velX = THREE.MathUtils.lerp(d.velX, vx, 0.45);
+      d.velY = THREE.MathUtils.lerp(d.velY, vy, 0.45);
       d.lastX = e.clientX;
       d.lastY = e.clientY;
+      d.lastT = now;
       keepAwake(1.2);
     };
     const onUp = () => {
       if (!drag.current.active) return;
       drag.current.active = false;
       setDragging(false);
+      // Keep the demand loop alive through coast + bounce settle.
+      keepAwake(8);
     };
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
@@ -574,6 +651,49 @@ function Logo({
     tilt.current.y = THREE.MathUtils.lerp(tilt.current.y, targetY, k);
 
     const d = drag.current;
+    if (!d.active) {
+      // Latch return once coasting is nearly done — don't flip back when the bounce speeds up.
+      if (
+        !d.returning &&
+        Math.abs(d.velX) < DRAG_VELOCITY_EPS &&
+        Math.abs(d.velY) < DRAG_VELOCITY_EPS
+      ) {
+        d.returning = true;
+        d.velX = 0;
+        d.velY = 0;
+        // Don't unwind full turns — spring along the nearest angle to rest.
+        d.rotX = shortestAngle(d.rotX);
+        d.rotY = shortestAngle(d.rotY);
+      }
+
+      if (!d.returning) {
+        d.rotX += d.velX * delta;
+        d.rotY += d.velY * delta;
+        const friction = Math.exp(-DRAG_FRICTION * delta);
+        d.velX *= friction;
+        d.velY *= friction;
+      } else {
+        d.velX += (-DRAG_SPRING * d.rotX - DRAG_SPRING_DAMP * d.velX) * delta;
+        d.velY += (-DRAG_SPRING * d.rotY - DRAG_SPRING_DAMP * d.velY) * delta;
+        d.rotX += d.velX * delta;
+        d.rotY += d.velY * delta;
+        if (
+          Math.abs(d.rotX) < DRAG_ANGLE_EPS &&
+          Math.abs(d.rotY) < DRAG_ANGLE_EPS &&
+          Math.abs(d.velX) < DRAG_VELOCITY_EPS &&
+          Math.abs(d.velY) < DRAG_VELOCITY_EPS
+        ) {
+          d.rotX = 0;
+          d.rotY = 0;
+          d.velX = 0;
+          d.velY = 0;
+          d.returning = false;
+        }
+      }
+      d.rotX = THREE.MathUtils.clamp(d.rotX, -Math.PI / 2, Math.PI / 2);
+      if (d.velX || d.velY || d.rotX || d.rotY || d.returning) invalidate();
+    }
+
     g.rotation.set(tilt.current.x + d.rotX, spinAt(t) + tilt.current.y + d.rotY, 0);
     logoPose.current.x = g.rotation.x;
     logoPose.current.y = g.rotation.y;
@@ -604,9 +724,14 @@ function Logo({
         onPointerDown={(e) => {
           e.stopPropagation();
           const { clientX, clientY } = e.nativeEvent;
-          drag.current.active = true;
-          drag.current.lastX = clientX;
-          drag.current.lastY = clientY;
+          const d = drag.current;
+          d.active = true;
+          d.returning = false;
+          d.lastX = clientX;
+          d.lastY = clientY;
+          d.lastT = performance.now();
+          d.velX = 0;
+          d.velY = 0;
           hover.current.active = false;
           setDragging(true);
           setHovered(true);
@@ -622,17 +747,16 @@ function Logo({
           backsideThickness={1.55}
           thickness={2.1}
           ior={1.56}
-          chromaticAberration={0.55}
-          // Stretch bright env streaks along the tubes instead of round blobs.
-          anisotropicBlur={0.22}
-          distortion={0.16}
-          distortionScale={0.5}
+          chromaticAberration={0.7}
+          anisotropicBlur={0.12}
+          distortion={0.14}
+          distortionScale={0.4}
           temporalDistortion={0}
-          roughness={0.08}
-          clearcoat={0.2}
-          clearcoatRoughness={0.35}
-          specularIntensity={0.3}
-          envMapIntensity={2.5}
+          roughness={0.04}
+          clearcoat={0.65}
+          clearcoatRoughness={0.08}
+          specularIntensity={0.75}
+          envMapIntensity={2.8}
           color="#ffffff"
           attenuationColor="#ffffff"
           attenuationDistance={2.8}
