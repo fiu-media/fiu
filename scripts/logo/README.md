@@ -6,17 +6,17 @@ tubes; extrude mode is the flat silhouette (crescent inset so it doesn't touch t
 f bowl). Diamonds are the two white.png parallelograms with a gem chamfer. Home hero
 Tubes / Extrude toggle for A/B.
 
-**Flat PNG:** `design/refs/white.png` (alpha).
+**Flat logo:** `public/brand/fiu-logo.svg`, traced from the alpha of `design/refs/white.png`.
 
 ```sh
 W=/tmp/fiu-logo
-python3 -m venv /tmp/fiu-py && /tmp/fiu-py/bin/pip install numpy scipy scikit-image skan pillow matplotlib
+python3 -m venv /tmp/fiu-py && /tmp/fiu-py/bin/pip install numpy scipy scikit-image skan pillow matplotlib potracer
 # Topology + sheared tip-cut angle from the white mark
 /tmp/fiu-py/bin/python scripts/logo/02b_from_white.py design/refs/white.png $W
 # Centreline radii + liquid-glass diamond layout → JSON for Three.js (no Blender)
 /tmp/fiu-py/bin/python scripts/logo/06_paths_for_three.py $W public/brand/fiu-logo-paths.json
-# Brand PNGs = flat white mark
-/tmp/fiu-py/bin/python scripts/logo/05_white_png.py design/refs/white.png public/brand
+# Flat white mark as SVG (needs: pip install potracer)
+/tmp/fiu-py/bin/python scripts/logo/05_white_svg.py design/refs/white.png public/brand/fiu-logo.svg
 ```
 
 Everything in `06_paths_for_three.py` is traced from `design/refs/white.png` (ü segments and

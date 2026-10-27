@@ -33,7 +33,7 @@ import {
 } from "@/components/three/logoConfig";
 import { costVsPreset, type LogoPerfStats } from "@/components/three/logoPerf";
 import { GlassPillButton } from "@/components/ui/Glass";
-import logo from "@/public/brand/fiu-logo.png";
+import logo from "@/public/brand/fiu-logo.svg";
 
 const LogoScene = dynamic(() => import("@/components/three/LogoScene"), { ssr: false });
 
@@ -167,7 +167,7 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
   const applyPreset = (rimLook: LogoRimLook) => {
     setFailed(false);
     // Keep sceneReady — remounting isn't needed; params update live. Clearing ready
-    // without a remount left the PNG up forever (onReady never fires again).
+    // without a remount left the fallback logo up forever (onReady never fires again).
     setConfig((c) => ({
       ...presetConfig(rimLook, c.meshMode),
       display: "live",
@@ -444,7 +444,7 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
                   aria-pressed={config.display === "fallback"}
                   onClick={() => setDisplay("fallback")}
                 >
-                  Fallback PNG
+                  Fallback logo
                 </GlassPillButton>
               </PillRow>
             </Section>
