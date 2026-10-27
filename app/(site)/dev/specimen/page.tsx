@@ -1,20 +1,24 @@
 import type { Metadata } from "next";
 import Image, { type StaticImageData } from "next/image";
-import type { CSSProperties } from "react";
 import { GlassNav } from "@/components/nav/GlassNav";
 import { GlassPanel, GlassPillButton } from "@/components/ui/Glass";
 import logo from "@/public/brand/fiu-logo.png";
-import candle from "@/public/stills/candle.jpg";
-import flowers from "@/public/stills/flowers.jpg";
-import jackets from "@/public/stills/jackets.jpg";
-import { pairings, type Pairing } from "./fonts";
-import { PairingPanel, PairingSwitcher } from "./PairingTabs";
+import banquet from "@/public/stills/banquet.jpg";
+import bouquet from "@/public/stills/bouquet.jpg";
+import citrus from "@/public/stills/citrus.jpg";
+import conservatory from "@/public/stills/conservatory.jpg";
+import fur from "@/public/stills/fur.jpg";
+import glow from "@/public/stills/glow.jpg";
+import grapes from "@/public/stills/grapes.jpg";
+import parlor from "@/public/stills/parlor.jpg";
+import pond from "@/public/stills/pond.jpg";
+import supper from "@/public/stills/supper.jpg";
 import { SchemeSwitcher } from "./SchemeSwitcher";
 
-// Public so the team can review it on the production URL while the type pairing (#5) is
-// decided. Unlisted: not linked from the site and kept out of search engines.
+// Living reference for the site's design theme: type (Fraunces + Manrope), cinematic and
+// adaptive surfaces, and liquid glass. Unlisted: not linked from the site, kept out of search engines.
 export const metadata: Metadata = {
-  title: "Type & glass specimen",
+  title: "Design specimen",
   robots: { index: false, follow: false },
 };
 
@@ -25,7 +29,18 @@ const nav = [
   { href: "/rentals", label: "Rentals" },
   { href: "/contact", label: "Contact" },
 ];
-const stills: StaticImageData[] = [candle, flowers, jackets];
+const stills: StaticImageData[] = [
+  conservatory,
+  banquet,
+  supper,
+  glow,
+  citrus,
+  bouquet,
+  grapes,
+  pond,
+  fur,
+  parlor,
+];
 
 // Sample copy only: placeholder project titles and gear from the Canva pack.
 const projects = [
@@ -39,40 +54,35 @@ export default function SpecimenPage() {
     <main data-surface="adaptive" className="min-h-dvh bg-bg text-fg">
       <header className="sticky top-0 z-20 border-b border-line bg-bg/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-6 py-3">
-          <p className="text-sm font-medium">Fiú · type &amp; glass specimen</p>
-          <PairingSwitcher pairings={pairings.map(({ id, name }) => ({ id, name }))} />
+          <p className="text-sm font-medium">Fiú · design specimen</p>
           <SchemeSwitcher />
         </div>
       </header>
 
       <div className="mx-auto max-w-7xl px-6 py-16">
-        {pairings.map((p, i) => (
-          <PairingPanel key={p.id} id={p.id}>
-            <PairingSection pairing={p} still={stills[i % stills.length]} />
-          </PairingPanel>
-        ))}
+        <Specimen still={stills[0]} />
       </div>
     </main>
   );
 }
 
-function PairingSection({ pairing: p, still }: { pairing: Pairing; still: StaticImageData }) {
-  const display = `font-display ${p.displayStyle}`;
-  const accent = p.italicAccent ? "italic" : "";
+function Specimen({ still }: { still: StaticImageData }) {
+  const display = "font-display";
+  const accent = "italic";
 
   return (
-    <section
-      className={`${p.className} font-sans`}
-      style={{ "--font-display-face": p.display, "--font-text": p.text } as CSSProperties}
-    >
+    <section>
       <div className="mb-8 flex flex-wrap items-end justify-between gap-4 border-b border-line pb-6">
         <div>
           <p className="text-xs font-medium tracking-[0.14em] text-fg-muted uppercase">
-            Pairing {p.id.toUpperCase()} · {p.faces}
+            Fraunces + Manrope
           </p>
-          <h2 className={`${display} mt-2 text-5xl md:text-6xl`}>{p.name}</h2>
+          <h2 className={`${display} mt-2 text-5xl md:text-6xl`}>Expressive</h2>
         </div>
-        <p className="max-w-md text-fg-muted">{p.note}</p>
+        <p className="max-w-md text-fg-muted">
+          Warm and a little playful, with soft serifs that echo the logo&rsquo;s curves. Manrope is friendly but
+          still precise.
+        </p>
       </div>
 
       {/* Home, Mockup 1 layout */}
@@ -164,7 +174,7 @@ function PairingSection({ pairing: p, still }: { pairing: Pairing; still: Static
 
         {/* The photo is a sibling behind the panel: backdrop-filter only affects what is behind an element. */}
         <div className="relative isolate overflow-hidden rounded-3xl p-4 md:p-6">
-          <Image src={flowers} alt="" fill sizes="50vw" className="-z-10 object-cover" />
+          <Image src={bouquet} alt="" fill sizes="50vw" className="-z-10 object-cover" />
           <GlassPanel className="p-8">
             <h3 className={`${display} text-3xl`}>Your quote</h3>
             <p className="mt-1 text-sm text-fg-muted">3 items · 12–14 March</p>

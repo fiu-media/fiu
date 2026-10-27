@@ -6,6 +6,7 @@ export const HOME_STILLS_QUERY = defineQuery(`
     "stills": homeStills[defined(asset)]{
       _key,
       alt,
+      lightTint,
       asset,
       crop,
       hotspot,

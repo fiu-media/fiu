@@ -7,6 +7,8 @@ export type HeroStill = {
   height: number;
   alt: string;
   blurDataURL?: string;
+  /** Precomputed studio tint (hex) for the glass logo; avoids sampling the texture. */
+  lightTint?: string;
   /** CSS object-position derived from the editor's hotspot. */
   position?: string;
   /** `data-sanity` value that makes the still clickable in the Presentation tool. */
@@ -18,6 +20,7 @@ type Source = Parameters<typeof urlFor>[0];
 export type SanityStill = {
   _key: string;
   alt: string | null;
+  lightTint?: string | null;
   asset: unknown;
   crop?: { top: number; bottom: number; left: number; right: number } | null;
   hotspot?: { x: number; y: number } | null;
@@ -49,6 +52,7 @@ export function toHeroStill(documentId: string, still: SanityStill): HeroStill |
     height: Math.round(width / aspect),
     alt: still.alt ?? "",
     blurDataURL: still.lqip ?? undefined,
+    lightTint: still.lightTint ?? undefined,
     dataSanity: createDataAttribute({
       id: documentId,
       type: "siteSettings",

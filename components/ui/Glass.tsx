@@ -13,9 +13,9 @@ const sizes: Record<Size, string> = {
 };
 
 const lens: Record<Size, { bezel: number; strength: number }> = {
-  sm: { bezel: 12, strength: 26 },
-  md: { bezel: 15, strength: 32 },
-  lg: { bezel: 18, strength: 38 },
+  sm: { bezel: 7, strength: 18 },
+  md: { bezel: 8, strength: 22 },
+  lg: { bezel: 9, strength: 26 },
 };
 
 type PillStyle = {
@@ -28,8 +28,8 @@ type PillStyle = {
 
 function pillClass({ size = "md", onImage, className }: Omit<PillStyle, "children">) {
   return [
-    "glass glass-interactive inline-flex items-center justify-center gap-2 rounded-full",
-    "font-semibold tracking-[-0.01em] whitespace-nowrap select-none",
+    "glass glass-piece glass-interactive inline-flex cursor-pointer items-center justify-center gap-2 rounded-full",
+    "font-semibold tracking-[-0.01em] whitespace-nowrap select-none disabled:cursor-not-allowed",
     sizes[size],
     onImage && "glass-on-image",
     className,
@@ -54,6 +54,7 @@ export function GlassPillLink({
       ref={ref}
       style={glass.style}
       onPointerMove={glass.onPointerMove}
+      onPointerLeave={glass.onPointerLeave}
       aria-current={current ? "page" : undefined}
       className={pillClass({ size, onImage, className })}
     >
@@ -79,6 +80,7 @@ export function GlassPillButton({
       ref={ref}
       style={glass.style}
       onPointerMove={glass.onPointerMove}
+      onPointerLeave={glass.onPointerLeave}
       type={type}
       className={pillClass({ size, onImage, className })}
     >
@@ -96,7 +98,7 @@ export function GlassPanel({
   ...props
 }: { onImage?: boolean; radius?: number } & ComponentProps<"div">) {
   const ref = useRef<HTMLDivElement>(null);
-  const glass = useLiquidGlass(ref, { radius, bezel: 30, strength: 56, aberration: 0.06 });
+  const glass = useLiquidGlass(ref, { radius, bezel: 13, strength: 34, aberration: 0.1 });
   return (
     <div
       {...props}

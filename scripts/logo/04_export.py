@@ -67,7 +67,9 @@ except Exception:
     pass
 
 # Dispersion: red bends least, blue most. Gems get a third of the spread (see 03_build.py).
-spreads = {"Glass": 0.03, "GemGlass": 0.01}
+# Dispersion spread: wide enough for warm orange / cool blue rim fringing, tight enough
+# that the body doesn't rainbow. Gems stay narrower so facets stay clear-blue.
+spreads = {"Glass": 0.035, "GemGlass": 0.008}
 iors = {name: bpy.data.materials[name].node_tree.nodes["Glass BSDF"].inputs["IOR"] for name in spreads}
 base = {name: socket.default_value for name, socket in iors.items()}
 passes = [("highlights", True, 0), ("refraction-r", False, -1), ("refraction-g", False, 0), ("refraction-b", False, 1)]

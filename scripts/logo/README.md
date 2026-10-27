@@ -1,32 +1,42 @@
 # Logo pipeline
 
-Rebuilds the Fiú glass logo from the Canva design pack and exports the web assets. The silhouette comes straight from the Canva home mockup's alpha channel. From it the pipeline builds:
-- round glass tubes, swept along traced centrelines
-- crossings that weld cleanly (exact boolean union)
-- a round brilliant gem and an emerald-cut baguette, both in the same glass as the strokes
+**Web logo (authoritative for the site):** procedural Three.js mesh from
+`public/brand/fiu-logo-paths.json`. Tube mode is pure variable-radius centreline
+tubes; extrude mode is the flat silhouette (crescent inset so it doesn't touch the
+f bowl). Diamonds are the two white.png parallelograms with a gem chamfer. Home hero
+Tubes / Extrude toggle for A/B.
 
-The Canva render's look comes from a procedural high-key studio plus dispersion. Blender 5.2's glass has no dispersion input, so the dispersion is rendered as three refraction passes at slightly different IORs, recombined as R, G and B.
-
-Steps 01, 02 and 05 need `numpy scipy scikit-image skan pillow`, e.g. `python3 -m venv /tmp/fiu-py && /tmp/fiu-py/bin/pip install numpy scipy scikit-image skan pillow`.
+**Flat PNG:** `design/refs/white.png` (alpha).
 
 ```sh
 W=/tmp/fiu-logo
-# 1. Silhouette from the Canva mockup (https://fiumockups.my.canva.site, "Home Screen Desktop Mockup 2", white variant)
-/tmp/fiu-py/bin/python scripts/logo/01_canva_mask.py path/to/canva-home-white.png $W
-# 2. Stroke centrelines + radii, and dot positions. Check $W/debug.png
-/tmp/fiu-py/bin/python scripts/logo/02_centerlines.py $W
-# 3. Tubes, gems, material, studio, camera, spin animation
-blender -b --factory-startup --python scripts/logo/03_build.py -- $W design/fiu-logo-glass.blend
-# 4. GLB + render passes
-blender -b design/fiu-logo-glass.blend --python scripts/logo/04_export.py -- $W public/brand
-# 5. PNGs
-/tmp/fiu-py/bin/python scripts/logo/05_fallback_png.py $W public/brand
+python3 -m venv /tmp/fiu-py && /tmp/fiu-py/bin/pip install numpy scipy scikit-image skan pillow matplotlib
+# Topology + sheared tip-cut angle from the white mark
+/tmp/fiu-py/bin/python scripts/logo/02b_from_white.py design/refs/white.png $W
+# Centreline radii + liquid-glass diamond layout → JSON for Three.js (no Blender)
+/tmp/fiu-py/bin/python scripts/logo/06_paths_for_three.py $W public/brand/fiu-logo-paths.json
+# Brand PNGs = flat white mark
+/tmp/fiu-py/bin/python scripts/logo/05_white_png.py design/refs/white.png public/brand
 ```
 
-Outputs:
-- `design/fiu-logo-glass.blend`: the editable logo, with the original spin animation on the `FiuLogo` empty.
-- `public/brand/fiu-logo.glb`: the mesh for the live WebGL logo.
-- `public/brand/fiu-logo-solid.png`: the Canva look (opaque glass). Use it on light backgrounds and for the OG image.
-- `public/brand/fiu-logo.png`: the transparent fallback for use over photography.
+Everything in `06_paths_for_three.py` is traced from `design/refs/white.png` (ü segments and
+dots sit exactly where the white mark has them; liquid-glass.jpg is no longer used).
 
-To tweak the shape or look by hand, edit `design/fiu-logo-glass.blend` and rerun steps 4–5 only.
+- Extrude shapes are emitted pre-inset by a per-shape `bevel`: three pushes the side walls
+  outward by `bevelSize`, and clamps that push to √2·bevel at corners sharper than 90°, which
+  blunts needle tips. Sharp tips are walked out to the real white.png apex and compensated, so
+  the extruded outline reproduces the artwork (tips included). `BEVEL_MAX` caps the bevel; it is
+  reduced per shape so thin slivers (the f bowl, the crescent) never break.
+- The inset is built from the anti-aliased alpha (4× supersampled, lightly smoothed) so rings
+  follow the artwork's curves, not its pixel staircase. A needle that curves is approximated by
+  one straight chord (extra vertices would be pushed a full bevel past the edge), so the bevel
+  shrinks per shape until the chord stays within ~1.5px of the art (`SAG_MAX`).
+- Each shape also ships its sharp `tips` and the true `outline`; `taperTips()` in
+  `buildLogoGeometry.ts` caps front/back height near a tip at the pillow height for its distance
+  to the edge, so the faces round over the needle instead of running on as a flat sliver.
+- Tube centrelines are extended from the skeleton end to the white.png silhouette (flat and point ends).
+
+Re-run that script and refresh — no GLB rebuild.
+
+Optional Blender path (`03_build.py` / `04_export.py`) remains for offline glass stills
+only; the homepage no longer loads `fiu-logo.glb`.

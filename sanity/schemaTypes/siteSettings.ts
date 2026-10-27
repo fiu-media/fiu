@@ -19,8 +19,8 @@ export const siteSettings = defineType({
       title: "Home stills",
       type: "array",
       group: "home",
-      description: "3–6 images that rotate behind the logo on the home page.",
-      validation: (rule) => rule.min(3).max(6),
+      description: "3–10 images that rotate behind the logo on the home page.",
+      validation: (rule) => rule.min(3).max(10),
       of: [
         defineArrayMember({
           name: "homeStill",
@@ -29,6 +29,13 @@ export const siteSettings = defineType({
           options: { hotspot: true },
           fields: [
             defineField({ name: "alt", title: "Alt text", type: "string", validation: (rule) => rule.required() }),
+            defineField({
+              name: "lightTint",
+              title: "Glass tint",
+              type: "string",
+              description: "Optional hex colour (e.g. #a0957b) the glass logo takes from this still. Leave empty to sample the image.",
+              validation: (rule) => rule.regex(/^#[0-9a-fA-F]{6}$/, { name: "hex colour" }).warning(),
+            }),
             defineField({
               name: "project",
               title: "Linked project",

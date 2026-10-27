@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import { Component, useCallback, useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
+import { Component, useCallback, useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
 import logo from "@/public/brand/fiu-logo.png";
 import type { HeroStill } from "@/sanity/lib/stills";
 
@@ -42,10 +42,7 @@ function useLiveSupport(): Mode {
 /**
  * Home hero (Canva mockup 1): rotating full-bleed stills with the glass logo.
  *
- * The stills and the transparent PNG logo render as <Image> first, so the first still is
- * the LCP element and the page works without JS. Where WebGL is available and motion
- * isn't reduced, the live scene fades in on top once loaded: the logo spins in and
- * refracts the same stills. Otherwise, or if the scene fails, the PNG simply stays.
+ * Mesh / rim playground controls live at `/dev/logo-playground`.
  */
 export function HomeHero({ stills }: { stills: HeroStill[] }) {
   const [index, setIndex] = useState(0);
@@ -61,6 +58,16 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
 
   const onReady = useCallback(() => setSceneReady(true), []);
   const onFail = useCallback(() => setFailed(true), []);
+  const sceneStills = useMemo(
+    () =>
+      stills.map(({ src, width, height, lightTint }) => ({
+        src,
+        width,
+        height,
+        lightTint,
+      })),
+    [stills],
+  );
 
   return (
     <div className="absolute inset-0 -z-10">
@@ -73,6 +80,7 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
           priority={i === 0}
           placeholder={still.blurDataURL ? "blur" : "empty"}
           blurDataURL={still.blurDataURL}
+          quality={90}
           sizes="100vw"
           className="object-cover transition-opacity duration-[1600ms] ease-in-out"
           style={{ opacity: i === index ? 1 : 0, objectPosition: still.position }}
@@ -102,11 +110,7 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
             className="absolute inset-0 transition-opacity duration-1000"
             style={{ opacity: sceneReady ? 1 : 0 }}
           >
-            <LogoScene
-              stills={stills.map(({ src, width, height }) => ({ src, width, height }))}
-              index={index}
-              onReady={onReady}
-            />
+            <LogoScene stills={sceneStills} index={index} onReady={onReady} meshMode="extrude" rimLook="light" />
           </div>
         </SceneBoundary>
       )}

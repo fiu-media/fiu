@@ -4,7 +4,7 @@ import { sanity } from "next-sanity/live/cache-life";
 const nextConfig: NextConfig = {
   /* config options here */
   experimental: {
-    agentFeedback: true,
+    agentFeedback: false,
   },
   cacheComponents: true,
   partialPrefetching: true,
@@ -13,6 +13,7 @@ const nextConfig: NextConfig = {
     default: sanity,
   },
   images: {
+    qualities: [75, 90],
     remotePatterns: [
       { protocol: "https", hostname: "cdn.sanity.io" },
       { protocol: "https", hostname: "i.vimeocdn.com" },

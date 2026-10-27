@@ -25,12 +25,20 @@ const client = createClient({
   useCdn: false,
 });
 
-// Canva-pack placeholders. The mockup's gear photos are retailer/stock images, so rental
+// Hero stills from public/stills. The mockup's gear photos are retailer/stock images, so rental
 // items deliberately get no images until Fiú shoots its own.
+// Keep the tints in sync with lib/fallback-stills.ts.
 const STILLS = [
-  { file: "candle.jpg", alt: "A lit candle in a dark room" },
-  { file: "flowers.jpg", alt: "Flowers in soft light" },
-  { file: "jackets.jpg", alt: "Jackets hanging in a row" },
+  { file: "conservatory.jpg", alt: "Conservatory", lightTint: "#a0957b" },
+  { file: "banquet.jpg", alt: "Banquet table", lightTint: "#866249" },
+  { file: "supper.jpg", alt: "Supper", lightTint: "#916d54" },
+  { file: "glow.jpg", alt: "Warm glow", lightTint: "#956444" },
+  { file: "citrus.jpg", alt: "Citrus", lightTint: "#968a77" },
+  { file: "bouquet.jpg", alt: "Bouquet", lightTint: "#977980" },
+  { file: "grapes.jpg", alt: "Grapes", lightTint: "#a39f82" },
+  { file: "pond.jpg", alt: "Pond", lightTint: "#746e67" },
+  { file: "fur.jpg", alt: "Fur", lightTint: "#8c5648" },
+  { file: "parlor.jpg", alt: "Parlor", lightTint: "#716755" },
 ];
 
 async function uploadStill(file: string, alt: string, extra: Record<string, unknown> = {}) {
@@ -53,6 +61,7 @@ const ref = (id: string) => ({ _type: "reference", _ref: id });
 
 async function main() {
   const stills = await Promise.all(STILLS.map((s) => uploadStill(s.file, s.alt)));
+  const tinted = stills.map((s, i) => ({ ...s, lightTint: STILLS[i].lightTint }));
 
   const docs: Record<string, unknown>[] = [];
 
@@ -62,7 +71,7 @@ async function main() {
     slogan: "Más fiú é a dhéanamh, is fiú é a dhéanamh i gceart.",
     sloganGloss: "If it's worth doing, it's worth doing right.",
     manifesto: [text("m1", "Placeholder manifesto. Replace this with Fiú's own words in the Studio.")],
-    homeStills: stills.map((s, i) => ({ ...s, _key: `home-${i}` })),
+    homeStills: tinted.map((s, i) => ({ ...s, _key: `home-${i}` })),
     aboutStill: { ...stills[0] },
     seoTitle: "Fiú Media",
     seoDescription: "Irish media company: original productions, commercial work, talent and gear rental.",
