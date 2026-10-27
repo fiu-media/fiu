@@ -6,7 +6,9 @@ import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObjec
 import * as THREE from "three";
 import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
 import paths from "@/public/brand/fiu-logo-paths.json";
-import { buildLogoGeometry, type LogoPaths } from "./buildLogoGeometry";
+import { buildLogoGeometry, type LogoMeshMode, type LogoPaths } from "./buildLogoGeometry";
+
+export type { LogoMeshMode };
 
 extend({ UnrealBloomPass });
 
@@ -35,8 +37,8 @@ type Fade = { from: number; to: number; start: number };
  * The live home hero: the rotating stills are drawn into the scene as a backdrop, so the
  * glass logo actually refracts whichever still is behind it.
  *
- * Logo mesh is built in Three.js from `fiu-logo-paths.json` (rounded extrusion of the
- * white mark + tip-aligned parallelogram diamonds) — no GLB / Blender step for the web.
+ * Logo mesh is built in Three.js from `fiu-logo-paths.json` (variable-radius tubes or
+ * silhouette extrude + chamfered diamonds) — no GLB for the web.
  *
  * Rendering is on demand. Frames are only drawn while something moves (intro spin,
  * crossfade, pointer parallax), so an idle hero costs nothing.
@@ -45,10 +47,13 @@ export default function LogoScene({
   stills,
   index,
   onReady,
+  meshMode = "tubes",
 }: {
   stills: SceneStill[];
   index: number;
   onReady: () => void;
+  /** `tubes` = liquid-glass taper; `extrude` = flat silhouette slab. */
+  meshMode?: LogoMeshMode;
 }) {
   return (
     <Canvas
@@ -63,7 +68,7 @@ export default function LogoScene({
       }}
       onCreated={({ gl }) => gl.setClearColor("#0c0b0d")}
     >
-      <Scene stills={stills} index={index} onReady={onReady} />
+      <Scene stills={stills} index={index} onReady={onReady} meshMode={meshMode} />
     </Canvas>
   );
 }
@@ -72,10 +77,12 @@ function Scene({
   stills,
   index,
   onReady,
+  meshMode,
 }: {
   stills: SceneStill[];
   index: number;
   onReady: () => void;
+  meshMode: LogoMeshMode;
 }) {
   // useTexture suspends until loaded, so .image is available on first paint here.
   const textures = useTexture(
@@ -119,7 +126,7 @@ function Scene({
   return (
     <>
       <Backdrop stills={stills} textures={textures} fade={fade} />
-      <Logo onReady={onReady} tint={tint} logoPose={logoPose} />
+      <Logo onReady={onReady} tint={tint} logoPose={logoPose} meshMode={meshMode} />
       {/* frames=Infinity: re-bake whenever the demand loop runs (crossfade / parallax),
           so tint tracks the still. Idle canvases don't draw, so this stays cheap. */}
       <Studio tint={tint} logoPose={logoPose} />
@@ -512,10 +519,12 @@ function Logo({
   onReady,
   tint,
   logoPose,
+  meshMode,
 }: {
   onReady: () => void;
   tint: MutableRefObject<THREE.Color>;
   logoPose: MutableRefObject<{ x: number; y: number }>;
+  meshMode: LogoMeshMode;
 }) {
   const size = useThree((s) => s.size);
   const viewport = useThree((s) => s.viewport);
@@ -545,7 +554,10 @@ function Logo({
   const [dragging, setDragging] = useState(false);
   useCursor(hovered || dragging, dragging ? "grabbing" : "grab");
 
-  const geometry = useMemo(() => buildLogoGeometry(paths as unknown as LogoPaths), []);
+  const geometry = useMemo(
+    () => buildLogoGeometry(paths as unknown as LogoPaths, meshMode),
+    [meshMode],
+  );
 
   useEffect(() => () => geometry.dispose(), [geometry]);
 
@@ -566,6 +578,11 @@ function Logo({
     invalidate();
     gl.domElement.style.touchAction = "none";
   }, [invalidate, gl]);
+
+  // Redraw after a mesh-mode swap without resetting intro spin state.
+  useEffect(() => {
+    invalidate();
+  }, [geometry, invalidate]);
 
   // Drag continues on the window so rotation doesn't stop when the pointer leaves the mesh.
   useEffect(() => {

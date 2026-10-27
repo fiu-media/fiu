@@ -1,7 +1,8 @@
 """Export `public/brand/fiu-logo-paths.json` for the procedural Three.js logo.
 
 Authority:
-  - Body silhouette / holes / crescent: design/refs/white.png
+  - Stroke centreline + radius: design/refs/white.png via 02b_from_white.py
+  - Tip taper emphasis (`TAPER_POWER`): liquid-glass.jpg look
   - Diamond size ratio + tip-relative placement: design/refs/liquid-glass.jpg
   - Tip-cut angle (sheared): measured from white.png next to the first diamond
 
@@ -13,6 +14,7 @@ Usage:
 from __future__ import annotations
 
 import json
+import math
 import os
 import sys
 
@@ -213,11 +215,20 @@ def lg_rel_world(col, row):
 PROXIMITY = 0.88
 d_centers = [tip_xy + PROXIMITY * lg_rel_world(c[0], c[1]) for c in lg_centers_px]
 short_ang = tip_ang  # white tip cut is the alignment authority
-# Acute angle between short (tip) and long sides ≈ white / liquid-glass.
-acute = np.radians(73.0)
+# Lock long edges to the f crossbar tangent at the tip so the gems read as a
+# sliced pair with the cap: short // tip cut, long // stroke.
+_tip_pt = np.array(tip_pt[:2], float)
+_prev = np.array(
+    max(strokes["strokes"], key=lambda s: len(s["points"]))["points"][-4][:2], float
+)
+_tangent = math.atan2(_tip_pt[1] - _prev[1], _tip_pt[0] - _prev[0])
+# Keep acute in (0, π); sn below picks the oblong shear that matches white/LG.
+acute = abs(((_tangent - short_ang + math.pi) % (2 * math.pi)) - math.pi)
 
 print(
     f"tip world={tip_xy.round(3)} ang={np.degrees(tip_ang):.1f}° side={tip_side:.3f}\n"
+    f"diamond short={np.degrees(short_ang):.1f}° long={np.degrees(_tangent):.1f}° "
+    f"acute={np.degrees(acute):.1f}°\n"
     f"LG scale={scale:.5f} long/short={LONG_RATIO:.3f}\n"
     f"d0 rel={ (d_centers[0]-tip_xy).round(3) } d1 rel={ (d_centers[1]-tip_xy).round(3) }\n"
     f"spacing={np.linalg.norm(d_centers[1]-d_centers[0]):.3f}"
@@ -225,40 +236,26 @@ print(
 
 
 def parallelogram(center_xy, short, long_len, short_ang_rad, acute_rad):
-    """Parallelogram with one side = tip cut (short @ short_ang); longer adjacent side."""
+    """Parallelogram: short side // tip cut; long side // crossbar tangent (refs)."""
     u = np.array([np.cos(short_ang_rad), np.sin(short_ang_rad)]) * short
     ca, sa = np.cos(acute_rad), np.sin(acute_rad)
-    best = None
-    for sn in (1.0, -1.0):
-        vdir = np.array(
-            [
-                np.cos(short_ang_rad) * ca - sn * np.sin(short_ang_rad) * sa,
-                sn * np.cos(short_ang_rad) * sa + np.sin(short_ang_rad) * ca,
-            ]
-        )
-        v = vdir * long_len
-        corners = np.array(
-            [
-                center_xy + 0.5 * (u + v),
-                center_xy + 0.5 * (u - v),
-                center_xy + 0.5 * (-u - v),
-                center_xy + 0.5 * (-u + v),
-            ]
-        )
-        # Prefer the rotation whose tip-facing (leftmost) edge is parallel to the tip cut
-        # and whose horizontal span matches the liquid-glass oblong look.
-        span = corners[:, 0].max() - corners[:, 0].min()
-        left_i = int(np.argmin(((corners + np.roll(corners, -1, axis=0)) / 2)[:, 0]))
-        left_edge = corners[(left_i + 1) % 4] - corners[left_i]
-        left_ang = np.arctan2(left_edge[1], left_edge[0])
-        ang_err = abs(((left_ang - short_ang_rad + np.pi) % (2 * np.pi)) - np.pi)
-        ang_err = min(ang_err, abs(((left_ang + np.pi - short_ang_rad + np.pi) % (2 * np.pi)) - np.pi))
-        score = span - ang_err * 2  # penalize misaligned left edge
-        if best is None or score > best[0]:
-            best = (score, corners, ang_err)
-    corners = best[1]
-    # Nudge so the left edge midpoint sits at the liquid-glass tip→left gap.
-    # (Centers already come from LG; this keeps the tip-facing side parallel.)
+    # sn=+1 yields long ≈ crossbar tangent (oblong like white / liquid-glass).
+    sn = 1.0
+    vdir = np.array(
+        [
+            np.cos(short_ang_rad) * ca - sn * np.sin(short_ang_rad) * sa,
+            sn * np.cos(short_ang_rad) * sa + np.sin(short_ang_rad) * ca,
+        ]
+    )
+    v = vdir * long_len
+    corners = np.array(
+        [
+            center_xy + 0.5 * (u + v),
+            center_xy + 0.5 * (u - v),
+            center_xy + 0.5 * (-u - v),
+            center_xy + 0.5 * (-u + v),
+        ]
+    )
     c = corners.mean(0)
     return corners[np.argsort(np.arctan2(corners[:, 1] - c[1], corners[:, 0] - c[0]))]
 
@@ -296,31 +293,207 @@ def recenter(pts):
     return [[round(float(x - cx), 4), round(float(y - cy), 4)] for x, y in pts]
 
 
+# --- Variable-radius strokes (authority for the live tube mesh) ----------------
+# white.png already tapers, but liquid-glass tips are sharper. Emphasize the
+# belly→tip falloff while keeping flat-cap ends near their measured radius.
+TAPER_POWER = 1.35
+
+
+def sharpen_stroke(points):
+    rs = np.array([p[2] for p in points], dtype=float)
+    rmax = float(rs.max()) or 1.0
+    out = []
+    for x, y, r in points:
+        t = max(float(r) / rmax, 0.0)
+        r2 = rmax * (t**TAPER_POWER)
+        out.append([round(float(x - cx), 4), round(float(y - cy), 4), round(float(r2), 4)])
+    return out
+
+
+stroke_payload = []
+for s in strokes["strokes"]:
+    # Keep white/liquid-glass flat tips (ü left top matches the f crossbar cuts).
+    stroke_payload.append(
+        {
+            "points": sharpen_stroke(s["points"]),
+            "closed": bool(s.get("closed", False)),
+            "caps": list(s.get("caps", ["flat", "flat"])),
+        }
+    )
+
+# --- Align ü (white-derived) to liquid-glass layout ----------------------------
+# Diamonds are already placed from liquid-glass tip-relative coords. The ü bowls
+# from white.png sit a little further right / differently angled — nudge them so
+# both mesh modes and the diamonds agree with the glass reference.
+def _rigid(pts, origin, dx, dy, dang):
+    ca, sa = np.cos(dang), np.sin(dang)
+    ox, oy = origin
+    out = []
+    for p in pts:
+        x, y = float(p[0]) - ox, float(p[1]) - oy
+        xr, yr = ca * x - sa * y, sa * x + ca * y
+        np_ = [round(xr + ox + dx, 4), round(yr + oy + dy, 4)]
+        if len(p) > 2:
+            np_.append(p[2])
+        out.append(np_)
+    return out
+
+
+# F width in centered stroke space (stroke 0).
+_f_pts = np.array([p[:2] for p in stroke_payload[0]["points"]], float)
+_fw = float(_f_pts[:, 0].max() - _f_pts[:, 0].min())
+_fh = float(_f_pts[:, 1].max() - _f_pts[:, 1].min())
+# Measured white→LG deltas (fraction of F size) for ü left / ü right.
+_U_ALIGN = [
+    # (stroke_index, dx/fw, dy/fh, dangle_deg)
+    (1, -0.018, -0.005, -2.3),
+    (2, -0.035, -0.005, -0.2),
+]
+_u_stroke_xf = {}
+for si, fdx, fdy, dang_deg in _U_ALIGN:
+    pts = np.array([p[:2] for p in stroke_payload[si]["points"]], float)
+    origin = pts.mean(0)
+    dx, dy, dang = fdx * _fw, fdy * _fh, np.radians(dang_deg)
+    stroke_payload[si]["points"] = _rigid(stroke_payload[si]["points"], origin, dx, dy, dang)
+    _u_stroke_xf[si] = (origin, dx, dy, dang)
+    print(
+        f"ü align stroke{si}: dx={dx:+.3f} dy={dy:+.3f} "
+        f"rot={dang_deg:+.1f}° (LG vs white)"
+    )
+
+shapes_payload = [
+    {"outer": recenter(s["outer"]), "holes": [recenter(h) for h in s["holes"]]}
+    for s in shapes
+]
+# Match extrude shapes to the same ü alignment (by nearest stroke centroid).
+for sh in shapes_payload:
+    outer = np.array(sh["outer"], float)
+    sc = outer.mean(0)
+    # Skip F (has holes) and the inner crescent (left of F).
+    if sh["holes"] or sc[0] < 0:
+        continue
+    best_si, best_d = None, 1e9
+    for si in _u_stroke_xf:
+        stc = np.array([p[:2] for p in stroke_payload[si]["points"]], float).mean(0)
+        d = float(np.linalg.norm(sc - stc))
+        if d < best_d:
+            best_d, best_si = d, si
+    if best_si is None:
+        continue
+    origin, dx, dy, dang = _u_stroke_xf[best_si]
+    sh["outer"] = _rigid(sh["outer"], origin, dx, dy, dang)
+    sh["holes"] = [_rigid(h, origin, dx, dy, dang) for h in sh["holes"]]
+
+def _scale_about(pts, cxy, scale, nudge=(0.0, 0.0)):
+    nx, ny = nudge
+    return [
+        [
+            round(float((x - cxy[0]) * scale + cxy[0] + nx), 4),
+            round(float((y - cxy[1]) * scale + cxy[1] + ny), 4),
+        ]
+        for x, y in pts
+    ]
+
+
+# Shrink the f inner crescent so extrude bevels don't close the gap to the outer wall.
+CRESCENT_SCALE = 0.78
+for sh in shapes_payload:
+    if sh["holes"]:
+        continue
+    outer = np.array(sh["outer"], float)
+    if outer[:, 0].mean() >= -0.5:
+        continue
+    sh["outer"] = _scale_about(outer, outer.mean(0), CRESCENT_SCALE, nudge=(0.05, 0.04))
+    print(f"crescent inset ×{CRESCENT_SCALE} (+nudge) for extrude gap")
+
+# Separate the two ü bowls — raw gap (~0.04) is smaller than 2× bevel, so they fuse.
+# Scale each down, then push apart until the gap clears the fillet.
+U_SCALE = 0.9
+U_GAP_TARGET = 0.22  # > 2 × extrude bevelSize so filleted edges stay separate
+u_shapes = [
+    sh
+    for sh in shapes_payload
+    if not sh["holes"] and np.array(sh["outer"], float)[:, 0].mean() > 0
+]
+u_shapes.sort(key=lambda sh: np.array(sh["outer"], float)[:, 0].mean())
+if len(u_shapes) >= 2:
+    for sh in u_shapes:
+        outer = np.array(sh["outer"], float)
+        sh["outer"] = _scale_about(outer, outer.mean(0), U_SCALE)
+
+    def _min_gap(a, b):
+        # Subsample for speed; contours are dense.
+        aa, bb = a[::2], b[::2]
+        d = ((aa[:, None, :] - bb[None, :, :]) ** 2).sum(-1)
+        return float(np.sqrt(d.min()))
+
+    left = np.array(u_shapes[0]["outer"], float)
+    right = np.array(u_shapes[1]["outer"], float)
+    gap0 = _min_gap(left, right)
+    # Closest-point direction ≈ separation axis.
+    aa, bb = left[::2], right[::2]
+    d2 = ((aa[:, None, :] - bb[None, :, :]) ** 2).sum(-1)
+    i, j = np.unravel_index(int(np.argmin(d2)), d2.shape)
+    sep = bb[j] - aa[i]
+    sep_n = sep / (np.linalg.norm(sep) + 1e-9)
+    need = max(0.0, U_GAP_TARGET - gap0)
+    # Split the push evenly.
+    push = 0.5 * need * sep_n
+    u_shapes[0]["outer"] = [
+        [round(float(x - push[0]), 4), round(float(y - push[1]), 4)] for x, y in u_shapes[0]["outer"]
+    ]
+    u_shapes[1]["outer"] = [
+        [round(float(x + push[0]), 4), round(float(y + push[1]), 4)] for x, y in u_shapes[1]["outer"]
+    ]
+    gap1 = _min_gap(np.array(u_shapes[0]["outer"], float), np.array(u_shapes[1]["outer"], float))
+    print(f"ü separate: scale×{U_SCALE} gap {gap0:.3f}→{gap1:.3f} (target {U_GAP_TARGET})")
+
+# --- Diamonds: tip-relative LG placement (already snapped), body-recentered --------
+# Size = f tip diameter × LG long/short. Height/spacing from liquid-glass tip mid
+# (PROXIMITY pull), not ü-tip offsets — those sat too low and stretched the pair.
+diamonds_out = [np.array(recenter(d), float) for d in diamonds]
+for i, d in enumerate(diamonds_out):
+    print(f"diamond{i} center={d.mean(0).round(3)} "
+          f"(tip-rel LG × {PROXIMITY}, short={tip_side:.3f})")
+# Gem chamfer: large bevel relative to depth → clear faceted table like liquid-glass.
+DIAMOND_DEPTH = 0.15
+DIAMOND_BEVEL = 0.065
+
 payload = {
     "units": "logo-world, y-up, centered at origin",
+    # Round tubes: local depth ≈ 2r along each centreline (liquid-glass).
+    "strokes": stroke_payload,
+    # Flat silhouette extrude — deep rounded fillet (liquid-glass pillow edge).
     "extrude": {
-        # Shallower bevel so crossings read as one flat glass table, not a tube.
-        "depth": 0.34,
-        "bevelThickness": 0.07,
-        "bevelSize": 0.07,
-        "bevelSegments": 3,
+        "depth": 0.30,
+        "bevelThickness": 0.09,
+        "bevelSize": 0.09,
+        "bevelSegments": 6,
     },
-    "shapes": [
-        {"outer": recenter(s["outer"]), "holes": [recenter(h) for h in s["holes"]]}
-        for s in shapes
-    ],
+    "shapes": shapes_payload,
     "diamonds": [
-        {"corners": recenter(d), "depth": 0.18, "bevel": 0.028} for d in diamonds
+        {
+            "corners": [[round(float(x), 4), round(float(y), 4)] for x, y in d],
+            "depth": DIAMOND_DEPTH,
+            "bevel": DIAMOND_BEVEL,
+        }
+        for d in diamonds_out
     ],
     "tipCut": {
         "angle": tip_ang,
         "side": float(tip_side),
         "longRatio": float(LONG_RATIO),
+        "taperPower": TAPER_POWER,
     },
 }
 os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
 json.dump(payload, open(out_path, "w"), indent=2)
+r_stats = [
+    (min(p[2] for p in s["points"]), max(p[2] for p in s["points"])) for s in stroke_payload
+]
 print(
-    f"wrote {out_path}: {len(payload['shapes'])} shapes, "
-    f"{len(payload['diamonds'])} diamonds, tip {np.degrees(tip_ang):.1f}°"
+    f"wrote {out_path}: {len(stroke_payload)} strokes "
+    + ", ".join(f"r[{a:.3f}-{b:.3f}]" for a, b in r_stats)
+    + f", {len(payload['shapes'])} shapes, {len(payload['diamonds'])} diamonds, "
+    f"tip {np.degrees(tip_ang):.1f}°"
 )
