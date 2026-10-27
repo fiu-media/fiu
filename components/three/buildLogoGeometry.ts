@@ -20,7 +20,11 @@ export type LogoPaths = {
     bevelSize: number;
     bevelSegments: number;
   };
-  shapes?: { outer: number[][]; holes: number[][][] }[];
+  /**
+   * Silhouettes are pre-inset by their own `bevel` (three pushes the side walls outward by
+   * bevelSize), so the extruded outline lands exactly on the white.png artwork.
+   */
+  shapes?: { outer: number[][]; holes: number[][][]; bevel?: number }[];
   diamonds: { corners: number[][]; depth: number; bevel: number }[];
   /** Sheared f-tip cut: edge angle in logo plane (y-up). Flat tube caps use this. */
   tipCut?: { angle: number; side: number };
@@ -285,7 +289,8 @@ function forMerge(g: THREE.BufferGeometry): THREE.BufferGeometry {
 function buildDiamonds(diamonds: LogoPaths["diamonds"]): THREE.BufferGeometry[] {
   return diamonds.map((d) => {
     const shape = shapeFromRing(d.corners);
-    // Hard faceted chamfer (bevelSegments: 1) like the liquid-glass gems.
+    // Hard faceted chamfer (bevelSegments: 1) like the liquid-glass gems. Corners are
+    // pre-inset by `bevel`, so the outer silhouette is the white.png dot.
     const g = new THREE.ExtrudeGeometry(shape, {
       depth: d.depth,
       bevelEnabled: true,
@@ -305,7 +310,7 @@ function buildExtrudedBody(paths: LogoPaths): THREE.BufferGeometry[] {
   const shapes = paths.shapes;
   if (!extrude || !shapes?.length) throw new Error("paths JSON missing extrude shapes");
 
-  const { depth, bevelThickness, bevelSize, bevelSegments } = extrude;
+  const { depth, bevelSegments } = extrude;
   const parts: THREE.BufferGeometry[] = [];
 
   for (const s of shapes) {
@@ -319,11 +324,13 @@ function buildExtrudedBody(paths: LogoPaths): THREE.BufferGeometry[] {
       shape.holes.push(h);
     }
     // High bevelSegments → smooth fillet (pillow edge); diamonds keep a harder chamfer.
+    // The shape was inset by exactly this bevel, so the walls land back on the artwork.
+    const bevel = s.bevel ?? extrude.bevelSize;
     const g = new THREE.ExtrudeGeometry(shape, {
       depth,
       bevelEnabled: true,
-      bevelThickness,
-      bevelSize,
+      bevelThickness: bevel,
+      bevelSize: bevel,
       bevelSegments,
       curveSegments: 4,
     });
