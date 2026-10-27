@@ -9,6 +9,8 @@ export type LogoStroke = {
   closed?: boolean;
   /** End treatments — `point` already tapers to ~0 in the radius data. */
   caps?: ("flat" | "point")[];
+  /** Per-end angle of each flat cut in the logo plane (y-up), measured from the artwork. */
+  cuts?: (number | null)[];
 };
 
 export type LogoPaths = {
@@ -186,13 +188,13 @@ function variableRadiusTube(stroke: LogoStroke, tipCutAngle?: number): THREE.Buf
 
   const caps = stroke.caps ?? ["flat", "flat"];
   // Oblique tip slices: ring + cap share the artwork tip-cut plane (// diamond sides).
+  const startAngle = stroke.cuts?.[0] ?? tipCutAngle;
+  const endAngle = stroke.cuts?.[1] ?? tipCutAngle;
   const startCut =
-    !closed && caps[0] === "flat" && tipCutAngle != null
-      ? tipCutNormal(tipCutAngle, tangents[0])
-      : null;
+    !closed && caps[0] === "flat" && startAngle != null ? tipCutNormal(startAngle, tangents[0]) : null;
   const endCut =
-    !closed && caps[caps.length - 1] === "flat" && tipCutAngle != null
-      ? tipCutNormal(tipCutAngle, tangents[n - 1])
+    !closed && caps[caps.length - 1] === "flat" && endAngle != null
+      ? tipCutNormal(endAngle, tangents[n - 1])
       : null;
   if (startCut) rewriteRing(positions, ringIndex[0], origins[0], radii[0], startCut, binormals[0]);
   if (endCut) rewriteRing(positions, ringIndex[n - 1], origins[n - 1], radii[n - 1], endCut, binormals[n - 1]);

@@ -253,6 +253,25 @@ def simplify_ring(ring_px, tol_px=0.4 * UP):
     return simp[:-1]
 
 
+def densify_ring(ring_px, spacing_px=4.0, corner_tol_px=0.4):
+    """Even vertex spacing along curves, keeping every corner/tip vertex.
+
+    Douglas-Peucker leaves ~15px chords on gentle arcs; the bevel shading then reads as
+    faceted. This keeps DP's vertices (so tips stay exact) and fills in dense-contour points
+    so no edge is longer than `spacing_px`.
+    """
+    corners = {tuple(v) for v in simplify_ring(ring_px, corner_tol_px * UP)}
+    out, run = [], 0.0
+    n = len(ring_px)
+    for i in range(n):
+        p = ring_px[i]
+        run += float(np.linalg.norm(p - ring_px[i - 1])) if out else 0.0
+        if tuple(p) in corners or run >= spacing_px * UP:
+            out.append(p)
+            run = 0.0
+    return np.array(out)
+
+
 def nest_rings(rings_world):
     """Group rings into [(outer, [holes])] by containment depth."""
     order = sorted(range(len(rings_world)), key=lambda i: -shoelace(rings_world[i]))
@@ -347,27 +366,32 @@ for p in body_props:
     def build_rings(d):
         d_px = d / S * UP
         rings, tips_world, sags = [], [], []
+        n_found = 0
         for c in find_contours(sdf, d_px):
             if len(c) < 12 * UP:
                 continue
+            n_found += 1
             ring, tips = fix_sharp_tips(c[:, ::-1], d_px, sdf)
-            ring = simplify_ring(ring)
+            ring = densify_ring(ring)
             w = big_to_world(ring, off)
             if shoelace(w) > 1e-4:
                 rings.append(w)
             for apex, dist, sag in tips:
                 tips_world.append([*big_to_world(apex[None], off)[0], dist / UP * S + 2 * d])
                 sags.append(sag)
-        return rings, tips_world, sags
+        return rings, tips_world, sags, n_found
 
     # Curved needles are approximated by a straight chord; shrink the bevel (and with it the
     # needle section the chord has to cover) until the chord stays within SAG_MAX px of the art.
     SAG_MAX = 1.5
+    # The bevel must also keep the shape in one piece: a thin neck can detach a tip as an island
+    # at some bevels (and not at larger or smaller ones), which shows as a notch.
     while True:
-        rings, tips_world, sags = build_rings(d)
-        if not sags or max(sags) <= SAG_MAX or d <= 0.025:
+        rings, tips_world, sags, n_found = build_rings(d)
+        ok = n_found == n_ref and (not sags or max(sags) <= SAG_MAX)
+        if ok or d <= 0.02:
             break
-        d = max(d * 0.85, 0.025)
+        d = max(d * 0.92, 0.02)
     print(f"shape label={p.label} area={p.area:.0f} bevel={d:.3f} tip sag px={[round(x, 1) for x in sags]}")
     # True white outline (sdf = 0) near each tip, for the TS depth taper.
     outline = []
@@ -458,7 +482,11 @@ for si, s in enumerate(strokes["strokes"]):
 
 
 def extend_end(pts, si, at_end, cap):
-    """Return pts with the chosen end extended to the white silhouette (raw world frame)."""
+    """Extend the chosen end to the white silhouette (raw world frame).
+
+    Returns (pts, cut_angle): for flat ends, `cut_angle` is the y-up angle of that end's own
+    cut edge measured from white.png (None for point ends / when it can't be measured).
+    """
     pts = [list(map(float, q)) for q in pts]
     i_end, i_prev = (-1, -4) if at_end else (0, 3)
     p = np.array(pts[i_end][:2])
@@ -472,9 +500,23 @@ def extend_end(pts, si, at_end, cap):
     perp = np.abs(rel @ np.array([-tpx[1], tpx[0]]))
     near = (along > 0) & (along < 60) & (perp < 3.0)
     if not near.any():
-        return pts
+        return pts, None
     over = float(along[near].max()) * S
     r_end = float(pts[i_end][2])
+    cut = None
+    if cap != "point":
+        # Fit the end's cut edge: furthest-along ink per perpendicular px column.
+        perp_s = rel @ np.array([-tpx[1], tpx[0]])
+        win = (along > 0) & (along < 60) & (np.abs(perp_s) <= 0.7 * r_end / S)
+        cols = {}
+        for a_, p_ in zip(along[win], np.round(perp_s[win]).astype(int)):
+            cols[p_] = max(cols.get(p_, -1e9), a_)
+        if len(cols) >= 6:
+            xs_, ys_ = np.array(sorted(cols)), np.array([cols[k] for k in sorted(cols)])
+            m_, a0_ = np.polyfit(xs_, ys_, 1)
+            over = float(a0_) * S
+            v = np.array([-tpx[1], tpx[0]]) + m_ * tpx  # cut edge direction, px (y down)
+            cut = float(np.arctan2(-v[1], v[0]))
     if cap == "point":
         hw = float(dist_px[int(round(pxy[1])), int(round(pxy[0]))]) * S
         r_old, r_new = max(r_end, hw), 0.0001
@@ -486,26 +528,30 @@ def extend_end(pts, si, at_end, cap):
          r_old + (r_new - r_old) * k / steps]
         for k in range(1, steps + 1)
     ]
-    print(f"    stroke{si} {'end' if at_end else 'start'} ({cap}) extended {over / S:.1f}px")
+    cut_s = "" if cut is None else f", cut {np.degrees(cut):.0f}°"
+    print(f"    stroke{si} {'end' if at_end else 'start'} ({cap}) extended {over / S:.1f}px{cut_s}")
     if at_end:
         pts[-1][2] = r_old
-        return pts + ext
+        return pts + ext, cut
     pts[0][2] = r_old
-    return ext[::-1] + pts
+    return ext[::-1] + pts, cut
 
 
 stroke_payload = []
 for si, s in enumerate(strokes["strokes"]):
     caps = list(s.get("caps", ["flat", "flat"]))
     pts = s["points"]
+    cuts = [None, None]
     if not s.get("closed", False):
-        pts = extend_end(pts, si, False, caps[0])
-        pts = extend_end(pts, si, True, caps[-1])
+        pts, cuts[0] = extend_end(pts, si, False, caps[0])
+        pts, cuts[1] = extend_end(pts, si, True, caps[-1])
     stroke_payload.append(
         {
             "points": [[round(float(x - cx), 4), round(float(y - cy), 4), round(float(r), 4)] for x, y, r in pts],
             "closed": bool(s.get("closed", False)),
             "caps": caps,
+            # Per-end flat-cut angle (y-up, radians) measured from white.png.
+            "cuts": [None if c is None else round(c, 4) for c in cuts],
         }
     )
 
