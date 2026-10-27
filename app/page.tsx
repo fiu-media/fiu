@@ -18,7 +18,7 @@ const stills = [candle, flowers, jackets];
 export default function Home() {
   return (
     <main data-surface="cinematic" className="relative isolate h-dvh overflow-hidden bg-ink">
-      <h1 className="sr-only">Fíu Media</h1>
+      <h1 className="sr-only">Fiú Media</h1>
       <HomeHero stills={stills} />
       <div className="relative z-10 flex justify-center p-4 md:absolute md:top-6 md:right-6 md:p-0">
         <GlassNav items={nav} onImage />
