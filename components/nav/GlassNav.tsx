@@ -13,11 +13,14 @@ export type NavItem = { href: string; label: string };
  */
 export function GlassNav({
   items,
+  label,
   onImage,
   className,
   current,
 }: {
   items: NavItem[];
+  /** Accessible name for the landmark (localised). */
+  label: string;
   onImage?: boolean;
   className?: string;
   /** Override the active item (defaults to matching the current pathname). */
@@ -28,7 +31,7 @@ export function GlassNav({
 
   return (
     <nav
-      aria-label="Primary"
+      aria-label={label}
       className={["flex flex-wrap items-center justify-center gap-1.5 md:gap-2", onImage && "glass-on-image", className]
         .filter(Boolean)
         .join(" ")}

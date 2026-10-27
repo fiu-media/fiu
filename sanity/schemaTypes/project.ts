@@ -1,5 +1,5 @@
 import { defineArrayMember, defineField, defineType } from "sanity";
-import { imageArrayMember, imageWithAlt, orderField, slugField, vimeoUrlField } from "./fields";
+import { imageArrayMember, imageWithAlt, languageField, orderField, slugField, vimeoUrlField } from "./fields";
 
 export const projectTypes = ["Original", "Commercial", "Music Video", "Short", "Documentary"] as const;
 
@@ -8,6 +8,7 @@ export const project = defineType({
   title: "Project",
   type: "document",
   fields: [
+    languageField,
     defineField({ name: "title", type: "string", validation: (rule) => rule.required() }),
     slugField("title"),
     defineField({

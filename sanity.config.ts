@@ -1,10 +1,12 @@
 "use client";
 
+import { documentInternationalization } from "@sanity/document-internationalization";
 import { visionTool } from "@sanity/vision";
 import { defineConfig } from "sanity";
 import { presentationTool } from "sanity/presentation";
 import { structureTool } from "sanity/structure";
 import { apiVersion, dataset, projectId } from "./sanity/env";
+import { languages, translatedTypes } from "./sanity/languages";
 import { resolve } from "./sanity/presentation/resolve";
 import { schemaTypes } from "./sanity/schemaTypes";
 import { hiddenTemplates, singletonActions, structure } from "./sanity/structure";
@@ -27,6 +29,11 @@ export default defineConfig({
     presentationTool({
       resolve,
       previewUrl: { draftMode: { enable: "/api/draft-mode/enable" } },
+    }),
+    documentInternationalization({
+      supportedLanguages: languages,
+      schemaTypes: translatedTypes,
+      languageField: "language",
     }),
     visionTool({ defaultApiVersion: apiVersion }),
   ],
