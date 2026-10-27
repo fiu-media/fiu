@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { Component, useCallback, useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
-import logo from "@/public/brand/fiu-logo.png";
+import logo from "@/public/brand/fiu-logo.svg";
 import type { HeroStill } from "@/sanity/lib/stills";
 import { isSplashDismissed, Splash } from "./Splash";
 
@@ -15,11 +15,11 @@ const SPLASH_MIN_MS = 800;
 /** Never hold the splash longer than this, even if the live scene never reports ready. */
 const SPLASH_MAX_MS = 6000;
 /**
- * After the splash starts to lift, the glass logo fades in over the PNG logo (700 ms) and the PNG
- * fades out alongside it (Splash.tsx, 700 ms). The spin waits for that, so the PNG is never seen sitting
- * under a spinning glass logo.
+ * The splash fades as one (backdrop + SVG logo) over 500 ms while the glass logo fades in on top
+ * over the same time. The spin waits for that to finish, so the SVG is never seen sitting under a
+ * spinning glass logo.
  */
-const SPIN_DELAY_MS = 800;
+const SPIN_DELAY_MS = 500;
 
 type Mode = "pending" | "live" | "static";
 
@@ -68,7 +68,7 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
   const [spinGo, setSpinGo] = useState(isSplashDismissed);
   const onSplashGone = useCallback(() => setSplashGone(true), []);
   const splashDone = timedOut || (minElapsed && (mode === "live" ? sceneReady : mode === "static"));
-  // The static PNG logo starts centred under the splash, then glides left on desktop.
+  // The static SVG logo starts centred under the splash, then glides left on desktop.
   const logoAtLeft = mode === "static" && splashDone;
 
   useEffect(() => {
@@ -107,7 +107,7 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
   return (
     <>
       {/* Outside the -z-10 hero so it stacks above the nav as well. */}
-      <Splash done={splashDone} swapLogo={mode !== "static"} onGone={onSplashGone} />
+      <Splash done={splashDone} onGone={onSplashGone} />
       <div className="absolute inset-0 -z-10">
         {stills.map((still, i) => (
           <Image
@@ -126,7 +126,7 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
           />
         ))}
 
-        {/* PNG logo: shown on the server render, while the live scene loads, and as the
+        {/* SVG logo: shown on the server render, while the live scene loads, and as the
             fallback. The live logo starts its spin from this same centred, front-facing pose,
             then glides to the left on desktop (-25vw = from 50vw to 4vw + half of 42vw). */}
         <div
@@ -148,11 +148,11 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
       {mode === "live" && (
         <SceneBoundary onError={onFail}>
           {/* Lifted above the splash while it fades, then dropped back under the nav. Hidden until the
-              fade starts, then cross-faded in over the PNG logo, which fades out underneath. */}
+              fade starts, then cross-faded in over the SVG logo, which fades out underneath. */}
           <div
             aria-hidden
             className={`inset-0 ${
-              splashGone ? "absolute -z-10" : "pointer-events-none fixed z-30 transition-opacity duration-700 ease-out"
+              splashGone ? "absolute -z-10" : "pointer-events-none fixed z-30 transition-opacity duration-500 ease-out"
             }`}
             style={{ opacity: sceneReady && splashDone ? 1 : 0 }}
           >
@@ -173,15 +173,15 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
   );
 }
 
-/** If the 3D scene throws (model or texture failed, context lost), fall back to the PNG. */
+/** If the 3D scene throws (model or texture failed, context lost), fall back to the SVG logo. */
 class SceneBoundary extends Component<{ onError: () => void; children: ReactNode }, { failed: boolean }> {
   state = { failed: false };
   static getDerivedStateFromError() {
     return { failed: true };
   }
   componentDidCatch(error: unknown) {
-    // The PNG fallback hides the failure visually, so leave a trace for debugging.
-    console.error("[HomeHero] live logo failed, showing PNG fallback:", error);
+    // The SVG fallback hides the failure visually, so leave a trace for debugging.
+    console.error("[HomeHero] live logo failed, showing SVG fallback:", error);
     this.props.onError();
   }
   render() {

@@ -1,5 +1,5 @@
 import { defineArrayMember, defineField, defineType } from "sanity";
-import { imageArrayMember, orderField, slugField } from "./fields";
+import { imageArrayMember, languageField, orderField, slugField } from "./fields";
 
 // Rentals are quote-only, so there are deliberately no price fields.
 export const rentalCategory = defineType({
@@ -7,6 +7,7 @@ export const rentalCategory = defineType({
   title: "Rental category",
   type: "document",
   fields: [
+    languageField,
     defineField({ name: "title", type: "string", validation: (rule) => rule.required() }),
     slugField("title"),
     orderField,
@@ -20,6 +21,7 @@ export const rentalItem = defineType({
   title: "Rental item",
   type: "document",
   fields: [
+    languageField,
     defineField({ name: "name", type: "string", validation: (rule) => rule.required() }),
     slugField("name"),
     defineField({

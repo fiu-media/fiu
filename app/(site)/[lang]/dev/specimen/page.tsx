@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
 import Image, { type StaticImageData } from "next/image";
-import { GlassNav } from "@/components/nav/GlassNav";
+import { notFound } from "next/navigation";
+import { GlassNav, type NavItem } from "@/components/nav/GlassNav";
 import { GlassPanel, GlassPillButton } from "@/components/ui/Glass";
-import logo from "@/public/brand/fiu-logo.png";
+import { isLocale } from "@/lib/i18n/config";
+import { getDictionary } from "@/lib/i18n/dictionaries";
+import { getNavItems } from "@/lib/i18n/nav";
+import logo from "@/public/brand/fiu-logo.svg";
 import banquet from "@/public/stills/banquet.jpg";
 import bouquet from "@/public/stills/bouquet.jpg";
 import citrus from "@/public/stills/citrus.jpg";
@@ -22,13 +26,6 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-const nav = [
-  { href: "/about", label: "About Us" },
-  { href: "/work", label: "Our Work" },
-  { href: "/talent", label: "Talent" },
-  { href: "/rentals", label: "Rentals" },
-  { href: "/contact", label: "Contact" },
-];
 const stills: StaticImageData[] = [
   conservatory,
   banquet,
@@ -49,7 +46,10 @@ const projects = [
   { title: "Last Orders", meta: "Commercial · 2025", credit: "Client: Sample Brand" },
 ];
 
-export default function SpecimenPage() {
+export default async function SpecimenPage({ params }: PageProps<"/[lang]/dev/specimen">) {
+  const { lang } = await params;
+  if (!isLocale(lang)) notFound();
+  const dict = await getDictionary(lang);
   return (
     <main data-surface="adaptive" className="min-h-dvh bg-bg text-fg">
       <header className="sticky top-0 z-20 border-b border-line bg-bg/80 backdrop-blur-xl">
@@ -60,13 +60,13 @@ export default function SpecimenPage() {
       </header>
 
       <div className="mx-auto max-w-7xl px-6 py-16">
-        <Specimen still={stills[0]} />
+        <Specimen still={stills[0]} nav={getNavItems(lang, dict)} navLabel={dict.nav.label} />
       </div>
     </main>
   );
 }
 
-function Specimen({ still }: { still: StaticImageData }) {
+function Specimen({ still, nav, navLabel }: { still: StaticImageData; nav: NavItem[]; navLabel: string }) {
   const display = "font-display";
   const accent = "italic";
 
@@ -92,7 +92,7 @@ function Specimen({ still }: { still: StaticImageData }) {
       >
         <Image src={still} alt="" fill placeholder="blur" sizes="(min-width: 1280px) 1232px, 100vw" className="-z-10 object-cover" />
         <div className="absolute top-5 right-5 hidden sm:block">
-          <GlassNav items={nav} onImage current="/work" />
+          <GlassNav items={nav} label={navLabel} onImage current="/work" />
         </div>
         <Image
           src={logo}

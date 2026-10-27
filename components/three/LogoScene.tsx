@@ -23,6 +23,12 @@ export type { LogoRimLook, LogoGlassParams } from "./logoConfig";
 export type { LogoPerfStats } from "./logoPerf";
 
 const BACKDROP_Z = -4;
+// A distant, narrow camera keeps the slab's front face from projecting wider than its back, so the
+// front-facing glass logo matches the flat SVG logo's outline (at 12 it overlapped the artwork by
+// 82%, at 48 by 93%). The fov is chosen so the view at z = 0 is the same size as the old fov-30
+// camera at z = 12, i.e. everything else keeps its size.
+const CAMERA_Z = 48;
+const CAMERA_FOV = (2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(15)) * (12 / CAMERA_Z)) * 180) / Math.PI;
 const CROSSFADE_SECONDS = 1.6;
 const SAMPLE_SIZE = 32;
 const NEUTRAL_TINT = new THREE.Color("#c8c4c0");
@@ -32,11 +38,10 @@ const NEUTRAL_TINT = new THREE.Color("#c8c4c0");
  * a plain 1.0 down to light grey.
  */
 const SPLASH_WHITE = 1.5;
-// The refracted field starts changing this long after the splash begins to lift, and takes this
-// long to become the photo. It needs to finish before the splash backdrop (300 ms delay, 1 s fade)
-// has cleared, or the glass is still white and reads as opaque when the still shows through.
-const REVEAL_DELAY = 0.35;
-const REVEAL_SECONDS = 0.8;
+// The refracted field goes white → photo over exactly the splash fade (500 ms, ease-out, same
+// curve as the CSS), so the glass clears as the splash lifts; a slower curve left a white glass
+// logo hanging around after the backdrop had gone.
+const REVEAL_SECONDS = 0.5;
 
 export type SceneStill = {
   src: string;
@@ -96,7 +101,7 @@ export default function LogoScene({
     <Canvas
       frameloop={measurePerf ? "always" : "demand"}
       dpr={dpr}
-      camera={{ position: [0, 0, 12], fov: 30 }}
+      camera={{ position: [0, 0, CAMERA_Z], fov: CAMERA_FOV }}
       gl={{
         alpha: true,
         antialias: true,
@@ -561,8 +566,8 @@ function Backdrop({
       reveal = 0;
     } else if (splashLift) {
       revealStart.current ??= performance.now();
-      const k = (performance.now() - revealStart.current) / 1000;
-      reveal = THREE.MathUtils.smoothstep(k, REVEAL_DELAY, REVEAL_DELAY + REVEAL_SECONDS);
+      const k = THREE.MathUtils.clamp((performance.now() - revealStart.current) / 1000 / REVEAL_SECONDS, 0, 1);
+      reveal = 1 - (1 - k) * (1 - k);
     }
     u.reveal.value = reveal;
   });
@@ -888,9 +893,19 @@ function Logo({
 
   useEffect(() => () => geometry.dispose(), [geometry]);
 
+  // Width of the silhouette as the camera sees it, front-facing: the front of the slab sits nearer
+  // the camera than z = 0, so its edges project slightly wider than the bounding box. Sizing by this
+  // makes the glass logo the width of the flat SVG logo it replaces.
   const modelWidth = useMemo(() => {
-    const box = geometry.boundingBox!;
-    return box.max.x - box.min.x;
+    const pos = geometry.getAttribute("position");
+    let min = Infinity;
+    let max = -Infinity;
+    for (let i = 0; i < pos.count; i++) {
+      const x = (pos.getX(i) * CAMERA_Z) / (CAMERA_Z - pos.getZ(i));
+      if (x < min) min = x;
+      if (x > max) max = x;
+    }
+    return max - min;
   }, [geometry]);
 
   // Mirror the static layout: 42vw from 4vw on desktop, centred at up to 80vw on mobile.
