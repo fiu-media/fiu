@@ -20,6 +20,12 @@ const SPLASH_MAX_MS = 6000;
  * spinning glass logo.
  */
 const SPIN_DELAY_MS = 500;
+/**
+ * From the splash lifting until the spin and glide have settled (500 ms + ~2.2 s spin, plus the
+ * spring tail). The layout/stacking swap and still rotation wait for this: doing either mid-spin
+ * costs a layer re-composite and extra WebGL work on the frames that matter most.
+ */
+const INTRO_SETTLE_MS = 4000;
 
 type Mode = "pending" | "live" | "static";
 
@@ -64,9 +70,8 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
 
   const [minElapsed, setMinElapsed] = useState(isSplashDismissed);
   const [timedOut, setTimedOut] = useState(isSplashDismissed);
-  const [splashGone, setSplashGone] = useState(isSplashDismissed);
   const [spinGo, setSpinGo] = useState(isSplashDismissed);
-  const onSplashGone = useCallback(() => setSplashGone(true), []);
+  const [introDone, setIntroDone] = useState(isSplashDismissed);
   const splashDone = timedOut || (minElapsed && (mode === "live" ? sceneReady : mode === "static"));
   // The static SVG logo starts centred under the splash, then glides left on desktop.
   const logoAtLeft = mode === "static" && splashDone;
@@ -82,14 +87,21 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
 
   useEffect(() => {
     if (!splashDone) return;
-    const id = window.setTimeout(() => setSpinGo(true), SPIN_DELAY_MS);
-    return () => window.clearTimeout(id);
+    const spin = window.setTimeout(() => setSpinGo(true), SPIN_DELAY_MS);
+    const settled = window.setTimeout(() => setIntroDone(true), INTRO_SETTLE_MS);
+    return () => {
+      window.clearTimeout(spin);
+      window.clearTimeout(settled);
+    };
   }, [splashDone]);
 
+  // Held until the intro is over so a still crossfade (and its extra rendering) never lands
+  // mid-spin.
   useEffect(() => {
+    if (!introDone) return;
     const id = window.setInterval(() => setIndex((i) => (i + 1) % stills.length), ROTATE_SECONDS * 1000);
     return () => window.clearInterval(id);
-  }, [stills.length]);
+  }, [introDone, stills.length]);
 
   const onReady = useCallback(() => setSceneReady(true), []);
   const onFail = useCallback(() => setFailed(true), []);
@@ -107,7 +119,7 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
   return (
     <>
       {/* Outside the -z-10 hero so it stacks above the nav as well. */}
-      <Splash done={splashDone} onGone={onSplashGone} />
+      <Splash done={splashDone} />
       <div className="absolute inset-0 -z-10">
         {stills.map((still, i) => (
           <Image
@@ -147,12 +159,12 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
 
       {mode === "live" && (
         <SceneBoundary onError={onFail}>
-          {/* Lifted above the splash while it fades, then dropped back under the nav. Hidden until the
+          {/* Lifted above the splash while it fades, then dropped back under the nav once the intro has settled. Hidden until the
               fade starts, then cross-faded in over the SVG logo, which fades out underneath. */}
           <div
             aria-hidden
             className={`inset-0 ${
-              splashGone ? "absolute -z-10" : "pointer-events-none fixed z-30 transition-opacity duration-500 ease-out"
+              introDone ? "absolute -z-10" : "pointer-events-none fixed z-30 transition-opacity duration-500 ease-out will-change-[opacity]"
             }`}
             style={{ opacity: sceneReady && splashDone ? 1 : 0 }}
           >

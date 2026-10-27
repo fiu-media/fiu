@@ -270,10 +270,13 @@ function Scene({
     [stills, textures],
   );
 
-  // Cover intro spin + first settle so env streaks track the logo.
+  // Cover intro spin + first settle so env streaks track the logo. The hero intro skips this: the
+  // live env bake is the heaviest per-frame cost (freezing it took the intro from ~28 to ~42 fps in
+  // a software-GL test), and the pose returns to rest, where the frozen env is already correct, so
+  // the spin loses only the lagging highlight crawl. Logo drives its own frames until INTRO_END.
   useEffect(() => {
-    keepAwake(INTRO_END + 1);
-  }, [keepAwake]);
+    if (!introSlide) keepAwake(INTRO_END + 1);
+  }, [keepAwake, introSlide]);
 
   useEffect(() => {
     const f = fade.current;
@@ -858,6 +861,7 @@ function Logo({
     velY: 0,
   });
   const intro = useRef({ frames: 0, time: 0 });
+  const introStats = useRef({ frames: 0, ms: 0, worst: 0, logged: false });
   const invalidate = useThree((s) => s.invalidate);
   const glow = useMemo(() => new THREE.Color(), []);
   const localPoint = useMemo(() => new THREE.Vector3(), []);
@@ -1010,6 +1014,23 @@ function Logo({
     if (a.frames > WARMUP_FRAMES && !introHold) a.time += Math.min(delta, 1 / 30);
     if (a.time < INTRO_END) invalidate();
     const t = a.time;
+
+    // Dev only: how smooth the hero intro really is on this machine (GPU cost can't be seen in a
+    // CPU profile). Logged once, when the intro ends.
+    if (process.env.NODE_ENV !== "production" && introSlide && a.frames > WARMUP_FRAMES && !introHold) {
+      const st = introStats.current;
+      if (t < INTRO_END) {
+        st.frames++;
+        st.ms += delta * 1000;
+        st.worst = Math.max(st.worst, delta * 1000);
+      } else if (!st.logged && st.frames > 0) {
+        st.logged = true;
+        console.info(
+          `[logo intro] ${st.frames} frames over ${(st.ms / 1000).toFixed(2)}s: ` +
+            `${((st.frames * 1000) / st.ms).toFixed(0)} fps avg, worst frame ${st.worst.toFixed(0)} ms`,
+        );
+      }
+    }
 
     // Start centred and glide to the resting x; `x` is read fresh so resizes stay correct.
     const slide = introSlide ? slideAt(t) : 1;

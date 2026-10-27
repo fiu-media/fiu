@@ -7,7 +7,8 @@ import logo from "@/public/brand/fiu-logo.svg";
 // The whole splash (backdrop and logo) fades as one. Keep in sync with FADE_CLASSES below, the
 // glass logo's fade-in in HomeHero, and the spin delay there.
 const FADE_MS = 500;
-const FADE_CLASSES = "motion-safe:transition-opacity motion-safe:duration-500 motion-safe:ease-out";
+// will-change promotes the layer before the fade starts, so the first frame of it isn't a hitch.
+const FADE_CLASSES = "will-change-[opacity] motion-safe:transition-opacity motion-safe:duration-500 motion-safe:ease-out";
 
 // Once per page load: if the hero remounts (Suspense swap, client navigation back to `/`),
 // the splash must not replay.
@@ -22,7 +23,7 @@ export function isSplashDismissed() {
  * JS runs, and holds the SVG logo at the exact size and centre the live logo starts its spin
  * from — fading out is the handoff.
  */
-export function Splash({ done, onGone }: { done: boolean; onGone?: () => void }) {
+export function Splash({ done }: { done: boolean }) {
   const [gone, setGone] = useState(dismissed);
 
   useEffect(() => {
@@ -30,10 +31,9 @@ export function Splash({ done, onGone }: { done: boolean; onGone?: () => void })
     const id = window.setTimeout(() => {
       dismissed = true;
       setGone(true);
-      onGone?.();
     }, FADE_MS);
     return () => window.clearTimeout(id);
-  }, [done, onGone]);
+  }, [done]);
 
   if (gone) return null;
 
