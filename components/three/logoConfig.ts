@@ -96,8 +96,20 @@ export type LogoGlassParams = {
   lights: LogoLightsConfig;
 };
 
-const INTERACTION_DEFAULTS = {
-  backside: true,
+export type LogoInteractionParams = {
+  dragPitchMax: number;
+  dragSensitivity: number;
+  hoverTiltX: number;
+  hoverTiltY: number;
+  hoverLerp: number;
+  dragFriction: number;
+  dragSpring: number;
+  dragSpringDamp: number;
+  dragSpringPitch: number;
+  dragSpringPitchDamp: number;
+};
+
+const INTERACTION_DEFAULTS: LogoInteractionParams = {
   dragPitchMax: 0.4,
   dragSensitivity: 0.005,
   hoverTiltX: 0.12,
@@ -108,7 +120,9 @@ const INTERACTION_DEFAULTS = {
   dragSpringDamp: 4.2,
   dragSpringPitch: 72,
   dragSpringPitchDamp: 5.2,
-} as const;
+};
+
+const INTERACTION_KEYS = Object.keys(INTERACTION_DEFAULTS) as (keyof LogoInteractionParams)[];
 
 export type LogoPlaygroundConfig = {
   version: 1;
@@ -447,6 +461,7 @@ const LIGHT_PARAMS: LogoGlassParams = {
   glowLMin: 0.52,
   glowLMax: 0.8,
   extrude: { depth: 0.16, bevelThickness: 0.12, bevelSize: 0.12 },
+  backside: true,
   ...INTERACTION_DEFAULTS,
   lights: lightsFor("light"),
 };
@@ -473,6 +488,7 @@ const DARK_PARAMS: LogoGlassParams = {
   glowLMin: 0.4,
   glowLMax: 0.72,
   extrude: null,
+  backside: true,
   ...INTERACTION_DEFAULTS,
   lights: lightsFor("dark"),
 };
@@ -510,8 +526,9 @@ export function presetConfig(rimLook: LogoRimLook, meshMode: LogoMeshMode = "ext
 const CONFIG_FENCE = "fiu-logo-config";
 const MATERIAL_FENCE = "fiu-logo-material";
 const LIGHTING_FENCE = "fiu-logo-lighting";
+const INTERACTION_FENCE = "fiu-logo-interaction";
 
-export type LogoMaterialParams = Omit<LogoGlassParams, "lights">;
+export type LogoMaterialParams = Omit<LogoGlassParams, "lights" | keyof LogoInteractionParams>;
 
 export type LogoMaterialConfigExport = {
   version: 1;
@@ -528,33 +545,73 @@ export type LogoLightingConfigExport = {
   lights: LogoLightsConfig;
 };
 
+export type LogoInteractionConfigExport = {
+  version: 1;
+  section: "interaction";
+  rimLook: LogoRimLook;
+  params: LogoInteractionParams;
+};
+
 function fence(lang: string, value: unknown): string {
   return [`\`\`\`${lang}`, JSON.stringify(value, null, 2), "```"].join("\n");
 }
 
-/** Material / glow / extrude / drag — everything except lights. */
+function omitInteraction<T extends Record<string, unknown>>(params: T): Omit<T, keyof LogoInteractionParams> {
+  const next = { ...params };
+  for (const key of INTERACTION_KEYS) delete next[key];
+  return next;
+}
+
+/** Material / glow / extrude — everything except lights and interaction. */
 export function pickMaterialParams(params: LogoGlassParams): LogoMaterialParams {
   const { lights: _lights, ...rest } = params;
+  const material = omitInteraction(rest);
   return {
-    ...rest,
-    extrude: rest.extrude ? { ...rest.extrude } : null,
+    ...material,
+    extrude: material.extrude ? { ...material.extrude } : null,
   };
 }
 
-/** Reset material fields from the rim preset; keep current lights. */
+export function pickInteractionParams(params: LogoGlassParams): LogoInteractionParams {
+  return {
+    dragPitchMax: params.dragPitchMax,
+    dragSensitivity: params.dragSensitivity,
+    hoverTiltX: params.hoverTiltX,
+    hoverTiltY: params.hoverTiltY,
+    hoverLerp: params.hoverLerp,
+    dragFriction: params.dragFriction,
+    dragSpring: params.dragSpring,
+    dragSpringDamp: params.dragSpringDamp,
+    dragSpringPitch: params.dragSpringPitch,
+    dragSpringPitchDamp: params.dragSpringPitchDamp,
+  };
+}
+
+/** Reset material fields from the rim preset; keep lights + interaction. */
 export function resetMaterialParams(params: LogoGlassParams, rimLook: LogoRimLook): LogoGlassParams {
   return {
     ...pickMaterialParams(LOGO_PARAM_PRESETS[rimLook]),
+    ...pickInteractionParams(params),
     lights: cloneLights(params.lights),
   };
 }
 
-/** Reset lights from the rim preset; keep current material fields. */
+/** Reset lights from the rim preset; keep material + interaction. */
 export function resetLightingParams(params: LogoGlassParams, rimLook: LogoRimLook): LogoGlassParams {
   return {
     ...params,
     extrude: params.extrude ? { ...params.extrude } : null,
     lights: cloneLights(LOGO_PARAM_PRESETS[rimLook].lights),
+  };
+}
+
+/** Reset interaction fields from the rim preset; keep material + lights. */
+export function resetInteractionParams(params: LogoGlassParams, rimLook: LogoRimLook): LogoGlassParams {
+  return {
+    ...params,
+    extrude: params.extrude ? { ...params.extrude } : null,
+    lights: cloneLights(params.lights),
+    ...pickInteractionParams(LOGO_PARAM_PRESETS[rimLook]),
   };
 }
 
@@ -584,6 +641,16 @@ export function formatLightingConfigExport(config: LogoPlaygroundConfig): string
   return fence(LIGHTING_FENCE, payload);
 }
 
+export function formatInteractionConfigExport(config: LogoPlaygroundConfig): string {
+  const payload: LogoInteractionConfigExport = {
+    version: 1,
+    section: "interaction",
+    rimLook: config.rimLook,
+    params: pickInteractionParams(config.params),
+  };
+  return fence(INTERACTION_FENCE, payload);
+}
+
 /** Fill missing param keys from the rim preset (older playground snapshots). */
 export function coalesceParams(partial: LogoGlassParams, rimLook: LogoRimLook = "light"): LogoGlassParams {
   const base = LOGO_PARAM_PRESETS[rimLook];
@@ -595,15 +662,147 @@ export function coalesceParams(partial: LogoGlassParams, rimLook: LogoRimLook = 
   });
 }
 
+function extractJsonPayload(text: string): { fence: string | null; raw: string } {
+  const fenced = text.match(/```([^\n`]*)\s*([\s\S]*?)```/);
+  if (fenced) return { fence: fenced[1].trim() || null, raw: fenced[2].trim() };
+  return { fence: null, raw: text.trim() };
+}
+
 export function parseConfigExport(text: string): LogoPlaygroundConfig | null {
-  const fenced = text.match(/```(?:fiu-logo-config|json)\s*([\s\S]*?)```/);
-  const raw = (fenced?.[1] ?? text).trim();
+  const { raw } = extractJsonPayload(text);
   try {
     const parsed = JSON.parse(raw) as LogoPlaygroundConfig;
     if (parsed?.version !== 1 || !parsed.params || !parsed.meshMode) return null;
+    // Partial section snapshots are handled by importPlaygroundConfig.
+    if ((parsed as { section?: string }).section) return null;
     parsed.params = coalesceParams(parsed.params, parsed.rimLook ?? "light");
     return parsed;
   } catch {
     return null;
   }
+}
+
+export type LogoImportKind = "full" | "material" | "lighting" | "interaction";
+
+export type LogoImportResult =
+  | { ok: true; kind: LogoImportKind; config: LogoPlaygroundConfig }
+  | { ok: false; error: string };
+
+/**
+ * Apply a copied full or tab-scoped snapshot onto the current playground config.
+ * Partial imports only overwrite their section; full replaces everything.
+ */
+export function importPlaygroundConfig(current: LogoPlaygroundConfig, text: string): LogoImportResult {
+  const { fence, raw } = extractJsonPayload(text);
+  if (!raw) return { ok: false, error: "Paste is empty." };
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return { ok: false, error: "Could not parse JSON." };
+  }
+
+  if (!parsed || typeof parsed !== "object") return { ok: false, error: "Config must be a JSON object." };
+  const obj = parsed as Record<string, unknown>;
+  const section =
+    typeof obj.section === "string"
+      ? obj.section
+      : fence === MATERIAL_FENCE
+        ? "material"
+        : fence === LIGHTING_FENCE
+          ? "lighting"
+          : fence === INTERACTION_FENCE
+            ? "interaction"
+            : fence === CONFIG_FENCE || fence === "json" || !fence
+              ? "full"
+              : null;
+
+  if (section === "material") {
+    const slice = obj as Partial<LogoMaterialConfigExport>;
+    if (!slice.params || typeof slice.params !== "object") {
+      return { ok: false, error: "Material snapshot is missing params." };
+    }
+    const rimLook = (slice.rimLook ?? current.rimLook) as LogoRimLook;
+    const meshMode = (slice.meshMode ?? current.meshMode) as LogoMeshMode;
+    const merged = coalesceParams(
+      {
+        ...pickMaterialParams(current.params),
+        ...(slice.params as LogoMaterialParams),
+        ...pickInteractionParams(current.params),
+        lights: current.params.lights,
+      } as LogoGlassParams,
+      rimLook,
+    );
+    return {
+      ok: true,
+      kind: "material",
+      config: {
+        ...current,
+        version: 1,
+        rimLook,
+        meshMode,
+        display: "live",
+        params: {
+          ...merged,
+          ...pickInteractionParams(current.params),
+          lights: cloneLights(current.params.lights),
+        },
+      },
+    };
+  }
+
+  if (section === "lighting") {
+    const slice = obj as Partial<LogoLightingConfigExport>;
+    if (!slice.lights || typeof slice.lights !== "object") {
+      return { ok: false, error: "Lighting snapshot is missing lights." };
+    }
+    return {
+      ok: true,
+      kind: "lighting",
+      config: {
+        ...current,
+        version: 1,
+        display: "live",
+        params: {
+          ...current.params,
+          extrude: current.params.extrude ? { ...current.params.extrude } : null,
+          lights: cloneLights(slice.lights as LogoLightsConfig),
+        },
+      },
+    };
+  }
+
+  if (section === "interaction") {
+    const slice = obj as Partial<LogoInteractionConfigExport>;
+    if (!slice.params || typeof slice.params !== "object") {
+      return { ok: false, error: "Interaction snapshot is missing params." };
+    }
+    return {
+      ok: true,
+      kind: "interaction",
+      config: {
+        ...current,
+        version: 1,
+        display: "live",
+        params: {
+          ...current.params,
+          extrude: current.params.extrude ? { ...current.params.extrude } : null,
+          lights: cloneLights(current.params.lights),
+          ...pickInteractionParams({
+            ...INTERACTION_DEFAULTS,
+            ...(slice.params as LogoInteractionParams),
+          } as LogoGlassParams),
+        },
+      },
+    };
+  }
+
+  if (section === "full" || (!obj.section && obj.params && obj.meshMode)) {
+    const full = parseConfigExport(raw) ?? parseConfigExport(text);
+    if (!full) return { ok: false, error: "Full snapshot needs version, meshMode, and params." };
+    return { ok: true, kind: "full", config: { ...full, display: full.display ?? "live" } };
+  }
+
+  return { ok: false, error: "Unrecognized config. Use a fiu-logo-config / material / lighting / interaction snapshot." };
 }

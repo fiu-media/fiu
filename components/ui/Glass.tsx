@@ -28,8 +28,8 @@ type PillStyle = {
 
 function pillClass({ size = "md", onImage, className }: Omit<PillStyle, "children">) {
   return [
-    "glass glass-interactive inline-flex items-center justify-center gap-2 rounded-full",
-    "font-semibold tracking-[-0.01em] whitespace-nowrap select-none",
+    "glass glass-interactive inline-flex cursor-pointer items-center justify-center gap-2 rounded-full",
+    "font-semibold tracking-[-0.01em] whitespace-nowrap select-none disabled:cursor-not-allowed",
     sizes[size],
     onImage && "glass-on-image",
     className,
