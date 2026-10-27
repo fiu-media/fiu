@@ -1,6 +1,6 @@
 # Logo pipeline
 
-Rebuilds the Fíu glass logo from the Canva design pack and exports the web assets. The silhouette comes straight from the Canva home mockup's alpha channel. From it the pipeline builds:
+Rebuilds the Fiú glass logo from the Canva design pack and exports the web assets. The silhouette comes straight from the Canva home mockup's alpha channel. From it the pipeline builds:
 - round glass tubes, swept along traced centrelines
 - crossings that weld cleanly (exact boolean union)
 - a round brilliant gem and an emerald-cut baguette, both in the same glass as the strokes
