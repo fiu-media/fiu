@@ -1,14 +1,17 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Fraunces, Manrope } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { InlineScript } from "@/components/InlineScript";
 import "./globals.css";
 
-// Placeholder text face until a pairing is chosen from /dev/specimen.
-const inter = Inter({
+// Type pairing "Expressive": Fraunces for display, Manrope for text.
+const fraunces = Fraunces({
   subsets: ["latin", "latin-ext"],
-  variable: "--font-text",
+  style: ["normal", "italic"],
+  axes: ["SOFT", "opsz"],
+  variable: "--font-fraunces",
 });
+const manrope = Manrope({ subsets: ["latin", "latin-ext"], variable: "--font-manrope" });
 
 export const metadata: Metadata = {
   title: {
@@ -24,7 +27,7 @@ const glassRefractScript = `if("userAgentData"in navigator)document.documentElem
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={inter.variable} suppressHydrationWarning>
+    <html lang="en" className={`${fraunces.variable} ${manrope.variable}`} suppressHydrationWarning>
       <head>
         <InlineScript html={glassRefractScript} />
       </head>

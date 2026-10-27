@@ -28,7 +28,7 @@
     color-scheme: light dark;
   }
 
-  /* Pin the adaptive surfaces to one scheme (specimen switcher, future site toggle). */
+  /* Pin the adaptive surfaces to one scheme (future site toggle). */
   :root[data-force-scheme="light"],
   :root[data-force-scheme="light"] [data-surface="adaptive"] {
     color-scheme: light;
@@ -74,13 +74,23 @@
   --color-paper: var(--paper);
   --color-ink: var(--ink);
 
-  --font-sans: var(--font-text), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-display-face, var(--font-text)), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-fraunces), ui-serif, Georgia, serif;
 }
 
 body {
   background: var(--bg);
   color: var(--fg);
+}
+
+/* Display headings: soft Fraunces. Add `italic` per use for the slogan and project titles. */
+@utility font-display {
+  font-family: var(--font-display);
+  font-weight: 450;
+  letter-spacing: -0.03em;
+  font-variation-settings:
+    "SOFT" 100,
+    "opsz" 144;
 }
 
 :focus-visible {
