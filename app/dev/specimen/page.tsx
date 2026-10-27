@@ -40,7 +40,7 @@ export default function SpecimenPage() {
     <main data-surface="adaptive" className="min-h-dvh bg-bg text-fg">
       <header className="sticky top-0 z-20 border-b border-line bg-bg/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-6 py-3">
-          <p className="text-sm font-medium">Fíu · type &amp; glass specimen</p>
+          <p className="text-sm font-medium">Fiú · type &amp; glass specimen</p>
           <nav aria-label="Pairings" className="flex gap-1.5">
             {pairings.map((p) => (
               <GlassPillLink key={p.id} href={`#pairing-${p.id}`} size="sm">
@@ -92,7 +92,7 @@ function PairingSection({ pairing: p, still }: { pairing: Pairing; still: Static
         </div>
         <Image
           src={logo}
-          alt="Fíu"
+          alt="Fiú"
           sizes="40vw"
           className="absolute top-1/2 left-[4%] h-auto w-[42%] -translate-y-1/2"
         />
@@ -116,7 +116,7 @@ function PairingSection({ pairing: p, still }: { pairing: Pairing; still: Static
           <div className="mt-10 max-w-prose space-y-4 text-[1.0625rem] leading-relaxed text-white/90">
             <p>
               <strong className="font-semibold text-white">
-                At Fíu we believe in telling a new generation of stories.
+                At Fiú we believe in telling a new generation of stories.
               </strong>{" "}
               We&rsquo;re a production company, a home for Irish directors, cinematographers and editors, and a
               rental house for the kit we trust on our own sets.
@@ -202,14 +202,14 @@ function PairingSection({ pairing: p, still }: { pairing: Pairing; still: Static
       <div className="mt-6 rounded-3xl border border-line p-8">
         <p className="text-xs font-medium tracking-[0.14em] text-fg-muted uppercase">Scale</p>
         <div className="mt-6 space-y-4">
-          <p className={`${display} text-7xl leading-none`}>Fíu Media</p>
+          <p className={`${display} text-7xl leading-none`}>Fiú Media</p>
           <p className={`${display} ${accent} text-5xl leading-tight`}>Our Work · Ár gCuid Oibre</p>
           <p className={`${display} text-3xl`}>Talent, Rentals &amp; Contact</p>
           <p className="max-w-prose text-lg leading-relaxed">
             Body: a production company, talent roster and rental house based in Ireland. We make films, music
             videos and commercials, and we lend out the kit we trust.
           </p>
-          <p className="text-sm text-fg-muted">Caption · Fíu Media © 2026, All Rights Reserved</p>
+          <p className="text-sm text-fg-muted">Caption · Fiú Media © 2026, All Rights Reserved</p>
         </div>
       </div>
     </section>

@@ -12,8 +12,8 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "Fíu Media",
-    template: "%s · Fíu Media",
+    default: "Fiú Media",
+    template: "%s · Fiú Media",
   },
   description: "Más fiú é a dhéanamh, is fiú é a dhéanamh i gceart.",
 };

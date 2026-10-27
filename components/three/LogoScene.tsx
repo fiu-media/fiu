@@ -1,21 +1,42 @@
 "use client";
 
-import { Environment, Lightformer, MeshTransmissionMaterial, useGLTF, useTexture } from "@react-three/drei";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Effects, Environment, MeshTransmissionMaterial, useCursor, useTexture } from "@react-three/drei";
+import { Canvas, extend, useFrame, useThree, type ThreeElement } from "@react-three/fiber";
+import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject, type RefObject } from "react";
 import * as THREE from "three";
-import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
+import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
+import paths from "@/public/brand/fiu-logo-paths.json";
+import { buildLogoGeometry, type LogoPaths } from "./buildLogoGeometry";
 
-const MODEL = "/brand/fiu-logo.glb";
-const DRACO = "/draco/";
+extend({ UnrealBloomPass });
+
+declare module "@react-three/fiber" {
+  interface ThreeElements {
+    unrealBloomPass: ThreeElement<typeof UnrealBloomPass>;
+  }
+}
+
 const BACKDROP_Z = -4;
 const CROSSFADE_SECONDS = 1.6;
+const SAMPLE_SIZE = 32;
+const NEUTRAL_TINT = new THREE.Color("#c8c4c0");
 
-export type SceneStill = { src: string; width: number; height: number };
+export type SceneStill = {
+  src: string;
+  width: number;
+  height: number;
+  /** CMS-provided studio tint (hex). Prefer this over client sampling — CORS-safe. */
+  lightTint?: string;
+};
+
+type Fade = { from: number; to: number; start: number };
 
 /**
  * The live home hero: the rotating stills are drawn into the scene as a backdrop, so the
  * glass logo actually refracts whichever still is behind it.
+ *
+ * Logo mesh is built in Three.js from `fiu-logo-paths.json` (rounded extrusion of the
+ * white mark + tip-aligned parallelogram diamonds) — no GLB / Blender step for the web.
  *
  * Rendering is on demand. Frames are only drawn while something moves (intro spin,
  * crossfade, pointer parallax), so an idle hero costs nothing.
@@ -31,27 +52,115 @@ export default function LogoScene({
 }) {
   return (
     <Canvas
-      flat
       frameloop="demand"
       dpr={[1, 1.5]}
       camera={{ position: [0, 0, 12], fov: 30 }}
-      gl={{ antialias: true, powerPreference: "high-performance" }}
+      gl={{
+        antialias: true,
+        powerPreference: "high-performance",
+        toneMapping: THREE.ACESFilmicToneMapping,
+        toneMappingExposure: 1,
+      }}
       onCreated={({ gl }) => gl.setClearColor("#0c0b0d")}
     >
-      <Backdrop stills={stills} index={index} />
-      <Logo onReady={onReady} />
-      {/* Studio matching design/refs/liquid-glass.jpg: deep red field, warm white/copper
-          keys, thin cool rim. Rendered once into an env map for glass reflections. */}
-      <Environment resolution={256} frames={1}>
-        <Lightformer form="rect" intensity={2.2} color="#3a0010" position={[0, 0, -6]} scale={[20, 14, 1]} />
-        <Lightformer form="rect" intensity={7} position={[0, 5.5, 3]} rotation-x={Math.PI / 2} scale={[14, 2.5, 1]} />
-        <Lightformer form="rect" intensity={5} color="#ffe8d0" position={[-7, 2, 5]} rotation-y={Math.PI / 2} scale={[8, 3, 1]} />
-        <Lightformer form="rect" intensity={6} color="#ff6020" position={[7, -0.5, 4]} rotation-y={-Math.PI / 2} scale={[7, 1.8, 1]} />
-        <Lightformer form="rect" intensity={3.5} color="#a8c8ff" position={[0, -5.5, 4]} rotation-x={-Math.PI / 2} scale={[12, 2, 1]} />
-        <Lightformer form="rect" intensity={4} position={[0, 1, 9]} scale={[8, 8, 1]} />
-        <Lightformer form="ring" intensity={10} color="#fff5ee" position={[3.5, 3.5, 7]} scale={1.4} />
-      </Environment>
+      <Scene stills={stills} index={index} onReady={onReady} />
     </Canvas>
+  );
+}
+
+function Scene({
+  stills,
+  index,
+  onReady,
+}: {
+  stills: SceneStill[];
+  index: number;
+  onReady: () => void;
+}) {
+  // useTexture suspends until loaded, so .image is available on first paint here.
+  const textures = useTexture(
+    stills.map((s) => s.src),
+    (loaded) => {
+      for (const t of loaded) {
+        t.colorSpace = THREE.SRGBColorSpace;
+        t.anisotropy = 4;
+      }
+    },
+  );
+  const keepAwake = useKeepAwake();
+  const fade = useRef<Fade>({ from: index, to: index, start: 0 });
+  const tint = useRef(NEUTRAL_TINT.clone());
+  // Logo orientation — spark lights lag behind this so highlights crawl on spin.
+  const logoPose = useRef({ x: 0, y: 0 });
+
+  const tints = useMemo(
+    () => stills.map((still, i) => resolveStillTint(still, textures[i])),
+    [stills, textures],
+  );
+
+  useEffect(() => {
+    const f = fade.current;
+    if (f.to === index) return;
+    f.from = f.to;
+    f.to = index;
+    f.start = performance.now();
+    keepAwake(CROSSFADE_SECONDS + 0.1);
+  }, [index, keepAwake]);
+
+  useFrame(() => {
+    const f = fade.current;
+    const progress = f.start
+      ? Math.min((performance.now() - f.start) / (CROSSFADE_SECONDS * 1000), 1)
+      : 1;
+    const k = progress * progress * (3 - 2 * progress);
+    tint.current.lerpColors(tints[f.from]!, tints[f.to]!, k);
+  });
+
+  return (
+    <>
+      <Backdrop stills={stills} textures={textures} fade={fade} />
+      <Logo onReady={onReady} tint={tint} logoPose={logoPose} />
+      {/* frames=Infinity: re-bake whenever the demand loop runs (crossfade / parallax),
+          so tint tracks the still. Idle canvases don't draw, so this stays cheap. */}
+      <Studio tint={tint} logoPose={logoPose} />
+      {/* External sparkle: lagged point lights + bloom so streaks trail the spin. */}
+      <SparkLights logoPose={logoPose} />
+      <SparkBloom />
+    </>
+  );
+}
+
+/** How quickly spark lights catch the logo pose — lower = slower highlight travel. */
+const SPARK_FOLLOW = 1.1;
+
+/**
+ * Soft fill only — point lights make round specular blobs. Streaks come from
+ * elongated env SoftLights + anisotropic transmission instead.
+ */
+function SparkLights({ logoPose }: { logoPose: MutableRefObject<{ x: number; y: number }> }) {
+  const group = useRef<THREE.Group>(null);
+  useFrame((_, delta) => {
+    const g = group.current;
+    if (!g) return;
+    g.rotation.x = THREE.MathUtils.damp(g.rotation.x, logoPose.current.x, SPARK_FOLLOW, delta);
+    g.rotation.y = THREE.MathUtils.damp(g.rotation.y, logoPose.current.y, SPARK_FOLLOW, delta);
+  });
+  return (
+    <group ref={group}>
+      <pointLight position={[-1.8, 3.8, 7]} intensity={8} distance={16} decay={2.2} color="#fff8f0" />
+      <pointLight position={[2.2, 2.5, 6.5]} intensity={6} distance={14} decay={2.2} color="#ffffff" />
+    </group>
+  );
+}
+
+/** Very soft bloom so streaks glow without round flares. */
+function SparkBloom() {
+  const { size } = useThree();
+  const res = useMemo(() => new THREE.Vector2(size.width, size.height), [size.width, size.height]);
+  return (
+    <Effects multisamping={0} disableGamma>
+      <unrealBloomPass args={[res, 0.08, 0.75, 0.94]} />
+    </Effects>
   );
 }
 
@@ -69,6 +178,65 @@ function useKeepAwake() {
     },
     [invalidate],
   );
+}
+
+/** Prefer CMS `lightTint`; else sample the texture; else neutral. Sampling failures (CORS) fall through. */
+function resolveStillTint(still: SceneStill, texture?: THREE.Texture): THREE.Color {
+  if (still.lightTint) {
+    try {
+      return new THREE.Color(still.lightTint);
+    } catch {
+      /* fall through */
+    }
+  }
+  if (texture?.image) {
+    const sampled = sampleAverageColor(texture);
+    if (sampled) return sampled;
+  }
+  return NEUTRAL_TINT.clone();
+}
+
+/** Downsample and average. Returns null if the image can't be read (tainted / not ready). */
+function sampleAverageColor(texture: THREE.Texture): THREE.Color | null {
+  const img = texture.image as CanvasImageSource | undefined;
+  if (!img || typeof document === "undefined") return null;
+
+  try {
+    const canvas = document.createElement("canvas");
+    canvas.width = SAMPLE_SIZE;
+    canvas.height = SAMPLE_SIZE;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    if (!ctx) return null;
+    ctx.drawImage(img, 0, 0, SAMPLE_SIZE, SAMPLE_SIZE);
+    const { data } = ctx.getImageData(0, 0, SAMPLE_SIZE, SAMPLE_SIZE);
+
+    let r = 0;
+    let g = 0;
+    let b = 0;
+    let w = 0;
+    for (let i = 0; i < data.length; i += 4) {
+      const lr = data[i]! / 255;
+      const lg = data[i + 1]! / 255;
+      const lb = data[i + 2]! / 255;
+      // Bright pixels weigh more — they dominate how glass reads temperature.
+      const lum = 0.2126 * lr + 0.7152 * lg + 0.0722 * lb;
+      const weight = 0.2 + lum * lum;
+      r += lr * weight;
+      g += lg * weight;
+      b += lb * weight;
+      w += weight;
+    }
+    if (w < 1e-6) return null;
+
+    const color = new THREE.Color(r / w, g / w, b / w);
+    const hsl = { h: 0, s: 0, l: 0 };
+    color.getHSL(hsl);
+    // Push chroma so glass reflections read the still's temperature clearly.
+    color.setHSL(hsl.h, Math.min(0.75, Math.max(0.35, hsl.s * 1.6)), THREE.MathUtils.clamp(hsl.l, 0.32, 0.58));
+    return color;
+  } catch {
+    return null;
+  }
 }
 
 const backdropVertex = /* glsl */ `
@@ -101,20 +269,17 @@ void main() {
   #include <colorspace_fragment>
 }`;
 
-function Backdrop({ stills, index }: { stills: SceneStill[]; index: number }) {
-  const textures = useTexture(
-    stills.map((s) => s.src),
-    (loaded) => {
-      for (const t of loaded) {
-        t.colorSpace = THREE.SRGBColorSpace;
-        t.anisotropy = 4;
-      }
-    },
-  );
+function Backdrop({
+  stills,
+  textures,
+  fade,
+}: {
+  stills: SceneStill[];
+  textures: THREE.Texture[];
+  fade: RefObject<Fade>;
+}) {
   const camera = useThree((s) => s.camera);
   const viewport = useThree((s) => s.viewport);
-  const keepAwake = useKeepAwake();
-  const fade = useRef({ from: index, to: index, start: 0 });
 
   const material = useRef<THREE.ShaderMaterial>(null);
   const [uniforms] = useState(() => ({
@@ -126,28 +291,20 @@ function Backdrop({ stills, index }: { stills: SceneStill[]; index: number }) {
     progress: { value: 1 },
   }));
 
-  // Plane sized to fill the view at its depth.
   const { width, height } = viewport.getCurrentViewport(camera, new THREE.Vector3(0, 0, BACKDROP_Z));
-
-  useEffect(() => {
-    const f = fade.current;
-    if (f.to === index) return;
-    f.from = f.to;
-    f.to = index;
-    f.start = performance.now();
-    keepAwake(CROSSFADE_SECONDS + 0.1);
-  }, [index, keepAwake]);
 
   useFrame(() => {
     const f = fade.current;
     const u = material.current?.uniforms;
-    if (!u) return;
-    u.tFrom.value = textures[f.from];
-    u.tTo.value = textures[f.to];
-    u.fromAspect.value = stills[f.from].width / stills[f.from].height;
-    u.toAspect.value = stills[f.to].width / stills[f.to].height;
+    if (!f || !u) return;
+    u.tFrom.value = textures[f.from]!;
+    u.tTo.value = textures[f.to]!;
+    u.fromAspect.value = stills[f.from]!.width / stills[f.from]!.height;
+    u.toAspect.value = stills[f.to]!.width / stills[f.to]!.height;
     u.planeAspect.value = width / height;
-    u.progress.value = f.start ? Math.min((performance.now() - f.start) / (CROSSFADE_SECONDS * 1000), 1) : 1;
+    u.progress.value = f.start
+      ? Math.min((performance.now() - f.start) / (CROSSFADE_SECONDS * 1000), 1)
+      : 1;
   });
 
   return (
@@ -161,6 +318,103 @@ function Backdrop({ stills, index }: { stills: SceneStill[]; index: number }) {
         depthWrite={false}
         toneMapped={false}
       />
+    </mesh>
+  );
+}
+
+/**
+ * Dual-key front studio like liquid-glass.jpg: warm still-tinted fill, plus clean
+ * white rim/keys for the bright edge catchlights that define the glass.
+ */
+function Studio({
+  tint,
+  logoPose,
+}: {
+  tint: MutableRefObject<THREE.Color>;
+  logoPose: MutableRefObject<{ x: number; y: number }>;
+}) {
+  const follow = useRef<THREE.Group>(null);
+  useFrame((_, delta) => {
+    const g = follow.current;
+    if (!g) return;
+    g.rotation.x = THREE.MathUtils.damp(g.rotation.x, logoPose.current.x, SPARK_FOLLOW, delta);
+    g.rotation.y = THREE.MathUtils.damp(g.rotation.y, logoPose.current.y, SPARK_FOLLOW, delta);
+  });
+  return (
+    <Environment resolution={256} frames={Infinity}>
+      <SoftLight tint={tint} mixWhite={0} intensity={1} lift={0.4} position={[0, 0, -7]} scale={14} />
+      {/* Still-tinted wrap — world-fixed so body colour stays stable */}
+      <SoftLight tint={tint} mixWhite={0.15} intensity={3.2} position={[-2.8, 3.2, 9]} scale={5.5} />
+      <SoftLight tint={tint} mixWhite={0.1} intensity={2.6} position={[3, -2, 8.5]} scale={5} />
+      <SoftLight tint={tint} mixWhite={0.12} intensity={2.2} position={[0.8, 1.2, 10]} scale={4.5} />
+      <SoftLight tint={tint} mixWhite={0.1} intensity={1.6} position={[0, -4, 6.5]} scale={5} />
+      {/* Elongated white streak lights — lag with spin; refract as lines inside the tubes */}
+      <group ref={follow}>
+        <SoftLight tint={tint} mixWhite={1} intensity={3.2} position={[-1.5, 4, 9.5]} scale={[7, 0.35, 1]} streak roll={0.4} />
+        <SoftLight tint={tint} mixWhite={1} intensity={2.6} position={[2, 3.2, 9]} scale={[6, 0.3, 1]} streak roll={-0.5} />
+        <SoftLight tint={tint} mixWhite={1} intensity={2.4} position={[0.3, 4.6, 8.5]} scale={[5.5, 0.28, 1]} streak roll={0.15} />
+        <SoftLight tint={tint} mixWhite={1} intensity={2.2} position={[-2.4, 1.2, 9]} scale={[5, 0.28, 1]} streak roll={1.1} />
+        <SoftLight tint={tint} mixWhite={1} intensity={2.0} position={[1.2, -2.2, 8.8]} scale={[4.5, 0.25, 1]} streak roll={-0.9} />
+      </group>
+    </Environment>
+  );
+}
+
+function SoftLight({
+  tint,
+  mixWhite,
+  intensity,
+  lift = 1,
+  position,
+  scale,
+  ring = false,
+  streak = false,
+  roll = 0,
+}: {
+  tint: MutableRefObject<THREE.Color>;
+  mixWhite: number;
+  intensity: number;
+  lift?: number;
+  position: [number, number, number];
+  scale: number | [number, number, number];
+  ring?: boolean;
+  /** Long thin plane — reads as a sparkle line once refracted through the glass. */
+  streak?: boolean;
+  /** Twist around the look-at axis (radians). */
+  roll?: number;
+}) {
+  const mesh = useRef<THREE.Mesh>(null);
+  const mat = useRef<THREE.MeshBasicMaterial>(null);
+  const tmp = useMemo(() => new THREE.Color(), []);
+
+  useEffect(() => {
+    const m = mesh.current;
+    if (!m) return;
+    m.lookAt(0, 0, 0);
+    if (roll) m.rotateZ(roll);
+  }, [position, roll]);
+
+  useFrame(() => {
+    const m = mat.current;
+    if (!m) return;
+    tmp.copy(tint.current).multiplyScalar(lift);
+    m.color.setRGB(
+      THREE.MathUtils.lerp(tmp.r, 1, mixWhite) * intensity,
+      THREE.MathUtils.lerp(tmp.g, 1, mixWhite) * intensity,
+      THREE.MathUtils.lerp(tmp.b, 1, mixWhite) * intensity,
+    );
+  });
+
+  return (
+    <mesh ref={mesh} position={position} scale={scale}>
+      {streak ? (
+        <planeGeometry args={[1, 1]} />
+      ) : ring ? (
+        <ringGeometry args={[0.22, 0.5, 64]} />
+      ) : (
+        <ringGeometry args={[0, 0.5, 64]} />
+      )}
+      <meshBasicMaterial ref={mat} side={THREE.DoubleSide} toneMapped={false} />
     </mesh>
   );
 }
@@ -188,35 +442,46 @@ function spinAt(t: number) {
   return SPIN[SPIN.length - 1][1];
 }
 
-function Logo({ onReady }: { onReady: () => void }) {
-  const { nodes } = useGLTF(MODEL, DRACO);
+const DRAG_SENSITIVITY = 0.005;
+const HOVER_TILT_X = 0.12;
+const HOVER_TILT_Y = 0.18;
+
+function Logo({
+  onReady,
+  tint,
+  logoPose,
+}: {
+  onReady: () => void;
+  tint: MutableRefObject<THREE.Color>;
+  logoPose: MutableRefObject<{ x: number; y: number }>;
+}) {
   const size = useThree((s) => s.size);
   const viewport = useThree((s) => s.viewport);
+  const gl = useThree((s) => s.gl);
   const keepAwake = useKeepAwake();
   const group = useRef<THREE.Group>(null);
-  const pointer = useRef({ x: 0, y: 0 });
+  const mesh = useRef<THREE.Mesh>(null);
+  const material = useRef<THREE.MeshPhysicalMaterial>(null);
+  const hover = useRef({ active: false, x: 0, y: 0 });
   const tilt = useRef({ x: 0, y: 0 });
+  const drag = useRef({
+    active: false,
+    lastX: 0,
+    lastY: 0,
+    rotX: 0,
+    rotY: 0,
+  });
   const intro = useRef({ frames: 0, time: 0 });
   const invalidate = useThree((s) => s.invalidate);
+  const glow = useMemo(() => new THREE.Color(), []);
+  const localPoint = useMemo(() => new THREE.Vector3(), []);
+  const [hovered, setHovered] = useState(false);
+  const [dragging, setDragging] = useState(false);
+  useCursor(hovered || dragging, dragging ? "grabbing" : "grab");
 
-  // One merged mesh means one transmission pass per frame instead of one per part.
-  const geometry = useMemo(() => {
-    const parts = Object.values(nodes)
-      .filter((n): n is THREE.Mesh => (n as THREE.Mesh).isMesh)
-      .map((mesh) => {
-        mesh.updateWorldMatrix(true, false);
-        const g = mesh.geometry.clone();
-        g.applyMatrix4(mesh.matrixWorld);
-        for (const name of Object.keys(g.attributes)) {
-          if (name !== "position" && name !== "normal") g.deleteAttribute(name);
-        }
-        return g;
-      });
-    const merged = mergeGeometries(parts)!;
-    merged.computeBoundingBox();
-    merged.center();
-    return merged;
-  }, [nodes]);
+  const geometry = useMemo(() => buildLogoGeometry(paths as unknown as LogoPaths), []);
+
+  useEffect(() => () => geometry.dispose(), [geometry]);
 
   const modelWidth = useMemo(() => {
     const box = geometry.boundingBox!;
@@ -233,18 +498,63 @@ function Logo({ onReady }: { onReady: () => void }) {
 
   useEffect(() => {
     invalidate();
+    gl.domElement.style.touchAction = "none";
+  }, [invalidate, gl]);
+
+  // Drag continues on the window so rotation doesn't stop when the pointer leaves the mesh.
+  useEffect(() => {
     const onMove = (e: PointerEvent) => {
-      pointer.current.x = (e.clientX / window.innerWidth) * 2 - 1;
-      pointer.current.y = (e.clientY / window.innerHeight) * 2 - 1;
+      const d = drag.current;
+      if (!d.active) return;
+      d.rotY += (e.clientX - d.lastX) * DRAG_SENSITIVITY;
+      d.rotX += (e.clientY - d.lastY) * DRAG_SENSITIVITY;
+      d.rotX = THREE.MathUtils.clamp(d.rotX, -Math.PI / 2, Math.PI / 2);
+      d.lastX = e.clientX;
+      d.lastY = e.clientY;
       keepAwake(1.2);
     };
+    const onUp = () => {
+      if (!drag.current.active) return;
+      drag.current.active = false;
+      setDragging(false);
+    };
     window.addEventListener("pointermove", onMove);
-    return () => window.removeEventListener("pointermove", onMove);
-  }, [invalidate, keepAwake]);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+    };
+  }, [keepAwake]);
+
+  const setHoverFromPoint = (point: THREE.Vector3) => {
+    const g = group.current;
+    const box = geometry.boundingBox;
+    if (!g || !box) return;
+    localPoint.copy(point);
+    g.worldToLocal(localPoint);
+    const nx = THREE.MathUtils.clamp(((localPoint.x - box.min.x) / (box.max.x - box.min.x)) * 2 - 1, -1, 1);
+    const ny = THREE.MathUtils.clamp(((localPoint.y - box.min.y) / (box.max.y - box.min.y)) * 2 - 1, -1, 1);
+    hover.current.x = nx;
+    hover.current.y = ny;
+    hover.current.active = true;
+  };
 
   useFrame((_, delta) => {
     const g = group.current;
     if (!g) return;
+
+    // Internal glow picks up the still temperature (like liquid-glass.jpg's warm core).
+    const mat = material.current as (THREE.MeshPhysicalMaterial & { attenuationColor: THREE.Color }) | null;
+    if (mat?.attenuationColor) {
+      glow.copy(tint.current);
+      // Lift so thick cores glow; keep chroma so it isn't milky white.
+      const hsl = { h: 0, s: 0, l: 0 };
+      glow.getHSL(hsl);
+      glow.setHSL(hsl.h, Math.min(0.85, hsl.s * 1.15), THREE.MathUtils.clamp(hsl.l + 0.12, 0.4, 0.72));
+      mat.attenuationColor.copy(glow);
+    }
 
     // The first frames compile shaders and can stall for a long time, so the intro is
     // driven by capped frame deltas rather than wall-clock time: it always plays in full,
@@ -255,40 +565,79 @@ function Logo({ onReady }: { onReady: () => void }) {
     if (a.frames > WARMUP_FRAMES) a.time += Math.min(delta, 1 / 30);
     if (a.time < SPIN_END) invalidate();
     const t = a.time;
-    // Gentle parallax toward the pointer, eased independently of frame rate.
+
+    // Wobble only while hovering the logo (and not dragging); ease back to rest on leave.
     const k = 1 - Math.exp(-delta * 4);
-    tilt.current.x = THREE.MathUtils.lerp(tilt.current.x, pointer.current.y * 0.12, k);
-    tilt.current.y = THREE.MathUtils.lerp(tilt.current.y, pointer.current.x * 0.18, k);
-    g.rotation.set(tilt.current.x, spinAt(t) + tilt.current.y, 0);
+    const targetX = hover.current.active && !drag.current.active ? hover.current.y * HOVER_TILT_X : 0;
+    const targetY = hover.current.active && !drag.current.active ? hover.current.x * HOVER_TILT_Y : 0;
+    tilt.current.x = THREE.MathUtils.lerp(tilt.current.x, targetX, k);
+    tilt.current.y = THREE.MathUtils.lerp(tilt.current.y, targetY, k);
+
+    const d = drag.current;
+    g.rotation.set(tilt.current.x + d.rotX, spinAt(t) + tilt.current.y + d.rotY, 0);
+    logoPose.current.x = g.rotation.x;
+    logoPose.current.y = g.rotation.y;
   });
 
   return (
     <group ref={group} position={[x, 0, 0]} scale={scale}>
-      <mesh geometry={geometry}>
+      <mesh
+        ref={mesh}
+        geometry={geometry}
+        onPointerOver={(e) => {
+          e.stopPropagation();
+          setHovered(true);
+          setHoverFromPoint(e.point);
+          keepAwake(1.2);
+        }}
+        onPointerMove={(e) => {
+          e.stopPropagation();
+          if (drag.current.active) return;
+          setHoverFromPoint(e.point);
+          keepAwake(1.2);
+        }}
+        onPointerOut={() => {
+          hover.current.active = false;
+          setHovered(false);
+          keepAwake(0.6);
+        }}
+        onPointerDown={(e) => {
+          e.stopPropagation();
+          const { clientX, clientY } = e.nativeEvent;
+          drag.current.active = true;
+          drag.current.lastX = clientX;
+          drag.current.lastY = clientY;
+          hover.current.active = false;
+          setDragging(true);
+          setHovered(true);
+          keepAwake(2);
+        }}
+      >
         <MeshTransmissionMaterial
-          samples={8}
+          ref={material}
+          samples={12}
           resolution={1024}
           backside
-          backsideThickness={1.6}
-          thickness={2.2}
-          ior={1.52}
-          chromaticAberration={0.22}
-          anisotropicBlur={0.08}
-          distortion={0.08}
-          distortionScale={0.25}
+          // Sparkles live in the volume only: hot env discs + strong dispersion, no coat.
+          backsideThickness={1.55}
+          thickness={2.1}
+          ior={1.56}
+          chromaticAberration={0.55}
+          // Stretch bright env streaks along the tubes instead of round blobs.
+          anisotropicBlur={0.22}
+          distortion={0.16}
+          distortionScale={0.5}
           temporalDistortion={0}
-          roughness={0.04}
-          clearcoat={1}
-          clearcoatRoughness={0}
-          specularIntensity={1}
-          envMapIntensity={3.2}
+          roughness={0.08}
+          clearcoat={0.2}
+          clearcoatRoughness={0.35}
+          specularIntensity={0.3}
+          envMapIntensity={2.5}
           color="#ffffff"
-          attenuationColor="#ffd0c0"
-          attenuationDistance={4}
+          attenuationColor="#ffffff"
+          attenuationDistance={2.8}
         />
       </mesh>
     </group>
   );
 }
-
-useGLTF.preload(MODEL, DRACO);
