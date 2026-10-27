@@ -38,7 +38,7 @@ export function Splash({ done }: { done: boolean }) {
   if (gone) return null;
 
   return (
-    <div aria-hidden className="pointer-events-none fixed inset-0 z-20 grid place-items-center">
+    <div aria-hidden className={`fixed inset-0 z-20 grid place-items-center ${done ? "pointer-events-none" : ""}`}>
       {/* Backdrop and logo fade together. In live mode the glass logo fades in on top over the
           same 500 ms (HomeHero), so the handoff happens inside this one fade. */}
       <div className={`absolute inset-0 bg-ink ${FADE_CLASSES}`} style={{ opacity: done ? 0 : 1 }} />

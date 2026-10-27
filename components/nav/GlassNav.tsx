@@ -2,33 +2,43 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useRef } from "react";
+import { Suspense, useRef } from "react";
 import { useLiquidGlass } from "@/components/ui/useLiquidGlass";
 
 export type NavItem = { href: string; label: string };
+
+type NavProps = {
+  items: NavItem[];
+  /** Accessible name for the landmark (localised). */
+  label: string;
+  onImage?: boolean;
+  className?: string;
+};
 
 /**
  * Primary navigation: one clear acrylic pill per link, like the logo's own material. The
  * current page is lit (brighter bevel, small dot); hover lifts the pill toward the pointer.
  */
 export function GlassNav({
-  items,
-  label,
-  onImage,
-  className,
   current,
-}: {
-  items: NavItem[];
-  /** Accessible name for the landmark (localised). */
-  label: string;
-  onImage?: boolean;
-  className?: string;
+  ...props
+}: NavProps & {
   /** Override the active item (defaults to matching the current pathname). */
   current?: string;
 }) {
-  const routePath = usePathname();
-  const pathname = current ?? routePath;
+  if (current !== undefined) return <NavList {...props} pathname={current} />;
+  return (
+    <Suspense fallback={<NavList {...props} pathname="" />}>
+      <RouteNavList {...props} />
+    </Suspense>
+  );
+}
 
+function RouteNavList(props: NavProps) {
+  return <NavList {...props} pathname={usePathname()} />;
+}
+
+function NavList({ items, label, onImage, className, pathname }: NavProps & { pathname: string }) {
   return (
     <nav
       aria-label={label}
