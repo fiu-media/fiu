@@ -15,59 +15,17 @@ import {
 import * as THREE from "three";
 import paths from "@/public/brand/fiu-logo-paths.json";
 import { buildLogoGeometry, type LogoMeshMode, type LogoPaths } from "./buildLogoGeometry";
+import { LOGO_PARAM_PRESETS, type LogoGlassParams, type LogoRimLook } from "./logoConfig";
+import type { LogoPerfStats } from "./logoPerf";
 
 export type { LogoMeshMode };
-
-/** Bevel/rim look: `light` lifts charcoal edges; `dark` keeps liquid-glass ink bands. */
-export type LogoRimLook = "light" | "dark";
+export type { LogoRimLook, LogoGlassParams } from "./logoConfig";
+export type { LogoPerfStats } from "./logoPerf";
 
 const BACKDROP_Z = -4;
 const CROSSFADE_SECONDS = 1.6;
 const SAMPLE_SIZE = 32;
 const NEUTRAL_TINT = new THREE.Color("#c8c4c0");
-
-const RIM_LOOK = {
-  light: {
-    backsideThickness: 0.9,
-    thickness: 1.2,
-    ior: 1.48,
-    chromaticAberration: 0.62,
-    anisotropicBlur: 0.42,
-    distortion: 0.1,
-    roughness: 0.1,
-    clearcoat: 0.45,
-    clearcoatRoughness: 0.2,
-    specularIntensity: 0.6,
-    envMapIntensity: 2.5,
-    backsideEnvMapIntensity: 1.85,
-    attenuationDistance: 5.8,
-    glowSat: 1.08,
-    glowLift: 0.2,
-    glowLMin: 0.52,
-    glowLMax: 0.8,
-    extrude: { depth: 0.16, bevelThickness: 0.12, bevelSize: 0.12 },
-  },
-  dark: {
-    backsideThickness: 1.55,
-    thickness: 2.1,
-    ior: 1.56,
-    chromaticAberration: 0.7,
-    anisotropicBlur: 0.38,
-    distortion: 0.14,
-    roughness: 0.06,
-    clearcoat: 0.6,
-    clearcoatRoughness: 0.12,
-    specularIntensity: 0.7,
-    envMapIntensity: 2.35,
-    backsideEnvMapIntensity: 1,
-    attenuationDistance: 2.6,
-    glowSat: 1.15,
-    glowLift: 0.12,
-    glowLMin: 0.4,
-    glowLMax: 0.72,
-    extrude: null as null,
-  },
-} as const;
 
 export type SceneStill = {
   src: string;
@@ -95,6 +53,9 @@ export default function LogoScene({
   onReady,
   meshMode = "extrude",
   rimLook = "light",
+  params: paramsProp,
+  measurePerf = false,
+  onPerf,
 }: {
   stills: SceneStill[];
   index: number;
@@ -103,10 +64,16 @@ export default function LogoScene({
   meshMode?: LogoMeshMode;
   /** `light` = luminous bevels; `dark` = charcoal liquid-glass bands. */
   rimLook?: LogoRimLook;
+  /** Live overrides (playground). Defaults to the rimLook preset. */
+  params?: LogoGlassParams;
+  /** Continuous frameloop + FPS sampling (playground only). */
+  measurePerf?: boolean;
+  onPerf?: (stats: LogoPerfStats) => void;
 }) {
+  const params = paramsProp ?? LOGO_PARAM_PRESETS[rimLook];
   return (
     <Canvas
-      frameloop="demand"
+      frameloop={measurePerf ? "always" : "demand"}
       dpr={[1, 1.5]}
       camera={{ position: [0, 0, 12], fov: 30 }}
       gl={{
@@ -121,9 +88,37 @@ export default function LogoScene({
       // the WebGL backdrop is only sampled for logo refraction (see BackdropLayerGate).
       onCreated={({ gl }) => gl.setClearColor(0x000000, 0)}
     >
-      <Scene stills={stills} index={index} onReady={onReady} meshMode={meshMode} rimLook={rimLook} />
+      <Scene stills={stills} index={index} onReady={onReady} meshMode={meshMode} params={params} />
+      {measurePerf && onPerf ? <PerfSampler onPerf={onPerf} /> : null}
     </Canvas>
   );
+}
+
+/** Samples FPS / frame time and renderer info ~2×/sec for the playground HUD. */
+function PerfSampler({ onPerf }: { onPerf: (stats: LogoPerfStats) => void }) {
+  const gl = useThree((s) => s.gl);
+  const onPerfRef = useRef(onPerf);
+  onPerfRef.current = onPerf;
+  const bucket = useRef({ started: performance.now(), frames: 0, frameMs: 0 });
+
+  useFrame((_, delta) => {
+    const b = bucket.current;
+    b.frames += 1;
+    b.frameMs = delta * 1000;
+    const now = performance.now();
+    if (now - b.started < 500) return;
+    const fps = (b.frames * 1000) / (now - b.started);
+    b.frames = 0;
+    b.started = now;
+    onPerfRef.current({
+      fps,
+      frameMs: b.frameMs,
+      triangles: gl.info.render.triangles,
+      calls: gl.info.render.calls,
+    });
+  });
+
+  return null;
 }
 
 function Scene({
@@ -131,13 +126,13 @@ function Scene({
   index,
   onReady,
   meshMode,
-  rimLook,
+  params,
 }: {
   stills: SceneStill[];
   index: number;
   onReady: () => void;
   meshMode: LogoMeshMode;
-  rimLook: LogoRimLook;
+  params: LogoGlassParams;
 }) {
   // useTexture suspends until loaded, so .image is available on first paint here.
   const textures = useTexture(
@@ -183,15 +178,15 @@ function Scene({
       {/* Layer 1: still plane for refraction only — not drawn to the screen (HTML stills are). */}
       <BackdropLayerGate />
       <Backdrop stills={stills} textures={textures} fade={fade} />
-      <Logo onReady={onReady} tint={tint} logoPose={logoPose} meshMode={meshMode} rimLook={rimLook} />
+      <Logo onReady={onReady} tint={tint} logoPose={logoPose} meshMode={meshMode} params={params} />
       {/* Disable still layer after MTM's FBO capture so the main/bloom pass is logo-only. */}
       <BackdropLayerGate phase="afterTransmission" />
       {/* frames=Infinity: re-bake whenever the demand loop runs (crossfade / parallax),
           so tint tracks the still. Idle canvases don't draw, so this stays cheap. */}
-      <Studio tint={tint} logoPose={logoPose} rimLook={rimLook} />
+      <Studio tint={tint} logoPose={logoPose} params={params} />
       {/* External sparkle: lagged point lights (env SoftLights do the glass streaks).
           Full-scene bloom is skipped — it was tonemapping/blooming the stills too. */}
-      <SparkLights logoPose={logoPose} />
+      <SparkLights logoPose={logoPose} lights={params.lights.points} />
     </>
   );
 }
@@ -213,21 +208,47 @@ const SPARK_FOLLOW = 1.1;
  * Soft fill only — point lights make round specular blobs. Streaks come from
  * elongated env SoftLights + anisotropic transmission instead.
  */
-function SparkLights({ logoPose }: { logoPose: MutableRefObject<{ x: number; y: number }> }) {
-  const group = useRef<THREE.Group>(null);
+function SparkLights({
+  logoPose,
+  lights,
+}: {
+  logoPose: MutableRefObject<{ x: number; y: number }>;
+  lights: LogoGlassParams["lights"]["points"];
+}) {
+  const follow = useRef<THREE.Group>(null);
+  const fixed = lights.filter((l) => l.enabled && !l.followPose);
+  const moving = lights.filter((l) => l.enabled && l.followPose);
   useFrame((_, delta) => {
-    const g = group.current;
+    const g = follow.current;
     if (!g) return;
     g.rotation.x = THREE.MathUtils.damp(g.rotation.x, logoPose.current.x, SPARK_FOLLOW, delta);
     g.rotation.y = THREE.MathUtils.damp(g.rotation.y, logoPose.current.y, SPARK_FOLLOW, delta);
   });
   return (
-    <group ref={group}>
-      <pointLight position={[-1.8, 3.8, 7]} intensity={28} distance={16} decay={2.2} color="#fff8f0" />
-      {/* Kept left/top — a right-side key was catching the ü tip at rest */}
-      <pointLight position={[-0.4, 2.8, 6.5]} intensity={18} distance={14} decay={2.2} color="#ffffff" />
-      <pointLight position={[0.5, -1.8, 6]} intensity={16} distance={12} decay={2.2} color="#ffffff" />
-    </group>
+    <>
+      {fixed.map((l) => (
+        <pointLight
+          key={l.id}
+          position={[l.x, l.y, l.z]}
+          intensity={l.intensity}
+          distance={l.distance}
+          decay={l.decay}
+          color={l.color}
+        />
+      ))}
+      <group ref={follow}>
+        {moving.map((l) => (
+          <pointLight
+            key={l.id}
+            position={[l.x, l.y, l.z]}
+            intensity={l.intensity}
+            distance={l.distance}
+            decay={l.decay}
+            color={l.color}
+          />
+        ))}
+      </group>
+    </>
   );
 }
 
@@ -424,15 +445,17 @@ function useFeatherMap() {
 function Studio({
   tint,
   logoPose,
-  rimLook,
+  params,
 }: {
   tint: MutableRefObject<THREE.Color>;
   logoPose: MutableRefObject<{ x: number; y: number }>;
-  rimLook: LogoRimLook;
+  params: LogoGlassParams;
 }) {
   const follow = useRef<THREE.Group>(null);
   const feather = useFeatherMap();
-  const light = rimLook === "light";
+  const soft = params.lights.soft.filter((l) => l.enabled);
+  const fixed = soft.filter((l) => !l.followPose);
+  const moving = soft.filter((l) => l.followPose);
   useFrame((_, delta) => {
     const g = follow.current;
     if (!g) return;
@@ -441,46 +464,35 @@ function Studio({
   });
   return (
     <Environment resolution={256} frames={Infinity}>
-      {light ? (
-        <SoftLight tint={tint} mixWhite={0.35} intensity={1.6} lift={0.65} position={[0, 0, -7]} scale={14} />
-      ) : (
-        <SoftLight tint={tint} mixWhite={0} intensity={0.8} lift={0.35} position={[0, 0, -7]} scale={14} />
-      )}
-      {/* Side fills — only in light look; bevel normals otherwise Fresnel into void. */}
-      {light && (
-        <>
-          <SoftLight tint={tint} mixWhite={0.55} intensity={2.2} lift={0.7} position={[-9, 1.5, 2]} scale={10} />
-          <SoftLight tint={tint} mixWhite={0.55} intensity={2.0} lift={0.7} position={[9, 0.5, 2]} scale={10} />
-          <SoftLight tint={tint} mixWhite={0.5} intensity={1.6} lift={0.65} position={[0, 8, 1]} scale={11} />
-          <SoftLight tint={tint} mixWhite={0.45} intensity={1.3} lift={0.6} position={[0, -8, 1]} scale={10} />
-        </>
-      )}
-      {/* Key + fill — oversized + feathered; low mixWhite so still tint colors the glass */}
-      <SoftLight
-        tint={tint}
-        mixWhite={0.08}
-        intensity={2.4}
-        position={[-2.2, 3, 9.5]}
-        scale={13}
-        feather={feather}
-      />
-      <SoftLight
-        tint={tint}
-        mixWhite={0.05}
-        intensity={1.8}
-        position={[2.6, -2, 9]}
-        scale={12}
-        feather={feather}
-      />
-      {/* Bright streaks + compact hot cores — biased left/top so the ü tip stays quiet at rest */}
+      {fixed.map((l) => (
+        <SoftLight
+          key={l.id}
+          tint={tint}
+          mixWhite={l.mixWhite}
+          intensity={l.intensity}
+          lift={l.lift}
+          position={[l.x, l.y, l.z]}
+          scale={[l.scaleX, l.scaleY, l.scaleZ]}
+          streak={l.kind === "streak"}
+          roll={l.roll}
+          feather={l.feather ? feather : undefined}
+        />
+      ))}
       <group ref={follow}>
-        <SoftLight tint={tint} mixWhite={1} intensity={7} position={[-1.5, 4, 9.5]} scale={[6, 0.55, 1]} streak roll={0.4} />
-        <SoftLight tint={tint} mixWhite={1} intensity={5.5} position={[0.3, 4.6, 8.5]} scale={[5, 0.45, 1]} streak roll={0.15} />
-        <SoftLight tint={tint} mixWhite={1} intensity={5} position={[-2.4, 1.2, 9]} scale={[4.5, 0.45, 1]} streak roll={1.1} />
-        <SoftLight tint={tint} mixWhite={1} intensity={4.5} position={[1.2, 4.2, 8.8]} scale={[4, 0.4, 1]} streak roll={-0.35} />
-        <SoftLight tint={tint} mixWhite={1} intensity={14} position={[-1.2, 3.5, 10]} scale={0.7} />
-        <SoftLight tint={tint} mixWhite={1} intensity={11} position={[0.6, 4.2, 9.8]} scale={0.5} />
-        <SoftLight tint={tint} mixWhite={1} intensity={10} position={[-2.0, 0.6, 9.2]} scale={0.45} />
+        {moving.map((l) => (
+          <SoftLight
+            key={l.id}
+            tint={tint}
+            mixWhite={l.mixWhite}
+            intensity={l.intensity}
+            lift={l.lift}
+            position={[l.x, l.y, l.z]}
+            scale={[l.scaleX, l.scaleY, l.scaleZ]}
+            streak={l.kind === "streak"}
+            roll={l.roll}
+            feather={l.feather ? feather : undefined}
+          />
+        ))}
       </group>
     </Environment>
   );
@@ -521,7 +533,7 @@ function SoftLight({
     if (!m) return;
     m.lookAt(0, 0, 0);
     if (roll) m.rotateZ(roll);
-  }, [position, roll]);
+  }, [position[0], position[1], position[2], roll]);
 
   useFrame(() => {
     const m = mat.current;
@@ -579,8 +591,6 @@ function spinAt(t: number) {
 }
 
 const DRAG_SENSITIVITY = 0.005;
-/** Pitch (rotX) cap — keep the face readable; ±π/2 left it edge-on after spins. */
-const DRAG_PITCH_MAX = 0.4;
 const HOVER_TILT_X = 0.12;
 const HOVER_TILT_Y = 0.18;
 /** Velocity decay after release (higher = stops sooner). */
@@ -606,13 +616,13 @@ function Logo({
   tint,
   logoPose,
   meshMode,
-  rimLook,
+  params,
 }: {
   onReady: () => void;
   tint: MutableRefObject<THREE.Color>;
   logoPose: MutableRefObject<{ x: number; y: number }>;
   meshMode: LogoMeshMode;
-  rimLook: LogoRimLook;
+  params: LogoGlassParams;
 }) {
   const size = useThree((s) => s.size);
   const viewport = useThree((s) => s.viewport);
@@ -639,28 +649,34 @@ function Logo({
   const invalidate = useThree((s) => s.invalidate);
   const glow = useMemo(() => new THREE.Color(), []);
   const localPoint = useMemo(() => new THREE.Vector3(), []);
-  const look = RIM_LOOK[rimLook];
+  const paramsRef = useRef(params);
+  paramsRef.current = params;
   const [hovered, setHovered] = useState(false);
   const [dragging, setDragging] = useState(false);
   useCursor(hovered || dragging, dragging ? "grabbing" : "grab");
 
+  const extrudeKey = params.extrude
+    ? `${params.extrude.depth}:${params.extrude.bevelThickness}:${params.extrude.bevelSize}`
+    : "default";
+
   const geometry = useMemo(() => {
     const base = paths as unknown as LogoPaths;
-    // Light look: shallower extrude + larger fillet → less charcoal sidewall.
-    if (meshMode === "extrude" && base.extrude && look.extrude) {
+    if (meshMode === "extrude" && base.extrude && params.extrude) {
       return buildLogoGeometry(
         {
           ...base,
           extrude: {
             ...base.extrude,
-            ...look.extrude,
+            ...params.extrude,
           },
         },
         meshMode,
       );
     }
     return buildLogoGeometry(base, meshMode);
-  }, [meshMode, look]);
+    // extrudeKey tracks nested extrude fields without depending on the whole params object identity.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [meshMode, extrudeKey]);
 
   useEffect(() => () => geometry.dispose(), [geometry]);
 
@@ -682,24 +698,25 @@ function Logo({
     gl.domElement.style.touchAction = "none";
   }, [invalidate, gl]);
 
-  // Redraw after a mesh-mode / rim-look swap without resetting intro spin state.
+  // Redraw after mesh / material param changes without resetting intro spin state.
   useEffect(() => {
     invalidate();
-  }, [geometry, rimLook, invalidate]);
+  }, [geometry, params, invalidate]);
 
   // Drag continues on the window so rotation doesn't stop when the pointer leaves the mesh.
   useEffect(() => {
     const onMove = (e: PointerEvent) => {
       const d = drag.current;
       if (!d.active) return;
+      const pitchMax = paramsRef.current.dragPitchMax;
       const now = performance.now();
       const dt = Math.max((now - d.lastT) / 1000, 1 / 120);
       const dX = (e.clientY - d.lastY) * DRAG_SENSITIVITY;
       const dY = (e.clientX - d.lastX) * DRAG_SENSITIVITY;
-      d.rotX = THREE.MathUtils.clamp(d.rotX + dX, -DRAG_PITCH_MAX, DRAG_PITCH_MAX);
+      d.rotX = THREE.MathUtils.clamp(d.rotX + dX, -pitchMax, pitchMax);
       d.rotY += dY;
       // Kill pitch momentum at the soft stop so coasting can't flip it vertical.
-      if (Math.abs(d.rotX) >= DRAG_PITCH_MAX - 1e-4) d.velX = 0;
+      if (Math.abs(d.rotX) >= pitchMax - 1e-4) d.velX = 0;
       // Exponential moving average of angular velocity (rad/s).
       const vx = dX / dt;
       const vy = dY / dt;
@@ -746,6 +763,7 @@ function Logo({
 
     // Internal glow picks up the still temperature (like liquid-glass.jpg's warm core).
     const mat = material.current as (THREE.MeshPhysicalMaterial & { attenuationColor: THREE.Color }) | null;
+    const look = paramsRef.current;
     if (mat?.attenuationColor) {
       glow.copy(tint.current);
       const hsl = { h: 0, s: 0, l: 0 };
@@ -815,8 +833,9 @@ function Logo({
           d.returning = false;
         }
       }
-      if (Math.abs(d.rotX) > DRAG_PITCH_MAX) {
-        d.rotX = THREE.MathUtils.clamp(d.rotX, -DRAG_PITCH_MAX, DRAG_PITCH_MAX);
+      const pitchMax = paramsRef.current.dragPitchMax;
+      if (Math.abs(d.rotX) > pitchMax) {
+        d.rotX = THREE.MathUtils.clamp(d.rotX, -pitchMax, pitchMax);
         d.velX = 0;
       }
       if (d.velX || d.velY || d.rotX || d.rotY || d.returning) invalidate();
@@ -869,27 +888,27 @@ function Logo({
         <MeshTransmissionMaterial
           ref={material}
           // Banding fix stays (blur + dither); CA / env / tint restored for color.
-          samples={10}
-          resolution={768}
+          samples={params.samples}
+          resolution={params.resolution}
           backside
-          backsideEnvMapIntensity={look.backsideEnvMapIntensity}
+          backsideEnvMapIntensity={params.backsideEnvMapIntensity}
           dithering
-          backsideThickness={look.backsideThickness}
-          thickness={look.thickness}
-          ior={look.ior}
-          chromaticAberration={look.chromaticAberration}
-          anisotropicBlur={look.anisotropicBlur}
-          distortion={look.distortion}
-          distortionScale={0.4}
+          backsideThickness={params.backsideThickness}
+          thickness={params.thickness}
+          ior={params.ior}
+          chromaticAberration={params.chromaticAberration}
+          anisotropicBlur={params.anisotropicBlur}
+          distortion={params.distortion}
+          distortionScale={params.distortionScale}
           temporalDistortion={0}
-          roughness={look.roughness}
-          clearcoat={look.clearcoat}
-          clearcoatRoughness={look.clearcoatRoughness}
-          specularIntensity={look.specularIntensity}
-          envMapIntensity={look.envMapIntensity}
+          roughness={params.roughness}
+          clearcoat={params.clearcoat}
+          clearcoatRoughness={params.clearcoatRoughness}
+          specularIntensity={params.specularIntensity}
+          envMapIntensity={params.envMapIntensity}
           color="#ffffff"
           attenuationColor="#fff6f0"
-          attenuationDistance={look.attenuationDistance}
+          attenuationDistance={params.attenuationDistance}
         />
       </mesh>
     </group>
