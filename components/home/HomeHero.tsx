@@ -1,9 +1,10 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import Image, { type StaticImageData } from "next/image";
+import Image from "next/image";
 import { Component, useCallback, useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
 import logo from "@/public/brand/fiu-logo.png";
+import type { HeroStill } from "@/sanity/lib/stills";
 
 const LogoScene = dynamic(() => import("@/components/three/LogoScene"), { ssr: false });
 
@@ -43,9 +44,6 @@ function useLiveSupport(): Mode {
  *
  * Mesh / rim playground controls live at `/dev/logo-playground`.
  */
-/** Local StaticImageData today; CMS stills can add `lightTint` for CORS-safe studio colour. */
-export type HeroStill = StaticImageData & { lightTint?: string };
-
 export function HomeHero({ stills }: { stills: HeroStill[] }) {
   const [index, setIndex] = useState(0);
   const [failed, setFailed] = useState(false);
@@ -76,15 +74,17 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
       {stills.map((still, i) => (
         <Image
           key={still.src}
-          src={still}
-          alt=""
+          src={still.src}
+          alt={still.alt}
           fill
           priority={i === 0}
-          placeholder="blur"
+          placeholder={still.blurDataURL ? "blur" : "empty"}
+          blurDataURL={still.blurDataURL}
           quality={90}
           sizes="100vw"
           className="object-cover transition-opacity duration-[1600ms] ease-in-out"
-          style={{ opacity: i === index ? 1 : 0 }}
+          style={{ opacity: i === index ? 1 : 0, objectPosition: still.position }}
+          data-sanity={still.dataSanity}
         />
       ))}
 

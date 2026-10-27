@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Fraunces, Manrope } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
+import { Suspense } from "react";
 import { InlineScript } from "@/components/InlineScript";
+import { SanityChrome } from "@/components/sanity/SanityChrome";
 import "./globals.css";
 
 // Type pairing "Expressive": Fraunces for display, Manrope for text.
@@ -33,6 +35,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       </head>
       <body className="min-h-dvh font-sans antialiased">
         {children}
+        <Suspense>
+          <SanityChrome />
+        </Suspense>
         <Analytics />
       </body>
     </html>
