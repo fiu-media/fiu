@@ -1,5 +1,5 @@
 import { defineArrayMember, defineField, defineType } from "sanity";
-import { imageWithAlt, languageField } from "./fields";
+import { imageArrayMember, imageWithAlt, languageField } from "./fields";
 
 export const siteSettings = defineType({
   name: "siteSettings",
@@ -23,28 +23,22 @@ export const siteSettings = defineType({
       description: "3–10 images that rotate behind the logo on the home page.",
       validation: (rule) => rule.min(3).max(10),
       of: [
-        defineArrayMember({
-          name: "homeStill",
-          title: "Home still",
-          type: "image",
-          options: { hotspot: true },
-          fields: [
-            defineField({ name: "alt", title: "Alt text", type: "string", validation: (rule) => rule.required() }),
-            defineField({
-              name: "lightTint",
-              title: "Glass tint",
-              type: "string",
-              description: "Optional hex colour (e.g. #a0957b) the glass logo takes from this still. Leave empty to sample the image.",
-              validation: (rule) => rule.regex(/^#[0-9a-fA-F]{6}$/, { name: "hex colour" }).warning(),
-            }),
-            defineField({
-              name: "project",
-              title: "Linked project",
-              type: "reference",
-              to: [{ type: "project" }],
-            }),
-          ],
-        }),
+        imageArrayMember([
+          defineField({
+            name: "lightTint",
+            title: "Glass tint",
+            type: "string",
+            description:
+              "Optional hex colour (e.g. #a0957b) the glass logo takes from this still. Leave empty to sample the image.",
+            validation: (rule) => rule.regex(/^#[0-9a-fA-F]{6}$/, { name: "hex colour" }).warning(),
+          }),
+          defineField({
+            name: "project",
+            title: "Linked project",
+            type: "reference",
+            to: [{ type: "project" }],
+          }),
+        ]),
       ],
     }),
     defineField({ name: "manifesto", type: "array", group: "about", of: [defineArrayMember({ type: "block" })] }),

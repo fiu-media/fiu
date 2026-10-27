@@ -1,4 +1,4 @@
-import { defineField } from "sanity";
+import { defineArrayMember, defineField } from "sanity";
 
 export const orderField = defineField({
   name: "order",
@@ -50,6 +50,14 @@ export const vimeoUrlField = (name: string, title: string, description?: string)
       }),
   });
 
+export const altField = defineField({
+  name: "alt",
+  title: "Alt text",
+  type: "string",
+  description: "Describe the image for people who can't see it.",
+  validation: (rule) => rule.required(),
+});
+
 /** An image with hotspot/crop and the alt text editors must fill in. */
 export const imageWithAlt = (name: string, title: string, required = false) =>
   defineField({
@@ -57,14 +65,17 @@ export const imageWithAlt = (name: string, title: string, required = false) =>
     title,
     type: "image",
     options: { hotspot: true },
-    fields: [
-      defineField({
-        name: "alt",
-        title: "Alt text",
-        type: "string",
-        description: "Describe the image for people who can't see it.",
-        validation: (rule) => rule.required(),
-      }),
-    ],
+    fields: [altField],
     validation: required ? (rule) => rule.required() : undefined,
+  });
+
+/**
+ * An image item for an array. Deliberately unnamed so items keep the plain `image` _type:
+ * a named member would require `_type` to match its name, and reject items typed `image`.
+ */
+export const imageArrayMember = (extraFields: ReturnType<typeof defineField>[] = []) =>
+  defineArrayMember({
+    type: "image",
+    options: { hotspot: true },
+    fields: [altField, ...extraFields],
   });
