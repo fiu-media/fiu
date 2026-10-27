@@ -9,6 +9,8 @@ export type LogoStroke = {
   closed?: boolean;
   /** End treatments — `point` already tapers to ~0 in the radius data. */
   caps?: ("flat" | "point")[];
+  /** Per-end angle of each flat cut in the logo plane (y-up), measured from the artwork. */
+  cuts?: (number | null)[];
 };
 
 export type LogoPaths = {
@@ -24,7 +26,15 @@ export type LogoPaths = {
    * Silhouettes are pre-inset by their own `bevel` (three pushes the side walls outward by
    * bevelSize), so the extruded outline lands exactly on the white.png artwork.
    */
-  shapes?: { outer: number[][]; holes: number[][][]; bevel?: number }[];
+  shapes?: {
+    outer: number[][];
+    holes: number[][][];
+    bevel?: number;
+    /** Needle/sharp tips: [x, y, influence radius] — depth is tapered inside it. */
+    tips?: number[][];
+    /** True (un-inset) artwork outline rings, used to measure distance to the edge near tips. */
+    outline?: number[][][];
+  }[];
   diamonds: { corners: number[][]; depth: number; bevel: number }[];
   /** Sheared f-tip cut: edge angle in logo plane (y-up). Flat tube caps use this. */
   tipCut?: { angle: number; side: number };
@@ -178,13 +188,13 @@ function variableRadiusTube(stroke: LogoStroke, tipCutAngle?: number): THREE.Buf
 
   const caps = stroke.caps ?? ["flat", "flat"];
   // Oblique tip slices: ring + cap share the artwork tip-cut plane (// diamond sides).
+  const startAngle = stroke.cuts?.[0] ?? tipCutAngle;
+  const endAngle = stroke.cuts?.[1] ?? tipCutAngle;
   const startCut =
-    !closed && caps[0] === "flat" && tipCutAngle != null
-      ? tipCutNormal(tipCutAngle, tangents[0])
-      : null;
+    !closed && caps[0] === "flat" && startAngle != null ? tipCutNormal(startAngle, tangents[0]) : null;
   const endCut =
-    !closed && caps[caps.length - 1] === "flat" && tipCutAngle != null
-      ? tipCutNormal(tipCutAngle, tangents[n - 1])
+    !closed && caps[caps.length - 1] === "flat" && endAngle != null
+      ? tipCutNormal(endAngle, tangents[n - 1])
       : null;
   if (startCut) rewriteRing(positions, ringIndex[0], origins[0], radii[0], startCut, binormals[0]);
   if (endCut) rewriteRing(positions, ringIndex[n - 1], origins[n - 1], radii[n - 1], endCut, binormals[n - 1]);
@@ -304,6 +314,59 @@ function buildDiamonds(diamonds: LogoPaths["diamonds"]): THREE.BufferGeometry[] 
   });
 }
 
+function distToSegment(px: number, py: number, ax: number, ay: number, bx: number, by: number) {
+  const abx = bx - ax;
+  const aby = by - ay;
+  const len2 = abx * abx + aby * aby;
+  const t = len2 > 0 ? THREE.MathUtils.clamp(((px - ax) * abx + (py - ay) * aby) / len2, 0, 1) : 0;
+  return Math.hypot(px - (ax + abx * t), py - (ay + aby * t));
+}
+
+/**
+ * Past the inset apex of a needle tip there is no flat top left, but the extrusion still
+ * builds a full-height front/back sliver there, so the faces run on past the pillowed body.
+ * Cap every vertex near a tip at the pillow height for its distance to the artwork edge, so
+ * the top rounds over the needle the same way it does along the rest of the outline.
+ */
+function taperTips(
+  g: THREE.BufferGeometry,
+  tips: number[][],
+  outline: number[][][],
+  depth: number,
+  bevel: number,
+) {
+  const pos = g.getAttribute("position") as THREE.BufferAttribute;
+  const edges = tips.map(([tx, ty, r]) => {
+    const near: number[][] = [];
+    for (const ring of outline) {
+      for (let i = 0; i < ring.length; i++) {
+        const a = ring[i];
+        const b = ring[(i + 1) % ring.length];
+        if (distToSegment(tx, ty, a[0], a[1], b[0], b[1]) <= r + bevel) near.push([a[0], a[1], b[0], b[1]]);
+      }
+    }
+    return near;
+  });
+  for (let v = 0; v < pos.count; v++) {
+    const x = pos.getX(v);
+    const y = pos.getY(v);
+    const z = pos.getZ(v);
+    if (Math.abs(z) <= depth / 2) continue;
+    let w = Infinity;
+    for (let k = 0; k < tips.length; k++) {
+      const [tx, ty, r] = tips[k];
+      if (Math.hypot(x - tx, y - ty) > r) continue;
+      for (const [ax, ay, bx, by] of edges[k]) w = Math.min(w, distToSegment(x, y, ax, ay, bx, by));
+    }
+    if (!Number.isFinite(w)) continue;
+    // Same quarter-round the bevel layers follow: height vs distance from the edge.
+    const e = 1 - Math.min(w, bevel) / bevel;
+    const hz = depth / 2 + bevel * Math.sqrt(Math.max(0, 1 - e * e));
+    if (Math.abs(z) > hz) pos.setZ(v, Math.sign(z) * hz);
+  }
+  pos.needsUpdate = true;
+}
+
 /** Rounded extrusion of the flat mark — filleted edges like liquid-glass. */
 function buildExtrudedBody(paths: LogoPaths): THREE.BufferGeometry[] {
   const extrude = paths.extrude;
@@ -335,6 +398,7 @@ function buildExtrudedBody(paths: LogoPaths): THREE.BufferGeometry[] {
       curveSegments: 4,
     });
     g.translate(0, 0, -depth / 2);
+    if (s.tips?.length && s.outline?.length) taperTips(g, s.tips, s.outline, depth, bevel);
     parts.push(forMerge(g));
   }
   return parts;

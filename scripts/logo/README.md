@@ -27,6 +27,13 @@ dots sit exactly where the white mark has them; liquid-glass.jpg is no longer us
   blunts needle tips. Sharp tips are walked out to the real white.png apex and compensated, so
   the extruded outline reproduces the artwork (tips included). `BEVEL_MAX` caps the bevel; it is
   reduced per shape so thin slivers (the f bowl, the crescent) never break.
+- The inset is built from the anti-aliased alpha (4× supersampled, lightly smoothed) so rings
+  follow the artwork's curves, not its pixel staircase. A needle that curves is approximated by
+  one straight chord (extra vertices would be pushed a full bevel past the edge), so the bevel
+  shrinks per shape until the chord stays within ~1.5px of the art (`SAG_MAX`).
+- Each shape also ships its sharp `tips` and the true `outline`; `taperTips()` in
+  `buildLogoGeometry.ts` caps front/back height near a tip at the pillow height for its distance
+  to the edge, so the faces round over the needle instead of running on as a flat sliver.
 - Tube centrelines are extended from the skeleton end to the white.png silhouette (flat and point ends).
 
 Re-run that script and refresh — no GLB rebuild.
