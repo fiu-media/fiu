@@ -23,9 +23,25 @@ export type { LogoRimLook, LogoGlassParams } from "./logoConfig";
 export type { LogoPerfStats } from "./logoPerf";
 
 const BACKDROP_Z = -4;
+// A distant, narrow camera keeps the slab's front face from projecting wider than its back, so the
+// front-facing glass logo matches the flat SVG logo's outline (at 12 it overlapped the artwork by
+// 82%, at 48 by 93%). The fov is chosen so the view at z = 0 is the same size as the old fov-30
+// camera at z = 12, i.e. everything else keeps its size.
+const CAMERA_Z = 48;
+const CAMERA_FOV = (2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(15)) * (12 / CAMERA_Z)) * 180) / Math.PI;
 const CROSSFADE_SECONDS = 1.6;
 const SAMPLE_SIZE = 32;
 const NEUTRAL_TINT = new THREE.Color("#c8c4c0");
+/**
+ * Hero intro: the glass starts out refracting a bright white field, so it reads as the white
+ * splash logo it replaces, then clears to the photo. Above 1 because ACES tone mapping pulls
+ * a plain 1.0 down to light grey.
+ */
+const SPLASH_WHITE = 1.5;
+// The refracted field goes white → photo over exactly the splash fade (500 ms, ease-out, same
+// curve as the CSS), so the glass clears as the splash lifts; a slower curve left a white glass
+// logo hanging around after the backdrop had gone.
+const REVEAL_SECONDS = 0.5;
 
 export type SceneStill = {
   src: string;
@@ -56,10 +72,19 @@ export default function LogoScene({
   params: paramsProp,
   measurePerf = false,
   onPerf,
+  introSlide = false,
+  introHold = false,
+  splashLift,
 }: {
   stills: SceneStill[];
   index: number;
   onReady: () => void;
+  /** Desktop: spin in the centre, then glide to the left-hand resting position. */
+  introSlide?: boolean;
+  /** Freeze the intro clock (the logo waits front-facing) until this turns false. */
+  introHold?: boolean;
+  /** Hero intro: false while the splash holds (glass refracts white), true once it starts lifting. */
+  splashLift?: boolean;
   /** `tubes` = liquid-glass taper; `extrude` = flat silhouette slab. */
   meshMode?: LogoMeshMode;
   /** `light` = luminous bevels; `dark` = charcoal liquid-glass bands. */
@@ -76,7 +101,7 @@ export default function LogoScene({
     <Canvas
       frameloop={measurePerf ? "always" : "demand"}
       dpr={dpr}
-      camera={{ position: [0, 0, 12], fov: 30 }}
+      camera={{ position: [0, 0, CAMERA_Z], fov: CAMERA_FOV }}
       gl={{
         alpha: true,
         antialias: true,
@@ -97,6 +122,9 @@ export default function LogoScene({
         params={params}
         envAlways={measurePerf}
         adaptiveQuality={!measurePerf}
+        introSlide={introSlide}
+        introHold={introHold}
+        splashLift={splashLift}
       />
       {measurePerf && onPerf ? <PerfSampler onPerf={onPerf} /> : null}
     </Canvas>
@@ -205,6 +233,9 @@ function Scene({
   params,
   envAlways,
   adaptiveQuality,
+  introSlide,
+  introHold,
+  splashLift,
 }: {
   stills: SceneStill[];
   index: number;
@@ -214,6 +245,9 @@ function Scene({
   /** Playground: keep cubemap live while measuring / scrubbing. */
   envAlways: boolean;
   adaptiveQuality: boolean;
+  introSlide: boolean;
+  introHold: boolean;
+  splashLift: boolean | undefined;
 }) {
   // useTexture suspends until loaded, so .image is available on first paint here.
   const textures = useTexture(
@@ -236,10 +270,13 @@ function Scene({
     [stills, textures],
   );
 
-  // Cover intro spin + first settle so env streaks track the logo.
+  // Cover intro spin + first settle so env streaks track the logo. The hero intro skips this: the
+  // live env bake is the heaviest per-frame cost (freezing it took the intro from ~28 to ~42 fps in
+  // a software-GL test), and the pose returns to rest, where the frozen env is already correct, so
+  // the spin loses only the lagging highlight crawl. Logo drives its own frames until INTRO_END.
   useEffect(() => {
-    keepAwake(SPIN_END + 1);
-  }, [keepAwake]);
+    if (!introSlide) keepAwake(INTRO_END + 1);
+  }, [keepAwake, introSlide]);
 
   useEffect(() => {
     const f = fade.current;
@@ -263,7 +300,7 @@ function Scene({
     <>
       {/* Layer 1: still plane for refraction only — not drawn to the screen (HTML stills are). */}
       <BackdropLayerGate />
-      <Backdrop stills={stills} textures={textures} fade={fade} />
+      <Backdrop stills={stills} textures={textures} fade={fade} splashLift={splashLift} />
       <Logo
         onReady={onReady}
         tint={tint}
@@ -272,6 +309,9 @@ function Scene({
         params={params}
         keepAwake={keepAwake}
         adaptiveQuality={adaptiveQuality}
+        introSlide={introSlide}
+        introHold={introHold}
+        splashLift={splashLift}
       />
       {/* Disable still layer after MTM's FBO capture so the main/bloom pass is logo-only. */}
       <BackdropLayerGate phase="afterTransmission" />
@@ -463,6 +503,8 @@ uniform float fromAspect;
 uniform float toAspect;
 uniform float planeAspect;
 uniform float progress;
+uniform float reveal;
+uniform float whiteLevel;
 varying vec2 vUv;
 vec2 cover(vec2 uv, float imageAspect) {
   vec2 scale = planeAspect > imageAspect
@@ -473,7 +515,8 @@ vec2 cover(vec2 uv, float imageAspect) {
 void main() {
   vec4 a = texture2D(tFrom, cover(vUv, fromAspect));
   vec4 b = texture2D(tTo, cover(vUv, toAspect));
-  gl_FragColor = mix(a, b, smoothstep(0.0, 1.0, progress));
+  vec4 still = mix(a, b, smoothstep(0.0, 1.0, progress));
+  gl_FragColor = vec4(mix(vec3(whiteLevel), still.rgb, reveal), still.a);
   #include <colorspace_fragment>
 }`;
 
@@ -481,10 +524,12 @@ function Backdrop({
   stills,
   textures,
   fade,
+  splashLift,
 }: {
   stills: SceneStill[];
   textures: THREE.Texture[];
   fade: RefObject<Fade>;
+  splashLift: boolean | undefined;
 }) {
   const camera = useThree((s) => s.camera);
   const viewport = useThree((s) => s.viewport);
@@ -497,7 +542,10 @@ function Backdrop({
     toAspect: { value: 1 },
     planeAspect: { value: 1 },
     progress: { value: 1 },
+    reveal: { value: 1 },
+    whiteLevel: { value: SPLASH_WHITE },
   }));
+  const revealStart = useRef<number | null>(null);
 
   const { width, height } = viewport.getCurrentViewport(camera, new THREE.Vector3(0, 0, BACKDROP_Z));
 
@@ -513,6 +561,18 @@ function Backdrop({
     u.progress.value = f.start
       ? Math.min((performance.now() - f.start) / (CROSSFADE_SECONDS * 1000), 1)
       : 1;
+
+    // Playground (splashLift undefined) always sees the photo.
+    let reveal = 1;
+    if (splashLift === false) {
+      revealStart.current = null;
+      reveal = 0;
+    } else if (splashLift) {
+      revealStart.current ??= performance.now();
+      const k = THREE.MathUtils.clamp((performance.now() - revealStart.current) / 1000 / REVEAL_SECONDS, 0, 1);
+      reveal = 1 - (1 - k) * (1 - k);
+    }
+    u.reveal.value = reveal;
   });
 
   return (
@@ -705,6 +765,36 @@ const SPIN: [seconds: number, radians: number][] = [
 const SPIN_END = SPIN[SPIN.length - 1][0];
 const WARMUP_FRAMES = 3;
 
+// Hero intro (`introSlide`): `HERO_TURNS` turns that spin up fast and decelerate like a spun coin,
+// then a springy glide to the left that overshoots and settles. Times in seconds.
+const HERO_TURNS = 1;
+const HERO_SPIN_SECONDS = 2.2;
+/** Glide starts mid-deceleration so the spin hands over to the move. */
+const SLIDE_START = 1;
+const SLIDE_SECONDS = 2.2;
+/** Spring: damping ratio < 1 overshoots (0.65 ≈ 7% past the target); omega sets the speed. */
+const SLIDE_DAMPING = 0.65;
+const SLIDE_OMEGA = 4.5;
+const HERO_END = Math.max(HERO_SPIN_SECONDS, SLIDE_START + SLIDE_SECONDS);
+/** Longest intro, so the demand loop stays awake for it. */
+const INTRO_END = Math.max(SPIN_END, HERO_END);
+
+function heroSpinAt(t: number) {
+  const k = Math.min(Math.max(t / HERO_SPIN_SECONDS, 0), 1);
+  // k^0.6 front-loads the speed; the cosine ease gives a soft start and a long settle.
+  return -Math.PI * 2 * HERO_TURNS * (0.5 - 0.5 * Math.cos(Math.PI * k ** 0.6));
+}
+
+/** Damped-spring step response: 0 → 1 with overshoot, snapped to 1 once settled. */
+function slideAt(t: number) {
+  const tau = t - SLIDE_START;
+  if (tau <= 0) return 0;
+  if (tau >= SLIDE_SECONDS) return 1;
+  const z = SLIDE_DAMPING;
+  const wd = SLIDE_OMEGA * Math.sqrt(1 - z * z);
+  return 1 - Math.exp(-z * SLIDE_OMEGA * tau) * (Math.cos(wd * tau) + ((z * SLIDE_OMEGA) / wd) * Math.sin(wd * tau));
+}
+
 function spinAt(t: number) {
   for (let i = 1; i < SPIN.length; i++) {
     const [t1, v1] = SPIN[i];
@@ -735,6 +825,9 @@ function Logo({
   params,
   keepAwake,
   adaptiveQuality,
+  introSlide,
+  introHold,
+  splashLift,
 }: {
   onReady: () => void;
   tint: MutableRefObject<THREE.Color>;
@@ -743,6 +836,9 @@ function Logo({
   params: LogoGlassParams;
   keepAwake: (seconds: number) => void;
   adaptiveQuality: boolean;
+  introSlide: boolean;
+  introHold: boolean;
+  splashLift: boolean | undefined;
 }) {
   const size = useThree((s) => s.size);
   const viewport = useThree((s) => s.viewport);
@@ -765,6 +861,7 @@ function Logo({
     velY: 0,
   });
   const intro = useRef({ frames: 0, time: 0 });
+  const introStats = useRef({ frames: 0, ms: 0, worst: 0, logged: false });
   const invalidate = useThree((s) => s.invalidate);
   const glow = useMemo(() => new THREE.Color(), []);
   const localPoint = useMemo(() => new THREE.Vector3(), []);
@@ -800,9 +897,19 @@ function Logo({
 
   useEffect(() => () => geometry.dispose(), [geometry]);
 
+  // Width of the silhouette as the camera sees it, front-facing: the front of the slab sits nearer
+  // the camera than z = 0, so its edges project slightly wider than the bounding box. Sizing by this
+  // makes the glass logo the width of the flat SVG logo it replaces.
   const modelWidth = useMemo(() => {
-    const box = geometry.boundingBox!;
-    return box.max.x - box.min.x;
+    const pos = geometry.getAttribute("position");
+    let min = Infinity;
+    let max = -Infinity;
+    for (let i = 0; i < pos.count; i++) {
+      const x = (pos.getX(i) * CAMERA_Z) / (CAMERA_Z - pos.getZ(i));
+      if (x < min) min = x;
+      if (x > max) max = x;
+    }
+    return max - min;
   }, [geometry]);
 
   // Mirror the static layout: 42vw from 4vw on desktop, centred at up to 80vw on mobile.
@@ -904,9 +1011,30 @@ function Logo({
     const a = intro.current;
     a.frames++;
     if (a.frames === WARMUP_FRAMES) onReady();
-    if (a.frames > WARMUP_FRAMES) a.time += Math.min(delta, 1 / 30);
-    if (a.time < SPIN_END) invalidate();
+    if (a.frames > WARMUP_FRAMES && !introHold) a.time += Math.min(delta, 1 / 30);
+    if (a.time < INTRO_END) invalidate();
     const t = a.time;
+
+    // Dev only: how smooth the hero intro really is on this machine (GPU cost can't be seen in a
+    // CPU profile). Logged once, when the intro ends.
+    if (process.env.NODE_ENV !== "production" && introSlide && a.frames > WARMUP_FRAMES && !introHold) {
+      const st = introStats.current;
+      if (t < INTRO_END) {
+        st.frames++;
+        st.ms += delta * 1000;
+        st.worst = Math.max(st.worst, delta * 1000);
+      } else if (!st.logged && st.frames > 0) {
+        st.logged = true;
+        console.info(
+          `[logo intro] ${st.frames} frames over ${(st.ms / 1000).toFixed(2)}s: ` +
+            `${((st.frames * 1000) / st.ms).toFixed(0)} fps avg, worst frame ${st.worst.toFixed(0)} ms`,
+        );
+      }
+    }
+
+    // Start centred and glide to the resting x; `x` is read fresh so resizes stay correct.
+    const slide = introSlide ? slideAt(t) : 1;
+    g.position.x = x * slide;
 
     // Wobble only while hovering the logo (and not dragging); ease back to rest on leave.
     const k = 1 - Math.exp(-delta * look.hoverLerp);
@@ -963,7 +1091,7 @@ function Logo({
       if (d.velX || d.velY || d.rotX || d.rotY || d.returning) invalidate();
     }
 
-    g.rotation.set(tilt.current.x + d.rotX, spinAt(t) + tilt.current.y + d.rotY, 0);
+    g.rotation.set(tilt.current.x + d.rotX, (introSlide ? heroSpinAt(t) : spinAt(t)) + tilt.current.y + d.rotY, 0);
     logoPose.current.x = g.rotation.x;
     logoPose.current.y = g.rotation.y;
   });

@@ -1,6 +1,8 @@
 """Export the flat white mark as an SVG by tracing the alpha of design/refs/white.png.
 
-Same crop + padding as 05_white_png.py, so the SVG frames the mark exactly like the PNG did.
+The viewBox is the traced mark's exact bounding box (no padding). The home hero sizes this SVG and the
+3D logo to the same width and centres both, so any margin here shows up as the flat logo
+sitting smaller than the glass one. The glass logo's perspective is compensated in LogoScene.
 The alpha is upscaled and lightly smoothed before tracing, so potrace fits Béziers to the
 artwork's curves rather than its pixel staircase.
 
@@ -22,7 +24,7 @@ out_path = sys.argv[2] if len(sys.argv) > 2 else "public/brand/fiu-logo.svg"
 os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
 
 SCALE = 4  # trace at 4× so curve fitting sees sub-pixel edges
-PAD = 16
+PAD = 8  # crop margin only; the viewBox below is cut to the traced mark itself
 
 alpha_img = Image.open(src).convert("RGBA").getchannel("A")
 a = np.asarray(alpha_img)
@@ -61,10 +63,16 @@ for curve in curves:
             parts.append(f"C{pt(seg.c1)} {pt(seg.c2)} {pt(seg.end_point)}")
     parts.append("Z")
 
+# Tight viewBox from the traced mask (4x px → user units), so the flat logo lines up with the
+# 3D one: both are sized to the mark's width and centred.
+my, mx = np.nonzero(mask)
+vx, vy = mx.min() / SCALE, my.min() / SCALE
+vw, vh = (mx.max() - mx.min() + 1) / SCALE, (my.max() - my.min() + 1) / SCALE
+
 svg = (
-    f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {w} {h}" fill="none">'
+    f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{vx:.2f} {vy:.2f} {vw:.2f} {vh:.2f}" fill="none">'
     f'<path fill="#fff" fill-rule="evenodd" d="{"".join(parts)}"/></svg>\n'
 )
 with open(out_path, "w") as f:
     f.write(svg)
-print(f"Wrote {out_path} ({w}x{h} viewBox, {len(svg) / 1024:.1f} KB, {len(curves)} contours)")
+print(f"Wrote {out_path} ({vw:.2f}x{vh:.2f} viewBox, {len(svg) / 1024:.1f} KB, {len(curves)} contours)")
