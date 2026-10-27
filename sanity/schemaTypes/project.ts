@@ -1,5 +1,5 @@
 import { defineArrayMember, defineField, defineType } from "sanity";
-import { imageWithAlt, orderField, slugField, vimeoUrlField } from "./fields";
+import { imageArrayMember, imageWithAlt, orderField, slugField, vimeoUrlField } from "./fields";
 
 export const projectTypes = ["Original", "Commercial", "Music Video", "Short", "Documentary"] as const;
 
@@ -27,7 +27,7 @@ export const project = defineType({
       name: "stills",
       title: "Stills gallery",
       type: "array",
-      of: [defineArrayMember(imageWithAlt("still", "Still"))],
+      of: [imageArrayMember()],
     }),
     vimeoUrlField("vimeoUrl", "Vimeo URL"),
     vimeoUrlField("previewLoopUrl", "Preview loop Vimeo URL", "Short silent loop shown on hover in the Work grid."),
