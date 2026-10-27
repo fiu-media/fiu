@@ -2,7 +2,16 @@
 
 import { Environment, MeshTransmissionMaterial, useCursor, useTexture } from "@react-three/drei";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject, type RefObject } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ComponentRef,
+  type MutableRefObject,
+  type RefObject,
+} from "react";
 import * as THREE from "three";
 import paths from "@/public/brand/fiu-logo-paths.json";
 import { buildLogoGeometry, type LogoMeshMode, type LogoPaths } from "./buildLogoGeometry";
@@ -537,7 +546,8 @@ function Logo({
   const keepAwake = useKeepAwake();
   const group = useRef<THREE.Group>(null);
   const mesh = useRef<THREE.Mesh>(null);
-  const material = useRef<THREE.MeshPhysicalMaterial>(null);
+  // drei types MeshTransmissionMaterial's ref as its props shape, not MeshPhysicalMaterial.
+  const material = useRef<ComponentRef<typeof MeshTransmissionMaterial>>(null);
   const hover = useRef({ active: false, x: 0, y: 0 });
   const tilt = useRef({ x: 0, y: 0 });
   const drag = useRef({
