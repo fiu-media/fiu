@@ -1,16 +1,18 @@
 import type { Metadata } from "next";
 import Image, { type StaticImageData } from "next/image";
-import { notFound } from "next/navigation";
 import type { CSSProperties } from "react";
 import { GlassNav } from "@/components/nav/GlassNav";
-import { GlassPanel, GlassPillButton, GlassPillLink } from "@/components/ui/Glass";
+import { GlassPanel, GlassPillButton } from "@/components/ui/Glass";
 import logo from "@/public/brand/fiu-logo.png";
 import candle from "@/public/stills/candle.jpg";
 import flowers from "@/public/stills/flowers.jpg";
 import jackets from "@/public/stills/jackets.jpg";
 import { pairings, type Pairing } from "./fonts";
+import { PairingPanel, PairingSwitcher } from "./PairingTabs";
 import { SchemeSwitcher } from "./SchemeSwitcher";
 
+// Public so the team can review it on the production URL while the type pairing (#5) is
+// decided. Unlisted: not linked from the site and kept out of search engines.
 export const metadata: Metadata = {
   title: "Type & glass specimen",
   robots: { index: false, follow: false },
@@ -33,28 +35,21 @@ const projects = [
 ];
 
 export default function SpecimenPage() {
-  // Visible in dev and on Vercel preview deployments, never in production.
-  if (process.env.VERCEL_ENV === "production") notFound();
-
   return (
     <main data-surface="adaptive" className="min-h-dvh bg-bg text-fg">
       <header className="sticky top-0 z-20 border-b border-line bg-bg/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-6 py-3">
           <p className="text-sm font-medium">Fiú · type &amp; glass specimen</p>
-          <nav aria-label="Pairings" className="flex gap-1.5">
-            {pairings.map((p) => (
-              <GlassPillLink key={p.id} href={`#pairing-${p.id}`} size="sm">
-                {p.id.toUpperCase()} · {p.name}
-              </GlassPillLink>
-            ))}
-          </nav>
+          <PairingSwitcher pairings={pairings.map(({ id, name }) => ({ id, name }))} />
           <SchemeSwitcher />
         </div>
       </header>
 
-      <div className="mx-auto max-w-7xl space-y-32 px-6 py-16">
+      <div className="mx-auto max-w-7xl px-6 py-16">
         {pairings.map((p, i) => (
-          <PairingSection key={p.id} pairing={p} still={stills[i % stills.length]} />
+          <PairingPanel key={p.id} id={p.id}>
+            <PairingSection pairing={p} still={stills[i % stills.length]} />
+          </PairingPanel>
         ))}
       </div>
     </main>
@@ -67,8 +62,7 @@ function PairingSection({ pairing: p, still }: { pairing: Pairing; still: Static
 
   return (
     <section
-      id={`pairing-${p.id}`}
-      className={`${p.className} scroll-mt-24 font-sans`}
+      className={`${p.className} font-sans`}
       style={{ "--font-display-face": p.display, "--font-text": p.text } as CSSProperties}
     >
       <div className="mb-8 flex flex-wrap items-end justify-between gap-4 border-b border-line pb-6">
