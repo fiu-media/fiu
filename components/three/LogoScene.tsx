@@ -1,22 +1,13 @@
 "use client";
 
-import { Effects, Environment, MeshTransmissionMaterial, useCursor, useTexture } from "@react-three/drei";
-import { Canvas, extend, useFrame, useThree, type ThreeElement } from "@react-three/fiber";
+import { Environment, MeshTransmissionMaterial, useCursor, useTexture } from "@react-three/drei";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject, type RefObject } from "react";
 import * as THREE from "three";
-import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
 import paths from "@/public/brand/fiu-logo-paths.json";
 import { buildLogoGeometry, type LogoMeshMode, type LogoPaths } from "./buildLogoGeometry";
 
 export type { LogoMeshMode };
-
-extend({ UnrealBloomPass });
-
-declare module "@react-three/fiber" {
-  interface ThreeElements {
-    unrealBloomPass: ThreeElement<typeof UnrealBloomPass>;
-  }
-}
 
 const BACKDROP_Z = -4;
 const CROSSFADE_SECONDS = 1.6;
@@ -47,7 +38,7 @@ export default function LogoScene({
   stills,
   index,
   onReady,
-  meshMode = "tubes",
+  meshMode = "extrude",
 }: {
   stills: SceneStill[];
   index: number;
@@ -61,12 +52,16 @@ export default function LogoScene({
       dpr={[1, 1.5]}
       camera={{ position: [0, 0, 12], fov: 30 }}
       gl={{
+        alpha: true,
         antialias: true,
         powerPreference: "high-performance",
         toneMapping: THREE.ACESFilmicToneMapping,
         toneMappingExposure: 1,
+        premultipliedAlpha: false,
       }}
-      onCreated={({ gl }) => gl.setClearColor("#0c0b0d")}
+      // Transparent clear so the HTML <Image> stills show through untouched;
+      // the WebGL backdrop is only sampled for logo refraction (see BackdropLayerGate).
+      onCreated={({ gl }) => gl.setClearColor(0x000000, 0)}
     >
       <Scene stills={stills} index={index} onReady={onReady} meshMode={meshMode} />
     </Canvas>
@@ -125,16 +120,30 @@ function Scene({
 
   return (
     <>
+      {/* Layer 1: still plane for refraction only — not drawn to the screen (HTML stills are). */}
+      <BackdropLayerGate />
       <Backdrop stills={stills} textures={textures} fade={fade} />
       <Logo onReady={onReady} tint={tint} logoPose={logoPose} meshMode={meshMode} />
+      {/* Disable still layer after MTM's FBO capture so the main/bloom pass is logo-only. */}
+      <BackdropLayerGate phase="afterTransmission" />
       {/* frames=Infinity: re-bake whenever the demand loop runs (crossfade / parallax),
           so tint tracks the still. Idle canvases don't draw, so this stays cheap. */}
       <Studio tint={tint} logoPose={logoPose} />
-      {/* External sparkle: lagged point lights + bloom so streaks trail the spin. */}
+      {/* External sparkle: lagged point lights (env SoftLights do the glass streaks).
+          Full-scene bloom is skipped — it was tonemapping/blooming the stills too. */}
       <SparkLights logoPose={logoPose} />
-      <SparkBloom />
     </>
   );
+}
+
+/** Still plane lives on layer 1. Mount order matters (same useFrame priority): enable →
+ *  MeshTransmissionMaterial FBO capture → disable, so bloom/screen never draw the stills. */
+function BackdropLayerGate({ phase = "beforeTransmission" }: { phase?: "beforeTransmission" | "afterTransmission" }) {
+  useFrame(({ camera }) => {
+    if (phase === "beforeTransmission") camera.layers.enable(1);
+    else camera.layers.disable(1);
+  });
+  return null;
 }
 
 /** How quickly spark lights catch the logo pose — lower = slower highlight travel. */
@@ -159,17 +168,6 @@ function SparkLights({ logoPose }: { logoPose: MutableRefObject<{ x: number; y: 
       <pointLight position={[-0.4, 2.8, 6.5]} intensity={18} distance={14} decay={2.2} color="#ffffff" />
       <pointLight position={[0.5, -1.8, 6]} intensity={16} distance={12} decay={2.2} color="#ffffff" />
     </group>
-  );
-}
-
-/** Bloom pops the hot specular cores into sparkle without huge flares. */
-function SparkBloom() {
-  const { size } = useThree();
-  const res = useMemo(() => new THREE.Vector2(size.width, size.height), [size.width, size.height]);
-  return (
-    <Effects multisamping={0} disableGamma>
-      <unrealBloomPass args={[res, 0.28, 0.35, 0.88]} />
-    </Effects>
   );
 }
 
@@ -255,8 +253,8 @@ void main() {
   gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
 }`;
 
-// Same cover-fit as CSS object-fit: cover / object-position: center, so the backdrop
-// lines up exactly with the <Image> stills underneath the canvas.
+// Same cover-fit as the HTML <Image> stills (object-fit: cover) so refraction matches
+// the full-bleed hero behind the logo.
 const backdropFragment = /* glsl */ `
 uniform sampler2D tFrom;
 uniform sampler2D tTo;
@@ -317,7 +315,13 @@ function Backdrop({
   });
 
   return (
-    <mesh position={[0, 0, BACKDROP_Z]} renderOrder={-1}>
+    <mesh
+      position={[0, 0, BACKDROP_Z]}
+      renderOrder={-1}
+      ref={(m) => {
+        if (m) m.layers.set(1);
+      }}
+    >
       <planeGeometry args={[width, height]} />
       <shaderMaterial
         ref={material}
@@ -326,6 +330,7 @@ function Backdrop({
         uniforms={uniforms}
         depthWrite={false}
         toneMapped={false}
+        transparent
       />
     </mesh>
   );
@@ -374,19 +379,19 @@ function Studio({
   return (
     <Environment resolution={256} frames={Infinity}>
       <SoftLight tint={tint} mixWhite={0} intensity={0.8} lift={0.35} position={[0, 0, -7]} scale={14} />
-      {/* Key + fill — oversized + feathered; kept dim so the front stays clear, not milky */}
+      {/* Key + fill — oversized + feathered; low mixWhite so still tint colors the glass */}
       <SoftLight
         tint={tint}
-        mixWhite={0.2}
-        intensity={2.2}
+        mixWhite={0.08}
+        intensity={2.4}
         position={[-2.2, 3, 9.5]}
         scale={13}
         feather={feather}
       />
       <SoftLight
         tint={tint}
-        mixWhite={0.15}
-        intensity={1.6}
+        mixWhite={0.05}
+        intensity={1.8}
         position={[2.6, -2, 9]}
         scale={12}
         feather={feather}
@@ -757,26 +762,28 @@ function Logo({
       >
         <MeshTransmissionMaterial
           ref={material}
-          samples={12}
-          resolution={1024}
+          // Banding fix stays (blur + dither); CA / env / tint restored for color.
+          samples={10}
+          resolution={768}
           backside
+          dithering
           // Sparkles live in the volume only: hot env discs + strong dispersion, no coat.
           backsideThickness={1.55}
           thickness={2.1}
           ior={1.56}
-          chromaticAberration={0.7}
-          anisotropicBlur={0.12}
+          chromaticAberration={0.58}
+          anisotropicBlur={0.38}
           distortion={0.14}
           distortionScale={0.4}
           temporalDistortion={0}
-          roughness={0.04}
-          clearcoat={0.65}
-          clearcoatRoughness={0.08}
-          specularIntensity={0.75}
-          envMapIntensity={2.2}
+          roughness={0.06}
+          clearcoat={0.6}
+          clearcoatRoughness={0.12}
+          specularIntensity={0.7}
+          envMapIntensity={2.35}
           color="#ffffff"
-          attenuationColor="#ffffff"
-          attenuationDistance={2.8}
+          attenuationColor="#fff6f0"
+          attenuationDistance={2.6}
         />
       </mesh>
     </group>

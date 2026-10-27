@@ -26,7 +26,7 @@ export type LogoPaths = {
   tipCut?: { angle: number; side: number };
 };
 
-const RADIAL = 10;
+const RADIAL = 12;
 const MIN_R = 0.002;
 
 function shapeFromRing(ring: number[][]) {
@@ -338,7 +338,7 @@ function buildExtrudedBody(paths: LogoPaths): THREE.BufferGeometry[] {
  * - `tubes` — pure variable-radius centreline tubes (liquid-glass taper).
  * - `extrude` — constant-depth silhouette extrude (compare mode).
  */
-export function buildLogoGeometry(paths: LogoPaths, mode: LogoMeshMode = "tubes"): THREE.BufferGeometry {
+export function buildLogoGeometry(paths: LogoPaths, mode: LogoMeshMode = "extrude"): THREE.BufferGeometry {
   const tipCutAngle = paths.tipCut?.angle;
   const parts: THREE.BufferGeometry[] =
     mode === "extrude"

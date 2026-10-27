@@ -55,7 +55,7 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
   const [index, setIndex] = useState(0);
   const [failed, setFailed] = useState(false);
   const [sceneReady, setSceneReady] = useState(false);
-  const [meshMode, setMeshMode] = useState<LogoMeshMode>("tubes");
+  const [meshMode, setMeshMode] = useState<LogoMeshMode>("extrude");
   const support = useLiveSupport();
   const mode: Mode = failed ? "static" : support;
 
@@ -87,6 +87,7 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
           fill
           priority={i === 0}
           placeholder="blur"
+          quality={90}
           sizes="100vw"
           className="object-cover transition-opacity duration-[1600ms] ease-in-out"
           style={{ opacity: i === index ? 1 : 0 }}
@@ -126,11 +127,11 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
           aria-label="Logo mesh"
           className="pointer-events-auto absolute bottom-4 left-4 z-20 flex gap-1.5"
         >
-          <GlassPillButton size="sm" onImage aria-pressed={meshMode === "tubes"} onClick={() => setMeshMode("tubes")}>
-            Tubes
-          </GlassPillButton>
           <GlassPillButton size="sm" onImage aria-pressed={meshMode === "extrude"} onClick={() => setMeshMode("extrude")}>
             Extrude
+          </GlassPillButton>
+          <GlassPillButton size="sm" onImage aria-pressed={meshMode === "tubes"} onClick={() => setMeshMode("tubes")}>
+            Tubes
           </GlassPillButton>
         </div>
       )}

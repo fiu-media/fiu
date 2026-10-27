@@ -211,9 +211,23 @@ def lg_rel_world(col, row):
     # Relative to tip mid, y-up, in logo-world units.
     return np.array([(col - tip_mid_lg[0]) * scale, -(row - tip_mid_lg[1]) * scale])
 
-# Pull slightly closer than raw LG centroids — mark reads tighter on the home hero.
+# Pull d0 slightly closer to the tip than raw LG — but keep full pair spacing.
+# (Scaling both centroids by PROXIMITY also crushed d0→d1 and left d1 too far left.)
 PROXIMITY = 0.88
-d_centers = [tip_xy + PROXIMITY * lg_rel_world(c[0], c[1]) for c in lg_centers_px]
+lg_rels = [lg_rel_world(c[0], c[1]) for c in lg_centers_px]
+# White diamond spacing matches the separated ü bowls better than LG's tighter pair.
+white_span = abs(
+    px_to_world(diamonds_p[1].centroid[1], diamonds_p[1].centroid[0])[0]
+    - px_to_world(diamonds_p[0].centroid[1], diamonds_p[0].centroid[0])[0]
+)
+lg_span = float(np.linalg.norm(lg_rels[1] - lg_rels[0]))
+pair_span = lg_rels[1] - lg_rels[0]
+if lg_span > 1e-6:
+    pair_span = pair_span * (white_span / lg_span)
+d_centers = [
+    tip_xy + PROXIMITY * lg_rels[0],
+    tip_xy + PROXIMITY * lg_rels[0] + pair_span,
+]
 short_ang = tip_ang  # white tip cut is the alignment authority
 # Lock long edges to the f crossbar tangent at the tip so the gems read as a
 # sliced pair with the cap: short // tip cut, long // stroke.
