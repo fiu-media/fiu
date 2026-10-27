@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import Image, { type StaticImageData } from "next/image";
 import { Component, useCallback, useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
 import type { LogoMeshMode } from "@/components/three/buildLogoGeometry";
+import type { LogoRimLook } from "@/components/three/LogoScene";
 import { GlassPillButton } from "@/components/ui/Glass";
 import logo from "@/public/brand/fiu-logo.png";
 
@@ -56,6 +57,7 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
   const [failed, setFailed] = useState(false);
   const [sceneReady, setSceneReady] = useState(false);
   const [meshMode, setMeshMode] = useState<LogoMeshMode>("extrude");
+  const [rimLook, setRimLook] = useState<LogoRimLook>("light");
   const support = useLiveSupport();
   const mode: Mode = failed ? "static" : support;
 
@@ -116,23 +118,35 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
             className="absolute inset-0 transition-opacity duration-1000"
             style={{ opacity: sceneReady ? 1 : 0 }}
           >
-            <LogoScene stills={sceneStills} index={index} onReady={onReady} meshMode={meshMode} />
+            <LogoScene
+              stills={sceneStills}
+              index={index}
+              onReady={onReady}
+              meshMode={meshMode}
+              rimLook={rimLook}
+            />
           </div>
         </SceneBoundary>
       )}
 
       {mode === "live" && (
-        <div
-          role="group"
-          aria-label="Logo mesh"
-          className="pointer-events-auto absolute bottom-4 left-4 z-20 flex gap-1.5"
-        >
-          <GlassPillButton size="sm" onImage aria-pressed={meshMode === "extrude"} onClick={() => setMeshMode("extrude")}>
-            Extrude
-          </GlassPillButton>
-          <GlassPillButton size="sm" onImage aria-pressed={meshMode === "tubes"} onClick={() => setMeshMode("tubes")}>
-            Tubes
-          </GlassPillButton>
+        <div className="pointer-events-auto absolute bottom-4 left-4 z-20 flex flex-col gap-1.5">
+          <div role="group" aria-label="Logo mesh" className="flex gap-1.5">
+            <GlassPillButton size="sm" onImage aria-pressed={meshMode === "extrude"} onClick={() => setMeshMode("extrude")}>
+              Extrude
+            </GlassPillButton>
+            <GlassPillButton size="sm" onImage aria-pressed={meshMode === "tubes"} onClick={() => setMeshMode("tubes")}>
+              Tubes
+            </GlassPillButton>
+          </div>
+          <div role="group" aria-label="Logo rim look" className="flex gap-1.5">
+            <GlassPillButton size="sm" onImage aria-pressed={rimLook === "light"} onClick={() => setRimLook("light")}>
+              Light
+            </GlassPillButton>
+            <GlassPillButton size="sm" onImage aria-pressed={rimLook === "dark"} onClick={() => setRimLook("dark")}>
+              Dark
+            </GlassPillButton>
+          </div>
         </div>
       )}
     </div>
