@@ -31,7 +31,7 @@ export type RentalItem = {
   summary: string | null;
   keyFeatures: string[] | null;
   maxQuantity: number | null;
-  category: { _id: string; title: string } | null;
+  category: { _id: string; title: string; slug: string } | null;
   images: SanityImage[] | null;
   specs?: { _key: string; key: string; value: string }[] | null;
   includedInKit?: string[] | null;

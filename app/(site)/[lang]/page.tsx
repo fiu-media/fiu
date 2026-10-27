@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { HomeHero } from "@/components/home/HomeHero";
 import { GlassNav } from "@/components/nav/GlassNav";
 import { fallbackStills } from "@/lib/fallback-stills";
-import { isLocale, languageAlternates, type Locale } from "@/lib/i18n/config";
+import { defaultLocale, isLocale, languageAlternates, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getNavItems } from "@/lib/i18n/nav";
 import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
@@ -46,7 +46,7 @@ async function homeStills(
   perspective: Awaited<ReturnType<typeof getDynamicFetchOptions>>["perspective"],
   variant: string | undefined,
 ): Promise<HeroStill[]> {
-  const { data } = await cachedSanity({ query: HOME_STILLS_QUERY, params: { lang }, perspective, variant, stega: false });
+  const { data } = await cachedSanity({ query: HOME_STILLS_QUERY, params: { lang, fallbackLang: defaultLocale }, perspective, variant, stega: false });
   const settings = data as HomeStillsResult;
   const stills = (settings?.stills ?? []).map((s) => toHeroStill(settings!._id, s)).filter((s): s is HeroStill => s !== null);
   return stills.length > 0 ? stills : fallbackStills;

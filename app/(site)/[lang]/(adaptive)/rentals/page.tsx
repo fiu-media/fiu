@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { CatalogueSkeleton } from "@/components/rentals/RentalSkeletons";
 import { RentalCatalogue, type CatalogueCard } from "@/components/rentals/RentalCatalogue";
-import { isLocale, languageAlternates, type Locale } from "@/lib/i18n/config";
+import { defaultLocale, isLocale, languageAlternates, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
 import { getPageText } from "@/sanity/lib/pageText";
@@ -38,7 +38,7 @@ export default async function RentalsPage({ params }: PageProps<"/[lang]/rentals
 async function Catalogue({ lang }: { lang: Locale }) {
   const { rentals } = await getDictionary(lang);
   const { perspective, variant } = await getDynamicFetchOptions();
-  const { data } = await cachedSanity({ query: RENTALS_QUERY, params: { lang }, perspective, variant, stega: false });
+  const { data } = await cachedSanity({ query: RENTALS_QUERY, params: { lang, fallbackLang: defaultLocale }, perspective, variant, stega: false });
   const { categories, items } = (data ?? { categories: [], items: [] }) as RentalsResult;
 
   const cards: CatalogueCard[] = items.map((item) => ({
@@ -48,14 +48,14 @@ async function Catalogue({ lang }: { lang: Locale }) {
     brand: item.brand,
     summary: item.summary,
     keyFeatures: item.keyFeatures ?? [],
-    categoryId: item.category?._id ?? null,
+    categoryId: item.category?.slug ?? null,
     image: item.images?.[0] ? toRentalImage(item.images[0], 800) : null,
   }));
 
   return (
     <RentalCatalogue
       lang={lang}
-      categories={categories.map((c) => ({ id: c._id, title: c.title }))}
+      categories={categories.map((c) => ({ id: c.slug, title: c.title }))}
       items={cards}
       dict={rentals}
     />
