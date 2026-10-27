@@ -1,5 +1,5 @@
 import { defineArrayMember, defineField, defineType } from "sanity";
-import { imageWithAlt } from "./fields";
+import { imageWithAlt, languageField } from "./fields";
 
 export const siteSettings = defineType({
   name: "siteSettings",
@@ -12,6 +12,7 @@ export const siteSettings = defineType({
     { name: "seo", title: "SEO" },
   ],
   fields: [
+    languageField,
     defineField({ name: "slogan", title: "Slogan (Irish)", type: "string", group: "home" }),
     defineField({ name: "sloganGloss", title: "Slogan (English gloss)", type: "string", group: "home" }),
     defineField({

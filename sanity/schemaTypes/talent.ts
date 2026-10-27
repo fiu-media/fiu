@@ -1,11 +1,12 @@
 import { defineArrayMember, defineField, defineType } from "sanity";
-import { imageWithAlt, orderField, slugField, vimeoUrlField } from "./fields";
+import { imageWithAlt, languageField, orderField, slugField, vimeoUrlField } from "./fields";
 
 export const talent = defineType({
   name: "talent",
   title: "Talent",
   type: "document",
   fields: [
+    languageField,
     defineField({ name: "name", type: "string", validation: (rule) => rule.required() }),
     slugField("name"),
     defineField({

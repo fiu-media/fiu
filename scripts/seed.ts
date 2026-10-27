@@ -68,6 +68,7 @@ async function main() {
   docs.push({
     _id: "siteSettings",
     _type: "siteSettings",
+      language: "en",
     slogan: "Más fiú é a dhéanamh, is fiú é a dhéanamh i gceart.",
     sloganGloss: "If it's worth doing, it's worth doing right.",
     manifesto: [text("m1", "Placeholder manifesto. Replace this with Fiú's own words in the Studio.")],
@@ -82,6 +83,7 @@ async function main() {
     docs.push({
       _id: id,
       _type: "talent",
+      language: "en",
       name: `Sample talent ${i + 1}`,
       slug: slug(`sample-talent-${i + 1}`),
       roles: i === 0 ? ["Director"] : ["Director of Photography"],
@@ -96,6 +98,7 @@ async function main() {
     docs.push({
       _id: `project-sample-${i + 1}`,
       _type: "project",
+      language: "en",
       title: `Sample project ${i + 1}`,
       slug: slug(`sample-project-${i + 1}`),
       type,
@@ -123,6 +126,7 @@ async function main() {
     docs.push({
       _id: c.id,
       _type: "rentalCategory",
+      language: "en",
       title: c.title,
       slug: slug(c.title.toLowerCase().replace(/[^a-z]+/g, "-")),
       order: (i + 1) * 10,
@@ -140,6 +144,7 @@ async function main() {
     docs.push({
       _id: `rental-${g.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
       _type: "rentalItem",
+      language: "en",
       name: g.name,
       slug: slug(g.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")),
       category: ref(g.category),
