@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { Component, useCallback, useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
-import logo from "@/public/brand/fiu-logo.png";
+import logo from "@/public/brand/fiu-logo.svg";
 import type { HeroStill } from "@/sanity/lib/stills";
 
 const LogoScene = dynamic(() => import("@/components/three/LogoScene"), { ssr: false });
@@ -88,7 +88,7 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
         />
       ))}
 
-      {/* PNG logo: shown on the server render, while the live scene loads, and as the
+      {/* SVG logo: shown on the server render, while the live scene loads, and as the
           fallback. The live logo starts its spin from this same front-facing pose. */}
       <div
         className="pointer-events-none absolute inset-0 grid place-items-center transition-opacity duration-700 md:justify-start md:pl-[4vw]"
@@ -118,15 +118,15 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
   );
 }
 
-/** If the 3D scene throws (model or texture failed, context lost), fall back to the PNG. */
+/** If the 3D scene throws (model or texture failed, context lost), fall back to the SVG logo. */
 class SceneBoundary extends Component<{ onError: () => void; children: ReactNode }, { failed: boolean }> {
   state = { failed: false };
   static getDerivedStateFromError() {
     return { failed: true };
   }
   componentDidCatch(error: unknown) {
-    // The PNG fallback hides the failure visually, so leave a trace for debugging.
-    console.error("[HomeHero] live logo failed, showing PNG fallback:", error);
+    // The SVG fallback hides the failure visually, so leave a trace for debugging.
+    console.error("[HomeHero] live logo failed, showing SVG fallback:", error);
     this.props.onError();
   }
   render() {
