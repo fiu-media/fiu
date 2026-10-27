@@ -3,8 +3,6 @@
 import dynamic from "next/dynamic";
 import Image, { type StaticImageData } from "next/image";
 import { Component, useCallback, useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
-import type { LogoMeshMode } from "@/components/three/buildLogoGeometry";
-import { GlassPillButton } from "@/components/ui/Glass";
 import logo from "@/public/brand/fiu-logo.png";
 
 const LogoScene = dynamic(() => import("@/components/three/LogoScene"), { ssr: false });
@@ -43,10 +41,7 @@ function useLiveSupport(): Mode {
 /**
  * Home hero (Canva mockup 1): rotating full-bleed stills with the glass logo.
  *
- * The stills and the transparent PNG logo render as <Image> first, so the first still is
- * the LCP element and the page works without JS. Where WebGL is available and motion
- * isn't reduced, the live scene fades in on top once loaded: the logo spins in and
- * refracts the same stills. Otherwise, or if the scene fails, the PNG simply stays.
+ * Mesh / rim playground controls live at `/dev/logo-playground`.
  */
 /** Local StaticImageData today; CMS stills can add `lightTint` for CORS-safe studio colour. */
 export type HeroStill = StaticImageData & { lightTint?: string };
@@ -55,7 +50,6 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
   const [index, setIndex] = useState(0);
   const [failed, setFailed] = useState(false);
   const [sceneReady, setSceneReady] = useState(false);
-  const [meshMode, setMeshMode] = useState<LogoMeshMode>("extrude");
   const support = useLiveSupport();
   const mode: Mode = failed ? "static" : support;
 
@@ -116,24 +110,9 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
             className="absolute inset-0 transition-opacity duration-1000"
             style={{ opacity: sceneReady ? 1 : 0 }}
           >
-            <LogoScene stills={sceneStills} index={index} onReady={onReady} meshMode={meshMode} />
+            <LogoScene stills={sceneStills} index={index} onReady={onReady} meshMode="extrude" rimLook="light" />
           </div>
         </SceneBoundary>
-      )}
-
-      {mode === "live" && (
-        <div
-          role="group"
-          aria-label="Logo mesh"
-          className="pointer-events-auto absolute bottom-4 left-4 z-20 flex gap-1.5"
-        >
-          <GlassPillButton size="sm" onImage aria-pressed={meshMode === "extrude"} onClick={() => setMeshMode("extrude")}>
-            Extrude
-          </GlassPillButton>
-          <GlassPillButton size="sm" onImage aria-pressed={meshMode === "tubes"} onClick={() => setMeshMode("tubes")}>
-            Tubes
-          </GlassPillButton>
-        </div>
       )}
     </div>
   );

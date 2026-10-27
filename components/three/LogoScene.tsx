@@ -15,8 +15,12 @@ import {
 import * as THREE from "three";
 import paths from "@/public/brand/fiu-logo-paths.json";
 import { buildLogoGeometry, type LogoMeshMode, type LogoPaths } from "./buildLogoGeometry";
+import { LOGO_PARAM_PRESETS, type LogoGlassParams, type LogoRimLook } from "./logoConfig";
+import type { LogoPerfStats } from "./logoPerf";
 
 export type { LogoMeshMode };
+export type { LogoRimLook, LogoGlassParams } from "./logoConfig";
+export type { LogoPerfStats } from "./logoPerf";
 
 const BACKDROP_Z = -4;
 const CROSSFADE_SECONDS = 1.6;
@@ -48,17 +52,30 @@ export default function LogoScene({
   index,
   onReady,
   meshMode = "extrude",
+  rimLook = "light",
+  params: paramsProp,
+  measurePerf = false,
+  onPerf,
 }: {
   stills: SceneStill[];
   index: number;
   onReady: () => void;
   /** `tubes` = liquid-glass taper; `extrude` = flat silhouette slab. */
   meshMode?: LogoMeshMode;
+  /** `light` = luminous bevels; `dark` = charcoal liquid-glass bands. */
+  rimLook?: LogoRimLook;
+  /** Live overrides (playground). Defaults to the rimLook preset. */
+  params?: LogoGlassParams;
+  /** Continuous frameloop + FPS sampling (playground only). */
+  measurePerf?: boolean;
+  onPerf?: (stats: LogoPerfStats) => void;
 }) {
+  const params = paramsProp ?? LOGO_PARAM_PRESETS[rimLook];
+  const dpr = useCanvasDpr(measurePerf);
   return (
     <Canvas
-      frameloop="demand"
-      dpr={[1, 1.5]}
+      frameloop={measurePerf ? "always" : "demand"}
+      dpr={dpr}
       camera={{ position: [0, 0, 12], fov: 30 }}
       gl={{
         alpha: true,
@@ -72,9 +89,112 @@ export default function LogoScene({
       // the WebGL backdrop is only sampled for logo refraction (see BackdropLayerGate).
       onCreated={({ gl }) => gl.setClearColor(0x000000, 0)}
     >
-      <Scene stills={stills} index={index} onReady={onReady} meshMode={meshMode} />
+      <Scene
+        stills={stills}
+        index={index}
+        onReady={onReady}
+        meshMode={meshMode}
+        params={params}
+        envAlways={measurePerf}
+        adaptiveQuality={!measurePerf}
+      />
+      {measurePerf && onPerf ? <PerfSampler onPerf={onPerf} /> : null}
     </Canvas>
   );
+}
+
+/** Cap pixel ratio on mobile / Save-Data; playground keeps a higher ceiling. */
+function useCanvasDpr(measurePerf: boolean): number | [number, number] {
+  const [dpr, setDpr] = useState<number | [number, number]>(() => (measurePerf ? [1, 1.5] : [1, 1.25]));
+  useEffect(() => {
+    if (measurePerf) {
+      setDpr([1, 1.5]);
+      return;
+    }
+    const mq = window.matchMedia("(max-width: 768px)");
+    const sync = () => {
+      const saveData = Boolean(
+        (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData,
+      );
+      setDpr(mq.matches || saveData ? 1 : [1, 1.25]);
+    };
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, [measurePerf]);
+  return dpr;
+}
+
+/**
+ * Step samples/resolution down if FPS stays low, recover when it climbs back.
+ * Disabled in the playground so slider values stay honest.
+ */
+function useAdaptiveTransmission(enabled: boolean, samples: number, resolution: number) {
+  const [tier, setTier] = useState(0);
+  const lowAcc = useRef(0);
+  const highAcc = useRef(0);
+  const tierRef = useRef(0);
+  tierRef.current = tier;
+
+  useFrame((_, delta) => {
+    if (!enabled) {
+      if (tierRef.current !== 0) setTier(0);
+      return;
+    }
+    const fps = delta > 0 ? 1 / delta : 60;
+    if (fps < 30) {
+      lowAcc.current += delta;
+      highAcc.current = 0;
+      if (lowAcc.current > 1.2 && tierRef.current < 2) {
+        lowAcc.current = 0;
+        setTier((t) => Math.min(2, t + 1));
+      }
+    } else if (fps > 48) {
+      highAcc.current += delta;
+      lowAcc.current = 0;
+      if (highAcc.current > 2 && tierRef.current > 0) {
+        highAcc.current = 0;
+        setTier((t) => Math.max(0, t - 1));
+      }
+    } else {
+      lowAcc.current = 0;
+      highAcc.current = 0;
+    }
+  });
+
+  if (!enabled || tier === 0) return { samples, resolution, tier: 0 };
+  return {
+    samples: Math.max(4, samples - tier * 2),
+    resolution: Math.max(256, resolution - tier * 256),
+    tier,
+  };
+}
+
+/** Samples FPS / frame time and renderer info ~2×/sec for the playground HUD. */
+function PerfSampler({ onPerf }: { onPerf: (stats: LogoPerfStats) => void }) {
+  const gl = useThree((s) => s.gl);
+  const onPerfRef = useRef(onPerf);
+  onPerfRef.current = onPerf;
+  const bucket = useRef({ started: performance.now(), frames: 0, frameMs: 0 });
+
+  useFrame((_, delta) => {
+    const b = bucket.current;
+    b.frames += 1;
+    b.frameMs = delta * 1000;
+    const now = performance.now();
+    if (now - b.started < 500) return;
+    const fps = (b.frames * 1000) / (now - b.started);
+    b.frames = 0;
+    b.started = now;
+    onPerfRef.current({
+      fps,
+      frameMs: b.frameMs,
+      triangles: gl.info.render.triangles,
+      calls: gl.info.render.calls,
+    });
+  });
+
+  return null;
 }
 
 function Scene({
@@ -82,11 +202,18 @@ function Scene({
   index,
   onReady,
   meshMode,
+  params,
+  envAlways,
+  adaptiveQuality,
 }: {
   stills: SceneStill[];
   index: number;
   onReady: () => void;
   meshMode: LogoMeshMode;
+  params: LogoGlassParams;
+  /** Playground: keep cubemap live while measuring / scrubbing. */
+  envAlways: boolean;
+  adaptiveQuality: boolean;
 }) {
   // useTexture suspends until loaded, so .image is available on first paint here.
   const textures = useTexture(
@@ -98,7 +225,7 @@ function Scene({
       }
     },
   );
-  const keepAwake = useKeepAwake();
+  const { keepAwake, awakeRef } = useKeepAwake();
   const fade = useRef<Fade>({ from: index, to: index, start: 0 });
   const tint = useRef(NEUTRAL_TINT.clone());
   // Logo orientation — spark lights lag behind this so highlights crawl on spin.
@@ -108,6 +235,11 @@ function Scene({
     () => stills.map((still, i) => resolveStillTint(still, textures[i])),
     [stills, textures],
   );
+
+  // Cover intro spin + first settle so env streaks track the logo.
+  useEffect(() => {
+    keepAwake(SPIN_END + 1);
+  }, [keepAwake]);
 
   useEffect(() => {
     const f = fade.current;
@@ -132,15 +264,22 @@ function Scene({
       {/* Layer 1: still plane for refraction only — not drawn to the screen (HTML stills are). */}
       <BackdropLayerGate />
       <Backdrop stills={stills} textures={textures} fade={fade} />
-      <Logo onReady={onReady} tint={tint} logoPose={logoPose} meshMode={meshMode} />
+      <Logo
+        onReady={onReady}
+        tint={tint}
+        logoPose={logoPose}
+        meshMode={meshMode}
+        params={params}
+        keepAwake={keepAwake}
+        adaptiveQuality={adaptiveQuality}
+      />
       {/* Disable still layer after MTM's FBO capture so the main/bloom pass is logo-only. */}
       <BackdropLayerGate phase="afterTransmission" />
-      {/* frames=Infinity: re-bake whenever the demand loop runs (crossfade / parallax),
-          so tint tracks the still. Idle canvases don't draw, so this stays cheap. */}
-      <Studio tint={tint} logoPose={logoPose} />
+      {/* Env cubemap re-bakes only while awake (crossfade / drag / intro); idle uses a frozen map. */}
+      <Studio tint={tint} logoPose={logoPose} params={params} fade={fade} awakeRef={awakeRef} envAlways={envAlways} />
       {/* External sparkle: lagged point lights (env SoftLights do the glass streaks).
           Full-scene bloom is skipped — it was tonemapping/blooming the stills too. */}
-      <SparkLights logoPose={logoPose} />
+      <SparkLights logoPose={logoPose} lights={params.lights.points} />
     </>
   );
 }
@@ -162,21 +301,47 @@ const SPARK_FOLLOW = 1.1;
  * Soft fill only — point lights make round specular blobs. Streaks come from
  * elongated env SoftLights + anisotropic transmission instead.
  */
-function SparkLights({ logoPose }: { logoPose: MutableRefObject<{ x: number; y: number }> }) {
-  const group = useRef<THREE.Group>(null);
+function SparkLights({
+  logoPose,
+  lights,
+}: {
+  logoPose: MutableRefObject<{ x: number; y: number }>;
+  lights: LogoGlassParams["lights"]["points"];
+}) {
+  const follow = useRef<THREE.Group>(null);
+  const fixed = lights.filter((l) => l.enabled && !l.followPose);
+  const moving = lights.filter((l) => l.enabled && l.followPose);
   useFrame((_, delta) => {
-    const g = group.current;
+    const g = follow.current;
     if (!g) return;
     g.rotation.x = THREE.MathUtils.damp(g.rotation.x, logoPose.current.x, SPARK_FOLLOW, delta);
     g.rotation.y = THREE.MathUtils.damp(g.rotation.y, logoPose.current.y, SPARK_FOLLOW, delta);
   });
   return (
-    <group ref={group}>
-      <pointLight position={[-1.8, 3.8, 7]} intensity={28} distance={16} decay={2.2} color="#fff8f0" />
-      {/* Kept left/top — a right-side key was catching the ü tip at rest */}
-      <pointLight position={[-0.4, 2.8, 6.5]} intensity={18} distance={14} decay={2.2} color="#ffffff" />
-      <pointLight position={[0.5, -1.8, 6]} intensity={16} distance={12} decay={2.2} color="#ffffff" />
-    </group>
+    <>
+      {fixed.map((l) => (
+        <pointLight
+          key={l.id}
+          position={[l.x, l.y, l.z]}
+          intensity={l.intensity}
+          distance={l.distance}
+          decay={l.decay}
+          color={l.color}
+        />
+      ))}
+      <group ref={follow}>
+        {moving.map((l) => (
+          <pointLight
+            key={l.id}
+            position={[l.x, l.y, l.z]}
+            intensity={l.intensity}
+            distance={l.distance}
+            decay={l.decay}
+            color={l.color}
+          />
+        ))}
+      </group>
+    </>
   );
 }
 
@@ -184,16 +349,43 @@ function SparkLights({ logoPose }: { logoPose: MutableRefObject<{ x: number; y: 
 function useKeepAwake() {
   const invalidate = useThree((s) => s.invalidate);
   const until = useRef(0);
+  const awakeRef = useRef(true);
   useFrame(() => {
-    if (performance.now() < until.current) invalidate();
+    const awake = performance.now() < until.current;
+    awakeRef.current = awake;
+    if (awake) invalidate();
   });
-  return useCallback(
+  const keepAwake = useCallback(
     (seconds: number) => {
       until.current = Math.max(until.current, performance.now() + seconds * 1000);
+      awakeRef.current = true;
       invalidate();
     },
     [invalidate],
   );
+  return { keepAwake, awakeRef };
+}
+
+/**
+ * Env portal frames: Infinity while the scene is moving (tint / pose), else 1 so the
+ * cubemap freezes. Playground passes envAlways to keep scrubbing live.
+ */
+function useEnvFrames(
+  fade: RefObject<Fade>,
+  awakeRef: MutableRefObject<boolean>,
+  envAlways: boolean,
+) {
+  const [frames, setFrames] = useState<number>(Infinity);
+  const liveRef = useRef(true);
+  useFrame(() => {
+    const f = fade.current;
+    const fading = Boolean(f?.start) && performance.now() - f.start < CROSSFADE_SECONDS * 1000;
+    const live = envAlways || awakeRef.current || fading;
+    if (live === liveRef.current) return;
+    liveRef.current = live;
+    setFrames(live ? Infinity : 1);
+  });
+  return frames;
 }
 
 /** Prefer CMS `lightTint`; else sample the texture; else neutral. Sampling failures (CORS) fall through. */
@@ -373,12 +565,24 @@ function useFeatherMap() {
 function Studio({
   tint,
   logoPose,
+  params,
+  fade,
+  awakeRef,
+  envAlways,
 }: {
   tint: MutableRefObject<THREE.Color>;
   logoPose: MutableRefObject<{ x: number; y: number }>;
+  params: LogoGlassParams;
+  fade: RefObject<Fade>;
+  awakeRef: MutableRefObject<boolean>;
+  envAlways: boolean;
 }) {
   const follow = useRef<THREE.Group>(null);
   const feather = useFeatherMap();
+  const frames = useEnvFrames(fade, awakeRef, envAlways);
+  const soft = params.lights.soft.filter((l) => l.enabled);
+  const fixed = soft.filter((l) => !l.followPose);
+  const moving = soft.filter((l) => l.followPose);
   useFrame((_, delta) => {
     const g = follow.current;
     if (!g) return;
@@ -386,34 +590,36 @@ function Studio({
     g.rotation.y = THREE.MathUtils.damp(g.rotation.y, logoPose.current.y, SPARK_FOLLOW, delta);
   });
   return (
-    <Environment resolution={256} frames={Infinity}>
-      <SoftLight tint={tint} mixWhite={0} intensity={0.8} lift={0.35} position={[0, 0, -7]} scale={14} />
-      {/* Key + fill — oversized + feathered; low mixWhite so still tint colors the glass */}
-      <SoftLight
-        tint={tint}
-        mixWhite={0.08}
-        intensity={2.4}
-        position={[-2.2, 3, 9.5]}
-        scale={13}
-        feather={feather}
-      />
-      <SoftLight
-        tint={tint}
-        mixWhite={0.05}
-        intensity={1.8}
-        position={[2.6, -2, 9]}
-        scale={12}
-        feather={feather}
-      />
-      {/* Bright streaks + compact hot cores — biased left/top so the ü tip stays quiet at rest */}
+    <Environment resolution={256} frames={frames}>
+      {fixed.map((l) => (
+        <SoftLight
+          key={l.id}
+          tint={tint}
+          mixWhite={l.mixWhite}
+          intensity={l.intensity}
+          lift={l.lift}
+          position={[l.x, l.y, l.z]}
+          scale={[l.scaleX, l.scaleY, l.scaleZ]}
+          streak={l.kind === "streak"}
+          roll={l.roll}
+          feather={l.feather ? feather : undefined}
+        />
+      ))}
       <group ref={follow}>
-        <SoftLight tint={tint} mixWhite={1} intensity={7} position={[-1.5, 4, 9.5]} scale={[6, 0.55, 1]} streak roll={0.4} />
-        <SoftLight tint={tint} mixWhite={1} intensity={5.5} position={[0.3, 4.6, 8.5]} scale={[5, 0.45, 1]} streak roll={0.15} />
-        <SoftLight tint={tint} mixWhite={1} intensity={5} position={[-2.4, 1.2, 9]} scale={[4.5, 0.45, 1]} streak roll={1.1} />
-        <SoftLight tint={tint} mixWhite={1} intensity={4.5} position={[1.2, 4.2, 8.8]} scale={[4, 0.4, 1]} streak roll={-0.35} />
-        <SoftLight tint={tint} mixWhite={1} intensity={14} position={[-1.2, 3.5, 10]} scale={0.7} />
-        <SoftLight tint={tint} mixWhite={1} intensity={11} position={[0.6, 4.2, 9.8]} scale={0.5} />
-        <SoftLight tint={tint} mixWhite={1} intensity={10} position={[-2.0, 0.6, 9.2]} scale={0.45} />
+        {moving.map((l) => (
+          <SoftLight
+            key={l.id}
+            tint={tint}
+            mixWhite={l.mixWhite}
+            intensity={l.intensity}
+            lift={l.lift}
+            position={[l.x, l.y, l.z]}
+            scale={[l.scaleX, l.scaleY, l.scaleZ]}
+            streak={l.kind === "streak"}
+            roll={l.roll}
+            feather={l.feather ? feather : undefined}
+          />
+        ))}
       </group>
     </Environment>
   );
@@ -454,7 +660,7 @@ function SoftLight({
     if (!m) return;
     m.lookAt(0, 0, 0);
     if (roll) m.rotateZ(roll);
-  }, [position, roll]);
+  }, [position[0], position[1], position[2], roll]);
 
   useFrame(() => {
     const m = mat.current;
@@ -472,9 +678,9 @@ function SoftLight({
       {streak ? (
         <planeGeometry args={[1, 1]} />
       ) : ring ? (
-        <ringGeometry args={[0.22, 0.5, 64]} />
+        <ringGeometry args={[0.22, 0.5, 24]} />
       ) : (
-        <ringGeometry args={[0, 0.5, 64]} />
+        <ringGeometry args={[0, 0.5, 24]} />
       )}
       <meshBasicMaterial
         ref={mat}
@@ -511,14 +717,6 @@ function spinAt(t: number) {
   return SPIN[SPIN.length - 1][1];
 }
 
-const DRAG_SENSITIVITY = 0.005;
-const HOVER_TILT_X = 0.12;
-const HOVER_TILT_Y = 0.18;
-/** Velocity decay after release (higher = stops sooner). */
-const DRAG_FRICTION = 2.4;
-/** Underdamped return spring — low damping so it overshoots once, then settles. */
-const DRAG_SPRING = 55;
-const DRAG_SPRING_DAMP = 4.2;
 /** Start the return spring once coasting has nearly stopped (not exactly 0). */
 const DRAG_VELOCITY_EPS = 0.08;
 const DRAG_ANGLE_EPS = 0.0015;
@@ -534,16 +732,21 @@ function Logo({
   tint,
   logoPose,
   meshMode,
+  params,
+  keepAwake,
+  adaptiveQuality,
 }: {
   onReady: () => void;
   tint: MutableRefObject<THREE.Color>;
   logoPose: MutableRefObject<{ x: number; y: number }>;
   meshMode: LogoMeshMode;
+  params: LogoGlassParams;
+  keepAwake: (seconds: number) => void;
+  adaptiveQuality: boolean;
 }) {
   const size = useThree((s) => s.size);
   const viewport = useThree((s) => s.viewport);
   const gl = useThree((s) => s.gl);
-  const keepAwake = useKeepAwake();
   const group = useRef<THREE.Group>(null);
   const mesh = useRef<THREE.Mesh>(null);
   // drei types MeshTransmissionMaterial's ref as its props shape, not MeshPhysicalMaterial.
@@ -565,14 +768,35 @@ function Logo({
   const invalidate = useThree((s) => s.invalidate);
   const glow = useMemo(() => new THREE.Color(), []);
   const localPoint = useMemo(() => new THREE.Vector3(), []);
+  const paramsRef = useRef(params);
+  paramsRef.current = params;
+  const quality = useAdaptiveTransmission(adaptiveQuality, params.samples, params.resolution);
   const [hovered, setHovered] = useState(false);
   const [dragging, setDragging] = useState(false);
   useCursor(hovered || dragging, dragging ? "grabbing" : "grab");
 
-  const geometry = useMemo(
-    () => buildLogoGeometry(paths as unknown as LogoPaths, meshMode),
-    [meshMode],
-  );
+  const extrudeKey = params.extrude
+    ? `${params.extrude.depth}:${params.extrude.bevelThickness}:${params.extrude.bevelSize}`
+    : "default";
+
+  const geometry = useMemo(() => {
+    const base = paths as unknown as LogoPaths;
+    if (meshMode === "extrude" && base.extrude && params.extrude) {
+      return buildLogoGeometry(
+        {
+          ...base,
+          extrude: {
+            ...base.extrude,
+            ...params.extrude,
+          },
+        },
+        meshMode,
+      );
+    }
+    return buildLogoGeometry(base, meshMode);
+    // extrudeKey tracks nested extrude fields without depending on the whole params object identity.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [meshMode, extrudeKey]);
 
   useEffect(() => () => geometry.dispose(), [geometry]);
 
@@ -594,22 +818,27 @@ function Logo({
     gl.domElement.style.touchAction = "none";
   }, [invalidate, gl]);
 
-  // Redraw after a mesh-mode swap without resetting intro spin state.
+  // Redraw after mesh / material param changes without resetting intro spin state.
   useEffect(() => {
     invalidate();
-  }, [geometry, invalidate]);
+  }, [geometry, params, invalidate]);
 
   // Drag continues on the window so rotation doesn't stop when the pointer leaves the mesh.
   useEffect(() => {
     const onMove = (e: PointerEvent) => {
       const d = drag.current;
       if (!d.active) return;
+      const look = paramsRef.current;
+      const pitchMax = look.dragPitchMax;
+      const sens = look.dragSensitivity;
       const now = performance.now();
       const dt = Math.max((now - d.lastT) / 1000, 1 / 120);
-      const dX = (e.clientY - d.lastY) * DRAG_SENSITIVITY;
-      const dY = (e.clientX - d.lastX) * DRAG_SENSITIVITY;
-      d.rotX = THREE.MathUtils.clamp(d.rotX + dX, -Math.PI / 2, Math.PI / 2);
+      const dX = (e.clientY - d.lastY) * sens;
+      const dY = (e.clientX - d.lastX) * sens;
+      d.rotX = THREE.MathUtils.clamp(d.rotX + dX, -pitchMax, pitchMax);
       d.rotY += dY;
+      // Kill pitch momentum at the soft stop so coasting can't flip it vertical.
+      if (Math.abs(d.rotX) >= pitchMax - 1e-4) d.velX = 0;
       // Exponential moving average of angular velocity (rad/s).
       const vx = dX / dt;
       const vy = dY / dt;
@@ -656,12 +885,16 @@ function Logo({
 
     // Internal glow picks up the still temperature (like liquid-glass.jpg's warm core).
     const mat = material.current as (THREE.MeshPhysicalMaterial & { attenuationColor: THREE.Color }) | null;
+    const look = paramsRef.current;
     if (mat?.attenuationColor) {
       glow.copy(tint.current);
-      // Lift so thick cores glow; keep chroma so it isn't milky white.
       const hsl = { h: 0, s: 0, l: 0 };
       glow.getHSL(hsl);
-      glow.setHSL(hsl.h, Math.min(0.85, hsl.s * 1.15), THREE.MathUtils.clamp(hsl.l + 0.12, 0.4, 0.72));
+      glow.setHSL(
+        hsl.h,
+        Math.min(0.85, hsl.s * look.glowSat),
+        THREE.MathUtils.clamp(hsl.l + look.glowLift, look.glowLMin, look.glowLMax),
+      );
       mat.attenuationColor.copy(glow);
     }
 
@@ -676,9 +909,9 @@ function Logo({
     const t = a.time;
 
     // Wobble only while hovering the logo (and not dragging); ease back to rest on leave.
-    const k = 1 - Math.exp(-delta * 4);
-    const targetX = hover.current.active && !drag.current.active ? hover.current.y * HOVER_TILT_X : 0;
-    const targetY = hover.current.active && !drag.current.active ? hover.current.x * HOVER_TILT_Y : 0;
+    const k = 1 - Math.exp(-delta * look.hoverLerp);
+    const targetX = hover.current.active && !drag.current.active ? hover.current.y * look.hoverTiltX : 0;
+    const targetY = hover.current.active && !drag.current.active ? hover.current.x * look.hoverTiltY : 0;
     tilt.current.x = THREE.MathUtils.lerp(tilt.current.x, targetX, k);
     tilt.current.y = THREE.MathUtils.lerp(tilt.current.y, targetY, k);
 
@@ -701,12 +934,12 @@ function Logo({
       if (!d.returning) {
         d.rotX += d.velX * delta;
         d.rotY += d.velY * delta;
-        const friction = Math.exp(-DRAG_FRICTION * delta);
+        const friction = Math.exp(-look.dragFriction * delta);
         d.velX *= friction;
         d.velY *= friction;
       } else {
-        d.velX += (-DRAG_SPRING * d.rotX - DRAG_SPRING_DAMP * d.velX) * delta;
-        d.velY += (-DRAG_SPRING * d.rotY - DRAG_SPRING_DAMP * d.velY) * delta;
+        d.velX += (-look.dragSpringPitch * d.rotX - look.dragSpringPitchDamp * d.velX) * delta;
+        d.velY += (-look.dragSpring * d.rotY - look.dragSpringDamp * d.velY) * delta;
         d.rotX += d.velX * delta;
         d.rotY += d.velY * delta;
         if (
@@ -722,7 +955,11 @@ function Logo({
           d.returning = false;
         }
       }
-      d.rotX = THREE.MathUtils.clamp(d.rotX, -Math.PI / 2, Math.PI / 2);
+      const pitchMax = paramsRef.current.dragPitchMax;
+      if (Math.abs(d.rotX) > pitchMax) {
+        d.rotX = THREE.MathUtils.clamp(d.rotX, -pitchMax, pitchMax);
+        d.velX = 0;
+      }
       if (d.velX || d.velY || d.rotX || d.rotY || d.returning) invalidate();
     }
 
@@ -773,27 +1010,27 @@ function Logo({
         <MeshTransmissionMaterial
           ref={material}
           // Banding fix stays (blur + dither); CA / env / tint restored for color.
-          samples={10}
-          resolution={768}
-          backside
+          samples={quality.samples}
+          resolution={quality.resolution}
+          backside={params.backside}
+          backsideEnvMapIntensity={params.backsideEnvMapIntensity}
           dithering
-          // Sparkles live in the volume only: hot env discs + strong dispersion, no coat.
-          backsideThickness={1.55}
-          thickness={2.1}
-          ior={1.56}
-          chromaticAberration={0.58}
-          anisotropicBlur={0.38}
-          distortion={0.14}
-          distortionScale={0.4}
+          backsideThickness={params.backsideThickness}
+          thickness={params.thickness}
+          ior={params.ior}
+          chromaticAberration={params.chromaticAberration}
+          anisotropicBlur={params.anisotropicBlur}
+          distortion={params.distortion}
+          distortionScale={params.distortionScale}
           temporalDistortion={0}
-          roughness={0.06}
-          clearcoat={0.6}
-          clearcoatRoughness={0.12}
-          specularIntensity={0.7}
-          envMapIntensity={2.35}
+          roughness={params.roughness}
+          clearcoat={params.clearcoat}
+          clearcoatRoughness={params.clearcoatRoughness}
+          specularIntensity={params.specularIntensity}
+          envMapIntensity={params.envMapIntensity}
           color="#ffffff"
           attenuationColor="#fff6f0"
-          attenuationDistance={2.6}
+          attenuationDistance={params.attenuationDistance}
         />
       </mesh>
     </group>
