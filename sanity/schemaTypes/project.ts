@@ -1,7 +1,6 @@
 import { defineArrayMember, defineField, defineType } from "sanity";
+import { projectTypes } from "../../lib/project-types";
 import { imageArrayMember, imageWithAlt, languageField, orderField, slugField, vimeoUrlField } from "./fields";
-
-export const projectTypes = ["Original", "Commercial", "Music Video", "Short", "Documentary"] as const;
 
 export const project = defineType({
   name: "project",

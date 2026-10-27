@@ -1,6 +1,8 @@
 /**
- * Seeds placeholder content into the Sanity dataset. Safe to re-run: every document has a
- * fixed _id and is written with createOrReplace, and image uploads are de-duplicated by hash.
+ * Seeds placeholder content into the Sanity dataset. Safe to re-run and non-destructive: every
+ * document has a fixed _id and is written with createIfNotExists, so anything that already
+ * exists (including edits made in the Studio) is left exactly as it is. Image uploads are
+ * de-duplicated by hash.
  *
  *   npm run seed
  *
@@ -162,10 +164,15 @@ async function main() {
     }),
   );
 
+  const existing = new Set(await client.fetch<string[]>(`*[_id in $ids]._id`, { ids: docs.map((d) => d._id) }));
+  const missing = docs.filter((doc) => !existing.has(doc._id as string));
+
   const tx = client.transaction();
-  for (const doc of docs) tx.createOrReplace(doc as { _id: string; _type: string });
+  for (const doc of missing) tx.createIfNotExists(doc as { _id: string; _type: string });
   await tx.commit();
-  console.log(`Seeded ${docs.length} documents and ${STILLS.length} images into ${client.config().dataset}.`);
+  console.log(
+    `Created ${missing.length} of ${docs.length} documents in ${client.config().dataset}; ${existing.size} already existed and were left untouched.`,
+  );
 }
 
 main().catch((err) => {

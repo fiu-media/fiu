@@ -16,6 +16,42 @@ export const en = {
     rentals: "Rentals",
     contact: "Contact",
   },
+  footer: {
+    copyright: "Fiú Media © {year}",
+  },
+  vimeo: {
+    play: "Play {title}",
+  },
+  about: {
+    title: "About",
+    emailLabel: "Email",
+    instagramLabel: "Instagram",
+  },
+  work: {
+    title: "Our Work",
+    filterLabel: "Filter by project type",
+    all: "All",
+    types: {
+      Original: "Originals",
+      Commercial: "Commercial",
+      "Music Video": "Music videos",
+      Short: "Shorts",
+      Documentary: "Documentaries",
+    },
+    empty: "No projects of this type yet.",
+    credits: "Credits",
+    stills: "Stills",
+    next: "Next project",
+    back: "All work",
+  },
+  talent: {
+    title: "Talent",
+    empty: "Our roster is being updated.",
+    showreel: "Showreel",
+    projects: "Projects",
+    workWith: "Work with {name}",
+    back: "All talent",
+  },
   rentals: {
     title: "Rentals",
     filterLabel: "Filter by category",
