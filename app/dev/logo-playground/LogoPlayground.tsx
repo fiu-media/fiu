@@ -14,14 +14,18 @@ import {
 import type { LogoMeshMode } from "@/components/three/buildLogoGeometry";
 import {
   formatConfigExport,
+  formatInteractionConfigExport,
   formatLightingConfigExport,
   formatMaterialConfigExport,
+  importPlaygroundConfig,
   LOGO_PARAM_PRESETS,
   presetConfig,
+  resetInteractionParams,
   resetLightingParams,
   resetMaterialParams,
   type LogoDisplayMode,
   type LogoGlassParams,
+  type LogoImportKind,
   type LogoPlaygroundConfig,
   type LogoPointLightConfig,
   type LogoRimLook,
@@ -35,12 +39,12 @@ const LogoScene = dynamic(() => import("@/components/three/LogoScene"), { ssr: f
 
 const ROTATE_SECONDS = 6;
 
-type ConfigTab = "material" | "lighting";
+type ConfigTab = "material" | "lighting" | "interaction";
 const DEFAULT_TAB: ConfigTab = "material";
 const TAB_EVENT = "logo-playground-tab";
 
 function isConfigTab(value: string): value is ConfigTab {
-  return value === "material" || value === "lighting";
+  return value === "material" || value === "lighting" || value === "interaction";
 }
 
 function subscribeTab(onChange: () => void) {
@@ -130,6 +134,9 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
   const [copied, setCopied] = useState<"full" | ConfigTab | null>(null);
   const [panelOpen, setPanelOpen] = useState(true);
   const [perf, setPerf] = useState<LogoPerfStats | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
+  const [importText, setImportText] = useState("");
+  const [importStatus, setImportStatus] = useState<string | null>(null);
   const tab = useConfigTab();
 
   const cost = useMemo(() => costVsPreset(config.params, config.rimLook), [config.params, config.rimLook]);
@@ -227,11 +234,32 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
 
   const copyFullConfig = () => writeClipboard("full", formatConfigExport(config));
 
-  const copyTabConfig = (section: ConfigTab) =>
-    writeClipboard(
-      section,
-      section === "material" ? formatMaterialConfigExport(config) : formatLightingConfigExport(config),
-    );
+  const applyImport = () => {
+    const result = importPlaygroundConfig(config, importText);
+    if (!result.ok) {
+      setImportStatus(result.error);
+      return;
+    }
+    setFailed(false);
+    if (result.config.meshMode !== config.meshMode || result.config.display !== config.display) {
+      setSceneReady(false);
+    }
+    setConfig(result.config);
+    setImportStatus(importSuccessLabel(result.kind));
+    setImportText("");
+    if (result.kind !== "full") selectTab(result.kind);
+    window.setTimeout(() => setImportStatus(null), 2200);
+  };
+
+  const copyTabConfig = (section: ConfigTab) => {
+    const payload =
+      section === "material"
+        ? formatMaterialConfigExport(config)
+        : section === "lighting"
+          ? formatLightingConfigExport(config)
+          : formatInteractionConfigExport(config);
+    return writeClipboard(section, payload);
+  };
 
   const resetTab = (section: ConfigTab) => {
     setConfig((c) => ({
@@ -239,7 +267,9 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
       params:
         section === "material"
           ? resetMaterialParams(c.params, c.rimLook)
-          : resetLightingParams(c.params, c.rimLook),
+          : section === "lighting"
+            ? resetLightingParams(c.params, c.rimLook)
+            : resetInteractionParams(c.params, c.rimLook),
     }));
   };
 
@@ -305,6 +335,18 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
           <GlassPillButton size="sm" onImage onClick={() => setPanelOpen((o) => !o)}>
             {panelOpen ? "Hide panel" : "Show panel"}
           </GlassPillButton>
+          <GlassPillButton
+            size="sm"
+            onImage
+            aria-pressed={importOpen}
+            onClick={() => {
+              setImportOpen((o) => !o);
+              setImportStatus(null);
+              setPanelOpen(true);
+            }}
+          >
+            Import
+          </GlassPillButton>
           <GlassPillButton size="sm" onImage onClick={copyFullConfig}>
             {copied === "full" ? "Copied" : "Copy all"}
           </GlassPillButton>
@@ -335,6 +377,16 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
               >
                 Lighting
               </GlassPillButton>
+              <GlassPillButton
+                size="sm"
+                onImage
+                role="tab"
+                aria-selected={tab === "interaction"}
+                aria-pressed={tab === "interaction"}
+                onClick={() => selectTab("interaction")}
+              >
+                Interaction
+              </GlassPillButton>
             </div>
             <GlassPillButton size="sm" onImage onClick={() => resetTab(tab)}>
               Reset
@@ -345,6 +397,42 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
           </div>
 
           <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-4 text-sm">
+            {importOpen && (
+              <Section title="Import config">
+                <p className="mb-2 text-[11px] leading-snug text-white/55">
+                  Paste a copied <code className="text-white/70">fiu-logo-config</code>, material, lighting, or
+                  interaction snapshot. Partial imports only overwrite that section.
+                </p>
+                <textarea
+                  value={importText}
+                  onChange={(e) => {
+                    setImportText(e.target.value);
+                    setImportStatus(null);
+                  }}
+                  spellCheck={false}
+                  rows={7}
+                  placeholder={'```fiu-logo-config\n{ ... }\n```'}
+                  className="w-full resize-y rounded-xl border border-white/15 bg-black/40 px-3 py-2 font-mono text-[11px] leading-snug text-white/90 outline-none placeholder:text-white/30 focus:border-white/35"
+                />
+                <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                  <GlassPillButton size="sm" onImage onClick={applyImport} disabled={!importText.trim()}>
+                    Apply import
+                  </GlassPillButton>
+                  <GlassPillButton
+                    size="sm"
+                    onImage
+                    onClick={() => {
+                      setImportText("");
+                      setImportStatus(null);
+                    }}
+                  >
+                    Clear
+                  </GlassPillButton>
+                  {importStatus && <span className="text-[11px] text-white/60">{importStatus}</span>}
+                </div>
+              </Section>
+            )}
+
             <Section title="Display">
               <PillRow>
                 <GlassPillButton size="sm" onImage aria-pressed={config.display === "live"} onClick={() => setDisplay("live")}>
@@ -475,20 +563,6 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
                   ))}
                 </Section>
 
-                <Section title="Interaction">
-                  {INTERACTION_SLIDERS.map((s) => (
-                    <Slider
-                      key={s.key}
-                      label={s.label}
-                      min={s.min}
-                      max={s.max}
-                      step={s.step}
-                      value={Number(config.params[s.key])}
-                      onChange={(v) => setParam(s.key, v as never)}
-                    />
-                  ))}
-                </Section>
-
                 {config.meshMode === "extrude" && (
                   <Section title="Extrude geometry">
                     <label className="mb-2 flex items-center gap-2 text-xs text-white/80">
@@ -562,16 +636,38 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
                 </Section>
               </>
             )}
+
+            {tab === "interaction" && (
+              <Section title="Drag & hover">
+                {INTERACTION_SLIDERS.map((s) => (
+                  <Slider
+                    key={s.key}
+                    label={s.label}
+                    min={s.min}
+                    max={s.max}
+                    step={s.step}
+                    value={Number(config.params[s.key])}
+                    onChange={(v) => setParam(s.key, v as never)}
+                  />
+                ))}
+              </Section>
+            )}
           </div>
           <p className="border-t border-white/10 px-4 py-2 text-[11px] leading-snug text-white/45">
-            Tab copy exports <code className="text-white/70">fiu-logo-material</code> or{" "}
-            <code className="text-white/70">fiu-logo-lighting</code>. Copy all uses{" "}
-            <code className="text-white/70">fiu-logo-config</code>.
+            Tab copy exports <code className="text-white/70">fiu-logo-material</code>,{" "}
+            <code className="text-white/70">fiu-logo-lighting</code>, or{" "}
+            <code className="text-white/70">fiu-logo-interaction</code>. Copy all / Import use{" "}
+            <code className="text-white/70">fiu-logo-config</code> (or a tab snapshot).
           </p>
         </aside>
       )}
     </div>
   );
+}
+
+function importSuccessLabel(kind: LogoImportKind) {
+  if (kind === "full") return "Applied full config.";
+  return `Applied ${kind} config.`;
 }
 
 function PerfMeter({

@@ -157,6 +157,14 @@ body {
     opacity: 1;
   }
 
+  .glass-interactive {
+    cursor: pointer;
+  }
+
+  .glass-interactive:disabled {
+    cursor: not-allowed;
+  }
+
   .glass-interactive:hover {
     --glass-tint: var(--glass-tint-strong);
   }
