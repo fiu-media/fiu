@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
+import { Suspense } from "react";
 import { InlineScript } from "@/components/InlineScript";
+import { SanityChrome } from "@/components/sanity/SanityChrome";
 import "./globals.css";
 
 // Placeholder text face until a pairing is chosen from /dev/specimen.
@@ -12,8 +14,8 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "Fíu Media",
-    template: "%s · Fíu Media",
+    default: "Fiú Media",
+    template: "%s · Fiú Media",
   },
   description: "Más fiú é a dhéanamh, is fiú é a dhéanamh i gceart.",
 };
@@ -30,6 +32,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       </head>
       <body className="min-h-dvh font-sans antialiased">
         {children}
+        <Suspense>
+          <SanityChrome />
+        </Suspense>
         <Analytics />
       </body>
     </html>

@@ -1,9 +1,10 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import Image, { type StaticImageData } from "next/image";
+import Image from "next/image";
 import { Component, useCallback, useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
 import logo from "@/public/brand/fiu-logo.png";
+import type { HeroStill } from "@/sanity/lib/stills";
 
 const LogoScene = dynamic(() => import("@/components/three/LogoScene"), { ssr: false });
 
@@ -46,7 +47,7 @@ function useLiveSupport(): Mode {
  * isn't reduced, the live scene fades in on top once loaded: the logo spins in and
  * refracts the same stills. Otherwise, or if the scene fails, the PNG simply stays.
  */
-export function HomeHero({ stills }: { stills: StaticImageData[] }) {
+export function HomeHero({ stills }: { stills: HeroStill[] }) {
   const [index, setIndex] = useState(0);
   const [failed, setFailed] = useState(false);
   const [sceneReady, setSceneReady] = useState(false);
@@ -66,14 +67,16 @@ export function HomeHero({ stills }: { stills: StaticImageData[] }) {
       {stills.map((still, i) => (
         <Image
           key={still.src}
-          src={still}
-          alt=""
+          src={still.src}
+          alt={still.alt}
           fill
           priority={i === 0}
-          placeholder="blur"
+          placeholder={still.blurDataURL ? "blur" : "empty"}
+          blurDataURL={still.blurDataURL}
           sizes="100vw"
           className="object-cover transition-opacity duration-[1600ms] ease-in-out"
-          style={{ opacity: i === index ? 1 : 0 }}
+          style={{ opacity: i === index ? 1 : 0, objectPosition: still.position }}
+          data-sanity={still.dataSanity}
         />
       ))}
 
