@@ -30,6 +30,7 @@ export type RentalItem = {
   brand: string | null;
   summary: string | null;
   keyFeatures: string[] | null;
+  maxQuantity: number | null;
   category: { _id: string; title: string } | null;
   images: SanityImage[] | null;
   specs?: { _key: string; key: string; value: string }[] | null;
@@ -41,6 +42,7 @@ export type CatalogueEntry = {
   _id: string;
   name: string;
   brand: string | null;
+  maxQuantity: number | null;
   slug: string;
   image: (Omit<SanityImage, "dimensions"> & { _key?: never }) | null;
 };

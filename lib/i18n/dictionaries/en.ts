@@ -4,8 +4,12 @@ export const en = {
     name: "Fiú Media",
     description: "Más fiú é a dhéanamh, is fiú é a dhéanamh i gceart.",
   },
+  common: {
+    loading: "Loading…",
+  },
   nav: {
     label: "Primary",
+    home: "Fiú Media, home",
     about: "About Us",
     work: "Our Work",
     talent: "Talent",
@@ -14,14 +18,14 @@ export const en = {
   },
   rentals: {
     title: "Rentals",
-    intro: "Cameras, lenses, lighting and grip from our own kit room. Build a quote and we'll come back to you with availability and rates.",
     filterLabel: "Filter by category",
     allCategories: "All",
     empty: "Nothing in this category yet.",
     emptyCatalogue: "Our kit list is being updated. Get in touch and we'll help with what you need.",
     addToQuote: "Add to quote",
     inQuote: "In quote ({qty})",
-    addAnother: "Add another",
+    maxReached: "Maximum in quote",
+    maxPerQuote: "Up to {max} per quote",
     viewDetails: "Details",
     backToRentals: "All rentals",
     noImage: "Photo coming soon",
@@ -46,7 +50,6 @@ export const en = {
   },
   quote: {
     title: "Request a quote",
-    intro: "Tell us what you need and when. We don't publish prices: we'll reply with availability and a quote for your dates.",
     itemsHeading: "Your kit",
     emptyBasket: "Your quote is empty.",
     browse: "Browse rentals",
@@ -69,7 +72,6 @@ export const en = {
   },
   contact: {
     title: "Contact",
-    intro: "Tell us about your project, ask about our talent, or say hello.",
     enquiryType: "What's this about?",
     enquiryTypes: { Project: "A project", Talent: "Our talent", Rentals: "Rentals", Other: "Something else" },
     name: "Name",
@@ -91,6 +93,7 @@ export const en = {
       empty: "Add at least one item to your quote.",
       beforeStart: "Return must be on or after pick-up.",
       past: "Pick-up can't be in the past.",
+      overLimit: "Some items are over the maximum we can offer in one quote. Please review your quote.",
       unavailable: "Some items in your quote are no longer available. Please review your quote.",
       rejected: "We couldn't verify this submission. Please try again.",
       failed: "Something went wrong on our side. Please try again, or email us directly.",

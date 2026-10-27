@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { DetailAddToQuote } from "@/components/rentals/DetailAddToQuote";
+import { ItemSkeleton } from "@/components/rentals/RentalSkeletons";
 import { RentalImageView } from "@/components/rentals/RentalImageView";
 import { isLocale, languageAlternates, localizedPath, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
@@ -32,7 +33,7 @@ export default function RentalItemPage({ params }: PageProps<"/[lang]/rentals/[s
   // Slugs are only known at runtime, so the item streams in behind a Suspense boundary.
   return (
     <main className="mx-auto max-w-6xl px-4 pb-32 md:px-6">
-      <Suspense fallback={<div aria-hidden className="h-96" />}>{params.then((p) => <Item lang={p.lang} slug={p.slug} />)}</Suspense>
+      <Suspense fallback={<ItemSkeleton />}>{params.then((p) => <Item lang={p.lang} slug={p.slug} />)}</Suspense>
     </main>
   );
 }
@@ -81,7 +82,7 @@ async function Item({ lang, slug }: { lang: string; slug: string }) {
             {item.summary && <p className="mt-4 text-lg">{item.summary}</p>}
           </header>
 
-          <DetailAddToQuote itemId={publishedId(item._id)} itemName={item.name} dict={rentals} />
+          <DetailAddToQuote itemId={publishedId(item._id)} itemName={item.name} dict={rentals} maxQuantity={item.maxQuantity} />
 
           {features.length > 0 && (
             <section aria-labelledby="item-features">

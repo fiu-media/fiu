@@ -75,6 +75,7 @@ export default function LogoScene({
   introSlide = false,
   introHold = false,
   splashLift,
+  interactive = true,
 }: {
   stills: SceneStill[];
   index: number;
@@ -85,6 +86,8 @@ export default function LogoScene({
   introHold?: boolean;
   /** Hero intro: false while the splash holds (glass refracts white), true once it starts lifting. */
   splashLift?: boolean;
+  /** When false the canvas ignores the pointer, so whatever is beneath it (the nav) stays clickable. */
+  interactive?: boolean;
   /** `tubes` = liquid-glass taper; `extrude` = flat silhouette slab. */
   meshMode?: LogoMeshMode;
   /** `light` = luminous bevels; `dark` = charcoal liquid-glass bands. */
@@ -100,6 +103,8 @@ export default function LogoScene({
   return (
     <Canvas
       frameloop={measurePerf ? "always" : "demand"}
+      // R3F gives its root div an inline `pointer-events: auto`, which a class on a wrapper cannot override.
+      style={interactive ? undefined : { pointerEvents: "none" }}
       dpr={dpr}
       camera={{ position: [0, 0, CAMERA_Z], fov: CAMERA_FOV }}
       gl={{

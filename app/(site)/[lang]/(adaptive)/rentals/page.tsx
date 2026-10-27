@@ -1,30 +1,34 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { CatalogueSkeleton } from "@/components/rentals/RentalSkeletons";
 import { RentalCatalogue, type CatalogueCard } from "@/components/rentals/RentalCatalogue";
 import { isLocale, languageAlternates, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
+import { getPageText } from "@/sanity/lib/pageText";
 import { RENTALS_QUERY } from "@/sanity/lib/queries";
 import { publishedId, toRentalImage, type RentalsResult } from "@/sanity/lib/rentals";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/rentals">): Promise<Metadata> {
   const { lang } = await params;
   if (!isLocale(lang)) return {};
-  const { rentals } = await getDictionary(lang);
-  return { title: rentals.title, description: rentals.intro, alternates: languageAlternates(lang, "/rentals") };
+  const [{ rentals }, text] = await Promise.all([getDictionary(lang), getPageText(lang)]);
+  return { title: rentals.title, description: text.rentalsIntro ?? undefined, alternates: languageAlternates(lang, "/rentals") };
 }
 
 export default async function RentalsPage({ params }: PageProps<"/[lang]/rentals">) {
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
-  const { rentals } = await getDictionary(lang);
+  const [{ rentals, common }, text] = await Promise.all([getDictionary(lang), getPageText(lang)]);
   return (
     <main className="mx-auto max-w-6xl px-4 pb-32 md:px-6">
-      <h1 className="font-display text-5xl md:text-6xl">{rentals.title}</h1>
-      <p className="mt-4 mb-10 max-w-2xl text-lg text-fg-muted">{rentals.intro}</p>
+      <header className="mb-10">
+        <h1 className="font-display text-5xl md:text-6xl">{rentals.title}</h1>
+        {text.rentalsIntro && <p className="mt-4 max-w-2xl text-lg text-fg-muted">{text.rentalsIntro}</p>}
+      </header>
       {/* Reads draft mode, so it streams in behind the static heading. */}
-      <Suspense fallback={<div aria-hidden className="h-96" />}>
+      <Suspense fallback={<CatalogueSkeleton label={common.loading} />}>
         <Catalogue lang={lang} />
       </Suspense>
     </main>

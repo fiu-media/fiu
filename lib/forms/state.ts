@@ -5,6 +5,7 @@ export type FormErrorCode =
   | "empty"
   | "beforeStart"
   | "past"
+  | "overLimit"
   | "unavailable"
   | "rejected"
   | "failed";
@@ -27,6 +28,7 @@ const codes: readonly string[] = [
   "empty",
   "beforeStart",
   "past",
+  "overLimit",
   "unavailable",
   "rejected",
   "failed",

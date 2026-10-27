@@ -76,22 +76,23 @@ const getSnapshot = () => {
 };
 const getServerSnapshot = () => EMPTY;
 
-const clampQty = (qty: number) => Math.min(MAX_QTY, Math.max(1, Math.floor(qty)));
+const clampQty = (qty: number, max = MAX_QTY) => Math.min(max, MAX_QTY, Math.max(1, Math.floor(qty)));
 
 export const basketActions = {
-  add(itemId: string, qty = 1) {
+  /** `max` is the item's per-quote cap from Sanity; quantities never go above it. */
+  add(itemId: string, qty = 1, max = MAX_QTY) {
     const { lines } = snapshot;
     const existing = lines.find((l) => l.itemId === itemId);
     commit({
       ...snapshot,
       lines: existing
-        ? lines.map((l) => (l.itemId === itemId ? { ...l, qty: clampQty(l.qty + qty) } : l))
-        : [...lines, { itemId, qty: clampQty(qty) }],
+        ? lines.map((l) => (l.itemId === itemId ? { ...l, qty: clampQty(l.qty + qty, max) } : l))
+        : [...lines, { itemId, qty: clampQty(qty, max) }],
     });
   },
-  setQty(itemId: string, qty: number) {
+  setQty(itemId: string, qty: number, max = MAX_QTY) {
     if (qty < 1) return basketActions.remove(itemId);
-    commit({ ...snapshot, lines: snapshot.lines.map((l) => (l.itemId === itemId ? { ...l, qty: clampQty(qty) } : l)) });
+    commit({ ...snapshot, lines: snapshot.lines.map((l) => (l.itemId === itemId ? { ...l, qty: clampQty(qty, max) } : l)) });
   },
   remove(itemId: string) {
     commit({ ...snapshot, lines: snapshot.lines.filter((l) => l.itemId !== itemId) });
@@ -104,9 +105,15 @@ export const basketActions = {
   },
 };
 
-/** The quote basket, persisted to localStorage. Empty on the server and during hydration. */
+const subscribeNever = () => () => {};
+
+/**
+ * The quote basket, persisted to localStorage. Empty on the server and during hydration, so
+ * `ready` says whether the lines are the visitor's real ones yet.
+ */
 export function useQuoteBasket() {
   const basket = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const ready = useSyncExternalStore(subscribeNever, () => true, () => false);
   const count = basket.lines.reduce((sum, l) => sum + l.qty, 0);
-  return { ...basket, count, ...basketActions };
+  return { ...basket, count, ready, ...basketActions };
 }

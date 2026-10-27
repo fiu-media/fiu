@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef } from "react";
 import { Field, Honeypot } from "@/components/forms/Field";
+import { FormSkeleton } from "@/components/forms/FormSkeleton";
 import { FormErrorSummary, type SummaryItem } from "@/components/forms/FormErrorSummary";
 import { QuoteLines } from "@/components/rentals/QuoteLines";
 import { GlassPanel, GlassPillButton, GlassPillLink } from "@/components/ui/Glass";
@@ -11,12 +12,12 @@ import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { basketActions, useQuoteBasket } from "@/lib/quote-basket";
 import { submitQuote } from "./actions";
 
-type QuoteDict = Pick<Dictionary, "quote" | "basket" | "forms">;
+type QuoteDict = Pick<Dictionary, "quote" | "basket" | "forms" | "common">;
 
 export function QuoteForm({ lang, dict }: { lang: Locale; dict: QuoteDict }) {
   const { quote, forms } = dict;
   const [state, formAction, pending] = useActionState(submitQuote, initialFormState);
-  const { lines, startDate, endDate, setDates } = useQuoteBasket();
+  const { lines, startDate, endDate, setDates, ready } = useQuoteBasket();
   // One id per attempt-to-submit: a retry after a failure reuses it, so the server can tell a
   // double submit from a new request. It is created on first submit because it must not be in
   // the server-rendered HTML.
@@ -28,6 +29,9 @@ export function QuoteForm({ lang, dict }: { lang: Locale; dict: QuoteDict }) {
       submissionId.current = null;
     }
   }, [state.status]);
+
+  // The basket only exists in the browser, so until it is read the form would flash "empty".
+  if (!ready) return <FormSkeleton label={dict.common.loading} fields={4} />;
 
   if (state.status === "success") {
     return (

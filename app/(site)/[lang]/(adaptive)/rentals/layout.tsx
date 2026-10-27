@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import { CatalogueProvider, type CatalogueItem } from "@/components/rentals/CatalogueContext";
 import { QuoteDrawer } from "@/components/rentals/QuoteDrawer";
 import { isLocale, localizedPath, type Locale } from "@/lib/i18n/config";
@@ -17,6 +18,7 @@ async function catalogueLookup(lang: Locale) {
       name: entry.name,
       brand: entry.brand,
       href: localizedPath(lang, `/rentals/${entry.slug}`),
+      max: entry.maxQuantity ?? 99,
       image: entry.image ? toRentalImage({ ...entry.image, dimensions: null }, 160) : null,
     };
   }
@@ -30,7 +32,9 @@ export default async function RentalsLayout({ children, params }: LayoutProps<"/
   return (
     <CatalogueProvider items={items}>
       {children}
-      <QuoteDrawer lang={lang} dict={dict.basket} />
+      <Suspense>
+        <QuoteDrawer lang={lang} dict={dict.basket} />
+      </Suspense>
     </CatalogueProvider>
   );
 }

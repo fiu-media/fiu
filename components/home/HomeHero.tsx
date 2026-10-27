@@ -177,6 +177,7 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
               introSlide
               introHold={!spinGo}
               splashLift={splashDone}
+              interactive={introDone}
             />
           </div>
         </SceneBoundary>

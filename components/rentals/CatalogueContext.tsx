@@ -3,7 +3,15 @@
 import { createContext, useContext, type ReactNode } from "react";
 import type { RentalImage } from "@/sanity/lib/rentals";
 
-export type CatalogueItem = { id: string; name: string; brand: string | null; href: string; image: RentalImage | null };
+export type CatalogueItem = {
+  id: string;
+  name: string;
+  brand: string | null;
+  href: string;
+  /** Most of this item one quote can ask for (set per item in Sanity). */
+  max: number;
+  image: RentalImage | null;
+};
 
 const CatalogueContext = createContext<Record<string, CatalogueItem>>({});
 

@@ -60,6 +60,13 @@ export const rentalItem = defineType({
       of: [defineArrayMember({ type: "string" })],
     }),
     defineField({
+      name: "maxQuantity",
+      title: "Max per quote",
+      type: "number",
+      description: "The most of this item one quote can ask for (e.g. how many you own). Leave empty for no limit.",
+      validation: (rule) => rule.integer().min(1).max(99),
+    }),
+    defineField({
       name: "available",
       type: "boolean",
       initialValue: true,

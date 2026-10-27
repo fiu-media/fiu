@@ -1,30 +1,34 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { FormSkeleton } from "@/components/forms/FormSkeleton";
 import { isLocale, languageAlternates, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
+import { getPageText } from "@/sanity/lib/pageText";
 import { CONTACT_SETTINGS_QUERY } from "@/sanity/lib/queries";
 import { ContactForm } from "./ContactForm";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/contact">): Promise<Metadata> {
   const { lang } = await params;
   if (!isLocale(lang)) return {};
-  const { contact } = await getDictionary(lang);
-  return { title: contact.title, description: contact.intro, alternates: languageAlternates(lang, "/contact") };
+  const [{ contact }, text] = await Promise.all([getDictionary(lang), getPageText(lang)]);
+  return { title: contact.title, description: text.contactIntro ?? undefined, alternates: languageAlternates(lang, "/contact") };
 }
 
 export default async function ContactPage({ params }: PageProps<"/[lang]/contact">) {
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
-  const { contact, forms } = await getDictionary(lang);
+  const [{ contact, forms, common }, text] = await Promise.all([getDictionary(lang), getPageText(lang)]);
   return (
     <main className="mx-auto grid max-w-6xl gap-12 px-4 pb-32 md:px-6 lg:grid-cols-[3fr_2fr]">
       <div>
-        <h1 className="font-display text-5xl md:text-6xl">{contact.title}</h1>
-        <p className="mt-4 mb-10 max-w-2xl text-lg text-fg-muted">{contact.intro}</p>
+        <header className="mb-10">
+          <h1 className="font-display text-5xl md:text-6xl">{contact.title}</h1>
+          {text.contactIntro && <p className="mt-4 max-w-2xl text-lg text-fg-muted">{text.contactIntro}</p>}
+        </header>
         {/* ContactForm reads the ?type= query, which needs a boundary to keep the page static. */}
-        <Suspense fallback={<div aria-hidden className="h-96" />}>
+        <Suspense fallback={<FormSkeleton label={common.loading} fields={2} />}>
           <ContactForm lang={lang} dict={{ contact, forms }} />
         </Suspense>
       </div>

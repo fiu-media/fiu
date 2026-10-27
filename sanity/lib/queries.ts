@@ -23,6 +23,7 @@ const RENTAL_ITEM_FIELDS = `
   brand,
   summary,
   keyFeatures,
+  maxQuantity,
   "category": category->{ _id, title },
   "images": images[defined(asset)]{
     _key,
@@ -60,6 +61,7 @@ export const QUOTE_CATALOGUE_QUERY = defineQuery(`
     _id,
     name,
     brand,
+    maxQuantity,
     "slug": slug.current,
     "image": images[defined(asset)][0]{ alt, asset, crop, hotspot, "lqip": asset->metadata.lqip }
   }
@@ -79,5 +81,10 @@ export const SUBMISSION_SETTINGS_QUERY = defineQuery(`
 
 /** Ids of rental items that can currently be requested (published and available). */
 export const AVAILABLE_ITEM_IDS_QUERY = defineQuery(`
-  *[_type == "rentalItem" && _id in $ids && available != false]{ _id, name, brand }
+  *[_type == "rentalItem" && _id in $ids && available != false]{ _id, name, brand, maxQuantity }
+`);
+
+/** Editor-written intro lines for the Rentals, Request a quote and Contact pages. */
+export const PAGE_TEXT_QUERY = defineQuery(`
+  *[_type == "siteSettings" && language == $lang][0]{ rentalsIntro, quoteIntro, contactIntro }
 `);

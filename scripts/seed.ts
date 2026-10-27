@@ -74,6 +74,10 @@ async function main() {
     manifesto: [text("m1", "Placeholder manifesto. Replace this with Fiú's own words in the Studio.")],
     homeStills: tinted.map((s, i) => ({ ...s, _key: `home-${i}` })),
     aboutStill: { ...stills[0] },
+    rentalsIntro:
+      "Cameras, lenses, lighting and grip from our own kit room. Build a quote and we'll come back to you with availability and rates.",
+    quoteIntro: "Tell us what you need and when, and we'll reply with availability and a quote for your dates.",
+    contactIntro: "Tell us about your project, ask about our talent, or say hello.",
     seoTitle: "Fiú Media",
     seoDescription: "Irish media company: original productions, commercial work, talent and gear rental.",
   });
