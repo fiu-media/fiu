@@ -367,19 +367,19 @@ function Studio({
   return (
     <Environment resolution={256} frames={Infinity}>
       <SoftLight tint={tint} mixWhite={0} intensity={0.8} lift={0.35} position={[0, 0, -7]} scale={14} />
-      {/* Key + fill — oversized + feathered so falloff stays soft across the mark */}
+      {/* Key + fill — oversized + feathered; kept dim so the front stays clear, not milky */}
       <SoftLight
         tint={tint}
-        mixWhite={0.35}
-        intensity={5}
+        mixWhite={0.2}
+        intensity={2.2}
         position={[-2.2, 3, 9.5]}
         scale={13}
         feather={feather}
       />
       <SoftLight
         tint={tint}
-        mixWhite={0.25}
-        intensity={3.6}
+        mixWhite={0.15}
+        intensity={1.6}
         position={[2.6, -2, 9]}
         scale={12}
         feather={feather}
@@ -756,7 +756,7 @@ function Logo({
           clearcoat={0.65}
           clearcoatRoughness={0.08}
           specularIntensity={0.75}
-          envMapIntensity={2.8}
+          envMapIntensity={2.2}
           color="#ffffff"
           attenuationColor="#ffffff"
           attenuationDistance={2.8}

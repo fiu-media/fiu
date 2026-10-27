@@ -1,8 +1,13 @@
 import { HomeHero } from "@/components/home/HomeHero";
 import { GlassNav } from "@/components/nav/GlassNav";
-import candle from "@/public/stills/candle.jpg";
-import flowers from "@/public/stills/flowers.jpg";
-import jackets from "@/public/stills/jackets.jpg";
+import bouquet from "@/public/stills/bouquet.jpg";
+import citrus from "@/public/stills/citrus.jpg";
+import conservatory from "@/public/stills/conservatory.jpg";
+import fur from "@/public/stills/fur.jpg";
+import glow from "@/public/stills/glow.jpg";
+import grapes from "@/public/stills/grapes.jpg";
+import parlor from "@/public/stills/parlor.jpg";
+import pond from "@/public/stills/pond.jpg";
 
 const nav = [
   { href: "/about", label: "About Us" },
@@ -15,9 +20,14 @@ const nav = [
 // Placeholder stills from the Canva pack until the CMS supplies them (Phase 2).
 // lightTint: precomputed studio temperature (CMS will ship this; avoids CORS sampling).
 const stills = [
-  { ...candle, lightTint: "#ce8d51" },
-  { ...flowers, lightTint: "#b5656d" },
-  { ...jackets, lightTint: "#835b1f" },
+  { ...conservatory, lightTint: "#837b51" },
+  { ...glow, lightTint: "#924c16" },
+  { ...citrus, lightTint: "#71755e" },
+  { ...bouquet, lightTint: "#8e6b68" },
+  { ...grapes, lightTint: "#76774f" },
+  { ...pond, lightTint: "#606547" },
+  { ...fur, lightTint: "#903a1f" },
+  { ...parlor, lightTint: "#6a522c" },
 ];
 
 export default function Home() {

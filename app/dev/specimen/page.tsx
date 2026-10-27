@@ -4,9 +4,14 @@ import type { CSSProperties } from "react";
 import { GlassNav } from "@/components/nav/GlassNav";
 import { GlassPanel, GlassPillButton } from "@/components/ui/Glass";
 import logo from "@/public/brand/fiu-logo.png";
-import candle from "@/public/stills/candle.jpg";
-import flowers from "@/public/stills/flowers.jpg";
-import jackets from "@/public/stills/jackets.jpg";
+import bouquet from "@/public/stills/bouquet.jpg";
+import citrus from "@/public/stills/citrus.jpg";
+import conservatory from "@/public/stills/conservatory.jpg";
+import fur from "@/public/stills/fur.jpg";
+import glow from "@/public/stills/glow.jpg";
+import grapes from "@/public/stills/grapes.jpg";
+import parlor from "@/public/stills/parlor.jpg";
+import pond from "@/public/stills/pond.jpg";
 import { pairings, type Pairing } from "./fonts";
 import { PairingPanel, PairingSwitcher } from "./PairingTabs";
 import { SchemeSwitcher } from "./SchemeSwitcher";
@@ -25,7 +30,7 @@ const nav = [
   { href: "/rentals", label: "Rentals" },
   { href: "/contact", label: "Contact" },
 ];
-const stills: StaticImageData[] = [candle, flowers, jackets];
+const stills: StaticImageData[] = [conservatory, glow, citrus, bouquet, grapes, pond, fur, parlor];
 
 // Sample copy only: placeholder project titles and gear from the Canva pack.
 const projects = [
@@ -164,7 +169,7 @@ function PairingSection({ pairing: p, still }: { pairing: Pairing; still: Static
 
         {/* The photo is a sibling behind the panel: backdrop-filter only affects what is behind an element. */}
         <div className="relative isolate overflow-hidden rounded-3xl p-4 md:p-6">
-          <Image src={flowers} alt="" fill sizes="50vw" className="-z-10 object-cover" />
+          <Image src={bouquet} alt="" fill sizes="50vw" className="-z-10 object-cover" />
           <GlassPanel className="p-8">
             <h3 className={`${display} text-3xl`}>Your quote</h3>
             <p className="mt-1 text-sm text-fg-muted">3 items · 12–14 March</p>
