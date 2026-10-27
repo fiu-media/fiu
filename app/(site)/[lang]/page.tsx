@@ -27,7 +27,8 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
       <Suspense fallback={<HomeHero stills={fallbackStills} />}>
         <CmsHero lang={lang} />
       </Suspense>
-      <div className="relative z-10 flex justify-center p-4 md:absolute md:top-6 md:right-6 md:p-0">
+      {/* Same container as the adaptive header, so the nav doesn't shift between Home and other pages. */}
+      <div className="relative z-10 mx-auto flex max-w-6xl justify-center px-4 py-4 md:absolute md:inset-x-0 md:top-0 md:justify-end md:px-6 md:py-6">
         <GlassNav items={getNavItems(lang, dict)} label={dict.nav.label} onImage />
       </div>
     </main>
