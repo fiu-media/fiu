@@ -102,6 +102,19 @@ const GLOW_SLIDERS: SliderDef[] = [
   { key: "glowLMax", label: "Glow L max", min: 0.3, max: 1, step: 0.01 },
 ];
 
+const INTERACTION_SLIDERS: SliderDef[] = [
+  { key: "dragPitchMax", label: "Drag pitch max (rad)", min: 0.1, max: 1.2, step: 0.01 },
+  { key: "dragSensitivity", label: "Drag sensitivity", min: 0.001, max: 0.02, step: 0.0005 },
+  { key: "hoverTiltX", label: "Hover tilt X", min: 0, max: 0.4, step: 0.01 },
+  { key: "hoverTiltY", label: "Hover tilt Y", min: 0, max: 0.5, step: 0.01 },
+  { key: "hoverLerp", label: "Hover snappiness", min: 1, max: 12, step: 0.5 },
+  { key: "dragFriction", label: "Coast friction", min: 0.5, max: 8, step: 0.1 },
+  { key: "dragSpring", label: "Yaw return spring", min: 10, max: 120, step: 1 },
+  { key: "dragSpringDamp", label: "Yaw return damp", min: 1, max: 16, step: 0.1 },
+  { key: "dragSpringPitch", label: "Pitch return spring", min: 10, max: 140, step: 1 },
+  { key: "dragSpringPitchDamp", label: "Pitch return damp", min: 1, max: 16, step: 0.1 },
+];
+
 const EXTRUDE_SLIDERS = [
   { key: "depth" as const, label: "Extrude depth", min: 0.05, max: 0.5, step: 0.01 },
   { key: "bevelThickness" as const, label: "Bevel thickness", min: 0.02, max: 0.25, step: 0.005 },
@@ -300,7 +313,38 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
 
       {panelOpen && (
         <aside className="absolute top-16 right-3 bottom-3 z-30 flex w-[min(100%-1.5rem,22rem)] flex-col overflow-hidden rounded-2xl border border-white/15 bg-black/55 shadow-2xl backdrop-blur-xl">
-          <div className="space-y-4 border-b border-white/10 p-4 text-sm">
+          <div className="flex shrink-0 flex-wrap items-center gap-1.5 border-b border-white/10 px-3 py-2.5">
+            <div role="tablist" aria-label="Config section" className="flex gap-1.5">
+              <GlassPillButton
+                size="sm"
+                onImage
+                role="tab"
+                aria-selected={tab === "material"}
+                aria-pressed={tab === "material"}
+                onClick={() => selectTab("material")}
+              >
+                Material
+              </GlassPillButton>
+              <GlassPillButton
+                size="sm"
+                onImage
+                role="tab"
+                aria-selected={tab === "lighting"}
+                aria-pressed={tab === "lighting"}
+                onClick={() => selectTab("lighting")}
+              >
+                Lighting
+              </GlassPillButton>
+            </div>
+            <GlassPillButton size="sm" onImage onClick={() => resetTab(tab)}>
+              Reset
+            </GlassPillButton>
+            <GlassPillButton size="sm" onImage onClick={() => copyTabConfig(tab)}>
+              {copied === tab ? "Copied" : "Copy"}
+            </GlassPillButton>
+          </div>
+
+          <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-4 text-sm">
             <Section title="Display">
               <PillRow>
                 <GlassPillButton size="sm" onImage aria-pressed={config.display === "live"} onClick={() => setDisplay("live")}>
@@ -389,45 +433,21 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
               rimLook={config.rimLook}
               samples={config.params.samples}
               resolution={config.params.resolution}
+              backside={config.params.backside}
             />
 
-            <div role="tablist" aria-label="Config section" className="flex gap-1.5">
-              <GlassPillButton
-                size="sm"
-                onImage
-                role="tab"
-                aria-selected={tab === "material"}
-                aria-pressed={tab === "material"}
-                onClick={() => selectTab("material")}
-              >
-                Material
-              </GlassPillButton>
-              <GlassPillButton
-                size="sm"
-                onImage
-                role="tab"
-                aria-selected={tab === "lighting"}
-                aria-pressed={tab === "lighting"}
-                onClick={() => selectTab("lighting")}
-              >
-                Lighting
-              </GlassPillButton>
-            </div>
-
-            <PillRow>
-              <GlassPillButton size="sm" onImage onClick={() => resetTab(tab)}>
-                Reset {tab}
-              </GlassPillButton>
-              <GlassPillButton size="sm" onImage onClick={() => copyTabConfig(tab)}>
-                {copied === tab ? "Copied" : `Copy ${tab}`}
-              </GlassPillButton>
-            </PillRow>
-          </div>
-
-          <div className="flex-1 space-y-5 overflow-y-auto p-4 text-sm">
             {tab === "material" && (
               <>
                 <Section title="Material">
+                  <label className="mb-3 flex items-center gap-2 text-xs text-white/80">
+                    <input
+                      type="checkbox"
+                      checked={config.params.backside}
+                      onChange={(e) => setParam("backside", e.target.checked)}
+                      className="accent-white"
+                    />
+                    Backside transmission (richer rims, ~2× FBO cost)
+                  </label>
                   {MATERIAL_SLIDERS.map((s) => (
                     <Slider
                       key={s.key}
@@ -456,14 +476,17 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
                 </Section>
 
                 <Section title="Interaction">
-                  <Slider
-                    label="Drag pitch max (rad)"
-                    min={0.1}
-                    max={1.2}
-                    step={0.01}
-                    value={config.params.dragPitchMax}
-                    onChange={(v) => setParam("dragPitchMax", v)}
-                  />
+                  {INTERACTION_SLIDERS.map((s) => (
+                    <Slider
+                      key={s.key}
+                      label={s.label}
+                      min={s.min}
+                      max={s.max}
+                      step={s.step}
+                      value={Number(config.params[s.key])}
+                      onChange={(v) => setParam(s.key, v as never)}
+                    />
+                  ))}
                 </Section>
 
                 {config.meshMode === "extrude" && (
@@ -558,6 +581,7 @@ function PerfMeter({
   rimLook,
   samples,
   resolution,
+  backside,
 }: {
   live: boolean;
   perf: LogoPerfStats | null;
@@ -565,6 +589,7 @@ function PerfMeter({
   rimLook: LogoRimLook;
   samples: number;
   resolution: number;
+  backside: boolean;
 }) {
   const ratioLabel = `${cost.ratio < 0.995 ? "" : cost.ratio > 1.005 ? "+" : ""}${((cost.ratio - 1) * 100).toFixed(0)}%`;
   const loadTone =
@@ -603,7 +628,7 @@ function PerfMeter({
           label="Transmission"
           value={cost.transmission}
           max={maxPart}
-          detail={`${samples} samp · ${resolution}px`}
+          detail={`${samples} samp · ${resolution}px${backside ? " · back" : ""}`}
         />
         <CostBar label="Soft lights" value={cost.soft} max={maxPart} detail={`${cost.softOn} on`} />
         <CostBar label="Point lights" value={cost.points} max={maxPart} detail={`${cost.pointsOn} on`} />
@@ -677,7 +702,9 @@ function Slider({
     <label className="mb-2 flex flex-col gap-1 text-xs text-white/70">
       <span className="flex justify-between gap-2">
         <span>{label}</span>
-        <span className="tabular-nums text-white/90">{Number.isInteger(step) ? value : value.toFixed(2)}</span>
+        <span className="tabular-nums text-white/90">
+          {Number.isInteger(step) ? value : value.toFixed(step < 0.01 ? 4 : 2)}
+        </span>
       </span>
       <input
         type="range"

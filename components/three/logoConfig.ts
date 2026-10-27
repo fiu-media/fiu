@@ -80,9 +80,35 @@ export type LogoGlassParams = {
   glowLMax: number;
   /** When set, overrides paths JSON extrude depth/bevel for extrude mesh mode. */
   extrude: LogoExtrudeOverride | null;
+  /** Double-sided transmission pass — richer rims, roughly 2× the FBO cost. */
+  backside: boolean;
   dragPitchMax: number;
+  dragSensitivity: number;
+  hoverTiltX: number;
+  hoverTiltY: number;
+  /** Hover return rate (higher = snappier). */
+  hoverLerp: number;
+  dragFriction: number;
+  dragSpring: number;
+  dragSpringDamp: number;
+  dragSpringPitch: number;
+  dragSpringPitchDamp: number;
   lights: LogoLightsConfig;
 };
+
+const INTERACTION_DEFAULTS = {
+  backside: true,
+  dragPitchMax: 0.4,
+  dragSensitivity: 0.005,
+  hoverTiltX: 0.12,
+  hoverTiltY: 0.18,
+  hoverLerp: 4,
+  dragFriction: 2.4,
+  dragSpring: 55,
+  dragSpringDamp: 4.2,
+  dragSpringPitch: 72,
+  dragSpringPitchDamp: 5.2,
+} as const;
 
 export type LogoPlaygroundConfig = {
   version: 1;
@@ -413,14 +439,15 @@ const LIGHT_PARAMS: LogoGlassParams = {
   envMapIntensity: 2.5,
   backsideEnvMapIntensity: 1.85,
   attenuationDistance: 5.8,
-  samples: 10,
-  resolution: 768,
+  // Production budget — playground can push higher via sliders.
+  samples: 6,
+  resolution: 512,
   glowSat: 1.08,
   glowLift: 0.2,
   glowLMin: 0.52,
   glowLMax: 0.8,
   extrude: { depth: 0.16, bevelThickness: 0.12, bevelSize: 0.12 },
-  dragPitchMax: 0.4,
+  ...INTERACTION_DEFAULTS,
   lights: lightsFor("light"),
 };
 
@@ -439,14 +466,14 @@ const DARK_PARAMS: LogoGlassParams = {
   envMapIntensity: 2.35,
   backsideEnvMapIntensity: 1,
   attenuationDistance: 2.6,
-  samples: 10,
-  resolution: 768,
+  samples: 6,
+  resolution: 512,
   glowSat: 1.15,
   glowLift: 0.12,
   glowLMin: 0.4,
   glowLMax: 0.72,
   extrude: null,
-  dragPitchMax: 0.4,
+  ...INTERACTION_DEFAULTS,
   lights: lightsFor("dark"),
 };
 
@@ -557,16 +584,24 @@ export function formatLightingConfigExport(config: LogoPlaygroundConfig): string
   return fence(LIGHTING_FENCE, payload);
 }
 
+/** Fill missing param keys from the rim preset (older playground snapshots). */
+export function coalesceParams(partial: LogoGlassParams, rimLook: LogoRimLook = "light"): LogoGlassParams {
+  const base = LOGO_PARAM_PRESETS[rimLook];
+  return cloneParams({
+    ...base,
+    ...partial,
+    extrude: partial.extrude !== undefined ? (partial.extrude ? { ...partial.extrude } : null) : base.extrude,
+    lights: partial.lights ? cloneLights(partial.lights) : cloneLights(base.lights),
+  });
+}
+
 export function parseConfigExport(text: string): LogoPlaygroundConfig | null {
   const fenced = text.match(/```(?:fiu-logo-config|json)\s*([\s\S]*?)```/);
   const raw = (fenced?.[1] ?? text).trim();
   try {
     const parsed = JSON.parse(raw) as LogoPlaygroundConfig;
     if (parsed?.version !== 1 || !parsed.params || !parsed.meshMode) return null;
-    // Older snapshots without lights — fill from the rim preset.
-    if (!parsed.params.lights) {
-      parsed.params.lights = cloneLights(LOGO_PARAM_PRESETS[parsed.rimLook ?? "light"].lights);
-    }
+    parsed.params = coalesceParams(parsed.params, parsed.rimLook ?? "light");
     return parsed;
   } catch {
     return null;

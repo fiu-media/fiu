@@ -71,10 +71,11 @@ export default function LogoScene({
   onPerf?: (stats: LogoPerfStats) => void;
 }) {
   const params = paramsProp ?? LOGO_PARAM_PRESETS[rimLook];
+  const dpr = useCanvasDpr(measurePerf);
   return (
     <Canvas
       frameloop={measurePerf ? "always" : "demand"}
-      dpr={[1, 1.5]}
+      dpr={dpr}
       camera={{ position: [0, 0, 12], fov: 30 }}
       gl={{
         alpha: true,
@@ -88,10 +89,85 @@ export default function LogoScene({
       // the WebGL backdrop is only sampled for logo refraction (see BackdropLayerGate).
       onCreated={({ gl }) => gl.setClearColor(0x000000, 0)}
     >
-      <Scene stills={stills} index={index} onReady={onReady} meshMode={meshMode} params={params} />
+      <Scene
+        stills={stills}
+        index={index}
+        onReady={onReady}
+        meshMode={meshMode}
+        params={params}
+        envAlways={measurePerf}
+        adaptiveQuality={!measurePerf}
+      />
       {measurePerf && onPerf ? <PerfSampler onPerf={onPerf} /> : null}
     </Canvas>
   );
+}
+
+/** Cap pixel ratio on mobile / Save-Data; playground keeps a higher ceiling. */
+function useCanvasDpr(measurePerf: boolean): number | [number, number] {
+  const [dpr, setDpr] = useState<number | [number, number]>(() => (measurePerf ? [1, 1.5] : [1, 1.25]));
+  useEffect(() => {
+    if (measurePerf) {
+      setDpr([1, 1.5]);
+      return;
+    }
+    const mq = window.matchMedia("(max-width: 768px)");
+    const sync = () => {
+      const saveData = Boolean(
+        (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData,
+      );
+      setDpr(mq.matches || saveData ? 1 : [1, 1.25]);
+    };
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, [measurePerf]);
+  return dpr;
+}
+
+/**
+ * Step samples/resolution down if FPS stays low, recover when it climbs back.
+ * Disabled in the playground so slider values stay honest.
+ */
+function useAdaptiveTransmission(enabled: boolean, samples: number, resolution: number) {
+  const [tier, setTier] = useState(0);
+  const lowAcc = useRef(0);
+  const highAcc = useRef(0);
+  const tierRef = useRef(0);
+  tierRef.current = tier;
+
+  useFrame((_, delta) => {
+    if (!enabled) {
+      if (tierRef.current !== 0) setTier(0);
+      return;
+    }
+    const fps = delta > 0 ? 1 / delta : 60;
+    if (fps < 30) {
+      lowAcc.current += delta;
+      highAcc.current = 0;
+      if (lowAcc.current > 1.2 && tierRef.current < 2) {
+        lowAcc.current = 0;
+        setTier((t) => Math.min(2, t + 1));
+      }
+    } else if (fps > 48) {
+      highAcc.current += delta;
+      lowAcc.current = 0;
+      if (highAcc.current > 2 && tierRef.current > 0) {
+        highAcc.current = 0;
+        setTier((t) => Math.max(0, t - 1));
+      }
+    } else {
+      lowAcc.current = 0;
+      highAcc.current = 0;
+    }
+  });
+
+  if (!enabled || tier === 0) return { samples, resolution, tier: 0 };
+  return {
+    samples: Math.max(4, samples - tier * 2),
+    resolution: Math.max(256, resolution - tier * 256),
+    tier,
+  };
 }
 
 /** Samples FPS / frame time and renderer info ~2×/sec for the playground HUD. */
@@ -127,12 +203,17 @@ function Scene({
   onReady,
   meshMode,
   params,
+  envAlways,
+  adaptiveQuality,
 }: {
   stills: SceneStill[];
   index: number;
   onReady: () => void;
   meshMode: LogoMeshMode;
   params: LogoGlassParams;
+  /** Playground: keep cubemap live while measuring / scrubbing. */
+  envAlways: boolean;
+  adaptiveQuality: boolean;
 }) {
   // useTexture suspends until loaded, so .image is available on first paint here.
   const textures = useTexture(
@@ -144,7 +225,7 @@ function Scene({
       }
     },
   );
-  const keepAwake = useKeepAwake();
+  const { keepAwake, awakeRef } = useKeepAwake();
   const fade = useRef<Fade>({ from: index, to: index, start: 0 });
   const tint = useRef(NEUTRAL_TINT.clone());
   // Logo orientation — spark lights lag behind this so highlights crawl on spin.
@@ -154,6 +235,11 @@ function Scene({
     () => stills.map((still, i) => resolveStillTint(still, textures[i])),
     [stills, textures],
   );
+
+  // Cover intro spin + first settle so env streaks track the logo.
+  useEffect(() => {
+    keepAwake(SPIN_END + 1);
+  }, [keepAwake]);
 
   useEffect(() => {
     const f = fade.current;
@@ -178,12 +264,19 @@ function Scene({
       {/* Layer 1: still plane for refraction only — not drawn to the screen (HTML stills are). */}
       <BackdropLayerGate />
       <Backdrop stills={stills} textures={textures} fade={fade} />
-      <Logo onReady={onReady} tint={tint} logoPose={logoPose} meshMode={meshMode} params={params} />
+      <Logo
+        onReady={onReady}
+        tint={tint}
+        logoPose={logoPose}
+        meshMode={meshMode}
+        params={params}
+        keepAwake={keepAwake}
+        adaptiveQuality={adaptiveQuality}
+      />
       {/* Disable still layer after MTM's FBO capture so the main/bloom pass is logo-only. */}
       <BackdropLayerGate phase="afterTransmission" />
-      {/* frames=Infinity: re-bake whenever the demand loop runs (crossfade / parallax),
-          so tint tracks the still. Idle canvases don't draw, so this stays cheap. */}
-      <Studio tint={tint} logoPose={logoPose} params={params} />
+      {/* Env cubemap re-bakes only while awake (crossfade / drag / intro); idle uses a frozen map. */}
+      <Studio tint={tint} logoPose={logoPose} params={params} fade={fade} awakeRef={awakeRef} envAlways={envAlways} />
       {/* External sparkle: lagged point lights (env SoftLights do the glass streaks).
           Full-scene bloom is skipped — it was tonemapping/blooming the stills too. */}
       <SparkLights logoPose={logoPose} lights={params.lights.points} />
@@ -256,16 +349,43 @@ function SparkLights({
 function useKeepAwake() {
   const invalidate = useThree((s) => s.invalidate);
   const until = useRef(0);
+  const awakeRef = useRef(true);
   useFrame(() => {
-    if (performance.now() < until.current) invalidate();
+    const awake = performance.now() < until.current;
+    awakeRef.current = awake;
+    if (awake) invalidate();
   });
-  return useCallback(
+  const keepAwake = useCallback(
     (seconds: number) => {
       until.current = Math.max(until.current, performance.now() + seconds * 1000);
+      awakeRef.current = true;
       invalidate();
     },
     [invalidate],
   );
+  return { keepAwake, awakeRef };
+}
+
+/**
+ * Env portal frames: Infinity while the scene is moving (tint / pose), else 1 so the
+ * cubemap freezes. Playground passes envAlways to keep scrubbing live.
+ */
+function useEnvFrames(
+  fade: RefObject<Fade>,
+  awakeRef: MutableRefObject<boolean>,
+  envAlways: boolean,
+) {
+  const [frames, setFrames] = useState<number>(Infinity);
+  const liveRef = useRef(true);
+  useFrame(() => {
+    const f = fade.current;
+    const fading = Boolean(f?.start) && performance.now() - f.start < CROSSFADE_SECONDS * 1000;
+    const live = envAlways || awakeRef.current || fading;
+    if (live === liveRef.current) return;
+    liveRef.current = live;
+    setFrames(live ? Infinity : 1);
+  });
+  return frames;
 }
 
 /** Prefer CMS `lightTint`; else sample the texture; else neutral. Sampling failures (CORS) fall through. */
@@ -446,13 +566,20 @@ function Studio({
   tint,
   logoPose,
   params,
+  fade,
+  awakeRef,
+  envAlways,
 }: {
   tint: MutableRefObject<THREE.Color>;
   logoPose: MutableRefObject<{ x: number; y: number }>;
   params: LogoGlassParams;
+  fade: RefObject<Fade>;
+  awakeRef: MutableRefObject<boolean>;
+  envAlways: boolean;
 }) {
   const follow = useRef<THREE.Group>(null);
   const feather = useFeatherMap();
+  const frames = useEnvFrames(fade, awakeRef, envAlways);
   const soft = params.lights.soft.filter((l) => l.enabled);
   const fixed = soft.filter((l) => !l.followPose);
   const moving = soft.filter((l) => l.followPose);
@@ -463,7 +590,7 @@ function Studio({
     g.rotation.y = THREE.MathUtils.damp(g.rotation.y, logoPose.current.y, SPARK_FOLLOW, delta);
   });
   return (
-    <Environment resolution={256} frames={Infinity}>
+    <Environment resolution={256} frames={frames}>
       {fixed.map((l) => (
         <SoftLight
           key={l.id}
@@ -551,9 +678,9 @@ function SoftLight({
       {streak ? (
         <planeGeometry args={[1, 1]} />
       ) : ring ? (
-        <ringGeometry args={[0.22, 0.5, 64]} />
+        <ringGeometry args={[0.22, 0.5, 24]} />
       ) : (
-        <ringGeometry args={[0, 0.5, 64]} />
+        <ringGeometry args={[0, 0.5, 24]} />
       )}
       <meshBasicMaterial
         ref={mat}
@@ -590,17 +717,6 @@ function spinAt(t: number) {
   return SPIN[SPIN.length - 1][1];
 }
 
-const DRAG_SENSITIVITY = 0.005;
-const HOVER_TILT_X = 0.12;
-const HOVER_TILT_Y = 0.18;
-/** Velocity decay after release (higher = stops sooner). */
-const DRAG_FRICTION = 2.4;
-/** Underdamped return spring — low damping so it overshoots once, then settles. */
-const DRAG_SPRING = 55;
-const DRAG_SPRING_DAMP = 4.2;
-/** Pitch returns a bit harder so vertical lean doesn't linger. */
-const DRAG_SPRING_PITCH = 72;
-const DRAG_SPRING_PITCH_DAMP = 5.2;
 /** Start the return spring once coasting has nearly stopped (not exactly 0). */
 const DRAG_VELOCITY_EPS = 0.08;
 const DRAG_ANGLE_EPS = 0.0015;
@@ -617,17 +733,20 @@ function Logo({
   logoPose,
   meshMode,
   params,
+  keepAwake,
+  adaptiveQuality,
 }: {
   onReady: () => void;
   tint: MutableRefObject<THREE.Color>;
   logoPose: MutableRefObject<{ x: number; y: number }>;
   meshMode: LogoMeshMode;
   params: LogoGlassParams;
+  keepAwake: (seconds: number) => void;
+  adaptiveQuality: boolean;
 }) {
   const size = useThree((s) => s.size);
   const viewport = useThree((s) => s.viewport);
   const gl = useThree((s) => s.gl);
-  const keepAwake = useKeepAwake();
   const group = useRef<THREE.Group>(null);
   const mesh = useRef<THREE.Mesh>(null);
   // drei types MeshTransmissionMaterial's ref as its props shape, not MeshPhysicalMaterial.
@@ -651,6 +770,7 @@ function Logo({
   const localPoint = useMemo(() => new THREE.Vector3(), []);
   const paramsRef = useRef(params);
   paramsRef.current = params;
+  const quality = useAdaptiveTransmission(adaptiveQuality, params.samples, params.resolution);
   const [hovered, setHovered] = useState(false);
   const [dragging, setDragging] = useState(false);
   useCursor(hovered || dragging, dragging ? "grabbing" : "grab");
@@ -708,11 +828,13 @@ function Logo({
     const onMove = (e: PointerEvent) => {
       const d = drag.current;
       if (!d.active) return;
-      const pitchMax = paramsRef.current.dragPitchMax;
+      const look = paramsRef.current;
+      const pitchMax = look.dragPitchMax;
+      const sens = look.dragSensitivity;
       const now = performance.now();
       const dt = Math.max((now - d.lastT) / 1000, 1 / 120);
-      const dX = (e.clientY - d.lastY) * DRAG_SENSITIVITY;
-      const dY = (e.clientX - d.lastX) * DRAG_SENSITIVITY;
+      const dX = (e.clientY - d.lastY) * sens;
+      const dY = (e.clientX - d.lastX) * sens;
       d.rotX = THREE.MathUtils.clamp(d.rotX + dX, -pitchMax, pitchMax);
       d.rotY += dY;
       // Kill pitch momentum at the soft stop so coasting can't flip it vertical.
@@ -787,9 +909,9 @@ function Logo({
     const t = a.time;
 
     // Wobble only while hovering the logo (and not dragging); ease back to rest on leave.
-    const k = 1 - Math.exp(-delta * 4);
-    const targetX = hover.current.active && !drag.current.active ? hover.current.y * HOVER_TILT_X : 0;
-    const targetY = hover.current.active && !drag.current.active ? hover.current.x * HOVER_TILT_Y : 0;
+    const k = 1 - Math.exp(-delta * look.hoverLerp);
+    const targetX = hover.current.active && !drag.current.active ? hover.current.y * look.hoverTiltX : 0;
+    const targetY = hover.current.active && !drag.current.active ? hover.current.x * look.hoverTiltY : 0;
     tilt.current.x = THREE.MathUtils.lerp(tilt.current.x, targetX, k);
     tilt.current.y = THREE.MathUtils.lerp(tilt.current.y, targetY, k);
 
@@ -812,12 +934,12 @@ function Logo({
       if (!d.returning) {
         d.rotX += d.velX * delta;
         d.rotY += d.velY * delta;
-        const friction = Math.exp(-DRAG_FRICTION * delta);
+        const friction = Math.exp(-look.dragFriction * delta);
         d.velX *= friction;
         d.velY *= friction;
       } else {
-        d.velX += (-DRAG_SPRING_PITCH * d.rotX - DRAG_SPRING_PITCH_DAMP * d.velX) * delta;
-        d.velY += (-DRAG_SPRING * d.rotY - DRAG_SPRING_DAMP * d.velY) * delta;
+        d.velX += (-look.dragSpringPitch * d.rotX - look.dragSpringPitchDamp * d.velX) * delta;
+        d.velY += (-look.dragSpring * d.rotY - look.dragSpringDamp * d.velY) * delta;
         d.rotX += d.velX * delta;
         d.rotY += d.velY * delta;
         if (
@@ -888,9 +1010,9 @@ function Logo({
         <MeshTransmissionMaterial
           ref={material}
           // Banding fix stays (blur + dither); CA / env / tint restored for color.
-          samples={params.samples}
-          resolution={params.resolution}
-          backside
+          samples={quality.samples}
+          resolution={quality.resolution}
+          backside={params.backside}
           backsideEnvMapIntensity={params.backsideEnvMapIntensity}
           dithering
           backsideThickness={params.backsideThickness}
