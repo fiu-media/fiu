@@ -31,20 +31,23 @@ import {
   type LogoRimLook,
   type LogoSoftLightConfig,
 } from "@/components/three/logoConfig";
+import { diffConfigs } from "@/components/three/logoDiff";
 import { costVsPreset, type LogoPerfStats } from "@/components/three/logoPerf";
 import { GlassPillButton } from "@/components/ui/Glass";
 import logo from "@/public/brand/fiu-logo.svg";
+import { LogoDiffView } from "./LogoDiffView";
 
 const LogoScene = dynamic(() => import("@/components/three/LogoScene"), { ssr: false });
 
 const ROTATE_SECONDS = 6;
 
-type ConfigTab = "material" | "lighting" | "interaction";
+type SectionTab = "material" | "lighting" | "interaction";
+type ConfigTab = SectionTab | "changes";
 const DEFAULT_TAB: ConfigTab = "material";
 const TAB_EVENT = "logo-playground-tab";
 
 function isConfigTab(value: string): value is ConfigTab {
-  return value === "material" || value === "lighting" || value === "interaction";
+  return value === "material" || value === "lighting" || value === "interaction" || value === "changes";
 }
 
 function subscribeTab(onChange: () => void) {
@@ -124,13 +127,27 @@ const EXTRUDE_SLIDERS = [
   { key: "bevelSize" as const, label: "Bevel size", min: 0.02, max: 0.25, step: 0.005 },
 ];
 
+const DIFF_LABELS: Record<string, string> = {
+  meshMode: "Mesh",
+  rimLook: "Rim preset",
+  display: "Display",
+  backside: "Backside transmission",
+  ...Object.fromEntries(
+    [...MATERIAL_SLIDERS, ...GLOW_SLIDERS, ...INTERACTION_SLIDERS, ...EXTRUDE_SLIDERS].map((s) => [s.key, s.label]),
+  ),
+};
+
 export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
   const [config, setConfig] = useState<LogoPlaygroundConfig>(() => presetConfig("light"));
+  // null = diff against the committed preset; otherwise a pinned snapshot.
+  const [pinned, setPinned] = useState<LogoPlaygroundConfig | null>(null);
+  const [pinOpen, setPinOpen] = useState(false);
+  const [pinText, setPinText] = useState("");
   const [index, setIndex] = useState(0);
   const [rotate, setRotate] = useState(true);
   const [sceneReady, setSceneReady] = useState(false);
   const [failed, setFailed] = useState(false);
-  const [copied, setCopied] = useState<"full" | ConfigTab | null>(null);
+  const [copied, setCopied] = useState<"full" | SectionTab | null>(null);
   const [panelOpen, setPanelOpen] = useState(true);
   const [perf, setPerf] = useState<LogoPerfStats | null>(null);
   const [importOpen, setImportOpen] = useState(false);
@@ -139,6 +156,26 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
   const tab = useConfigTab();
 
   const cost = useMemo(() => costVsPreset(config.params, config.rimLook), [config.params, config.rimLook]);
+
+  const baseline = useMemo(
+    () => pinned ?? presetConfig(config.rimLook, config.meshMode),
+    [pinned, config.rimLook, config.meshMode],
+  );
+  const baselineDiff = useMemo(() => diffConfigs(baseline, config, DIFF_LABELS), [baseline, config]);
+
+  // Live preview of what the pasted import would do, before it is applied.
+  const importPreview = useMemo(
+    () => (importText.trim() ? importPlaygroundConfig(config, importText) : null),
+    [config, importText],
+  );
+  const importDiff = useMemo(
+    () => (importPreview?.ok ? diffConfigs(config, importPreview.config, DIFF_LABELS) : null),
+    [config, importPreview],
+  );
+  const pinPreview = useMemo(
+    () => (pinText.trim() ? importPlaygroundConfig(presetConfig(config.rimLook, config.meshMode), pinText) : null),
+    [config.rimLook, config.meshMode, pinText],
+  );
 
   useEffect(() => {
     if (!rotate || stills.length < 2) return;
@@ -221,7 +258,7 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
     }));
   };
 
-  const writeClipboard = async (kind: "full" | ConfigTab, payload: string) => {
+  const writeClipboard = async (kind: "full" | SectionTab, payload: string) => {
     try {
       await navigator.clipboard.writeText(payload);
       setCopied(kind);
@@ -234,11 +271,8 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
   const copyFullConfig = () => writeClipboard("full", formatConfigExport(config));
 
   const applyImport = () => {
-    const result = importPlaygroundConfig(config, importText);
-    if (!result.ok) {
-      setImportStatus(result.error);
-      return;
-    }
+    const result = importPreview;
+    if (!result?.ok) return;
     setFailed(false);
     if (result.config.meshMode !== config.meshMode || result.config.display !== config.display) {
       setSceneReady(false);
@@ -250,7 +284,13 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
     window.setTimeout(() => setImportStatus(null), 2200);
   };
 
-  const copyTabConfig = (section: ConfigTab) => {
+  const pinConfig = (next: LogoPlaygroundConfig) => {
+    setPinned(next);
+    setPinOpen(false);
+    setPinText("");
+  };
+
+  const copyTabConfig = (section: SectionTab) => {
     const payload =
       section === "material"
         ? formatMaterialConfigExport(config)
@@ -260,7 +300,7 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
     return writeClipboard(section, payload);
   };
 
-  const resetTab = (section: ConfigTab) => {
+  const resetTab = (section: SectionTab) => {
     setConfig((c) => ({
       ...c,
       params:
@@ -355,7 +395,7 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
       {panelOpen && (
         <aside className="absolute top-16 right-3 bottom-3 z-30 flex w-[min(100%-1.5rem,22rem)] flex-col overflow-hidden rounded-2xl border border-white/15 bg-black/55 shadow-2xl backdrop-blur-xl">
           <div className="flex shrink-0 flex-wrap items-center gap-1.5 border-b border-white/10 px-3 py-2.5">
-            <div role="tablist" aria-label="Config section" className="flex gap-1.5">
+            <div role="tablist" aria-label="Config section" className="flex flex-wrap gap-1.5">
               <GlassPillButton
                 size="sm"
                 onImage
@@ -383,13 +423,29 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
               >
                 Interaction
               </GlassPillButton>
+              <GlassPillButton
+                size="sm"
+                onImage
+                role="tab"
+                aria-selected={tab === "changes"}
+                onClick={() => selectTab("changes")}
+              >
+                Changes
+                {baselineDiff.entries.length > 0 && (
+                  <span className="ml-1 tabular-nums text-white/60">{baselineDiff.entries.length}</span>
+                )}
+              </GlassPillButton>
             </div>
-            <GlassPillButton size="sm" onImage onClick={() => resetTab(tab)}>
-              Reset
-            </GlassPillButton>
-            <GlassPillButton size="sm" onImage onClick={() => copyTabConfig(tab)}>
-              {copied === tab ? "Copied" : "Copy"}
-            </GlassPillButton>
+            {tab !== "changes" && (
+              <>
+                <GlassPillButton size="sm" onImage onClick={() => resetTab(tab)}>
+                  Reset
+                </GlassPillButton>
+                <GlassPillButton size="sm" onImage onClick={() => copyTabConfig(tab)}>
+                  {copied === tab ? "Copied" : "Copy"}
+                </GlassPillButton>
+              </>
+            )}
           </div>
 
           <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-4 text-sm">
@@ -410,9 +466,30 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
                   placeholder={'```fiu-logo-config\n{ ... }\n```'}
                   className="w-full resize-y rounded-xl border border-white/15 bg-black/40 px-3 py-2 font-mono text-[11px] leading-snug text-white/90 outline-none placeholder:text-white/30 focus:border-white/35"
                 />
+                {importPreview && !importPreview.ok && (
+                  <p className="mt-2 text-[11px] text-rose-300">{importPreview.error}</p>
+                )}
+                {importPreview?.ok && importDiff && (
+                  <div className="mt-3 space-y-2">
+                    <p className="text-[11px] text-white/55">
+                      Preview · {importPreview.kind === "full" ? "full config" : `${importPreview.kind} section`} vs
+                      current
+                    </p>
+                    {(importPreview.config.meshMode !== config.meshMode ||
+                      importPreview.config.display !== config.display) && (
+                      <p className="text-[11px] text-amber-300">Mesh or display changes, so the scene will remount.</p>
+                    )}
+                    <LogoDiffView diff={importDiff} emptyText="This import matches the current config." />
+                  </div>
+                )}
                 <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                  <GlassPillButton size="sm" onImage onClick={applyImport} disabled={!importText.trim()}>
-                    Apply import
+                  <GlassPillButton
+                    size="sm"
+                    onImage
+                    onClick={applyImport}
+                    disabled={!importDiff || importDiff.entries.length === 0}
+                  >
+                    {importDiff ? `Apply (${importDiff.entries.length})` : "Apply"}
                   </GlassPillButton>
                   <GlassPillButton
                     size="sm"
@@ -422,13 +499,68 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
                       setImportStatus(null);
                     }}
                   >
-                    Clear
+                    Cancel
                   </GlassPillButton>
                   {importStatus && <span className="text-[11px] text-white/60">{importStatus}</span>}
                 </div>
               </Section>
             )}
 
+            {tab === "changes" && (
+              <Section title={pinned ? "Changes vs pinned snapshot" : "Changes vs master"}>
+                <div className="mb-3 space-y-2">
+                  <p className="text-[11px] leading-snug text-white/55">
+                    {pinned ? (
+                      "Comparing against a snapshot you pinned this session."
+                    ) : (
+                      <>
+                        Comparing against the committed <code className="text-white/70">{config.rimLook}</code> preset,
+                        which is what the site renders.
+                      </>
+                    )}
+                  </p>
+                  <PillRow>
+                    <GlassPillButton size="sm" onImage aria-pressed={!pinned} onClick={() => setPinned(null)}>
+                      Committed preset
+                    </GlassPillButton>
+                    <GlassPillButton size="sm" onImage aria-pressed={Boolean(pinned)} onClick={() => pinConfig(config)}>
+                      Pin current
+                    </GlassPillButton>
+                    <GlassPillButton size="sm" onImage aria-pressed={pinOpen} onClick={() => setPinOpen((o) => !o)}>
+                      Pin from paste
+                    </GlassPillButton>
+                  </PillRow>
+                  {pinOpen && (
+                    <div className="space-y-2">
+                      <textarea
+                        value={pinText}
+                        onChange={(e) => setPinText(e.target.value)}
+                        spellCheck={false}
+                        rows={5}
+                        placeholder={'```fiu-logo-config\n{ ... }\n```'}
+                        className="w-full resize-y rounded-xl border border-white/15 bg-black/40 px-3 py-2 font-mono text-[11px] leading-snug text-white/90 outline-none placeholder:text-white/30 focus:border-white/35"
+                      />
+                      {pinPreview && !pinPreview.ok && <p className="text-[11px] text-rose-300">{pinPreview.error}</p>}
+                      <GlassPillButton
+                        size="sm"
+                        onImage
+                        disabled={!pinPreview?.ok}
+                        onClick={() => pinPreview?.ok && pinConfig(pinPreview.config)}
+                      >
+                        Use as baseline
+                      </GlassPillButton>
+                    </div>
+                  )}
+                </div>
+                <LogoDiffView
+                  diff={baselineDiff}
+                  emptyText={pinned ? "Identical to the pinned snapshot." : "Identical to the committed preset."}
+                />
+              </Section>
+            )}
+
+            {tab !== "changes" && (
+              <>
             <Section title="Display">
               <PillRow>
                 <GlassPillButton size="sm" onImage aria-pressed={config.display === "live"} onClick={() => setDisplay("live")}>
@@ -518,6 +650,8 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
               samples={config.params.samples}
               backside={config.params.backside}
             />
+              </>
+            )}
 
             {tab === "material" && (
               <>
