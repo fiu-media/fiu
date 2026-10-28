@@ -1,5 +1,6 @@
+import { orderRankField, orderRankOrdering } from "@sanity/orderable-document-list";
 import { defineArrayMember, defineField, defineType } from "sanity";
-import { imageArrayMember, languageField, orderField, slugField } from "./fields";
+import { imageArrayMember, languageField, readOnlyInTranslation, slugField } from "./fields";
 
 // Rentals are quote-only, so there are deliberately no price fields.
 export const rentalCategory = defineType({
@@ -10,9 +11,9 @@ export const rentalCategory = defineType({
     languageField,
     defineField({ name: "title", type: "string", validation: (rule) => rule.required() }),
     slugField("title"),
-    orderField,
+    orderRankField({ type: "rentalCategory" }),
   ],
-  orderings: [{ title: "Order", name: "order", by: [{ field: "order", direction: "asc" }] }],
+  orderings: [orderRankOrdering],
   preview: { select: { title: "title" } },
 });
 
@@ -61,20 +62,22 @@ export const rentalItem = defineType({
     }),
     defineField({
       name: "maxQuantity",
-      title: "Max per quote",
+      title: "Inventory",
       type: "number",
-      description: "The most of this item one quote can ask for (e.g. how many you own). Leave empty for no limit.",
-      validation: (rule) => rule.integer().min(1).max(99),
+      description: "How many of this item you own. A quote can't ask for more than this.",
+      readOnly: readOnlyInTranslation,
+      validation: (rule) => rule.required().integer().min(1).max(99),
     }),
     defineField({
       name: "available",
       type: "boolean",
       initialValue: true,
+      readOnly: readOnlyInTranslation,
       description: "Untick to hide the item from the rentals catalogue.",
     }),
-    orderField,
+    orderRankField({ type: "rentalItem" }),
   ],
-  orderings: [{ title: "Order", name: "order", by: [{ field: "order", direction: "asc" }] }],
+  orderings: [orderRankOrdering],
   preview: {
     select: { title: "name", subtitle: "brand", media: "images.0" },
   },

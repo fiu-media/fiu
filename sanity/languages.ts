@@ -6,4 +6,4 @@ const titles = { en: "English" } satisfies Record<(typeof locales)[number], stri
 export const languages = locales.map((id) => ({ id, title: titles[id] }));
 
 /** Document types with one document per language. Inbox types stay untranslated. */
-export const translatedTypes = ["siteSettings", "project", "talent", "rentalCategory", "rentalItem"];
+export const translatedTypes = ["siteSettings", "project", "talent", "projectType", "role", "rentalCategory", "rentalItem"];

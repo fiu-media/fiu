@@ -7,6 +7,7 @@ import { isConflict, sendAll } from "@/lib/forms/notify";
 import { quoteSchema } from "@/lib/forms/schemas";
 import type { FormState } from "@/lib/forms/state";
 import { formDataToRecord, guardSubmission } from "@/lib/forms/submit";
+import { defaultLocale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { AVAILABLE_ITEM_IDS_QUERY } from "@/sanity/lib/queries";
 import { writeClient } from "@/sanity/lib/writeClient";
@@ -38,6 +39,7 @@ export async function submitQuote(_previous: FormState, formData: FormData): Pro
   for (const { itemId, qty } of data.items) qtyById.set(itemId, Math.min(99, (qtyById.get(itemId) ?? 0) + qty));
   const found = await writeClient.fetch<{ _id: string; name: string; brand: string | null; maxQuantity: number | null }[]>(AVAILABLE_ITEM_IDS_QUERY, {
     ids: [...qtyById.keys()],
+    fallbackLang: defaultLocale,
   });
   if (found.length !== qtyById.size) return { status: "error", error: "unavailable", values };
 

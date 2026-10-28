@@ -1,6 +1,14 @@
+import { orderRankField, orderRankOrdering } from "@sanity/orderable-document-list";
 import { defineArrayMember, defineField, defineType } from "sanity";
-import { projectTypes } from "../../lib/project-types";
-import { imageArrayMember, imageWithAlt, languageField, orderField, slugField, vimeoUrlField } from "./fields";
+import {
+  defaultLanguageReference,
+  imageArrayMember,
+  imageWithAlt,
+  languageField,
+  readOnlyInTranslation,
+  slugField,
+  vimeoUrlField,
+} from "./fields";
 
 export const project = defineType({
   name: "project",
@@ -8,18 +16,19 @@ export const project = defineType({
   type: "document",
   fields: [
     languageField,
-    defineField({ name: "title", type: "string", validation: (rule) => rule.required() }),
+    defineField({ name: "title", type: "string", readOnly: readOnlyInTranslation, validation: (rule) => rule.required() }),
     slugField("title"),
     defineField({
       name: "type",
-      type: "string",
-      options: { list: [...projectTypes], layout: "radio" },
+      ...defaultLanguageReference("projectType"),
+      readOnly: readOnlyInTranslation,
       validation: (rule) => rule.required(),
     }),
-    defineField({ name: "client", type: "string" }),
+    defineField({ name: "client", type: "string", readOnly: readOnlyInTranslation }),
     defineField({
       name: "year",
       type: "number",
+      readOnly: readOnlyInTranslation,
       validation: (rule) => rule.integer().min(1990).max(2100),
     }),
     imageWithAlt("coverStill", "Cover still", true),
@@ -35,12 +44,13 @@ export const project = defineType({
     defineField({
       name: "credits",
       type: "array",
+      readOnly: readOnlyInTranslation,
       of: [
         defineArrayMember({
           name: "credit",
           type: "object",
           fields: [
-            defineField({ name: "role", type: "string", validation: (rule) => rule.required() }),
+            defineField({ name: "role", ...defaultLanguageReference("role"), validation: (rule) => rule.required() }),
             defineField({
               name: "talent",
               type: "reference",
@@ -52,21 +62,21 @@ export const project = defineType({
           validation: (rule) =>
             rule.custom((credit) => (credit?.talent || credit?.name ? true : "Pick a talent or enter a name")),
           preview: {
-            select: { role: "role", talent: "talent.name", name: "name" },
+            select: { role: "role.title", talent: "talent.name", name: "name" },
             prepare: ({ role, talent, name }) => ({ title: role, subtitle: talent ?? name }),
           },
         }),
       ],
     }),
-    defineField({ name: "featured", type: "boolean", initialValue: false }),
-    orderField,
+    defineField({ name: "featured", type: "boolean", initialValue: false, readOnly: readOnlyInTranslation }),
+    orderRankField({ type: "project" }),
   ],
   orderings: [
-    { title: "Order", name: "order", by: [{ field: "order", direction: "asc" }] },
+    orderRankOrdering,
     { title: "Year, newest first", name: "yearDesc", by: [{ field: "year", direction: "desc" }] },
   ],
   preview: {
-    select: { title: "title", type: "type", year: "year", media: "coverStill" },
+    select: { title: "title", type: "type.title", year: "year", media: "coverStill" },
     prepare: ({ title, type, year, media }) => ({
       title,
       subtitle: [type, year].filter(Boolean).join(" · "),

@@ -84,6 +84,31 @@ async function main() {
     seoDescription: "Irish media company: original productions, commercial work, talent and gear rental.",
   });
 
+  const kebab = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+
+  const types = [
+    { title: "Original", plural: "Originals" },
+    { title: "Commercial", plural: "Commercial" },
+    { title: "Music video", plural: "Music videos" },
+    { title: "Short", plural: "Shorts" },
+    { title: "Documentary", plural: "Documentaries" },
+  ];
+  types.forEach((t) =>
+    docs.push({
+      _id: `type-${kebab(t.title)}`,
+      _type: "projectType",
+      language: "en",
+      title: t.title,
+      pluralTitle: t.plural,
+      slug: slug(kebab(t.title)),
+    }),
+  );
+
+  const roles = ["Director", "Director of Photography", "Producer"];
+  roles.forEach((title) =>
+    docs.push({ _id: `role-${kebab(title)}`, _type: "role", language: "en", title, slug: slug(kebab(title)) }),
+  );
+
   const talentIds = ["talent-sample-one", "talent-sample-two"];
   talentIds.forEach((id, i) => {
     docs.push({
@@ -92,33 +117,30 @@ async function main() {
       language: "en",
       name: `Sample talent ${i + 1}`,
       slug: slug(`sample-talent-${i + 1}`),
-      roles: i === 0 ? ["Director"] : ["Director of Photography"],
+      roles: [{ ...ref(i === 0 ? "role-director" : "role-director-of-photography"), _key: "role-0" }],
       portrait: { ...stills[i] },
       bio: [text("b1", "Placeholder bio.")],
-      order: (i + 1) * 10,
     });
   });
 
-  const types = ["Original", "Commercial", "Music Video"];
-  types.forEach((type, i) => {
+  types.slice(0, 3).forEach((type, i) => {
     docs.push({
       _id: `project-sample-${i + 1}`,
       _type: "project",
       language: "en",
       title: `Sample project ${i + 1}`,
       slug: slug(`sample-project-${i + 1}`),
-      type,
-      client: type === "Original" ? undefined : "Sample client",
+      type: ref(`type-${kebab(type.title)}`),
+      client: type.title === "Original" ? undefined : "Sample client",
       year: 2026,
       coverStill: { ...stills[i] },
       stills: stills.map((s, j) => ({ ...s, _key: `still-${j}` })),
       description: [text("d1", "Placeholder description.")],
       credits: [
-        { _type: "credit", _key: "c1", role: "Director", talent: ref(talentIds[0]) },
-        { _type: "credit", _key: "c2", role: "Producer", name: "Sample producer" },
+        { _type: "credit", _key: "c1", role: ref("role-director"), talent: ref(talentIds[0]) },
+        { _type: "credit", _key: "c2", role: ref("role-producer"), name: "Sample producer" },
       ],
       featured: i === 0,
-      order: (i + 1) * 10,
     });
   });
 
@@ -128,14 +150,13 @@ async function main() {
     { id: "cat-lighting", title: "Lighting" },
     { id: "cat-grip", title: "Grip & support" },
   ];
-  categories.forEach((c, i) =>
+  categories.forEach((c) =>
     docs.push({
       _id: c.id,
       _type: "rentalCategory",
       language: "en",
       title: c.title,
       slug: slug(c.title.toLowerCase().replace(/[^a-z]+/g, "-")),
-      order: (i + 1) * 10,
     }),
   );
 
@@ -146,7 +167,7 @@ async function main() {
     { name: "Avenger YT200 stand", brand: "Avenger", category: "cat-grip", summary: "Heavy-duty light stand." },
     { name: "Rokinon cine lens set", brand: "Rokinon", category: "cat-lenses", summary: "Matched cine prime set." },
   ];
-  gear.forEach((g, i) =>
+  gear.forEach((g) =>
     docs.push({
       _id: `rental-${g.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
       _type: "rentalItem",
@@ -160,7 +181,6 @@ async function main() {
       specs: [],
       includedInKit: [],
       available: true,
-      order: (i + 1) * 10,
     }),
   );
 
