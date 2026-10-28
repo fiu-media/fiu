@@ -1020,9 +1020,22 @@ function Logo({
 
   // Drag continues on the window so rotation doesn't stop when the pointer leaves the mesh.
   useEffect(() => {
+    const onUp = () => {
+      if (!drag.current.active) return;
+      drag.current.active = false;
+      setDragging(false);
+      // Keep the demand loop alive through coast + bounce settle.
+      keepAwake(8);
+    };
     const onMove = (e: PointerEvent) => {
       const d = drag.current;
       if (!d.active) return;
+      // The release was missed (e.g. the window lost focus mid-drag): end the drag instead of
+      // letting the stale last position turn into one huge jump.
+      if (e.buttons === 0 && e.pointerType === "mouse") {
+        onUp();
+        return;
+      }
       const look = paramsRef.current;
       const pitchMax = look.dragPitchMax;
       const sens = look.dragSensitivity;
@@ -1044,20 +1057,20 @@ function Logo({
       d.lastT = now;
       keepAwake(1.2);
     };
-    const onUp = () => {
-      if (!drag.current.active) return;
-      drag.current.active = false;
-      setDragging(false);
-      // Keep the demand loop alive through coast + bounce settle.
-      keepAwake(8);
+    const onHidden = () => {
+      if (document.hidden) onUp();
     };
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
     window.addEventListener("pointercancel", onUp);
+    window.addEventListener("blur", onUp);
+    document.addEventListener("visibilitychange", onHidden);
     return () => {
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
       window.removeEventListener("pointercancel", onUp);
+      window.removeEventListener("blur", onUp);
+      document.removeEventListener("visibilitychange", onHidden);
     };
   }, [keepAwake]);
 
@@ -1074,9 +1087,12 @@ function Logo({
     hover.current.active = true;
   };
 
-  useFrame((_, delta) => {
+  useFrame((_, rawDelta) => {
     const g = group.current;
     if (!g) return;
+    // rAF pauses in background tabs, so the first frame back can carry a delta of minutes; cap it
+    // so drag coast and the return spring don't integrate that whole gap in one step.
+    const delta = Math.min(rawDelta, 1 / 30);
 
     // Internal glow picks up the still temperature (like liquid-glass.jpg's warm core).
     const mat = material.current as (THREE.MeshPhysicalMaterial & { attenuationColor: THREE.Color }) | null;
@@ -1099,7 +1115,7 @@ function Logo({
     const a = intro.current;
     a.frames++;
     if (a.frames === WARMUP_FRAMES) onReady();
-    if (a.frames > WARMUP_FRAMES && !introHold) a.time += Math.min(delta, 1 / 30);
+    if (a.frames > WARMUP_FRAMES && !introHold) a.time += delta;
     // The hero intro is shorter than the playground's Blender spin, so it ends (and stops
     // drawing) on its own clock.
     const introEnd = introSlide ? HERO_END : INTRO_END;
@@ -1116,8 +1132,8 @@ function Logo({
       const st = introStats.current;
       if (t < introEnd) {
         st.frames++;
-        st.ms += delta * 1000;
-        st.worst = Math.max(st.worst, delta * 1000);
+        st.ms += rawDelta * 1000;
+        st.worst = Math.max(st.worst, rawDelta * 1000);
       } else if (!st.logged && st.frames > 0) {
         st.logged = true;
         console.info(
