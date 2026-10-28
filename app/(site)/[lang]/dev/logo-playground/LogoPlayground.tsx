@@ -96,7 +96,6 @@ const MATERIAL_SLIDERS: SliderDef[] = [
   { key: "backsideEnvMapIntensity", label: "Backside env", min: 0, max: 4, step: 0.05 },
   { key: "attenuationDistance", label: "Attenuation distance", min: 0.5, max: 12, step: 0.1 },
   { key: "samples", label: "Samples", min: 4, max: 32, step: 1 },
-  { key: "resolution", label: "Resolution", min: 256, max: 1024, step: 64 },
 ];
 
 const GLOW_SLIDERS: SliderDef[] = [
@@ -520,7 +519,6 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
               cost={cost}
               rimLook={config.rimLook}
               samples={config.params.samples}
-              resolution={config.params.resolution}
               backside={config.params.backside}
             />
 
@@ -676,7 +674,6 @@ function PerfMeter({
   cost,
   rimLook,
   samples,
-  resolution,
   backside,
 }: {
   live: boolean;
@@ -684,7 +681,6 @@ function PerfMeter({
   cost: ReturnType<typeof costVsPreset>;
   rimLook: LogoRimLook;
   samples: number;
-  resolution: number;
   backside: boolean;
 }) {
   const ratioLabel = `${cost.ratio < 0.995 ? "" : cost.ratio > 1.005 ? "+" : ""}${((cost.ratio - 1) * 100).toFixed(0)}%`;
@@ -724,7 +720,7 @@ function PerfMeter({
           label="Transmission"
           value={cost.transmission}
           max={maxPart}
-          detail={`${samples} samp · ${resolution}px${backside ? " · back" : ""}`}
+          detail={`${samples} samp${backside ? " · back" : ""}`}
         />
         <CostBar label="Soft lights" value={cost.soft} max={maxPart} detail={`${cost.softOn} on`} />
         <CostBar label="Point lights" value={cost.points} max={maxPart} detail={`${cost.pointsOn} on`} />

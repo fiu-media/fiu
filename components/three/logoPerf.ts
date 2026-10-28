@@ -2,14 +2,14 @@ import { LOGO_PARAM_PRESETS, type LogoGlassParams, type LogoRimLook } from "./lo
 
 /**
  * Rough relative GPU cost for playground feedback.
- * MeshTransmissionMaterial dominates via samples × resolution²; env soft lights
+ * MeshTransmissionMaterial dominates via its sample count and buffer passes; env soft lights
  * matter because Environment re-renders every frame; point lights are lighter.
  */
 export function estimateLogoCost(params: LogoGlassParams) {
   const softOn = params.lights.soft.filter((l) => l.enabled).length;
   const pointsOn = params.lights.points.filter((l) => l.enabled).length;
   const backsideMul = params.backside === false ? 1 : 2;
-  const transmission = params.samples * (params.resolution / 256) ** 2 * backsideMul;
+  const transmission = params.samples * 4 * backsideMul;
   const soft = softOn * 2.2;
   const points = pointsOn * 1.1;
   return {
