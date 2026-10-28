@@ -361,7 +361,6 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
                 onImage
                 role="tab"
                 aria-selected={tab === "material"}
-                aria-pressed={tab === "material"}
                 onClick={() => selectTab("material")}
               >
                 Material
@@ -371,7 +370,6 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
                 onImage
                 role="tab"
                 aria-selected={tab === "lighting"}
-                aria-pressed={tab === "lighting"}
                 onClick={() => selectTab("lighting")}
               >
                 Lighting
@@ -381,7 +379,6 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
                 onImage
                 role="tab"
                 aria-selected={tab === "interaction"}
-                aria-pressed={tab === "interaction"}
                 onClick={() => selectTab("interaction")}
               >
                 Interaction

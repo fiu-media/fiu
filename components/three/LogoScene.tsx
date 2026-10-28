@@ -8,6 +8,7 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
   type ComponentRef,
   type MutableRefObject,
   type RefObject,
@@ -130,6 +131,7 @@ export default function LogoScene({
       // the WebGL backdrop is only sampled for logo refraction (see BackdropLayerGate).
       onCreated={({ gl }) => {
         gl.setClearColor(0x000000, 0);
+        gl.domElement.style.touchAction = "none";
         gl.domElement.addEventListener("webglcontextlost", (event) => {
           event.preventDefault();
           onContextLost?.();
@@ -158,19 +160,15 @@ export default function LogoScene({
  * Pixel ratio for the canvas and, because the transmission buffers are sized from it, the glass
  * refraction too. Only Save-Data drops to 1; slow GPUs step down later via `useAdaptiveTransmission`.
  */
+const FULL_DPR: [number, number] = [1, 1.5];
+const subscribeNever = () => () => {};
+const readSaveData = () =>
+  Boolean((navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData);
+const serverSaveData = () => false;
+
 function useCanvasDpr(measurePerf: boolean): number | [number, number] {
-  const [dpr, setDpr] = useState<number | [number, number]>([1, 1.5]);
-  useEffect(() => {
-    if (measurePerf) {
-      setDpr([1, 1.5]);
-      return;
-    }
-    const saveData = Boolean(
-      (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData,
-    );
-    setDpr(saveData ? 1 : [1, 1.5]);
-  }, [measurePerf]);
-  return dpr;
+  const saveData = useSyncExternalStore(subscribeNever, readSaveData, serverSaveData);
+  return saveData && !measurePerf ? 1 : FULL_DPR;
 }
 
 /**
@@ -182,7 +180,9 @@ function useAdaptiveTransmission(enabled: boolean, samples: number) {
   const lowAcc = useRef(0);
   const highAcc = useRef(0);
   const tierRef = useRef(0);
-  tierRef.current = tier;
+  useEffect(() => {
+    tierRef.current = tier;
+  }, [tier]);
 
   useFrame((_, delta) => {
     if (!enabled) {
@@ -218,14 +218,17 @@ function useAdaptiveTransmission(enabled: boolean, samples: number) {
 function PerfSampler({ onPerf }: { onPerf: (stats: LogoPerfStats) => void }) {
   const gl = useThree((s) => s.gl);
   const onPerfRef = useRef(onPerf);
-  onPerfRef.current = onPerf;
-  const bucket = useRef({ started: performance.now(), frames: 0, frameMs: 0 });
+  useEffect(() => {
+    onPerfRef.current = onPerf;
+  }, [onPerf]);
+  const bucket = useRef({ started: 0, frames: 0, frameMs: 0 });
 
   useFrame((_, delta) => {
     const b = bucket.current;
     b.frames += 1;
     b.frameMs = delta * 1000;
     const now = performance.now();
+    if (!b.started) b.started = now;
     if (now - b.started < 500) return;
     const fps = (b.frames * 1000) / (now - b.started);
     b.frames = 0;
@@ -321,6 +324,10 @@ function Scene({
   const tint = useRef(NEUTRAL_TINT.clone());
   // Logo orientation — spark lights lag behind this so highlights crawl on spin.
   const logoPose = useRef({ x: 0, y: 0 });
+  const setLogoPose = useCallback((x: number, y: number) => {
+    logoPose.current.x = x;
+    logoPose.current.y = y;
+  }, []);
 
   const tints = useMemo(
     () => stills.map((still, i) => resolveStillTint(still, textures[i])),
@@ -361,14 +368,13 @@ function Scene({
       <Logo
         onReady={onReady}
         tint={tint}
-        logoPose={logoPose}
+        onPose={setLogoPose}
         meshMode={meshMode}
         params={params}
         keepAwake={keepAwake}
         adaptiveQuality={adaptiveQuality}
         introSlide={introSlide}
         introHold={introHold}
-        splashLift={splashLift}
         onIntroEnd={handleIntroEnd}
       />
       {/* Disable still layer after MTM's FBO capture so the main/bloom pass is logo-only. */}
@@ -786,12 +792,13 @@ function SoftLight({
   const mat = useRef<THREE.MeshBasicMaterial>(null);
   const tmp = useMemo(() => new THREE.Color(), []);
 
+  const [px, py, pz] = position;
   useEffect(() => {
     const m = mesh.current;
     if (!m) return;
     m.lookAt(0, 0, 0);
     if (roll) m.rotateZ(roll);
-  }, [position[0], position[1], position[2], roll]);
+  }, [px, py, pz, roll]);
 
   useFrame(() => {
     const m = mat.current;
@@ -899,27 +906,25 @@ function shortestAngle(radians: number) {
 function Logo({
   onReady,
   tint,
-  logoPose,
+  onPose,
   meshMode,
   params,
   keepAwake,
   adaptiveQuality,
   introSlide,
   introHold,
-  splashLift,
   onIntroEnd,
 }: {
   onReady: () => void;
   onIntroEnd: (() => void) | undefined;
   tint: MutableRefObject<THREE.Color>;
-  logoPose: MutableRefObject<{ x: number; y: number }>;
+  onPose: (x: number, y: number) => void;
   meshMode: LogoMeshMode;
   params: LogoGlassParams;
   keepAwake: (seconds: number) => void;
   adaptiveQuality: boolean;
   introSlide: boolean;
   introHold: boolean;
-  splashLift: boolean | undefined;
 }) {
   const size = useThree((s) => s.size);
   const viewport = useThree((s) => s.viewport);
@@ -947,7 +952,9 @@ function Logo({
   const glow = useMemo(() => new THREE.Color(), []);
   const localPoint = useMemo(() => new THREE.Vector3(), []);
   const paramsRef = useRef(params);
-  paramsRef.current = params;
+  useEffect(() => {
+    paramsRef.current = params;
+  }, [params]);
   const quality = useAdaptiveTransmission(adaptiveQuality, params.samples);
   // Struggling: trim the pixel ratio along with the samples, and restore it on recovery.
   const setDpr = useThree((s) => s.setDpr);
@@ -965,28 +972,18 @@ function Logo({
   const [dragging, setDragging] = useState(false);
   useCursor(hovered || dragging, dragging ? "grabbing" : "grab");
 
-  const extrudeKey = params.extrude
-    ? `${params.extrude.depth}:${params.extrude.bevelThickness}:${params.extrude.bevelSize}`
-    : "default";
+  const extrudeOverride = params.extrude;
+  const depth = extrudeOverride?.depth;
+  const bevelThickness = extrudeOverride?.bevelThickness;
+  const bevelSize = extrudeOverride?.bevelSize;
 
   const geometry = useMemo(() => {
     const base = paths as unknown as LogoPaths;
-    if (meshMode === "extrude" && base.extrude && params.extrude) {
-      return buildLogoGeometry(
-        {
-          ...base,
-          extrude: {
-            ...base.extrude,
-            ...params.extrude,
-          },
-        },
-        meshMode,
-      );
+    if (meshMode === "extrude" && base.extrude && depth !== undefined && bevelThickness !== undefined && bevelSize !== undefined) {
+      return buildLogoGeometry({ ...base, extrude: { ...base.extrude, depth, bevelThickness, bevelSize } }, meshMode);
     }
     return buildLogoGeometry(base, meshMode);
-    // extrudeKey tracks nested extrude fields without depending on the whole params object identity.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [meshMode, extrudeKey]);
+  }, [meshMode, depth, bevelThickness, bevelSize]);
 
   useEffect(() => () => geometry.dispose(), [geometry]);
 
@@ -1015,8 +1012,7 @@ function Logo({
 
   useEffect(() => {
     invalidate();
-    gl.domElement.style.touchAction = "none";
-  }, [invalidate, gl]);
+  }, [invalidate]);
 
   // Redraw after mesh / material param changes without resetting intro spin state.
   useEffect(() => {
@@ -1209,8 +1205,7 @@ function Logo({
     }
 
     g.rotation.set(tilt.current.x + d.rotX, (introSlide ? heroSpinAt(t) : spinAt(t)) + tilt.current.y + d.rotY, 0);
-    logoPose.current.x = g.rotation.x;
-    logoPose.current.y = g.rotation.y;
+    onPose(g.rotation.x, g.rotation.y);
   });
 
   return (

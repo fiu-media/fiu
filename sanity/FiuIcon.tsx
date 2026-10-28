@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 /**
  * Studio workspace icon: the dark Fíu avatar (design/avatar), served from public/brand.
  * The Studio wraps it in a fixed 25px/41px rounded box and does not set a font-size,
@@ -5,11 +7,14 @@
  */
 export function FiuIcon() {
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src="/brand/fiu-avatar.png"
-      alt=""
-      style={{ display: "block", width: "100%", height: "100%", borderRadius: "inherit" }}
-    />
+    <span style={{ display: "block", position: "relative", width: "100%", height: "100%", borderRadius: "inherit" }}>
+      <Image
+        src="/brand/fiu-avatar.png"
+        alt=""
+        fill
+        sizes="41px"
+        style={{ borderRadius: "inherit" }}
+      />
+    </span>
   );
 }
