@@ -6,6 +6,7 @@ import { Component, useCallback, useEffect, useMemo, useState, useSyncExternalSt
 import logo from "@/public/brand/fiu-logo.svg";
 import type { HeroStill } from "@/sanity/lib/stills";
 import { isSplashDismissed, Splash } from "./Splash";
+import { SPLASH_FADE_MS, splashFadeVars } from "./splash-config";
 
 const LogoScene = dynamic(() => import("@/components/three/LogoScene"), { ssr: false });
 
@@ -13,19 +14,26 @@ const ROTATE_SECONDS = 6;
 /** Keep the splash up at least this long so a fast load doesn't flash it. */
 const SPLASH_MIN_MS = 800;
 /** Never hold the splash longer than this, even if the live scene never reports ready. */
-const SPLASH_MAX_MS = 6000;
+const SPLASH_MAX_MS = 4000;
 /**
- * The splash fades as one (backdrop + SVG logo) over 500 ms while the glass logo fades in on top
- * over the same time. The spin waits for that to finish, so the SVG is never seen sitting under a
- * spinning glass logo.
+ * The splash fades as one (backdrop + SVG logo) over SPLASH_FADE_MS while the glass logo fades in
+ * on top over the same time. The spin starts partway through that fade, so the two read as one
+ * gesture. It can't start at 0: the spin front-loads its speed, and the glass would visibly turn
+ * away from the SVG it is cross-fading with.
  */
-const SPIN_DELAY_MS = 500;
+const SPIN_DELAY_MS = SPLASH_FADE_MS * 0.35;
 /**
- * From the splash lifting until the spin and glide have settled (500 ms + ~2.2 s spin, plus the
- * spring tail). The layout/stacking swap and still rotation wait for this: doing either mid-spin
- * costs a layer re-composite and extra WebGL work on the frames that matter most.
+ * Static mode has no scene to report the end of the intro, so the stills start rotating this long
+ * after the splash lifts (the logo's 300 ms delay + 1 s slide, plus margin).
  */
-const INTRO_SETTLE_MS = 4000;
+const INTRO_SETTLE_MS = 2000;
+/**
+ * Live mode: the scene reports the end of its intro (`onIntroEnd`), which on a slow device runs
+ * well past INTRO_SETTLE_MS, since its clock is frame-capped. Swapping the layout/stacking or
+ * starting still rotation mid-spin costs a layer re-composite and extra WebGL work on the frames
+ * that matter most. This is only a backstop for a scene that stops drawing.
+ */
+const INTRO_BACKSTOP_MS = 12000;
 
 type Mode = "pending" | "live" | "static";
 
@@ -88,12 +96,17 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
   useEffect(() => {
     if (!splashDone) return;
     const spin = window.setTimeout(() => setSpinGo(true), SPIN_DELAY_MS);
-    const settled = window.setTimeout(() => setIntroDone(true), INTRO_SETTLE_MS);
-    return () => {
-      window.clearTimeout(spin);
-      window.clearTimeout(settled);
-    };
+    return () => window.clearTimeout(spin);
   }, [splashDone]);
+
+  useEffect(() => {
+    if (!splashDone) return;
+    const settled = window.setTimeout(
+      () => setIntroDone(true),
+      mode === "live" ? INTRO_BACKSTOP_MS : INTRO_SETTLE_MS,
+    );
+    return () => window.clearTimeout(settled);
+  }, [splashDone, mode]);
 
   // Held until the intro is over so a still crossfade (and its extra rendering) never lands
   // mid-spin.
@@ -104,6 +117,7 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
   }, [introDone, stills.length]);
 
   const onReady = useCallback(() => setSceneReady(true), []);
+  const onIntroEnd = useCallback(() => setIntroDone(true), []);
   const onFail = useCallback(() => setFailed(true), []);
   const sceneStills = useMemo(
     () =>
@@ -142,7 +156,7 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
             fallback. The live logo starts its spin from this same centred, front-facing pose,
             then glides to the left on desktop (-25vw = from 50vw to 4vw + half of 42vw). */}
         <div
-          className={`pointer-events-none absolute inset-0 grid place-items-center ${splashDone && mode !== "live" ? "transition-opacity duration-700" : ""}`}
+          className={`pointer-events-none absolute inset-0 grid place-items-center ${splashDone && mode !== "live" ? "motion-safe:transition-opacity motion-safe:duration-700" : ""}`}
           style={{ opacity: mode === "live" && sceneReady ? 0 : 1 }}
         >
           <Image
@@ -164,9 +178,9 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
           <div
             aria-hidden
             className={`inset-0 ${
-              introDone ? "absolute -z-10" : "pointer-events-none fixed z-30 transition-opacity duration-500 ease-out will-change-[opacity]"
+              introDone ? "absolute -z-10" : "pointer-events-none fixed z-30 transition-opacity duration-(--splash-fade) ease-out will-change-[opacity]"
             }`}
-            style={{ opacity: sceneReady && splashDone ? 1 : 0 }}
+            style={{ ...splashFadeVars, opacity: sceneReady && splashDone ? 1 : 0 }}
           >
             <LogoScene
               stills={sceneStills}
@@ -178,6 +192,8 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
               introHold={!spinGo}
               splashLift={splashDone}
               interactive={introDone}
+              onIntroEnd={onIntroEnd}
+              onContextLost={onFail}
             />
           </div>
         </SceneBoundary>

@@ -3,12 +3,12 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import logo from "@/public/brand/fiu-logo.svg";
+import { SPLASH_FADE_MS, splashFadeVars } from "./splash-config";
 
-// The whole splash (backdrop and logo) fades as one. Keep in sync with FADE_CLASSES below, the
-// glass logo's fade-in in HomeHero, and the spin delay there.
-const FADE_MS = 500;
+// The whole splash (backdrop and logo) fades as one, over SPLASH_FADE_MS (shared with the glass
+// logo's fade-in in HomeHero and the shader reveal in LogoScene).
 // will-change promotes the layer before the fade starts, so the first frame of it isn't a hitch.
-const FADE_CLASSES = "will-change-[opacity] motion-safe:transition-opacity motion-safe:duration-500 motion-safe:ease-out";
+const FADE_CLASSES = "will-change-[opacity] motion-safe:transition-opacity motion-safe:duration-(--splash-fade) motion-safe:ease-out";
 
 // Once per page load: if the hero remounts (Suspense swap, client navigation back to `/`),
 // the splash must not replay.
@@ -28,19 +28,28 @@ export function Splash({ done }: { done: boolean }) {
 
   useEffect(() => {
     if (!done) return;
-    const id = window.setTimeout(() => {
-      dismissed = true;
-      setGone(true);
-    }, FADE_MS);
+    // Under reduced motion the fade is instant, so there is nothing to wait for.
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const id = window.setTimeout(
+      () => {
+        dismissed = true;
+        setGone(true);
+      },
+      reduced ? 0 : SPLASH_FADE_MS,
+    );
     return () => window.clearTimeout(id);
   }, [done]);
 
   if (gone) return null;
 
   return (
-    <div aria-hidden className={`fixed inset-0 z-20 grid place-items-center ${done ? "pointer-events-none" : ""}`}>
+    <div
+      aria-hidden
+      style={splashFadeVars}
+      className={`fixed inset-0 z-20 grid place-items-center ${done ? "pointer-events-none" : ""}`}
+    >
       {/* Backdrop and logo fade together. In live mode the glass logo fades in on top over the
-          same 500 ms (HomeHero), so the handoff happens inside this one fade. */}
+          same SPLASH_FADE_MS (HomeHero), so the handoff happens inside this one fade. */}
       <div className={`absolute inset-0 bg-ink ${FADE_CLASSES}`} style={{ opacity: done ? 0 : 1 }} />
       <Image
         src={logo}

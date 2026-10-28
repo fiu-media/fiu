@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { preload } from "react-dom";
 import { HomeHero } from "@/components/home/HomeHero";
 import { GlassNav } from "@/components/nav/GlassNav";
 import { fallbackStills } from "@/lib/fallback-stills";
@@ -38,6 +39,10 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
 async function CmsHero({ lang }: { lang: Locale }) {
   const { perspective, variant } = await getDynamicFetchOptions();
   const stills = await homeStills(lang, perspective, variant);
+  // The glass logo's WebGL scene can't draw until its first still has loaded. Start that download
+  // with the HTML, not after the scene's code has mounted. `crossOrigin` must match the texture
+  // loader's request (anonymous CORS) or the browser won't reuse the preloaded response.
+  if (stills[0]) preload(stills[0].src, { as: "image", crossOrigin: "anonymous" });
   return <HomeHero stills={stills} />;
 }
 
