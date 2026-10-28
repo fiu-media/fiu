@@ -59,7 +59,7 @@ export function NavPreview({
         ref={scroller}
         className={`absolute inset-0 overflow-y-auto overscroll-contain ${option === "e" ? "@2xl:pl-16" : ""}`}
       >
-        <Content dark={dark} dockRoom={option === "d"} />
+        <Content dark={dark} dockRoom={option === "d"} phone={width === "phone"} />
       </div>
       {option === "a" && <Capsule {...concept} />}
       {option === "b" && <TypeOnly {...concept} />}
@@ -71,7 +71,12 @@ export function NavPreview({
 }
 
 /** Stand-in page content so each nav is judged over real stills. Long enough to scroll. */
-function Content({ dark, dockRoom }: { dark: boolean; dockRoom: boolean }) {
+function Content({ dark, dockRoom, phone }: { dark: boolean; dockRoom: boolean; phone: boolean }) {
+  // The frame is 390px in phone mode, otherwise the page column (max-w-6xl, 1152px, with page padding).
+  const frameSizes = phone ? "390px" : "(min-width: 1200px) 1152px, calc(100vw - 3rem)";
+  const tileSizes = phone
+    ? "390px"
+    : "(min-width: 1200px) 370px, (min-width: 720px) calc((100vw - 3rem) / 3), calc(100vw - 2rem)";
   const hero = (
     <div className={`relative z-10 flex h-full flex-col justify-end p-5 @2xl:p-10 ${dockRoom ? "pb-24" : "pb-8 @2xl:pb-12"}`}>
       <p className="font-display text-5xl tracking-tight text-white @2xl:text-7xl">Stories worth watching</p>
@@ -85,7 +90,7 @@ function Content({ dark, dockRoom }: { dark: boolean; dockRoom: boolean }) {
       <section className="relative h-(--frame-h)">
         {dark ? (
           <>
-            <Image src={conservatory} alt="" fill priority placeholder="blur" sizes="100vw" className="object-cover" />
+            <Image src={conservatory} alt="" fill priority placeholder="blur" sizes={frameSizes} className="object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
             {hero}
           </>
@@ -93,7 +98,7 @@ function Content({ dark, dockRoom }: { dark: boolean; dockRoom: boolean }) {
           <div className="flex h-full flex-col px-3 pt-24 pb-3 @2xl:px-6">
             <p className="font-display px-2 pb-4 text-4xl tracking-tight @2xl:text-6xl">Stories worth watching</p>
             <div className="relative min-h-0 flex-1 overflow-hidden rounded-2xl">
-              <Image src={conservatory} alt="" fill placeholder="blur" sizes="100vw" className="object-cover" />
+              <Image src={conservatory} alt="" fill placeholder="blur" sizes={frameSizes} className="object-cover" />
             </div>
           </div>
         )}
@@ -101,7 +106,7 @@ function Content({ dark, dockRoom }: { dark: boolean; dockRoom: boolean }) {
       <section className="grid gap-3 p-3 @2xl:grid-cols-3 @2xl:p-6">
         {[glow, pond, supper].map((still, i) => (
           <div key={i} className="relative aspect-[16/10] overflow-hidden rounded-2xl">
-            <Image src={still} alt="" fill placeholder="blur" sizes="(min-width: 1024px) 33vw, 100vw" className="object-cover" />
+            <Image src={still} alt="" fill placeholder="blur" sizes={tileSizes} className="object-cover" />
           </div>
         ))}
       </section>
@@ -174,6 +179,36 @@ function Logo({ label, className }: { label: string; className: string }) {
   );
 }
 
+/** Two quiet lines that fold into a cross while the menu is open. */
+function MenuIcon({ open = false, className = "" }: { open?: boolean; className?: string }) {
+  const line = "origin-center [transform-box:fill-box] transition-transform duration-300";
+  return (
+    <svg
+      aria-hidden
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.6}
+      strokeLinecap="round"
+      className={`size-6 ${className}`}
+    >
+      <line x1="5" x2="19" y1="8" y2="8" className={`${line} ${open ? "translate-y-[4px] rotate-45" : ""}`} />
+      <line x1="5" x2="19" y1="16" y2="16" className={`${line} ${open ? "-translate-y-[4px] -rotate-45" : ""}`} />
+    </svg>
+  );
+}
+
+/*
+ * Dropdowns hold glass, and a backdrop-filter only sees what is behind it inside its nearest
+ * "backdrop root". Anything below full opacity (also filter, mask, clip-path) makes its element
+ * one, so fading the wrapper left the glass with nothing to bend and it flashed black. The wrapper
+ * therefore moves with transform and visibility only; the links inside fade instead.
+ */
+const dropdown = "transition-[translate,scale,visibility] duration-200";
+const dropdownOpen = "visible translate-y-0 scale-100";
+const dropdownShut = "invisible -translate-y-1 scale-95";
+const fade = (open: boolean) => `transition-opacity duration-200 ${open ? "opacity-100" : "opacity-0"}`;
+
 const hoverEase = "ease-[cubic-bezier(0.2,0.7,0.2,1)]";
 
 /* ------------------------------------------------------------------------------------------ */
@@ -235,34 +270,35 @@ function Capsule({ items, current, onSelect, homeLabel, onImage }: Concept) {
           </nav>
           <button
             type="button"
+            aria-label="Menu"
             aria-expanded={open}
             aria-controls="capsule-menu"
             onClick={() => setOpen(!open)}
-            className="h-10 cursor-pointer rounded-full px-4 text-sm font-medium hover:bg-fg/10 @2xl:hidden"
+            className="grid size-10 cursor-pointer place-items-center rounded-full hover:bg-fg/10 @2xl:hidden"
           >
-            {open ? "Close" : "Menu"}
+            <MenuIcon open={open} />
           </button>
         </GlassPanel>
         <div
           id="capsule-menu"
           inert={!open}
-          className={`absolute inset-x-0 top-full pt-2 transition duration-200 @2xl:hidden ${
-            open ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-1 opacity-0"
-          }`}
+          className={`${dropdown} absolute inset-x-0 top-full origin-top pt-2 @2xl:hidden ${open ? dropdownOpen : dropdownShut}`}
         >
-          <GlassPanel onImage={onImage} radius={24} className="flex flex-col p-2">
-            {items.map((item) => (
-              <NavLink
-                key={item.href}
-                item={item}
-                current={current}
-                onSelect={(href) => {
-                  onSelect(href);
-                  setOpen(false);
-                }}
-                className="flex h-11 items-center rounded-2xl px-4 text-base font-medium aria-[current=page]:bg-fg/12 aria-[current=page]:font-semibold"
-              />
-            ))}
+          <GlassPanel onImage={onImage} radius={24} className="p-2">
+            <div className={`flex flex-col ${fade(open)}`}>
+              {items.map((item) => (
+                <NavLink
+                  key={item.href}
+                  item={item}
+                  current={current}
+                  onSelect={(href) => {
+                    onSelect(href);
+                    setOpen(false);
+                  }}
+                  className="flex h-11 items-center rounded-2xl px-4 text-base font-medium aria-[current=page]:bg-fg/12 aria-[current=page]:font-semibold"
+                />
+              ))}
+            </div>
           </GlassPanel>
         </div>
       </div>
@@ -291,8 +327,13 @@ function Overlay({
     >
       <div className="flex items-center justify-between px-5 py-5">
         <Logo label={homeLabel} className="h-9" />
-        <button type="button" onClick={onClose} className="cursor-pointer text-[0.9375rem] font-medium">
-          Close
+        <button
+          type="button"
+          aria-label="Close menu"
+          onClick={onClose}
+          className="-mr-2 grid size-10 cursor-pointer place-items-center rounded-full hover:bg-fg/10"
+        >
+          <MenuIcon open />
         </button>
       </div>
       <nav aria-label="Primary" className="flex flex-1 flex-col justify-center gap-1 px-5 pb-20">
@@ -338,11 +379,12 @@ function TypeOnly({ items, current, onSelect, homeLabel, onImage }: Concept) {
         </nav>
         <button
           type="button"
+          aria-label="Menu"
           aria-expanded={open}
           onClick={() => setOpen(true)}
-          className={`cursor-pointer text-[0.9375rem] font-medium @2xl:hidden ${shadow}`}
+          className="-mr-2 grid size-10 cursor-pointer place-items-center rounded-full @2xl:hidden"
         >
-          Menu
+          <MenuIcon className={onImage ? "drop-shadow-[0_1px_4px_rgb(0_0_0/0.4)]" : ""} />
         </button>
       </header>
       <Overlay open={open} onClose={() => setOpen(false)} items={items} current={current} onSelect={onSelect} homeLabel={homeLabel} />
@@ -378,11 +420,10 @@ function LogoMenu({ items, current, onSelect, homeLabel, onImage }: Concept) {
       <div
         id="logo-menu"
         inert={!open}
-        className={`absolute top-full left-0 origin-top-left pt-2 transition duration-200 ${
-          open ? "scale-100 opacity-100" : "pointer-events-none scale-95 opacity-0"
-        }`}
+        className={`${dropdown} absolute top-full left-0 origin-top-left pt-2 ${open ? dropdownOpen : dropdownShut}`}
       >
-        <GlassPanel onImage={onImage} radius={24} className="flex w-56 flex-col p-2">
+        <GlassPanel onImage={onImage} radius={24} className="w-56 p-2">
+          <div className={`flex flex-col ${fade(open)}`}>
           <NavLink
             item={{ href: "", label: homeLabel }}
             current={current}
@@ -407,6 +448,7 @@ function LogoMenu({ items, current, onSelect, homeLabel, onImage }: Concept) {
               className="flex h-11 items-center rounded-xl px-4 text-[0.9375rem] font-medium hover:bg-fg/10 aria-[current=page]:bg-fg/12 aria-[current=page]:font-semibold"
             />
           ))}
+          </div>
         </GlassPanel>
       </div>
     </div>
@@ -476,12 +518,12 @@ function Rail({ items, current, onSelect, homeLabel, onImage }: Concept) {
   return (
     <>
       <aside
-        className={`absolute inset-y-0 left-0 z-30 hidden w-16 flex-col items-center justify-between border-r border-line py-7 @2xl:flex ${
+        className={`absolute inset-y-0 left-0 z-30 hidden w-16 flex-col items-center gap-12 border-r border-line py-7 @2xl:flex ${
           onImage ? "bg-gradient-to-r from-black/35 to-transparent" : ""
         }`}
       >
         <Logo label={homeLabel} className="h-8" />
-        <nav aria-label="Primary" className="flex flex-col items-center gap-8">
+        <nav aria-label="Primary" className="flex flex-col items-center gap-7">
           {items.map((item) => (
             <NavLink
               key={item.href}
@@ -492,12 +534,18 @@ function Rail({ items, current, onSelect, homeLabel, onImage }: Concept) {
             />
           ))}
         </nav>
-        <span aria-hidden className="h-8" />
       </aside>
       <header className="absolute inset-x-0 top-0 z-30 flex items-center justify-between px-5 py-5 @2xl:hidden">
         <Logo label={homeLabel} className="h-9" />
-        <GlassPillButton size="sm" onImage={onImage} aria-expanded={open} onClick={() => setOpen(true)}>
-          Menu
+        <GlassPillButton
+          size="sm"
+          onImage={onImage}
+          aria-label="Menu"
+          aria-expanded={open}
+          onClick={() => setOpen(true)}
+          className="size-10! px-0!"
+        >
+          <MenuIcon />
         </GlassPillButton>
       </header>
       <Overlay open={open} onClose={() => setOpen(false)} items={items} current={current} onSelect={onSelect} homeLabel={homeLabel} />
