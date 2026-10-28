@@ -14,6 +14,7 @@ import {
 } from "react";
 import * as THREE from "three";
 import paths from "@/public/brand/fiu-logo-paths.json";
+import { SPLASH_FADE_MS } from "@/components/home/splash-config";
 import { buildLogoGeometry, type LogoMeshMode, type LogoPaths } from "./buildLogoGeometry";
 import { LOGO_PARAM_PRESETS, type LogoGlassParams, type LogoRimLook } from "./logoConfig";
 import type { LogoPerfStats } from "./logoPerf";
@@ -38,10 +39,10 @@ const NEUTRAL_TINT = new THREE.Color("#c8c4c0");
  * a plain 1.0 down to light grey.
  */
 const SPLASH_WHITE = 1.5;
-// The refracted field goes white → photo over exactly the splash fade (500 ms, ease-out, same
-// curve as the CSS), so the glass clears as the splash lifts; a slower curve left a white glass
-// logo hanging around after the backdrop had gone.
-const REVEAL_SECONDS = 0.5;
+// The refracted field goes white → photo over exactly the splash fade (ease-out, same curve as
+// the CSS), so the glass clears as the splash lifts; a slower curve left a white glass logo
+// hanging around after the backdrop had gone.
+const REVEAL_SECONDS = SPLASH_FADE_MS / 1000;
 
 export type SceneStill = {
   src: string;
@@ -76,6 +77,8 @@ export default function LogoScene({
   introHold = false,
   splashLift,
   interactive = true,
+  onIntroEnd,
+  onContextLost,
 }: {
   stills: SceneStill[];
   index: number;
@@ -88,6 +91,10 @@ export default function LogoScene({
   splashLift?: boolean;
   /** When false the canvas ignores the pointer, so whatever is beneath it (the nav) stays clickable. */
   interactive?: boolean;
+  /** Fires once, when the hero intro (spin and glide) has played out in full. */
+  onIntroEnd?: () => void;
+  /** The GL context was lost and the canvas can no longer draw; the caller should swap in a fallback. */
+  onContextLost?: () => void;
   /** `tubes` = liquid-glass taper; `extrude` = flat silhouette slab. */
   meshMode?: LogoMeshMode;
   /** `light` = luminous bevels; `dark` = charcoal liquid-glass bands. */
@@ -100,6 +107,10 @@ export default function LogoScene({
 }) {
   const params = paramsProp ?? LOGO_PARAM_PRESETS[rimLook];
   const dpr = useCanvasDpr(measurePerf);
+  // Start loading the first still before the canvas mounts. If it has resolved by the time Scene
+  // first renders, useTexture reads it from cache and never suspends. A suspend would cost
+  // React's 300 ms Suspense reveal throttle, even with the image already in the HTTP cache.
+  preloadStill(stills[index]!.src);
   return (
     <Canvas
       frameloop={measurePerf ? "always" : "demand"}
@@ -117,7 +128,13 @@ export default function LogoScene({
       }}
       // Transparent clear so the HTML <Image> stills show through untouched;
       // the WebGL backdrop is only sampled for logo refraction (see BackdropLayerGate).
-      onCreated={({ gl }) => gl.setClearColor(0x000000, 0)}
+      onCreated={({ gl }) => {
+        gl.setClearColor(0x000000, 0);
+        gl.domElement.addEventListener("webglcontextlost", (event) => {
+          event.preventDefault();
+          onContextLost?.();
+        });
+      }}
     >
       <Scene
         stills={stills}
@@ -130,6 +147,7 @@ export default function LogoScene({
         introSlide={introSlide}
         introHold={introHold}
         splashLift={splashLift}
+        onIntroEnd={onIntroEnd}
       />
       {measurePerf && onPerf ? <PerfSampler onPerf={onPerf} /> : null}
     </Canvas>
@@ -241,10 +259,12 @@ function Scene({
   introSlide,
   introHold,
   splashLift,
+  onIntroEnd,
 }: {
   stills: SceneStill[];
   index: number;
   onReady: () => void;
+  onIntroEnd: (() => void) | undefined;
   meshMode: LogoMeshMode;
   params: LogoGlassParams;
   /** Playground: keep cubemap live while measuring / scrubbing. */
@@ -254,15 +274,54 @@ function Scene({
   introHold: boolean;
   splashLift: boolean | undefined;
 }) {
-  // useTexture suspends until loaded, so .image is available on first paint here.
-  const textures = useTexture(
-    stills.map((s) => s.src),
-    (loaded) => {
-      for (const t of loaded) {
-        t.colorSpace = THREE.SRGBColorSpace;
-        t.anisotropy = 4;
+  const gl = useThree((s) => s.gl);
+  // Only the still on screen at mount gates the first paint (useTexture suspends until it has
+  // loaded, so .image is available on first paint here). Decoding and uploading all of them
+  // up front cost ~600 ms of the splash for stills nobody sees for another six seconds.
+  const [firstSrc] = useState(() => stills[index]!.src);
+  const [first] = useTexture([firstSrc], (loaded) => {
+    for (const t of loaded) configureStill(t);
+  });
+
+  // The rest stream in once the intro is over (uploading them mid-spin would hitch it), or
+  // sooner if the hero has already moved on to another still.
+  const [introOver, setIntroOver] = useState(!introSlide);
+  const handleIntroEnd = useCallback(() => {
+    setIntroOver(true);
+    onIntroEnd?.();
+  }, [onIntroEnd]);
+  const [rest, setRest] = useState<Record<string, THREE.Texture>>({});
+  const loadRest = introOver || stills[index]!.src !== firstSrc;
+  const restKey = stills.map((s) => s.src).join("|");
+  useEffect(() => {
+    if (!loadRest) return;
+    let cancelled = false;
+    const loader = new THREE.TextureLoader();
+    (async () => {
+      for (const src of restKey.split("|")) {
+        if (src === firstSrc) continue;
+        try {
+          const t = configureStill(await loader.loadAsync(src));
+          if (cancelled) return t.dispose();
+          // Upload now, at idle, rather than inside the first crossfade that samples it.
+          gl.initTexture(t);
+          setRest((prev) => ({ ...prev, [src]: t }));
+        } catch (error) {
+          // A still that fails to load just keeps the previous one behind the glass.
+          console.warn("[LogoScene] still failed to load:", src, error);
+        }
+        await new Promise((resolve) => setTimeout(resolve, 60));
+        if (cancelled) return;
       }
-    },
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [loadRest, restKey, firstSrc, gl]);
+
+  const textures = useMemo(
+    () => stills.map((s) => (s.src === firstSrc ? first : rest[s.src])),
+    [stills, firstSrc, first, rest],
   );
   const { keepAwake, awakeRef } = useKeepAwake();
   const fade = useRef<Fade>({ from: index, to: index, start: 0 });
@@ -317,6 +376,7 @@ function Scene({
         introSlide={introSlide}
         introHold={introHold}
         splashLift={splashLift}
+        onIntroEnd={handleIntroEnd}
       />
       {/* Disable still layer after MTM's FBO capture so the main/bloom pass is logo-only. */}
       <BackdropLayerGate phase="afterTransmission" />
@@ -434,6 +494,17 @@ function useEnvFrames(
 }
 
 /** Prefer CMS `lightTint`; else sample the texture; else neutral. Sampling failures (CORS) fall through. */
+/** Same cache key as `useTexture([src])` in Scene. */
+function preloadStill(src: string) {
+  useTexture.preload([src]);
+}
+
+function configureStill(t: THREE.Texture) {
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 4;
+  return t;
+}
+
 function resolveStillTint(still: SceneStill, texture?: THREE.Texture): THREE.Color {
   if (still.lightTint) {
     try {
@@ -532,7 +603,8 @@ function Backdrop({
   splashLift,
 }: {
   stills: SceneStill[];
-  textures: THREE.Texture[];
+  /** `undefined` while a still is still streaming in; the backdrop shows whichever side has loaded. */
+  textures: (THREE.Texture | undefined)[];
   fade: RefObject<Fade>;
   splashLift: boolean | undefined;
 }) {
@@ -558,8 +630,9 @@ function Backdrop({
     const f = fade.current;
     const u = material.current?.uniforms;
     if (!f || !u) return;
-    u.tFrom.value = textures[f.from]!;
-    u.tTo.value = textures[f.to]!;
+    const ready = textures[f.to] ?? textures[f.from] ?? textures.find(Boolean)!;
+    u.tFrom.value = textures[f.from] ?? ready;
+    u.tTo.value = textures[f.to] ?? ready;
     u.fromAspect.value = stills[f.from]!.width / stills[f.from]!.height;
     u.toAspect.value = stills[f.to]!.width / stills[f.to]!.height;
     u.planeAspect.value = width / height;
@@ -773,21 +846,29 @@ const WARMUP_FRAMES = 3;
 // Hero intro (`introSlide`): `HERO_TURNS` turns that spin up fast and decelerate like a spun coin,
 // then a springy glide to the left that overshoots and settles. Times in seconds.
 const HERO_TURNS = 1;
-const HERO_SPIN_SECONDS = 2.2;
+const HERO_SPIN_SECONDS = 1.6;
 /** Glide starts mid-deceleration so the spin hands over to the move. */
-const SLIDE_START = 1;
-const SLIDE_SECONDS = 2.2;
+const SLIDE_START = 0.6;
+const SLIDE_SECONDS = 1.8;
 /** Spring: damping ratio < 1 overshoots (0.65 ≈ 7% past the target); omega sets the speed. */
 const SLIDE_DAMPING = 0.65;
-const SLIDE_OMEGA = 4.5;
+const SLIDE_OMEGA = 5.5;
 const HERO_END = Math.max(HERO_SPIN_SECONDS, SLIDE_START + SLIDE_SECONDS);
 /** Longest intro, so the demand loop stays awake for it. */
 const INTRO_END = Math.max(SPIN_END, HERO_END);
+/** Mobile has no glide, so the logo is tossed up this fraction of the viewport height and lands. */
+const MOBILE_TOSS = 0.035;
 
 function heroSpinAt(t: number) {
   const k = Math.min(Math.max(t / HERO_SPIN_SECONDS, 0), 1);
   // k^0.6 front-loads the speed; the cosine ease gives a soft start and a long settle.
   return -Math.PI * 2 * HERO_TURNS * (0.5 - 0.5 * Math.cos(Math.PI * k ** 0.6));
+}
+
+/** 0 → 1 → 0 over the spin: the coin-toss arc the mobile logo rides while it spins in place. */
+function tossAt(t: number) {
+  const k = Math.min(Math.max(t / HERO_SPIN_SECONDS, 0), 1);
+  return Math.sin(Math.PI * k) ** 2;
 }
 
 /** Damped-spring step response: 0 → 1 with overshoot, snapped to 1 once settled. */
@@ -833,8 +914,10 @@ function Logo({
   introSlide,
   introHold,
   splashLift,
+  onIntroEnd,
 }: {
   onReady: () => void;
+  onIntroEnd: (() => void) | undefined;
   tint: MutableRefObject<THREE.Color>;
   logoPose: MutableRefObject<{ x: number; y: number }>;
   meshMode: LogoMeshMode;
@@ -865,7 +948,7 @@ function Logo({
     velX: 0,
     velY: 0,
   });
-  const intro = useRef({ frames: 0, time: 0 });
+  const intro = useRef({ frames: 0, time: 0, ended: false });
   const introStats = useRef({ frames: 0, ms: 0, worst: 0, logged: false });
   const invalidate = useThree((s) => s.invalidate);
   const glow = useMemo(() => new THREE.Color(), []);
@@ -1017,14 +1100,21 @@ function Logo({
     a.frames++;
     if (a.frames === WARMUP_FRAMES) onReady();
     if (a.frames > WARMUP_FRAMES && !introHold) a.time += Math.min(delta, 1 / 30);
-    if (a.time < INTRO_END) invalidate();
+    // The hero intro is shorter than the playground's Blender spin, so it ends (and stops
+    // drawing) on its own clock.
+    const introEnd = introSlide ? HERO_END : INTRO_END;
+    if (a.time < introEnd) invalidate();
     const t = a.time;
+    if (introSlide && !a.ended && t >= introEnd) {
+      a.ended = true;
+      onIntroEnd?.();
+    }
 
     // Dev only: how smooth the hero intro really is on this machine (GPU cost can't be seen in a
     // CPU profile). Logged once, when the intro ends.
     if (process.env.NODE_ENV !== "production" && introSlide && a.frames > WARMUP_FRAMES && !introHold) {
       const st = introStats.current;
-      if (t < INTRO_END) {
+      if (t < introEnd) {
         st.frames++;
         st.ms += delta * 1000;
         st.worst = Math.max(st.worst, delta * 1000);
@@ -1040,6 +1130,7 @@ function Logo({
     // Start centred and glide to the resting x; `x` is read fresh so resizes stay correct.
     const slide = introSlide ? slideAt(t) : 1;
     g.position.x = x * slide;
+    g.position.y = introSlide && !desktop ? viewport.height * MOBILE_TOSS * tossAt(t) : 0;
 
     // Wobble only while hovering the logo (and not dragging); ease back to rest on leave.
     const k = 1 - Math.exp(-delta * look.hoverLerp);
