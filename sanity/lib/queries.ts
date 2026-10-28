@@ -10,6 +10,25 @@ const withFallback = (type: string, extra = "") => `(
     + *[_type == "${type}" && language == $fallbackLang${extra} && !(slug.current in *[_type == "${type}" && language == $lang${extra}].slug.current)]
   )`;
 
+/** The default-language document a translation was made from (they share a slug). Use inside a projection. */
+const DEFAULT_COUNTERPART = `*[_type == ^._type && language == $fallbackLang && slug.current == ^.slug.current][0]`;
+
+/**
+ * Rental items the default-language document has marked unavailable are hidden in every language:
+ * availability and stock are read-only in translations (see readOnlyInTranslation), so they can't be trusted there.
+ */
+const RENTAL_AVAILABLE = ` && !(slug.current in *[_type == "rentalItem" && language == $fallbackLang && available == false].slug.current)`;
+
+/**
+ * Orders a document list by the editor-set drag-and-drop rank. Every language shares the default
+ * language's order (matched by slug); a document with no default-language counterpart uses its own
+ * rank. Unranked documents tie, so `tiebreak` (a field name) keeps their order stable.
+ */
+const byRank = (tiebreak: string) => `[]{
+    ...,
+    "rank": coalesce(${DEFAULT_COUNTERPART}.orderRank, orderRank)
+  } | order(rank asc, ${tiebreak} asc)`;
+
 export const HOME_STILLS_QUERY = defineQuery(`
   coalesce(
     *[_type == "siteSettings" && language == $lang && count(homeStills[defined(asset)]) > 0][0],
@@ -36,7 +55,7 @@ const RENTAL_ITEM_FIELDS = `
   brand,
   summary,
   keyFeatures,
-  maxQuantity,
+  "maxQuantity": coalesce(${DEFAULT_COUNTERPART}.maxQuantity, maxQuantity),
   "category": category->{ _id, title, "slug": slug.current },
   "images": images[defined(asset)]{
     _key,
@@ -50,20 +69,20 @@ const RENTAL_ITEM_FIELDS = `
 `;
 
 export const RENTALS_QUERY = defineQuery(`{
-  "categories": ${withFallback("rentalCategory")} | order(order asc){
+  "categories": ${withFallback("rentalCategory")}${byRank("title")}{
     _id,
     title,
     "slug": slug.current
   },
-  "items": ${withFallback("rentalItem", " && available != false")} | order(order asc){
+  "items": ${withFallback("rentalItem", RENTAL_AVAILABLE)}${byRank("name")}{
     ${RENTAL_ITEM_FIELDS}
   }
 }`);
 
 export const RENTAL_ITEM_QUERY = defineQuery(`
   coalesce(
-    *[_type == "rentalItem" && language == $lang && slug.current == $slug && available != false][0],
-    *[_type == "rentalItem" && language == $fallbackLang && slug.current == $slug && available != false][0]
+    *[_type == "rentalItem" && language == $lang && slug.current == $slug${RENTAL_AVAILABLE}][0],
+    *[_type == "rentalItem" && language == $fallbackLang && slug.current == $slug${RENTAL_AVAILABLE}][0]
   ){
     ${RENTAL_ITEM_FIELDS},
     specs[]{ _key, key, value },
@@ -73,11 +92,11 @@ export const RENTAL_ITEM_QUERY = defineQuery(`
 
 /** Just enough per item to label basket lines, which only store ids and quantities. */
 export const QUOTE_CATALOGUE_QUERY = defineQuery(`
-  ${withFallback("rentalItem", " && available != false")} | order(order asc){
+  ${withFallback("rentalItem", RENTAL_AVAILABLE)}${byRank("name")}{
     _id,
     name,
     brand,
-    maxQuantity,
+    "maxQuantity": coalesce(${DEFAULT_COUNTERPART}.maxQuantity, maxQuantity),
     "slug": slug.current,
     "image": images[defined(asset)][0]{ alt, asset, crop, hotspot, "lqip": asset->metadata.lqip }
   }
@@ -101,7 +120,10 @@ export const SUBMISSION_SETTINGS_QUERY = defineQuery(`
 
 /** Ids of rental items that can currently be requested (published and available). */
 export const AVAILABLE_ITEM_IDS_QUERY = defineQuery(`
-  *[_type == "rentalItem" && _id in $ids && available != false]{ _id, name, brand, maxQuantity }
+  *[_type == "rentalItem" && _id in $ids${RENTAL_AVAILABLE}]{
+    _id, name, brand,
+    "maxQuantity": coalesce(${DEFAULT_COUNTERPART}.maxQuantity, maxQuantity)
+  }
 `);
 
 /** Editor-written intro lines for the Rentals, Request a quote and Contact pages. */

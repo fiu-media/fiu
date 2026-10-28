@@ -4,12 +4,36 @@ import { EnvelopeIcon } from "@sanity/icons/Envelope";
 import { ThLargeIcon } from "@sanity/icons/ThLarge";
 import { UsersIcon } from "@sanity/icons/Users";
 import { VideoIcon } from "@sanity/icons/Video";
+import { orderableDocumentListDeskItem } from "@sanity/orderable-document-list";
+import type { ComponentType } from "react";
 import type { StructureResolver } from "sanity/structure";
+import { defaultLocale } from "../lib/i18n/config";
 
 const singletons = ["siteSettings"];
 const inboxTypes = ["quoteRequest", "contactMessage"];
 
-export const structure: StructureResolver = (S) =>
+/**
+ * Drag-and-drop list of the default-language documents of `type`. Translations take their order
+ * from these (see `byRank` in lib/queries.ts), so there is one list to reorder, not one per language.
+ */
+const orderableList = (
+  S: Parameters<StructureResolver>[0],
+  context: Parameters<StructureResolver>[1],
+  type: string,
+  title: string,
+  icon?: ComponentType,
+) =>
+  orderableDocumentListDeskItem({
+    type,
+    title,
+    icon,
+    S,
+    context,
+    filter: "language == $lang",
+    params: { lang: defaultLocale },
+  });
+
+export const structure: StructureResolver = (S, context) =>
   S.list()
     .title("Fiú Media")
     .items([
@@ -18,8 +42,28 @@ export const structure: StructureResolver = (S) =>
         .icon(CogIcon)
         .child(S.document().schemaType("siteSettings").documentId("siteSettings")),
       S.divider(),
-      S.documentTypeListItem("project").title("Projects").icon(VideoIcon),
-      S.documentTypeListItem("talent").title("Talent").icon(UsersIcon),
+      S.listItem()
+        .title("Projects")
+        .icon(VideoIcon)
+        .child(
+          S.list()
+            .title("Projects")
+            .items([
+              orderableList(S, context, "project", "Projects"),
+              orderableList(S, context, "projectType", "Types"),
+            ]),
+        ),
+      S.listItem()
+        .title("Talent")
+        .icon(UsersIcon)
+        .child(
+          S.list()
+            .title("Talent")
+            .items([
+              orderableList(S, context, "talent", "Talent"),
+              orderableList(S, context, "role", "Roles"),
+            ]),
+        ),
       S.listItem()
         .title("Rentals")
         .icon(ThLargeIcon)
@@ -27,8 +71,8 @@ export const structure: StructureResolver = (S) =>
           S.list()
             .title("Rentals")
             .items([
-              S.documentTypeListItem("rentalItem").title("Items"),
-              S.documentTypeListItem("rentalCategory").title("Categories"),
+              orderableList(S, context, "rentalItem", "Items"),
+              orderableList(S, context, "rentalCategory", "Categories"),
             ]),
         ),
       S.divider(),

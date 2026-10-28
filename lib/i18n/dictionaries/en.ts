@@ -31,13 +31,6 @@ export const en = {
     title: "Our Work",
     filterLabel: "Filter by project type",
     all: "All",
-    types: {
-      Original: "Originals",
-      Commercial: "Commercial",
-      "Music Video": "Music videos",
-      Short: "Shorts",
-      Documentary: "Documentaries",
-    },
     empty: "No projects of this type yet.",
     credits: "Credits",
     stills: "Stills",

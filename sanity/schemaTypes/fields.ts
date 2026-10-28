@@ -1,11 +1,21 @@
-import { defineArrayMember, defineField } from "sanity";
+import { defineArrayMember, defineField, type SanityDocument } from "sanity";
+import { defaultLocale } from "../../lib/i18n/config";
 
-export const orderField = defineField({
-  name: "order",
-  title: "Order",
-  type: "number",
-  description: "Lower numbers appear first.",
-  initialValue: 100,
+/**
+ * `readOnly` for language-neutral fields (slugs, stock, availability, facts about a project or
+ * person). Only the default-language document is edited; translations read these from it.
+ */
+export const readOnlyInTranslation = ({ document }: { document?: SanityDocument }) =>
+  !!document?.language && document.language !== defaultLocale;
+
+/**
+ * Reference to a translated document type. Always points at the default-language document, so
+ * there is one target per thing; queries resolve the translated title by slug.
+ */
+export const defaultLanguageReference = (type: string) => ({
+  type: "reference" as const,
+  to: [{ type }],
+  options: { filter: "language == $language", filterParams: { language: defaultLocale } },
 });
 
 /** Written by @sanity/document-internationalization; editors never touch it. */
@@ -34,6 +44,7 @@ export const slugField = (source: string) =>
         );
       },
     },
+    readOnly: readOnlyInTranslation,
     validation: (rule) => rule.required(),
   });
 
@@ -43,6 +54,7 @@ export const vimeoUrlField = (name: string, title: string, description?: string)
     title,
     type: "url",
     description,
+    readOnly: readOnlyInTranslation,
     validation: (rule) =>
       rule.uri({ scheme: ["https"] }).custom((url) => {
         if (!url) return true;
