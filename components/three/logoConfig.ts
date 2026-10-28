@@ -553,16 +553,15 @@ function fence(lang: string, value: unknown): string {
   return [`\`\`\`${lang}`, JSON.stringify(value, null, 2), "```"].join("\n");
 }
 
-function omitInteraction<T extends Record<string, unknown>>(params: T): Omit<T, keyof LogoInteractionParams> {
+function omitKeys<T extends Record<string, unknown>, K extends keyof T>(params: T, keys: readonly K[]): Omit<T, K> {
   const next = { ...params };
-  for (const key of INTERACTION_KEYS) delete next[key];
+  for (const key of keys) delete next[key];
   return next;
 }
 
 /** Material / glow / extrude — everything except lights and interaction. */
 export function pickMaterialParams(params: LogoGlassParams): LogoMaterialParams {
-  const { lights: _lights, ...rest } = params;
-  const material = omitInteraction(rest);
+  const material = omitKeys(params, ["lights", ...INTERACTION_KEYS]);
   return {
     ...material,
     extrude: material.extrude ? { ...material.extrude } : null,
