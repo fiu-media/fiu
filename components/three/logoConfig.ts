@@ -73,7 +73,6 @@ export type LogoGlassParams = {
   backsideEnvMapIntensity: number;
   attenuationDistance: number;
   samples: number;
-  resolution: number;
   glowSat: number;
   glowLift: number;
   glowLMin: number;
@@ -454,7 +453,6 @@ const LIGHT_PARAMS: LogoGlassParams = {
   backsideEnvMapIntensity: 1.85,
   attenuationDistance: 5.8,
   samples: 24,
-  resolution: 768,
   glowSat: 0.77,
   glowLift: 0,
   glowLMin: 0.52,
@@ -482,7 +480,6 @@ const DARK_PARAMS: LogoGlassParams = {
   backsideEnvMapIntensity: 1,
   attenuationDistance: 2.6,
   samples: 6,
-  resolution: 512,
   glowSat: 1.15,
   glowLift: 0.12,
   glowLMin: 0.4,

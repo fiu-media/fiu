@@ -155,30 +155,29 @@ export default function LogoScene({
 }
 
 /**
- * Render at the device's pixel ratio (up to 2), or edges are upscaled and look pixelated, most of
- * all on phones. Only Save-Data drops to 1; slow GPUs step down later via `useAdaptiveTransmission`.
- * The logo is the only thing drawn to this canvas, so the extra pixels are cheap.
+ * Pixel ratio for the canvas and, because the transmission buffers are sized from it, the glass
+ * refraction too. Only Save-Data drops to 1; slow GPUs step down later via `useAdaptiveTransmission`.
  */
 function useCanvasDpr(measurePerf: boolean): number | [number, number] {
-  const [dpr, setDpr] = useState<number | [number, number]>([1, 2]);
+  const [dpr, setDpr] = useState<number | [number, number]>([1, 1.5]);
   useEffect(() => {
     if (measurePerf) {
-      setDpr([1, 2]);
+      setDpr([1, 1.5]);
       return;
     }
     const saveData = Boolean(
       (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData,
     );
-    setDpr(saveData ? 1 : [1, 2]);
+    setDpr(saveData ? 1 : [1, 1.5]);
   }, [measurePerf]);
   return dpr;
 }
 
 /**
- * Step samples/resolution down if FPS stays low, recover when it climbs back.
+ * Step samples down (and, in `Logo`, the pixel ratio) if FPS stays low, recover when it climbs back.
  * Disabled in the playground so slider values stay honest.
  */
-function useAdaptiveTransmission(enabled: boolean, samples: number, resolution: number) {
+function useAdaptiveTransmission(enabled: boolean, samples: number) {
   const [tier, setTier] = useState(0);
   const lowAcc = useRef(0);
   const highAcc = useRef(0);
@@ -211,12 +210,8 @@ function useAdaptiveTransmission(enabled: boolean, samples: number, resolution: 
     }
   });
 
-  if (!enabled || tier === 0) return { samples, resolution, tier: 0 };
-  return {
-    samples: Math.max(4, samples - tier * 2),
-    resolution: Math.max(256, resolution - tier * 256),
-    tier,
-  };
+  if (!enabled || tier === 0) return { samples, tier: 0 };
+  return { samples: Math.max(4, samples - tier * 2), tier };
 }
 
 /** Samples FPS / frame time and renderer info ~2×/sec for the playground HUD. */
@@ -726,7 +721,7 @@ function Studio({
     g.rotation.y = THREE.MathUtils.damp(g.rotation.y, logoPose.current.y, SPARK_FOLLOW, delta);
   });
   return (
-    <Environment resolution={512} frames={frames}>
+    <Environment resolution={256} frames={frames}>
       {fixed.map((l) => (
         <SoftLight
           key={l.id}
@@ -953,14 +948,14 @@ function Logo({
   const localPoint = useMemo(() => new THREE.Vector3(), []);
   const paramsRef = useRef(params);
   paramsRef.current = params;
-  const quality = useAdaptiveTransmission(adaptiveQuality, params.samples, params.resolution);
-  // Struggling at the lowest transmission tier: trim the pixel ratio too, and restore it on recovery.
+  const quality = useAdaptiveTransmission(adaptiveQuality, params.samples);
+  // Struggling: trim the pixel ratio along with the samples, and restore it on recovery.
   const setDpr = useThree((s) => s.setDpr);
   const fullDpr = useRef<number | null>(null);
   useEffect(() => {
-    if (quality.tier >= 2) {
+    if (quality.tier >= 1) {
       fullDpr.current ??= gl.getPixelRatio();
-      setDpr(Math.min(fullDpr.current, 1.5));
+      setDpr(Math.min(fullDpr.current, quality.tier >= 2 ? 1 : 1.25));
     } else if (fullDpr.current !== null) {
       setDpr(fullDpr.current);
       fullDpr.current = null;
@@ -1261,7 +1256,9 @@ function Logo({
           ref={material}
           // Banding fix stays (blur + dither); CA / env / tint restored for color.
           samples={quality.samples}
-          resolution={quality.resolution}
+          // No `resolution`: drei then sizes the transmission buffers to the canvas (with its
+          // pixel ratio). A number makes them square, which squashes the wide viewport into it and
+          // leaves horizontal detail well under one buffer pixel per screen pixel on desktop.
           backside={params.backside}
           backsideEnvMapIntensity={params.backsideEnvMapIntensity}
           dithering
