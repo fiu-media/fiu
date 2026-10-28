@@ -154,24 +154,22 @@ export default function LogoScene({
   );
 }
 
-/** Cap pixel ratio on mobile / Save-Data; playground keeps a higher ceiling. */
+/**
+ * Render at the device's pixel ratio (up to 2), or edges are upscaled and look pixelated, most of
+ * all on phones. Only Save-Data drops to 1; slow GPUs step down later via `useAdaptiveTransmission`.
+ * The logo is the only thing drawn to this canvas, so the extra pixels are cheap.
+ */
 function useCanvasDpr(measurePerf: boolean): number | [number, number] {
-  const [dpr, setDpr] = useState<number | [number, number]>(() => (measurePerf ? [1, 1.5] : [1, 1.25]));
+  const [dpr, setDpr] = useState<number | [number, number]>([1, 2]);
   useEffect(() => {
     if (measurePerf) {
-      setDpr([1, 1.5]);
+      setDpr([1, 2]);
       return;
     }
-    const mq = window.matchMedia("(max-width: 768px)");
-    const sync = () => {
-      const saveData = Boolean(
-        (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData,
-      );
-      setDpr(mq.matches || saveData ? 1 : [1, 1.25]);
-    };
-    sync();
-    mq.addEventListener("change", sync);
-    return () => mq.removeEventListener("change", sync);
+    const saveData = Boolean(
+      (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData,
+    );
+    setDpr(saveData ? 1 : [1, 2]);
   }, [measurePerf]);
   return dpr;
 }
@@ -678,7 +676,7 @@ function Backdrop({
 /** Radial alpha falloff so softboxes don't hard-cut at the rim. */
 function useFeatherMap() {
   return useMemo(() => {
-    const size = 128;
+    const size = 256;
     const canvas = document.createElement("canvas");
     canvas.width = size;
     canvas.height = size;
@@ -728,7 +726,7 @@ function Studio({
     g.rotation.y = THREE.MathUtils.damp(g.rotation.y, logoPose.current.y, SPARK_FOLLOW, delta);
   });
   return (
-    <Environment resolution={256} frames={frames}>
+    <Environment resolution={512} frames={frames}>
       {fixed.map((l) => (
         <SoftLight
           key={l.id}
@@ -956,6 +954,18 @@ function Logo({
   const paramsRef = useRef(params);
   paramsRef.current = params;
   const quality = useAdaptiveTransmission(adaptiveQuality, params.samples, params.resolution);
+  // Struggling at the lowest transmission tier: trim the pixel ratio too, and restore it on recovery.
+  const setDpr = useThree((s) => s.setDpr);
+  const fullDpr = useRef<number | null>(null);
+  useEffect(() => {
+    if (quality.tier >= 2) {
+      fullDpr.current ??= gl.getPixelRatio();
+      setDpr(Math.min(fullDpr.current, 1.5));
+    } else if (fullDpr.current !== null) {
+      setDpr(fullDpr.current);
+      fullDpr.current = null;
+    }
+  }, [quality.tier, setDpr, gl]);
   const [hovered, setHovered] = useState(false);
   const [dragging, setDragging] = useState(false);
   useCursor(hovered || dragging, dragging ? "grabbing" : "grab");
