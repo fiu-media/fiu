@@ -3,6 +3,15 @@ import { defineArrayMember, defineField, defineType } from "sanity";
 // Written by the site's server actions (see #10). Editors can only change `status`.
 const readOnly = true;
 
+// List and header previews: enough to tell requests apart and see what's outstanding at a glance.
+const capitalise = (value?: string) => (value ? value[0].toUpperCase() + value.slice(1) : undefined);
+const shortDate = (date?: string) =>
+  date ? new Date(`${date}T00:00:00`).toLocaleDateString("en-IE", { day: "numeric", month: "short" }) : undefined;
+const excerpt = (text?: string, length = 70) => {
+  const flat = text?.replace(/\s+/g, " ").trim();
+  return flat && flat.length > length ? `${flat.slice(0, length).trimEnd()}…` : flat;
+};
+
 export const quoteRequest = defineType({
   name: "quoteRequest",
   title: "Quote request",
@@ -50,11 +59,30 @@ export const quoteRequest = defineType({
   ],
   orderings: [{ title: "Newest first", name: "newest", by: [{ field: "createdAt", direction: "desc" }] }],
   preview: {
-    select: { title: "name", status: "status", production: "production" },
-    prepare: ({ title, status, production }) => ({
-      title,
-      subtitle: [status, production].filter(Boolean).join(" · "),
-    }),
+    select: {
+      name: "name",
+      production: "production",
+      company: "company",
+      status: "status",
+      startDate: "startDate",
+      endDate: "endDate",
+      items: "items",
+    },
+    prepare: ({ name, production, company, status, startDate, endDate, items }) => {
+      const lines = Array.isArray(items) ? items.length : 0;
+      return {
+        title: [name, production || company].filter(Boolean).join(" · "),
+        subtitle: [
+          capitalise(status),
+          startDate && endDate && startDate !== endDate
+            ? `${shortDate(startDate)} → ${shortDate(endDate)}`
+            : shortDate(startDate),
+          lines ? `${lines} ${lines === 1 ? "item" : "items"}` : undefined,
+        ]
+          .filter(Boolean)
+          .join(" · "),
+      };
+    },
   },
 });
 
@@ -89,10 +117,10 @@ export const contactMessage = defineType({
   ],
   orderings: [{ title: "Newest first", name: "newest", by: [{ field: "createdAt", direction: "desc" }] }],
   preview: {
-    select: { title: "name", status: "status", enquiry: "enquiryType" },
-    prepare: ({ title, status, enquiry }) => ({
-      title,
-      subtitle: [status, enquiry].filter(Boolean).join(" · "),
+    select: { name: "name", enquiry: "enquiryType", status: "status", message: "message" },
+    prepare: ({ name, enquiry, status, message }) => ({
+      title: [name, enquiry].filter(Boolean).join(" · "),
+      subtitle: [capitalise(status), excerpt(message)].filter(Boolean).join(" · "),
     }),
   },
 });
