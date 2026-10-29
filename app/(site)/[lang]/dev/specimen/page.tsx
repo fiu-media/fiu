@@ -54,7 +54,7 @@ export default async function SpecimenPage({ params }: PageProps<"/[lang]/dev/sp
     <main data-surface="adaptive" className="min-h-dvh bg-bg text-fg">
       <header className="sticky top-0 z-20 border-b border-line bg-bg/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-6 py-3">
-          <p className="text-sm font-medium">Fiú · design specimen</p>
+          <p className="pl-16 text-sm font-medium">Fiú · design specimen</p>
           <SchemeSwitcher />
         </div>
       </header>
