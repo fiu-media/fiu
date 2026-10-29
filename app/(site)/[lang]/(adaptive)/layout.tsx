@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
 import { SiteHeader } from "@/components/nav/SiteHeader";
-import { EdgeBars } from "@/components/ui/EdgeBars";
 import { isLocale } from "@/lib/i18n/config";
 
 /** Pages that follow the system light/dark setting (Rentals, Contact). */
@@ -9,7 +8,6 @@ export default async function AdaptiveLayout({ children, params }: LayoutProps<"
   if (!isLocale(lang)) notFound();
   return (
     <div data-surface="adaptive" className="min-h-dvh bg-bg text-fg">
-      <EdgeBars />
       <SiteHeader lang={lang} />
       {children}
     </div>
