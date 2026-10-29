@@ -56,9 +56,9 @@ function Nav({ items, homeHref, labels, onImage, hideLogo, pathname }: NavProps 
         {/* Sprocket rhythm: a faint, evenly spaced row of ticks, the only nod to film. */}
         <span
           aria-hidden
-          className="pointer-events-none absolute inset-y-0 right-1.5 w-0.5 bg-[repeating-linear-gradient(to_bottom,currentColor_0_6px,transparent_6px_18px)] text-fg opacity-10"
+          className="pointer-events-none absolute inset-y-0 right-1 w-0.5 bg-[repeating-linear-gradient(to_bottom,currentColor_0_6px,transparent_6px_18px)] text-fg opacity-10"
         />
-        {!hideLogo && <HomeLink href={homeHref} label={labels.home} className="h-8" />}
+        {!hideLogo && <HomeLink href={homeHref} label={labels.home} className="h-7" />}
         <nav aria-label={labels.label} className="flex flex-col items-center gap-7">
           {items.map((item) => (
             <Link
