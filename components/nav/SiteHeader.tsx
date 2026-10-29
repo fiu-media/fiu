@@ -11,7 +11,7 @@ import { HomeLink } from "./HomeLink";
 export async function SiteHeader({ lang, onImage }: { lang: Locale; onImage?: boolean }) {
   const dict = await getDictionary(lang);
   return (
-    <header className="mx-auto flex max-w-6xl flex-col items-center gap-4 px-4 py-4 md:flex-row md:justify-between md:px-6 md:py-6">
+    <header className="mx-auto flex max-w-6xl flex-col items-center gap-4 px-[max(1rem,env(safe-area-inset-left))] pt-[max(1rem,env(safe-area-inset-top))] pb-4 md:flex-row md:justify-between md:px-[max(1.5rem,env(safe-area-inset-left))] md:pt-[max(1.5rem,env(safe-area-inset-top))] md:pb-6">
       <div className="order-2 md:order-1">
         <HomeLink href={localizedPath(lang, "/")} label={dict.nav.home} />
       </div>

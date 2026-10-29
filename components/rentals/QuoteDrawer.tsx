@@ -23,7 +23,7 @@ export function QuoteDrawer({ lang, dict }: { lang: Locale; dict: Dictionary["ba
 
   return (
     <>
-      <div className="fixed right-4 bottom-4 z-40 sm:right-6 sm:bottom-6">
+      <div className="fixed right-[max(1rem,env(safe-area-inset-right))] bottom-[max(1rem,env(safe-area-inset-bottom))] z-40 sm:right-[max(1.5rem,env(safe-area-inset-right))] sm:bottom-[max(1.5rem,env(safe-area-inset-bottom))]">
         <GlassPillButton
           size="lg"
           onClick={() => dialog.current?.showModal()}
@@ -41,7 +41,7 @@ export function QuoteDrawer({ lang, dict }: { lang: Locale; dict: Dictionary["ba
         ref={dialog}
         aria-label={dict.title}
         onClick={(event) => event.target === event.currentTarget && close()}
-        className="m-0 ml-auto h-dvh max-h-none w-[min(26rem,100vw)] max-w-none bg-transparent p-3 text-fg backdrop:bg-black/40"
+        className="m-0 ml-auto h-dvh max-h-none w-[min(26rem,100vw)] max-w-none bg-transparent pt-[max(0.75rem,env(safe-area-inset-top))] pr-[max(0.75rem,env(safe-area-inset-right))] pb-[max(0.75rem,env(safe-area-inset-bottom))] pl-3 text-fg backdrop:bg-black/40"
       >
         <GlassPanel className="flex h-full flex-col p-5">
           <div className="mb-2 flex items-center justify-between">

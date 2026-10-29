@@ -83,6 +83,16 @@
   --font-display: var(--font-fraunces), ui-serif, Georgia, serif;
 }
 
+/* The canvas behind the notch, the home indicator and overscroll is the root background, so it
+   must match the surface: cinematic pages are always dark, whatever the OS scheme. */
+html {
+  background: var(--bg);
+}
+
+html:has([data-surface="cinematic"]) {
+  background: var(--ink);
+}
+
 body {
   background: var(--bg);
   color: var(--fg);
