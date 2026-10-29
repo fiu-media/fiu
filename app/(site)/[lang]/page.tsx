@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { preload } from "react-dom";
@@ -11,6 +11,8 @@ import { getNavItems } from "@/lib/i18n/nav";
 import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
 import { HOME_STILLS_QUERY } from "@/sanity/lib/queries";
 import { toHeroStill, type HeroStill, type HomeStillsResult } from "@/sanity/lib/stills";
+
+export const viewport: Viewport = { themeColor: "#0c0b0d" };
 
 export async function generateMetadata({ params }: PageProps<"/[lang]">): Promise<Metadata> {
   const { lang } = await params;
@@ -29,7 +31,7 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
         <CmsHero lang={lang} />
       </Suspense>
       {/* Same container as the adaptive header, so the nav doesn't shift between Home and other pages. */}
-      <div className="relative z-10 mx-auto flex max-w-6xl justify-center px-4 py-4 md:absolute md:inset-x-0 md:top-0 md:justify-end md:px-6 md:py-6">
+      <div className="relative z-10 mx-auto flex max-w-6xl justify-center px-[max(1rem,env(safe-area-inset-left))] pt-[max(1rem,env(safe-area-inset-top))] pb-4 md:absolute md:inset-x-0 md:top-0 md:justify-end md:px-[max(1.5rem,env(safe-area-inset-left))] md:pt-[max(1.5rem,env(safe-area-inset-top))] md:pb-6">
         <GlassNav items={getNavItems(lang, dict)} label={dict.nav.label} onImage />
       </div>
     </main>

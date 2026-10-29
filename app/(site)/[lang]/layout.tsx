@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { notFound } from "next/navigation";
 import { Fraunces, Manrope } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
@@ -34,6 +34,16 @@ export async function generateMetadata({ params }: LayoutProps<"/[lang]">): Prom
     description: site.description,
   };
 }
+
+// Paint under the notch and home indicator (components pad themselves with env(safe-area-inset-*)),
+// and colour the browser chrome to match the surface. Cinematic pages override this to always-dark.
+export const viewport: Viewport = {
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f4f1ec" },
+    { media: "(prefers-color-scheme: dark)", color: "#0c0b0d" },
+  ],
+};
 
 // Only Chromium renders SVG filters inside backdrop-filter, and only Chromium exposes
 // navigator.userAgentData, so it doubles as the feature flag for liquid-glass lensing.
