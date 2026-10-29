@@ -4,7 +4,6 @@ import { Suspense } from "react";
 import { preload } from "react-dom";
 import { HomeHero } from "@/components/home/HomeHero";
 import { GlassNav } from "@/components/nav/GlassNav";
-import { EdgeBars } from "@/components/ui/EdgeBars";
 import { fallbackStills } from "@/lib/fallback-stills";
 import { defaultLocale, isLocale, languageAlternates, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
@@ -26,7 +25,7 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
   const dict = await getDictionary(lang);
   return (
     <main data-surface="cinematic" className="relative isolate h-dvh overflow-hidden bg-ink">
-      <EdgeBars />
+      {/* No EdgeBars here: they would make Safari paint a solid colour over the photo behind its controls. */}
       <h1 className="sr-only">{dict.site.name}</h1>
       {/* Reads draft mode, so it streams; the fallback stills keep the first paint identical. */}
       <Suspense fallback={<HomeHero stills={fallbackStills} />}>
