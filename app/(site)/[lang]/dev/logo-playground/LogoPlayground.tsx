@@ -313,7 +313,7 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
   };
 
   return (
-    <div className="relative h-dvh overflow-hidden bg-ink text-white">
+    <div className="relative h-[calc(100dvh-var(--dev-bar))] overflow-hidden bg-ink text-white">
       <div className="absolute inset-0">
         {stills.map((still, i) => (
           <Image
@@ -366,7 +366,7 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
       )}
 
       <header className="absolute top-0 right-0 left-0 z-30 flex items-center justify-between gap-3 p-4">
-        <div className="pl-[4.5rem]">
+        <div>
           <p className="text-sm font-medium tracking-wide">Fiú · logo playground</p>
           <p className="text-xs text-white/55">/dev/logo-playground · unlisted</p>
         </div>
