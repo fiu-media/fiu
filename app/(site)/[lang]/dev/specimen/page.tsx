@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
 import Image, { type StaticImageData } from "next/image";
 import { notFound } from "next/navigation";
-import { GlassNav, type NavItem } from "@/components/nav/GlassNav";
 import { GlassPanel, GlassPillButton } from "@/components/ui/Glass";
 import { isLocale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
-import { getNavItems } from "@/lib/i18n/nav";
+import { getNavItems, type NavItem } from "@/lib/i18n/nav";
 import logo from "@/public/brand/fiu-logo.svg";
 import banquet from "@/public/stills/banquet.jpg";
 import bouquet from "@/public/stills/bouquet.jpg";
@@ -91,14 +90,25 @@ function Specimen({ still, nav, navLabel }: { still: StaticImageData; nav: NavIt
         className="relative isolate aspect-[16/9] overflow-hidden rounded-3xl bg-ink text-white"
       >
         <Image src={still} alt="" fill placeholder="blur" sizes="(min-width: 1280px) 1232px, 100vw" className="-z-10 object-cover" />
-        <div className="absolute top-5 right-5 hidden sm:block">
-          <GlassNav items={nav} label={navLabel} onImage current="/work" />
-        </div>
+        <nav
+          aria-label={navLabel}
+          className="absolute inset-y-0 left-0 hidden w-12 flex-col items-center gap-5 border-r border-white/15 bg-gradient-to-r from-black/35 to-transparent pt-6 sm:flex"
+        >
+          {nav.map((item) => (
+            <span
+              key={item.href}
+              aria-current={item.href === "/work" ? "page" : undefined}
+              className="rotate-180 text-xs font-medium tracking-wide text-white/60 [writing-mode:vertical-rl] aria-[current=page]:text-white"
+            >
+              {item.label}
+            </span>
+          ))}
+        </nav>
         <Image
           src={logo}
           alt="Fiú"
           sizes="40vw"
-          className="absolute top-1/2 left-[4%] h-auto w-[42%] -translate-y-1/2"
+          className="absolute top-1/2 left-[10%] h-auto w-[40%] -translate-y-1/2"
         />
         <div className="absolute bottom-6 left-6">
           <p className={`${display} ${accent} text-2xl md:text-4xl`}>Solas</p>

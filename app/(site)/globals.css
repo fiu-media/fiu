@@ -265,3 +265,8 @@ body {
     background: light-dark(rgb(255 255 255 / 0.92), rgb(24 22 27 / 0.92));
   }
 }
+
+/* An open modal (nav overlay, quote drawer) holds the page still behind it. */
+html:has(dialog[open]) {
+  overflow: hidden;
+}
