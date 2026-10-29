@@ -7,8 +7,6 @@ const nextConfig: NextConfig = {
   experimental: {
     agentFeedback: false,
   },
-  // Lets a phone on the home network load the dev server by LAN address (HMR is blocked otherwise).
-  allowedDevOrigins: ["192.168.68.120", "192.168.68.*"],
   cacheComponents: true,
   partialPrefetching: true,
   cacheLife: {
