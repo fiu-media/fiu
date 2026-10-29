@@ -29,7 +29,7 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
       <Suspense fallback={<HomeHero stills={fallbackStills} />}>
         <CmsHero lang={lang} />
       </Suspense>
-      <SiteNav lang={lang} onImage hideLogo />
+      <SiteNav lang={lang} onImage />
     </main>
   );
 }

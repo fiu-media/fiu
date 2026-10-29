@@ -13,7 +13,6 @@ type NavProps = {
   homeHref: string;
   labels: Dictionary["nav"];
   onImage?: boolean;
-  hideLogo?: boolean;
 };
 
 export function SiteNavClient(props: NavProps) {
@@ -30,7 +29,7 @@ function RouteNav(props: NavProps) {
 
 const isCurrent = (pathname: string, href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
-function Nav({ items, homeHref, labels, onImage, hideLogo, pathname }: NavProps & { pathname: string }) {
+function Nav({ items, homeHref, labels, onImage, pathname }: NavProps & { pathname: string }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const dialogId = useId();
   const close = () => dialog.current?.close();
@@ -58,7 +57,7 @@ function Nav({ items, homeHref, labels, onImage, hideLogo, pathname }: NavProps 
           aria-hidden
           className="pointer-events-none absolute inset-y-0 right-1 w-0.5 bg-[repeating-linear-gradient(to_bottom,currentColor_0_6px,transparent_6px_18px)] text-fg opacity-10"
         />
-        {!hideLogo && <HomeLink href={homeHref} label={labels.home} className="h-7" />}
+        <HomeLink href={homeHref} label={labels.home} className="h-7" />
         <nav aria-label={labels.label} className="flex flex-col items-center gap-7">
           {items.map((item) => (
             <Link
@@ -75,11 +74,11 @@ function Nav({ items, homeHref, labels, onImage, hideLogo, pathname }: NavProps 
 
       {/* On cinematic pages the bar floats over the content; on adaptive pages it takes its own row. */}
       <header
-        className={`z-30 flex items-center px-[max(1.25rem,env(safe-area-inset-left))] pt-[max(1.25rem,env(safe-area-inset-top))] pr-[max(1.25rem,env(safe-area-inset-right))] pb-4 md:hidden ${
-          hideLogo ? "justify-end" : "justify-between"
-        } ${onImage ? "absolute inset-x-0 top-0" : "relative"}`}
+        className={`z-30 flex items-center justify-between px-[max(1.25rem,env(safe-area-inset-left))] pt-[max(1.25rem,env(safe-area-inset-top))] pr-[max(1.25rem,env(safe-area-inset-right))] pb-4 md:hidden ${
+          onImage ? "absolute inset-x-0 top-0" : "relative"
+        }`}
       >
-        {!hideLogo && <HomeLink href={homeHref} label={labels.home} className="h-9" />}
+        <HomeLink href={homeHref} label={labels.home} className="h-9" />
         <GlassPillButton
           size="sm"
           onImage={onImage}
@@ -101,7 +100,7 @@ function Nav({ items, homeHref, labels, onImage, hideLogo, pathname }: NavProps 
         className="m-0 h-dvh max-h-none w-full max-w-none flex-col bg-bg/80 text-fg backdrop-blur-2xl transition-opacity duration-300 backdrop:bg-transparent starting:open:opacity-0 open:flex md:hidden!"
       >
         <div className="flex items-center justify-between px-[max(1.25rem,env(safe-area-inset-left))] pt-[max(1.25rem,env(safe-area-inset-top))] pr-[max(1.25rem,env(safe-area-inset-right))]">
-          {hideLogo ? <span /> : <HomeLink href={homeHref} label={labels.home} className="h-9" />}
+          <HomeLink href={homeHref} label={labels.home} className="h-9" />
           <button
             type="button"
             aria-label={labels.closeMenu}
