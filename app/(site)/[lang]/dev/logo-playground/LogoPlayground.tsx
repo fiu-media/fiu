@@ -313,7 +313,7 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
   };
 
   return (
-    <div className="relative h-dvh overflow-hidden bg-ink text-white">
+    <div className="relative h-[calc(100dvh-var(--dev-bar))] overflow-hidden bg-ink text-white">
       <div className="absolute inset-0">
         {stills.map((still, i) => (
           <Image
