@@ -19,9 +19,6 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "cdn.sanity.io" },
       { protocol: "https", hostname: "i.vimeocdn.com" },
     ],
-    // Mobile hotspots (NAT64) resolve public hosts to 64:ff9b::/96, which Next treats as private.
-    // Dev only, so production keeps the SSRF guard.
-    dangerouslyAllowLocalIP: process.env.NODE_ENV === "development",
   },
   turbopack: {
     rules: {
