@@ -32,6 +32,11 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
       <Suspense fallback={<HomeHero stills={fallbackStills} />}>
         <CmsHero lang={lang} />
       </Suspense>
+      {/* Safari paints its bars one flat colour (the EdgeBars' ink), never the photo. Fade every still into that
+          colour at the top and bottom so the photo meets the bars without a seam. Absolute, not fixed, so Safari
+          never samples these as the edge element. */}
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-linear-to-b from-ink to-transparent" />
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-linear-to-t from-ink to-transparent" />
       {/* Same container as the adaptive header, so the nav doesn't shift between Home and other pages. */}
       <div className="relative z-10 mx-auto flex max-w-6xl justify-center px-[max(1rem,env(safe-area-inset-left))] pt-[max(1rem,env(safe-area-inset-top))] pb-4 md:absolute md:inset-x-0 md:top-0 md:justify-end md:px-[max(1.5rem,env(safe-area-inset-left))] md:pt-[max(1.5rem,env(safe-area-inset-top))] md:pb-6">
         <GlassNav items={getNavItems(lang, dict)} label={dict.nav.label} onImage />
