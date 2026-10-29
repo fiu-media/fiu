@@ -35,9 +35,6 @@ const INTRO_SETTLE_MS = 2000;
  */
 const INTRO_BACKSTOP_MS = 12000;
 
-/** Mobile only: extra photo above and below the page, symmetric so the logo stays centred. */
-const BLEED_CLASS = "max-md:-inset-y-[120px]";
-
 type Mode = "pending" | "live" | "static";
 
 let liveSupport: boolean | undefined;
@@ -137,9 +134,9 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
     <>
       {/* Outside the -z-10 hero so it stacks above the nav as well. */}
       <Splash done={splashDone} />
-      {/* On mobile the photo is taller than the page (BLEED_CLASS), so there are real pixels to show behind Safari's status
-          bar and toolbar. Not fixed: Safari tints its bars from fixed layers instead of showing the page behind them. */}
-      <div className={`absolute inset-0 -z-10 ${BLEED_CLASS}`}>
+      {/* Fixed, not absolute in the h-dvh page: Safari lays fixed boxes out against the full screen, so the photo
+          reaches under the status bar and toolbar instead of stopping at the dvh edge. */}
+      <div className="fixed inset-0 -z-10">
         {stills.map((still, i) => (
           <Image
             key={still.src}
@@ -183,7 +180,7 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
           <div
             aria-hidden
             className={`inset-0 ${
-              introDone ? `absolute -z-10 ${BLEED_CLASS}` : "pointer-events-none fixed z-30 transition-opacity duration-(--splash-fade) ease-out will-change-[opacity]"
+              introDone ? "fixed -z-10" : "pointer-events-none fixed z-30 transition-opacity duration-(--splash-fade) ease-out will-change-[opacity]"
             }`}
             style={{ ...splashFadeVars, opacity: sceneReady && splashDone ? 1 : 0 }}
           >
