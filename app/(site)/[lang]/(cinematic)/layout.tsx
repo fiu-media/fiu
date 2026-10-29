@@ -1,6 +1,7 @@
 import type { Viewport } from "next";
 import { notFound } from "next/navigation";
 import { SiteHeader } from "@/components/nav/SiteHeader";
+import { EdgeBars } from "@/components/ui/EdgeBars";
 import { isLocale } from "@/lib/i18n/config";
 
 export const viewport: Viewport = { themeColor: "#0c0b0d" };
@@ -11,6 +12,7 @@ export default async function CinematicLayout({ children, params }: LayoutProps<
   if (!isLocale(lang)) notFound();
   return (
     <div data-surface="cinematic" className="relative isolate min-h-dvh bg-ink text-fg">
+      <EdgeBars />
       <div className="absolute inset-x-0 top-0 z-20">
         <SiteHeader lang={lang} onImage />
       </div>
