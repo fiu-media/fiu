@@ -35,6 +35,9 @@ const INTRO_SETTLE_MS = 2000;
  */
 const INTRO_BACKSTOP_MS = 12000;
 
+/** Mobile only: matches the padding around Home's <main> and HomeScrollLock's BLEED_PX. Symmetric, so the logo stays centred. */
+const BLEED_CLASS = "max-md:-inset-y-32";
+
 type Mode = "pending" | "live" | "static";
 
 let liveSupport: boolean | undefined;
@@ -134,7 +137,9 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
     <>
       {/* Outside the -z-10 hero so it stacks above the nav as well. */}
       <Splash done={splashDone} />
-      <div className="absolute inset-0 -z-10">
+      {/* On mobile the photo is 8rem taller than the page above and below (BLEED_CLASS): real pixels for Safari to show behind
+          its status bar and toolbar. Not fixed, or Safari would tint its bars from this layer instead. */}
+      <div className={`absolute inset-0 -z-10 ${BLEED_CLASS}`}>
         {stills.map((still, i) => (
           <Image
             key={still.src}
@@ -178,7 +183,7 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
           <div
             aria-hidden
             className={`inset-0 ${
-              introDone ? "absolute -z-10" : "pointer-events-none fixed z-30 transition-opacity duration-(--splash-fade) ease-out will-change-[opacity]"
+              introDone ? `absolute -z-10 ${BLEED_CLASS}` : "pointer-events-none fixed z-30 transition-opacity duration-(--splash-fade) ease-out will-change-[opacity]"
             }`}
             style={{ ...splashFadeVars, opacity: sceneReady && splashDone ? 1 : 0 }}
           >
