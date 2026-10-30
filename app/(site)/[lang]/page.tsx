@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { preload } from "react-dom";
 import { HomeHero } from "@/components/home/HomeHero";
+import { HomeScrollLock } from "@/components/home/HomeScrollLock";
 import { GlassNav } from "@/components/nav/GlassNav";
 import { fallbackStills } from "@/lib/fallback-stills";
 import { defaultLocale, isLocale, languageAlternates, type Locale } from "@/lib/i18n/config";
@@ -24,17 +25,23 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
   if (!isLocale(lang)) notFound();
   const dict = await getDictionary(lang);
   return (
-    <main data-surface="cinematic" className="relative isolate h-dvh overflow-hidden bg-ink">
-      <h1 className="sr-only">{dict.site.name}</h1>
-      {/* Reads draft mode, so it streams; the fallback stills keep the first paint identical. */}
-      <Suspense fallback={<HomeHero stills={fallbackStills} />}>
-        <CmsHero lang={lang} />
-      </Suspense>
-      {/* Same container as the adaptive header, so the nav doesn't shift between Home and other pages. */}
-      <div className="relative z-10 mx-auto flex max-w-6xl justify-center px-[max(1rem,env(safe-area-inset-left))] pt-[max(1rem,env(safe-area-inset-top))] pb-4 md:absolute md:inset-x-0 md:top-0 md:justify-end md:px-[max(1.5rem,env(safe-area-inset-left))] md:pt-[max(1.5rem,env(safe-area-inset-top))] md:pb-6">
-        <GlassNav items={getNavItems(lang, dict)} label={dict.nav.label} onImage />
-      </div>
-    </main>
+    // On mobile the photo bleeds 12rem past the page above and below, inside a document that is pinned in the middle
+    // (HomeScrollLock), so Safari has real pixels to show behind its status bar and toolbar. Off from md up, Home is a
+    // plain h-dvh page.
+    <div data-surface="cinematic" data-home-lock className="bg-ink max-md:py-48">
+      <HomeScrollLock />
+      <main className="relative isolate h-dvh bg-ink md:overflow-hidden">
+        <h1 className="sr-only">{dict.site.name}</h1>
+        {/* Reads draft mode, so it streams; the fallback stills keep the first paint identical. */}
+        <Suspense fallback={<HomeHero stills={fallbackStills} />}>
+          <CmsHero lang={lang} />
+        </Suspense>
+        {/* Same container as the adaptive header, so the nav doesn't shift between Home and other pages. */}
+        <div className="relative z-10 mx-auto flex max-w-6xl justify-center px-[max(1rem,env(safe-area-inset-left))] pt-[max(1rem,env(safe-area-inset-top))] pb-4 md:absolute md:inset-x-0 md:top-0 md:justify-end md:px-[max(1.5rem,env(safe-area-inset-left))] md:pt-[max(1.5rem,env(safe-area-inset-top))] md:pb-6">
+          <GlassNav items={getNavItems(lang, dict)} label={dict.nav.label} onImage />
+        </div>
+      </main>
+    </div>
   );
 }
 
