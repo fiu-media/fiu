@@ -178,12 +178,12 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
 
       {mode === "live" && (
         <SceneBoundary onError={onFail}>
-          {/* Lifted above the splash while it fades, then dropped back under the nav once the intro has settled. Hidden until the
+          {/* Never `fixed`: WebKit tints its bars from a viewport-sized fixed layer over a canvas, which hides the photo behind them. Lifted above the splash while it fades, then dropped back under the nav once the intro has settled. Hidden until the
               fade starts, then cross-faded in over the SVG logo, which fades out underneath. */}
           <div
             aria-hidden
-            className={`inset-0 ${
-              introDone ? `absolute -z-10 ${BLEED_CLASS}` : "pointer-events-none fixed z-30 transition-opacity duration-(--splash-fade) ease-out will-change-[opacity]"
+            className={`absolute inset-0 ${BLEED_CLASS} ${
+              introDone ? "-z-10" : "pointer-events-none z-30 transition-opacity duration-(--splash-fade) ease-out will-change-[opacity]"
             }`}
             style={{ ...splashFadeVars, opacity: sceneReady && splashDone ? 1 : 0 }}
           >
