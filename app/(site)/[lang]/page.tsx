@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { preload } from "react-dom";
 import { HomeHero } from "@/components/home/HomeHero";
+import { HomeScrollLock } from "@/components/home/HomeScrollLock";
 import { SiteNav } from "@/components/nav/SiteNav";
 import { fallbackStills } from "@/lib/fallback-stills";
 import { defaultLocale, isLocale, languageAlternates, type Locale } from "@/lib/i18n/config";
@@ -23,14 +24,20 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
   if (!isLocale(lang)) notFound();
   const dict = await getDictionary(lang);
   return (
-    <main data-surface="cinematic" className="relative isolate h-dvh overflow-hidden bg-ink">
-      <h1 className="sr-only">{dict.site.name}</h1>
-      {/* Reads draft mode, so it streams; the fallback stills keep the first paint identical. */}
-      <Suspense fallback={<HomeHero stills={fallbackStills} />}>
-        <CmsHero lang={lang} />
-      </Suspense>
-      <SiteNav lang={lang} onImage />
-    </main>
+    // On mobile the photo bleeds 12rem past the page above and below, inside a document that is pinned in the middle
+    // (HomeScrollLock), so Safari has real pixels to show behind its status bar and toolbar. Off from md up, Home is a
+    // plain h-dvh page.
+    <div data-surface="cinematic" data-home-lock className="bg-ink max-md:py-48">
+      <HomeScrollLock />
+      <main className="relative isolate h-dvh bg-ink md:overflow-hidden">
+        <h1 className="sr-only">{dict.site.name}</h1>
+        {/* Reads draft mode, so it streams; the fallback stills keep the first paint identical. */}
+        <Suspense fallback={<HomeHero stills={fallbackStills} />}>
+          <CmsHero lang={lang} />
+        </Suspense>
+        <SiteNav lang={lang} onImage />
+      </main>
+    </div>
   );
 }
 
