@@ -5,16 +5,13 @@ import { sanity } from "next-sanity/live/cache-life";
 
 /**
  * Dev only: lets a phone on the same network load the dev server (and its HMR socket) by this
- * machine's own names, so nothing needs editing when the IP changes. Prefer the stable
- * `<hostname>.local` address on the phone; the current IPs are listed for when that doesn't resolve.
+ * machine's Bonjour name (`<hostname>.local`), which stays the same when the IP changes. Only that
+ * name is allowed, not the IPs, so the allowlist stays as narrow as it can be.
  */
 function devLanOrigins(): string[] {
   if (process.env.NODE_ENV !== "development") return [];
-  const addresses = Object.values(os.networkInterfaces())
-    .flatMap((interfaces) => interfaces ?? [])
-    .filter((entry) => entry.family === "IPv4" && !entry.internal)
-    .map((entry) => entry.address);
-  return [os.hostname(), ...addresses];
+  const hostname = os.hostname();
+  return [hostname.endsWith(".local") ? hostname : `${hostname}.local`];
 }
 
 const nextConfig: NextConfig = {
