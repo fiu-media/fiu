@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Suspense, useEffect, useId, useRef } from "react";
+import { EdgeBars } from "@/components/ui/EdgeBars";
 import { GlassPillButton } from "@/components/ui/Glass";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import type { NavItem } from "@/lib/i18n/nav";
@@ -97,8 +98,10 @@ function Nav({ items, homeHref, labels, onImage, pathname }: NavProps & { pathna
         ref={dialog}
         id={dialogId}
         aria-label={labels.label}
-        className="m-0 h-dvh max-h-none w-full max-w-none flex-col bg-bg/80 text-fg backdrop-blur-2xl transition-opacity duration-300 backdrop:bg-transparent starting:open:opacity-0 open:flex md:hidden!"
+        className="fixed inset-0 m-0 h-auto max-h-none w-auto max-w-none flex-col bg-bg/80 text-fg backdrop-blur-2xl transition-opacity duration-300 backdrop:bg-transparent starting:open:opacity-0 open:flex md:hidden!"
       >
+        {/* The overlay is see-through, so solid edge bars keep the notch and chin (and Safari's tint) filled. */}
+        <EdgeBars />
         <div className="flex items-center justify-between px-[max(1.25rem,env(safe-area-inset-left))] pt-[max(1.25rem,env(safe-area-inset-top))] pr-[max(1.25rem,env(safe-area-inset-right))]">
           <HomeLink href={homeHref} label={labels.home} className="h-9" />
           <button
