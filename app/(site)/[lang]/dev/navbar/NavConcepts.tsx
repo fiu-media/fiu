@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from "react";
 import { LogoMask } from "@/components/nav/HomeLink";
-import type { NavItem } from "@/components/nav/GlassNav";
+import type { NavItem } from "@/lib/i18n/nav";
 import { GlassPanel, GlassPillButton } from "@/components/ui/Glass";
 import conservatory from "@/public/stills/conservatory.jpg";
 import glow from "@/public/stills/glow.jpg";

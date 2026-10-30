@@ -4,11 +4,10 @@ import { Suspense } from "react";
 import { preload } from "react-dom";
 import { HomeHero } from "@/components/home/HomeHero";
 import { HomeScrollLock } from "@/components/home/HomeScrollLock";
-import { GlassNav } from "@/components/nav/GlassNav";
+import { SiteNav } from "@/components/nav/SiteNav";
 import { fallbackStills } from "@/lib/fallback-stills";
 import { defaultLocale, isLocale, languageAlternates, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
-import { getNavItems } from "@/lib/i18n/nav";
 import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
 import { HOME_STILLS_QUERY } from "@/sanity/lib/queries";
 import { toHeroStill, type HeroStill, type HomeStillsResult } from "@/sanity/lib/stills";
@@ -36,10 +35,7 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
         <Suspense fallback={<HomeHero stills={fallbackStills} />}>
           <CmsHero lang={lang} />
         </Suspense>
-        {/* Same container as the adaptive header, so the nav doesn't shift between Home and other pages. */}
-        <div className="relative z-10 mx-auto flex max-w-6xl justify-center px-[max(1rem,env(safe-area-inset-left))] pt-[max(1rem,env(safe-area-inset-top))] pb-4 md:absolute md:inset-x-0 md:top-0 md:justify-end md:px-[max(1.5rem,env(safe-area-inset-left))] md:pt-[max(1.5rem,env(safe-area-inset-top))] md:pb-6">
-          <GlassNav items={getNavItems(lang, dict)} label={dict.nav.label} onImage />
-        </div>
+        <SiteNav lang={lang} onImage />
       </main>
     </div>
   );

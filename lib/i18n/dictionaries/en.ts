@@ -10,6 +10,8 @@ export const en = {
   nav: {
     label: "Primary",
     home: "Fiú Media, home",
+    menu: "Menu",
+    closeMenu: "Close menu",
     about: "About Us",
     work: "Our Work",
     talent: "Talent",

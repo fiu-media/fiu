@@ -23,10 +23,10 @@ export function LogoMask({ className = "h-9 md:h-11" }: { className?: string }) 
 }
 
 /** The small logo that returns to Home. The SVG is white, so it is used as a mask and takes the text colour. */
-export function HomeLink({ href, label }: { href: string; label: string }) {
+export function HomeLink({ href, label, className }: { href: string; label: string; className?: string }) {
   return (
-    <Link href={href} aria-label={label} className="block rounded-md text-fg">
-      <LogoMask />
+    <Link href={href} aria-label={label} className="block shrink-0 rounded-md text-fg">
+      <LogoMask className={className} />
     </Link>
   );
 }
