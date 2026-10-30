@@ -25,10 +25,10 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
   if (!isLocale(lang)) notFound();
   const dict = await getDictionary(lang);
   return (
-    // On mobile the photo bleeds 8rem past the page above and below, inside a document that is pinned in the middle
+    // On mobile the photo bleeds 12rem past the page above and below, inside a document that is pinned in the middle
     // (HomeScrollLock), so Safari has real pixels to show behind its status bar and toolbar. Off from md up, Home is a
     // plain h-dvh page.
-    <div data-surface="cinematic" data-home-lock className="bg-ink max-md:py-32">
+    <div data-surface="cinematic" data-home-lock className="bg-ink max-md:py-48">
       <HomeScrollLock />
       <main className="relative isolate h-dvh bg-ink md:overflow-hidden">
         <h1 className="sr-only">{dict.site.name}</h1>

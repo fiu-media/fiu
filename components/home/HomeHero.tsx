@@ -36,7 +36,7 @@ const INTRO_SETTLE_MS = 2000;
 const INTRO_BACKSTOP_MS = 12000;
 
 /** Mobile only: matches the padding around Home's <main> and HomeScrollLock's BLEED_PX. Symmetric, so the logo stays centred. */
-const BLEED_CLASS = "max-md:-inset-y-32";
+const BLEED_CLASS = "max-md:-inset-y-48";
 
 type Mode = "pending" | "live" | "static";
 
@@ -137,7 +137,7 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
     <>
       {/* Outside the -z-10 hero so it stacks above the nav as well. */}
       <Splash done={splashDone} />
-      {/* On mobile the photo is 8rem taller than the page above and below (BLEED_CLASS): real pixels for Safari to show behind
+      {/* On mobile the photo is 12rem taller than the page above and below (BLEED_CLASS): real pixels for Safari to show behind
           its status bar and toolbar. Not fixed, or Safari would tint its bars from this layer instead. */}
       <div className={`absolute inset-0 -z-10 ${BLEED_CLASS}`}>
         {stills.map((still, i) => (
