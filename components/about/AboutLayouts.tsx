@@ -58,12 +58,14 @@ export function AboutLayoutA({ still, slogan, gloss, manifesto, contacts, footer
 
       <section className="relative bg-ink px-5 py-24 md:px-10 md:py-36">
         <div className="mx-auto flex max-w-3xl flex-col gap-14">
-          <div
-            data-sanity={attributes?.manifesto}
-            className="space-y-6 text-xl leading-relaxed text-white/85 md:text-2xl"
-          >
-            {manifesto}
-          </div>
+          {manifesto && (
+            <div
+              data-sanity={attributes?.manifesto}
+              className="space-y-6 text-xl leading-relaxed text-white/85 md:text-2xl"
+            >
+              {manifesto}
+            </div>
+          )}
           {contacts}
           {footer}
         </div>
