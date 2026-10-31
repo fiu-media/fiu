@@ -17,7 +17,7 @@ export const notFoundCopy: NotFoundCopy = {
 };
 
 /**
- * The site's 404: always dark, a slowly drifting patch of light (the #51 experiment; still when motion
+ * The site's 404: always dark, two slowly wandering lights (the #51 experiment; still when motion
  * is reduced), the rail, a link back to the section the URL was under, or home. `className` sets the height; the default fills the viewport,
  * /dev/not-found fits it to a preview frame.
  */
@@ -37,7 +37,8 @@ export async function NotFoundPage({
       className={`relative isolate flex flex-col overflow-hidden bg-ink text-fg ${railInset} ${className}`}
     >
       <div aria-hidden className="absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute -top-1/4 left-1/4 h-[150%] w-3/4 animate-[light-drift_14s_ease-in-out_infinite_alternate] rounded-full bg-[radial-gradient(closest-side,rgb(214_160_110/0.5),transparent)] blur-3xl motion-reduce:animate-none" />
+        <div className="absolute -top-1/4 left-1/4 h-[150%] w-3/4 animate-[light-drift_32s_ease-in-out_infinite] rounded-full bg-[radial-gradient(closest-side,rgb(214_160_110/0.5),transparent)] blur-3xl motion-reduce:animate-none" />
+        <div className="absolute -bottom-1/4 left-1/2 h-[110%] w-1/2 animate-[light-drift-b_47s_ease-in-out_infinite] rounded-full bg-[radial-gradient(closest-side,rgb(196_120_110/0.32),transparent)] blur-3xl motion-reduce:animate-none" />
         <div className="absolute inset-0 bg-gradient-to-t from-ink/80 to-transparent" />
       </div>
       <SiteNav lang={lang} onImage />
