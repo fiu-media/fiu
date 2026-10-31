@@ -73,7 +73,6 @@ export type LogoGlassParams = {
   backsideEnvMapIntensity: number;
   attenuationDistance: number;
   samples: number;
-  resolution: number;
   glowSat: number;
   glowLift: number;
   glowLMin: number;
@@ -454,7 +453,6 @@ const LIGHT_PARAMS: LogoGlassParams = {
   backsideEnvMapIntensity: 1.85,
   attenuationDistance: 5.8,
   samples: 24,
-  resolution: 768,
   glowSat: 0.77,
   glowLift: 0,
   glowLMin: 0.52,
@@ -482,7 +480,6 @@ const DARK_PARAMS: LogoGlassParams = {
   backsideEnvMapIntensity: 1,
   attenuationDistance: 2.6,
   samples: 6,
-  resolution: 512,
   glowSat: 1.15,
   glowLift: 0.12,
   glowLMin: 0.4,
@@ -556,16 +553,15 @@ function fence(lang: string, value: unknown): string {
   return [`\`\`\`${lang}`, JSON.stringify(value, null, 2), "```"].join("\n");
 }
 
-function omitInteraction<T extends Record<string, unknown>>(params: T): Omit<T, keyof LogoInteractionParams> {
+function omitKeys<T extends Record<string, unknown>, K extends keyof T>(params: T, keys: readonly K[]): Omit<T, K> {
   const next = { ...params };
-  for (const key of INTERACTION_KEYS) delete next[key];
+  for (const key of keys) delete next[key];
   return next;
 }
 
 /** Material / glow / extrude — everything except lights and interaction. */
 export function pickMaterialParams(params: LogoGlassParams): LogoMaterialParams {
-  const { lights: _lights, ...rest } = params;
-  const material = omitInteraction(rest);
+  const material = omitKeys(params, ["lights", ...INTERACTION_KEYS]);
   return {
     ...material,
     extrude: material.extrude ? { ...material.extrude } : null,

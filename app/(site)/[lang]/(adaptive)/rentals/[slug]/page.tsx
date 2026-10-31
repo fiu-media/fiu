@@ -5,7 +5,7 @@ import { Suspense } from "react";
 import { DetailAddToQuote } from "@/components/rentals/DetailAddToQuote";
 import { ItemSkeleton } from "@/components/rentals/RentalSkeletons";
 import { RentalImageView } from "@/components/rentals/RentalImageView";
-import { isLocale, languageAlternates, localizedPath, type Locale } from "@/lib/i18n/config";
+import { defaultLocale, isLocale, languageAlternates, localizedPath, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
 import { RENTAL_ITEM_QUERY } from "@/sanity/lib/queries";
@@ -13,7 +13,7 @@ import { publishedId, toRentalImage, type RentalItem } from "@/sanity/lib/rental
 
 async function getItem(lang: Locale, slug: string) {
   const { perspective, variant } = await getDynamicFetchOptions();
-  const { data } = await cachedSanity({ query: RENTAL_ITEM_QUERY, params: { lang, slug }, perspective, variant, stega: false });
+  const { data } = await cachedSanity({ query: RENTAL_ITEM_QUERY, params: { lang, fallbackLang: defaultLocale, slug }, perspective, variant, stega: false });
   return (data as RentalItem | null) ?? null;
 }
 

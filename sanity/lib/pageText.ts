@@ -1,4 +1,4 @@
-import type { Locale } from "@/lib/i18n/config";
+import { defaultLocale, type Locale } from "@/lib/i18n/config";
 import { cachedSanity } from "./live";
 import { PAGE_TEXT_QUERY } from "./queries";
 
@@ -29,6 +29,6 @@ const EMPTY: PageText = {
  * each page title, written in Site settings. Published content only, so the pages stay static.
  */
 export async function getPageText(lang: Locale): Promise<PageText> {
-  const { data } = await cachedSanity({ query: PAGE_TEXT_QUERY, params: { lang }, perspective: "published", stega: false });
+  const { data } = await cachedSanity({ query: PAGE_TEXT_QUERY, params: { lang, fallbackLang: defaultLocale }, perspective: "published", stega: false });
   return (data as PageText | null) ?? EMPTY;
 }

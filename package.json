@@ -3,11 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "NODE_OPTIONS=--no-experimental-webstorage next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "seed": "tsx --env-file=.env.local scripts/seed.ts"
+    "seed": "tsx --env-file=.env.local scripts/seed.ts",
+    "sync:dev": "tsx --env-file=.env.local scripts/sync-dev.ts"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.9",
@@ -15,6 +16,7 @@
     "@sanity/client": "^8.11.0",
     "@sanity/document-internationalization": "^6.2.45",
     "@sanity/image-url": "^2.1.1",
+    "@sanity/orderable-document-list": "^2.0.28",
     "@sanity/vision": "^6.20.0",
     "@vercel/analytics": "^2.0.1",
     "botid": "^1.5.11",

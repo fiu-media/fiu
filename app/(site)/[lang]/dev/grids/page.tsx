@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import Image, { type StaticImageData } from "next/image";
 import { notFound } from "next/navigation";
 import { Suspense, type ReactNode } from "react";
+import { NameIndex } from "@/components/talent/NameIndex";
 import { GlassPillButton, GlassPillLink } from "@/components/ui/Glass";
 import { isLocale, localizedPath } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
-import { projectTypes } from "@/lib/project-types";
-import { IndexList } from "./IndexList";
+
 import banquet from "@/public/stills/banquet.jpg";
 import bouquet from "@/public/stills/bouquet.jpg";
 import citrus from "@/public/stills/citrus.jpg";
@@ -23,6 +23,9 @@ export const metadata: Metadata = {
   title: "Grid options",
   robots: { index: false, follow: false },
 };
+
+// Filter chips on placeholder content; the real ones come from the project type documents.
+const typeChips = ["Originals", "Commercial", "Music videos", "Shorts", "Documentaries"];
 
 type Sample = { still: StaticImageData; title: string; meta: string; ratio: string };
 
@@ -94,9 +97,9 @@ async function Grids({
       <GlassPillButton size="sm" onImage aria-pressed>
         {work.all}
       </GlassPillButton>
-      {projectTypes.map((type) => (
-        <GlassPillButton key={type} size="sm" onImage>
-          {work.types[type]}
+      {typeChips.map((label) => (
+        <GlassPillButton key={label} size="sm" onImage>
+          {label}
         </GlassPillButton>
       ))}
     </div>
@@ -142,8 +145,9 @@ async function Grids({
         content: (
           <>
             {chips}
-            <IndexList
-              items={projects.map((p) => ({ title: p.title, meta: p.meta, still: p.still }))}
+            <NameIndex
+              label="Index"
+              items={projects.map((p) => ({ title: p.title, meta: p.meta, href: "#", image: p.still }))}
               ratio="16/9"
               previewWidth={320}
             />
@@ -238,8 +242,9 @@ async function Grids({
         note: "Names in large type; the portrait follows the cursor (thumbnails on touch). Suits a small, established roster.",
         content: (
           <>
-            <IndexList
-              items={people.map((p) => ({ title: p.title, meta: p.meta, still: p.still }))}
+            <NameIndex
+              label="Index"
+              items={people.map((p) => ({ title: p.title, meta: p.meta, href: "#", image: p.still }))}
               ratio="4/5"
               previewWidth={220}
             />

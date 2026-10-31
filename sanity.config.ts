@@ -8,12 +8,14 @@ import { structureTool } from "sanity/structure";
 import { apiVersion, dataset, projectId } from "./sanity/env";
 import { languages, translatedTypes } from "./sanity/languages";
 import { resolve } from "./sanity/presentation/resolve";
+import { FiuIcon } from "./sanity/FiuIcon";
 import { schemaTypes } from "./sanity/schemaTypes";
 import { hiddenTemplates, singletonActions, structure } from "./sanity/structure";
 
 export default defineConfig({
   name: "default",
   title: "Fiú Media",
+  icon: FiuIcon,
   basePath: "/studio",
   projectId,
   dataset,

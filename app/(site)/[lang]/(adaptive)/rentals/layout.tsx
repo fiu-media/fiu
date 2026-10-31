@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { CatalogueProvider, type CatalogueItem } from "@/components/rentals/CatalogueContext";
 import { QuoteDrawer } from "@/components/rentals/QuoteDrawer";
-import { isLocale, localizedPath, type Locale } from "@/lib/i18n/config";
+import { defaultLocale, isLocale, localizedPath, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { cachedSanity } from "@/sanity/lib/live";
 import { QUOTE_CATALOGUE_QUERY } from "@/sanity/lib/queries";
@@ -10,7 +10,7 @@ import { toRentalImage, type CatalogueEntry } from "@/sanity/lib/rentals";
 
 /** Labels for basket lines. Published content only, so it is cached and keeps the shell static. */
 async function catalogueLookup(lang: Locale) {
-  const { data } = await cachedSanity({ query: QUOTE_CATALOGUE_QUERY, params: { lang }, perspective: "published", stega: false });
+  const { data } = await cachedSanity({ query: QUOTE_CATALOGUE_QUERY, params: { lang, fallbackLang: defaultLocale }, perspective: "published", stega: false });
   const items: Record<string, CatalogueItem> = {};
   for (const entry of (data ?? []) as CatalogueEntry[]) {
     items[entry._id] = {
