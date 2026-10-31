@@ -69,6 +69,11 @@
   }
 }
 
+/* Pages with a FullBleedScroll snap the document to its slides (one project per screen). */
+html:has([data-snap="mandatory"]) {
+  scroll-snap-type: y mandatory;
+}
+
 @theme inline {
   --color-bg: var(--bg);
   --color-bg-raised: var(--bg-raised);

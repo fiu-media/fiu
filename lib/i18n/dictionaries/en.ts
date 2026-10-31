@@ -23,6 +23,7 @@ export const en = {
   },
   vimeo: {
     play: "Play {title}",
+    stop: "Stop video",
   },
   about: {
     title: "About",
@@ -42,8 +43,12 @@ export const en = {
   talent: {
     title: "Talent",
     empty: "Our roster is being updated.",
+    indexLabel: "Our talent",
     showreel: "Showreel",
     projects: "Projects",
+    projectsOf: "{name}'s work",
+    slideLabel: "{title}, {index} of {total}",
+    noPortrait: "Portrait coming soon",
     workWith: "Work with {name}",
     back: "All talent",
   },
