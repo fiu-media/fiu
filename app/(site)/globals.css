@@ -284,3 +284,13 @@ body {
 html:has(dialog[open]) {
   overflow: hidden;
 }
+
+/* Slow sideways drift for the lit patch on the /dev/not-found moving-light option. */
+@keyframes light-drift {
+  from {
+    transform: translate3d(-18%, 0, 0);
+  }
+  to {
+    transform: translate3d(18%, 4%, 0);
+  }
+}
