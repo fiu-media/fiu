@@ -16,7 +16,7 @@ import { ABOUT_QUERY } from "@/sanity/lib/queries";
 import { toSizedImage } from "@/sanity/lib/rentals";
 
 // Sign-off page for the About layout (issue #55): two options on the real still, slogan and gloss.
-// The manifesto is sample copy because the real text isn't written yet. Unlisted, like /dev/grids.
+// The manifesto and contact links are sample copy because the real ones aren't written yet. Unlisted, like /dev/grids.
 export const metadata: Metadata = {
   title: "About layout options",
   robots: { index: false, follow: false },
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
 
 const OPTIONS = ["a", "b"] as const;
 type Option = (typeof OPTIONS)[number];
-const optionName: Record<Option, string> = { a: "Slogan first", b: "One screen" };
+const optionName: Record<Option, string> = { a: "Slogan first", b: "Split screen" };
 
 const sampleManifesto = (
   <>
@@ -33,10 +33,8 @@ const sampleManifesto = (
       We&rsquo;re a production company, a home for Irish directors, cinematographers and editors, and a rental house for
       the kit we trust on our own sets.
     </p>
-    <p className="text-white/75">
-      Sample copy: the real manifesto comes from Fíu. This paragraph only shows how a longer text sits in each layout,
-      so it runs on a little: we make original work, we make work for clients, and we make room for the people who make
-      it with us.
+    <p className="text-white/70">
+      We make original work, we make work for clients, and we make room for the people who make it with us.
     </p>
   </>
 );

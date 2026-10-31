@@ -31,7 +31,7 @@ const concepts: Concept[] = [
     href: "/dev/about",
     title: "About layout options",
     kind: "Sign-off",
-    note: "Two layouts for the About page (slogan first, or one screen) on the real still and slogan (issue #55).",
+    note: "Two layouts for the About page (slogan first, or split screen) on the real still and slogan (issue #55).",
   },
   {
     href: "/dev/specimen",

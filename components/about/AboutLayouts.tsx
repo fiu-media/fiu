@@ -13,9 +13,6 @@ export type AboutLayoutProps = {
   attributes?: { still?: string; slogan?: string; manifesto?: string };
 };
 
-/** Room beside the side rail, for fixed backgrounds that must not slide under it. */
-const BESIDE_RAIL = "inset-y-0 right-0 left-0 md:left-[calc(4rem+env(safe-area-inset-left))]";
-
 function Still({ still, attribute, className = "" }: { still: SizedImage; attribute?: string; className?: string }) {
   return (
     <Image
@@ -35,8 +32,8 @@ function Still({ still, attribute, className = "" }: { still: SizedImage; attrib
 }
 
 /**
- * Option A, "Slogan first": the still holds the first screen with the slogan large over it. Scrolling
- * slides the manifesto up over a darkening still, with the contact links and footer at the end.
+ * Option A, "Slogan first": the still holds the first screen with the slogan large over it. The
+ * manifesto, contact links and footer follow on plain dark, so no running text sits over the photo.
  */
 export function AboutLayoutA({ still, slogan, gloss, manifesto, contacts, footer, attributes }: AboutLayoutProps) {
   return (
@@ -58,11 +55,11 @@ export function AboutLayoutA({ still, slogan, gloss, manifesto, contacts, footer
         </p>
       </section>
 
-      <section className="relative min-h-dvh bg-gradient-to-b from-black/75 via-black/85 to-black px-5 py-20 md:px-10 md:py-28">
-        <div className="mx-auto flex max-w-3xl flex-col gap-12">
+      <section className="relative bg-ink px-5 py-24 md:px-10 md:py-36">
+        <div className="mx-auto flex max-w-3xl flex-col gap-14">
           <div
             data-sanity={attributes?.manifesto}
-            className="space-y-6 text-xl leading-relaxed text-white/90 md:text-2xl"
+            className="space-y-6 text-xl leading-relaxed text-white/85 md:text-2xl"
           >
             {manifesto}
           </div>
@@ -75,41 +72,37 @@ export function AboutLayoutA({ still, slogan, gloss, manifesto, contacts, footer
 }
 
 /**
- * Option B, "One screen": a single composition. The still fills the screen, darkening to the left
- * where the slogan, manifesto, contact links and footer sit in one column. On phones the column
- * stacks over the still and scrolls.
+ * Option B, "Split screen": the slogan, manifesto, contact links and footer sit in a solid dark
+ * column beside the still, which stays clean on the right. On phones the still comes first and the
+ * column follows below it.
  */
 export function AboutLayoutB({ still, slogan, gloss, manifesto, contacts, footer, attributes }: AboutLayoutProps) {
   return (
-    <main className="relative min-h-dvh text-white">
-      <div className={`fixed ${BESIDE_RAIL} -z-10`}>
-        <Still still={still} attribute={attributes?.still} />
-        <div
-          aria-hidden
-          className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/65 to-black/10 max-md:bg-black/70"
-        />
-      </div>
-
-      <div className="flex min-h-dvh flex-col justify-center px-5 py-24 md:px-10 md:py-16">
-        <div className="flex max-w-xl flex-col gap-8">
+    <main className="relative flex min-h-dvh flex-col bg-ink text-white md:grid md:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
+      <div className="flex flex-col justify-center px-5 py-16 md:px-10 md:py-20">
+        <div className="flex max-w-xl flex-col gap-10">
           <header>
             <h1
               data-sanity={attributes?.slogan}
-              className="font-display text-4xl leading-[1.05] text-balance italic md:text-6xl"
+              className="font-display text-4xl leading-[1.05] text-balance italic md:text-5xl lg:text-6xl"
             >
               {slogan}
             </h1>
-            {gloss && <p className="mt-3 text-base text-white/75">{gloss}</p>}
+            {gloss && <p className="mt-3 text-base text-white/70">{gloss}</p>}
           </header>
           <div
             data-sanity={attributes?.manifesto}
-            className="space-y-4 text-base leading-relaxed text-white/90 md:text-lg"
+            className="space-y-4 text-base leading-relaxed text-white/85 md:text-lg"
           >
             {manifesto}
           </div>
           {contacts}
           {footer}
         </div>
+      </div>
+
+      <div className="relative h-[60dvh] max-md:order-first md:sticky md:top-0 md:h-dvh">
+        <Still still={still} attribute={attributes?.still} />
       </div>
     </main>
   );
