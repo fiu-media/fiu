@@ -15,8 +15,8 @@ import type { TalentCard } from "@/sanity/lib/talent";
 export async function generateMetadata({ params }: PageProps<"/[lang]/talent">): Promise<Metadata> {
   const { lang } = await params;
   if (!isLocale(lang)) return {};
-  const { talent } = await getDictionary(lang);
-  return { title: talent.title, alternates: languageAlternates(lang, "/talent") };
+  const [{ talent }, text] = await Promise.all([getDictionary(lang), getPageText(lang)]);
+  return { title: talent.title, description: text.talentIntro ?? undefined, alternates: languageAlternates(lang, "/talent") };
 }
 
 export default async function TalentPage({ params }: PageProps<"/[lang]/talent">) {
@@ -27,6 +27,7 @@ export default async function TalentPage({ params }: PageProps<"/[lang]/talent">
     <main className="mx-auto max-w-6xl px-4 pt-24 pb-32 md:px-6 md:pt-16">
       <header className="mb-10">
         <PageTitle title={talent.title} tagline={text.talentTagline} />
+        {text.talentIntro && <p className="mt-4 max-w-2xl text-lg text-fg-muted">{text.talentIntro}</p>}
       </header>
       {/* Reads draft mode, so it streams in behind the static heading. */}
       <Suspense fallback={<IndexSkeleton label={common.loading} />}>

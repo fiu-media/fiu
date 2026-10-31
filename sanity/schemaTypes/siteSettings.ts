@@ -100,6 +100,22 @@ export const siteSettings = defineType({
       description: "The line under the Contact title.",
       validation: (rule) => rule.required(),
     }),
+    defineField({
+      name: "workIntro",
+      title: "Our Work intro",
+      type: "text",
+      rows: 3,
+      group: "pages",
+      description: "The line under the Our Work title. Leave empty to show just the title.",
+    }),
+    defineField({
+      name: "talentIntro",
+      title: "Talent intro",
+      type: "text",
+      rows: 3,
+      group: "pages",
+      description: "The line under the Talent title. Leave empty to show just the title.",
+    }),
     defineField({ name: "instagram", title: "Instagram URL", type: "url", group: "contact" }),
     defineField({
       name: "contactEmail",

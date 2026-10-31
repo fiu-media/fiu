@@ -7,9 +7,9 @@ import { format } from "@/lib/i18n/format";
 const MAX_TICKS = 24;
 
 /**
- * The overlay that keeps a long full-bleed scroll navigable: a bar pinned to the top (the filter
- * goes in `children`, with a "3 / 12" counter at its end) and, on desktop, a column of ticks on
- * the right edge, one per slide, that jump to it.
+ * The overlay that keeps a long full-bleed scroll navigable: a "3 / 12" counter pinned to the top
+ * (anything in `children` sits before it) and, on desktop, a column of ticks on the right edge,
+ * one per slide, that jump to it.
  *
  * It follows the slides inside the element `containerId` (a FullBleedScroll), so it carries no
  * state of its own beyond which slide is current. Remount it (via `key`) when the slides change.

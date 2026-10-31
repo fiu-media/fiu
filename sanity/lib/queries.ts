@@ -126,8 +126,8 @@ export const AVAILABLE_ITEM_IDS_QUERY = defineQuery(`
   }
 `);
 
-/** Editor-written intro lines for the Rentals, Request a quote and Contact pages, plus each page's Fiú line. */
-const PAGE_TEXT_FIELDS = ["rentalsIntro", "quoteIntro", "contactIntro", "aboutTagline", "workTagline", "talentTagline", "rentalsTagline", "contactTagline"];
+/** Editor-written intro lines for the Rentals, Request a quote, Contact, Our Work and Talent pages, plus each page's Fiú line. */
+const PAGE_TEXT_FIELDS = ["rentalsIntro", "quoteIntro", "contactIntro", "workIntro", "talentIntro", "aboutTagline", "workTagline", "talentTagline", "rentalsTagline", "contactTagline"];
 
 export const PAGE_TEXT_QUERY = defineQuery(`{
   "cur": *[_type == "siteSettings" && language == $lang][0]{ ${PAGE_TEXT_FIELDS.join(", ")} },
