@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { NotFoundPage, type NotFoundCopy } from "@/components/NotFoundPage";
 import { SiteNav } from "@/components/nav/SiteNav";
 import { railInset } from "@/components/nav/rail";
 import { GlassPillLink } from "@/components/ui/Glass";
@@ -7,7 +8,7 @@ import { getDictionary } from "@/lib/i18n/dictionaries";
 
 import glow from "@/public/stills/glow.jpg";
 
-export type Copy = { eyebrow: string; heading: string; body: string; home: string };
+export type Copy = NotFoundCopy;
 
 type Props = { lang: Locale; copy: Copy };
 
@@ -73,27 +74,7 @@ export async function OptionB({ lang, copy }: Props) {
   );
 }
 
-/** C · Cinematic with a slowly drifting patch of light (the #51 experiment); still when motion is reduced. */
-export async function OptionC({ lang, copy }: Props) {
-  const { site } = await getDictionary(lang);
-  return (
-    <div data-surface="cinematic" className={`relative isolate h-full overflow-hidden bg-ink text-fg ${railInset}`}>
-      <div aria-hidden className="absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute -top-1/4 left-1/4 h-[150%] w-3/4 animate-[light-drift_26s_ease-in-out_infinite_alternate] rounded-full bg-[radial-gradient(closest-side,rgb(214_160_110/0.38),transparent)] blur-3xl motion-reduce:animate-none" />
-        <div className="absolute inset-0 bg-gradient-to-t from-ink/80 to-transparent" />
-      </div>
-      <SiteNav lang={lang} onImage />
-      <main className="flex h-full flex-col justify-center gap-6 px-6 pt-24 pb-14 md:px-12 md:pt-0">
-        <p className="text-xs font-medium tracking-[0.14em] text-fg-muted uppercase">{copy.eyebrow}</p>
-        <h1 className="font-display max-w-3xl text-5xl leading-[1.02] md:text-8xl">{copy.heading}</h1>
-        <p className="max-w-md text-base text-fg-muted md:text-lg">{copy.body}</p>
-        <div>
-          <GlassPillLink href={localizedPath(lang, "/")} size="lg" onImage>
-            {copy.home}
-          </GlassPillLink>
-        </div>
-        <p className="font-display text-sm text-fg-muted italic">{site.description}</p>
-      </main>
-    </div>
-  );
+/** C · Cinematic with a slowly drifting patch of light (the #51 experiment); still when motion is reduced. The live 404 (components/NotFoundPage.tsx). */
+export function OptionC({ lang, copy }: Props) {
+  return <NotFoundPage lang={lang} copy={copy} className="h-full" />;
 }

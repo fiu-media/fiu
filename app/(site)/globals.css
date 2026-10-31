@@ -285,12 +285,36 @@ html:has(dialog[open]) {
   overflow: hidden;
 }
 
-/* Slow sideways drift for the lit patch on the /dev/not-found moving-light option. */
+/* The 404's two lights. Each wanders a closed loop, not a line, and they run on different cycle lengths
+   (see NotFoundPage), so they never line up the same way twice. The first and last stops match so the loop is seamless. */
 @keyframes light-drift {
-  from {
-    transform: translate3d(-18%, 0, 0);
+  0%,
+  100% {
+    transform: translate3d(-40%, -10%, 0) scale(0.9);
   }
-  to {
-    transform: translate3d(18%, 4%, 0);
+  25% {
+    transform: translate3d(5%, 22%, 0) scale(1.1);
+  }
+  50% {
+    transform: translate3d(45%, -4%, 0) scale(0.95);
+  }
+  75% {
+    transform: translate3d(8%, -24%, 0) scale(1.15);
+  }
+}
+
+@keyframes light-drift-b {
+  0%,
+  100% {
+    transform: translate3d(35%, 15%, 0) scale(1);
+  }
+  30% {
+    transform: translate3d(-25%, -18%, 0) scale(1.2);
+  }
+  60% {
+    transform: translate3d(-45%, 20%, 0) scale(0.85);
+  }
+  80% {
+    transform: translate3d(10%, 28%, 0) scale(1.05);
   }
 }
