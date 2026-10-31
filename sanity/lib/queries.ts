@@ -135,3 +135,52 @@ export const PAGE_TEXT_QUERY = defineQuery(`{
   "quoteIntro": coalesce(cur.quoteIntro, fb.quoteIntro),
   "contactIntro": coalesce(cur.contactIntro, fb.contactIntro)
 }`);
+
+/** The title of a role or project type in `$lang`; those references always point at the default-language document. */
+const translatedTitle = (type: string) =>
+  `coalesce(*[_type == "${type}" && language == $lang && slug.current == ^.slug.current][0].title, title)`;
+
+const IMAGE_FIELDS = `alt, asset, crop, hotspot, "lqip": asset->metadata.lqip, "dimensions": asset->metadata.dimensions`;
+
+const TALENT_CARD_FIELDS = `
+  _id,
+  name,
+  "slug": slug.current,
+  "roles": roles[]->{ "title": ${translatedTitle("role")} }.title,
+  "portrait": select(defined(portrait.asset) => portrait, ${DEFAULT_COUNTERPART}.portrait){ ${IMAGE_FIELDS} }
+`;
+
+/** The Talent index: the roster in the editors' drag-and-drop order. */
+export const TALENT_QUERY = defineQuery(`
+  ${withFallback("talent")}${byRank("name")}{
+    ${TALENT_CARD_FIELDS}
+  }
+`);
+
+/** One person for their bio page. `talentId` is the default-language document that projects credit. */
+export const TALENT_PROFILE_QUERY = defineQuery(`
+  coalesce(
+    *[_type == "talent" && language == $lang && slug.current == $slug][0],
+    *[_type == "talent" && language == $fallbackLang && slug.current == $slug][0]
+  ){
+    ${TALENT_CARD_FIELDS},
+    "bio": coalesce(bio, ${DEFAULT_COUNTERPART}.bio),
+    "talentId": coalesce(${DEFAULT_COUNTERPART}._id, _id)
+  }
+`);
+
+/** The projects a person is credited on, in the editors' drag-and-drop order, with what they did on each. */
+export const TALENT_PROJECTS_QUERY = defineQuery(`
+  ${withFallback("project", " && references($talentId)")}${byRank("title")}{
+    _id,
+    title,
+    "slug": slug.current,
+    "type": type->{ "title": ${translatedTitle("projectType")} }.title,
+    "year": coalesce(year, ${DEFAULT_COUNTERPART}.year),
+    "client": coalesce(client, ${DEFAULT_COUNTERPART}.client),
+    "vimeoUrl": coalesce(vimeoUrl, ${DEFAULT_COUNTERPART}.vimeoUrl),
+    "previewLoopUrl": coalesce(previewLoopUrl, ${DEFAULT_COUNTERPART}.previewLoopUrl),
+    "cover": select(defined(coverStill.asset) => coverStill, ${DEFAULT_COUNTERPART}.coverStill){ ${IMAGE_FIELDS} },
+    "roles": credits[talent._ref == $talentId].role->{ "title": ${translatedTitle("role")} }.title
+  }
+`);

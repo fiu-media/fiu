@@ -2,7 +2,7 @@ import { urlFor } from "./image";
 
 type Source = Parameters<typeof urlFor>[0];
 
-type SanityImage = {
+export type SanityImage = {
   _key?: string;
   alt: string | null;
   asset: unknown;
@@ -67,3 +67,7 @@ export function toRentalImage(image: SanityImage, width = 1200): RentalImage | n
 
 /** Drafts show up as `drafts.<id>` in preview; items are always referenced by their published id. */
 export const publishedId = (id: string) => id.replace(/^drafts\./, "");
+
+/** The same sizing and cropping for any queried Sanity image (talent portraits, project covers). */
+export const toSizedImage = toRentalImage;
+export type SizedImage = RentalImage;
