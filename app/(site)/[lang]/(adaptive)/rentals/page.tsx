@@ -9,7 +9,7 @@ import { getDictionary } from "@/lib/i18n/dictionaries";
 import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
 import { getPageText } from "@/sanity/lib/pageText";
 import { RENTALS_QUERY } from "@/sanity/lib/queries";
-import { publishedId, toRentalImage, type RentalsResult } from "@/sanity/lib/rentals";
+import { publishedId, toRentalImage } from "@/sanity/lib/rentals";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/rentals">): Promise<Metadata> {
   const { lang } = await params;
@@ -40,7 +40,7 @@ async function Catalogue({ lang }: { lang: Locale }) {
   const { rentals } = await getDictionary(lang);
   const { perspective, variant } = await getDynamicFetchOptions();
   const { data } = await cachedSanity({ query: RENTALS_QUERY, params: { lang, fallbackLang: defaultLocale }, perspective, variant, stega: false });
-  const { categories, items } = (data ?? { categories: [], items: [] }) as RentalsResult;
+  const { categories, items } = data;
 
   const cards: CatalogueCard[] = items.map((item) => ({
     id: publishedId(item._id),

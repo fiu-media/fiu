@@ -10,7 +10,7 @@ import { defaultLocale, isLocale, languageAlternates, type Locale } from "@/lib/
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
 import { HOME_STILLS_QUERY } from "@/sanity/lib/queries";
-import { toHeroStill, type HeroStill, type HomeStillsResult } from "@/sanity/lib/stills";
+import { toHeroStill, type HeroStill } from "@/sanity/lib/stills";
 
 export const viewport: Viewport = { themeColor: "#0c0b0d" };
 
@@ -57,7 +57,6 @@ async function homeStills(
   variant: string | undefined,
 ): Promise<HeroStill[]> {
   const { data } = await cachedSanity({ query: HOME_STILLS_QUERY, params: { lang, fallbackLang: defaultLocale }, perspective, variant, stega: false });
-  const settings = data as HomeStillsResult;
-  const stills = (settings?.stills ?? []).map((s) => toHeroStill(settings!._id, s)).filter((s): s is HeroStill => s !== null);
+  const stills = (data?.stills ?? []).map((s) => toHeroStill(data!._id, s)).filter((s): s is HeroStill => s !== null);
   return stills.length > 0 ? stills : fallbackStills;
 }

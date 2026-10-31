@@ -46,7 +46,7 @@ async function DirectContact({ lang }: { lang: Locale }) {
   const { contact } = await getDictionary(lang);
   const { perspective, variant } = await getDynamicFetchOptions();
   const { data } = await cachedSanity({ query: CONTACT_SETTINGS_QUERY, params: { lang, fallbackLang: defaultLocale }, perspective, variant, stega: false });
-  const settings = data as { contactEmail: string | null; instagram: string | null } | null;
+  const settings = data;
   if (!settings?.contactEmail && !settings?.instagram) return null;
 
   return (

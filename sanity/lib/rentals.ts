@@ -1,15 +1,14 @@
+import type { SanityImageAssetReference, SanityImageCrop, SanityImageDimensions, SanityImageHotspot } from "@/sanity.types";
 import { urlFor } from "./image";
 
-type Source = Parameters<typeof urlFor>[0];
-
-export type SanityImage = {
-  _key?: string;
+/** A queried Sanity image (`alt`, `asset`, `crop`, `hotspot`, `lqip`, optionally `dimensions`), as every image projection returns it. */
+export type QueriedImage = {
   alt: string | null;
-  asset: unknown;
-  crop?: { top: number; bottom: number; left: number; right: number } | null;
-  hotspot?: { x: number; y: number } | null;
+  asset: SanityImageAssetReference | null;
+  crop: SanityImageCrop | null;
+  hotspot: SanityImageHotspot | null;
   lqip: string | null;
-  dimensions?: { width: number; height: number } | null;
+  dimensions?: SanityImageDimensions | null;
 };
 
 export type RentalImage = {
@@ -22,46 +21,23 @@ export type RentalImage = {
   position?: string;
 };
 
-/** Result shapes of the rentals queries (hand-written until we adopt typegen). */
-export type RentalItem = {
-  _id: string;
-  name: string;
-  slug: string;
-  brand: string | null;
-  summary: string | null;
-  keyFeatures: string[] | null;
-  maxQuantity: number | null;
-  category: { _id: string; title: string; slug: string } | null;
-  images: SanityImage[] | null;
-  specs?: { _key: string; key: string; value: string }[] | null;
-  includedInKit?: string[] | null;
-};
-export type RentalCategory = { _id: string; title: string; slug: string };
-export type RentalsResult = { categories: RentalCategory[]; items: RentalItem[] };
-export type CatalogueEntry = {
-  _id: string;
-  name: string;
-  brand: string | null;
-  maxQuantity: number | null;
-  slug: string;
-  image: (Omit<SanityImage, "dimensions"> & { _key?: never }) | null;
-};
-
 /** A queried Sanity image as a sized, cropped `next/image` source (null without dimensions). */
-export function toRentalImage(image: SanityImage, width = 1200): RentalImage | null {
-  const { crop, dimensions } = image;
+export function toRentalImage(image: QueriedImage, width = 1200): RentalImage | null {
+  const { asset, crop, hotspot } = image;
+  if (!asset) return null;
+  const dimensions = image.dimensions?.width && image.dimensions.height ? { width: image.dimensions.width, height: image.dimensions.height } : null;
   // Cropped images have no dimensions in the catalogue lookup; fall back to a 4:3 frame.
-  const cropW = crop ? 1 - crop.left - crop.right : 1;
-  const cropH = crop ? 1 - crop.top - crop.bottom : 1;
+  const cropW = crop ? 1 - (crop.left ?? 0) - (crop.right ?? 0) : 1;
+  const cropH = crop ? 1 - (crop.top ?? 0) - (crop.bottom ?? 0) : 1;
   const aspect = dimensions ? (dimensions.width * cropW) / (dimensions.height * cropH) : 4 / 3;
   const w = dimensions ? Math.min(width, Math.round(dimensions.width * cropW)) : width;
   return {
-    src: urlFor(image as unknown as Source).width(w).auto("format").url(),
+    src: urlFor({ asset, crop: crop ?? undefined, hotspot: hotspot ?? undefined }).width(w).auto("format").url(),
     width: w,
     height: Math.round(w / aspect),
     alt: image.alt ?? "",
     blurDataURL: image.lqip ?? undefined,
-    position: image.hotspot ? `${image.hotspot.x * 100}% ${image.hotspot.y * 100}%` : undefined,
+    position: hotspot ? `${(hotspot.x ?? 0.5) * 100}% ${(hotspot.y ?? 0.5) * 100}%` : undefined,
   };
 }
 

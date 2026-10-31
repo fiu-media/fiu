@@ -9,12 +9,12 @@ import { defaultLocale, isLocale, languageAlternates, localizedPath, type Locale
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
 import { RENTAL_ITEM_QUERY } from "@/sanity/lib/queries";
-import { publishedId, toRentalImage, type RentalItem } from "@/sanity/lib/rentals";
+import { publishedId, toRentalImage } from "@/sanity/lib/rentals";
 
 async function getItem(lang: Locale, slug: string) {
   const { perspective, variant } = await getDynamicFetchOptions();
   const { data } = await cachedSanity({ query: RENTAL_ITEM_QUERY, params: { lang, fallbackLang: defaultLocale, slug }, perspective, variant, stega: false });
-  return (data as RentalItem | null) ?? null;
+  return data;
 }
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/rentals/[slug]">): Promise<Metadata> {
