@@ -201,3 +201,23 @@ export const WORK_QUERY = defineQuery(`{
     ${PROJECT_SLIDE_FIELDS}
   }
 }`);
+
+/** The About page: slogan, gloss, manifesto and still from Site settings, each falling back to the default language's. */
+export const ABOUT_QUERY = defineQuery(`{
+  "cur": *[_type == "siteSettings" && language == $lang][0]{
+    _id, slogan, sloganGloss, manifesto, contactEmail, instagram,
+    "still": aboutStill{ ${IMAGE_FIELDS} }
+  },
+  "fb": *[_type == "siteSettings" && language == $fallbackLang][0]{
+    _id, slogan, sloganGloss, manifesto, contactEmail, instagram,
+    "still": aboutStill{ ${IMAGE_FIELDS} }
+  }
+}{
+  "_id": coalesce(cur._id, fb._id),
+  "slogan": coalesce(cur.slogan, fb.slogan),
+  "sloganGloss": coalesce(cur.sloganGloss, fb.sloganGloss),
+  "manifesto": coalesce(cur.manifesto, fb.manifesto),
+  "contactEmail": coalesce(cur.contactEmail, fb.contactEmail),
+  "instagram": coalesce(cur.instagram, fb.instagram),
+  "still": select(defined(cur.still.asset) => cur.still, fb.still)
+}`);

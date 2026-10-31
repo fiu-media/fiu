@@ -28,6 +28,12 @@ const concepts: Concept[] = [
     note: "Layout options for the Our Work and Talent grids on placeholder content (issue #9).",
   },
   {
+    href: "/dev/about",
+    title: "About layout options",
+    kind: "Sign-off",
+    note: "Two layouts for the About page (slogan first, or one screen) on the real still and slogan (issue #55).",
+  },
+  {
     href: "/dev/specimen",
     title: "Design specimen",
     kind: "Sign-off",

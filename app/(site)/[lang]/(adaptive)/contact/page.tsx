@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { FormSkeleton } from "@/components/forms/FormSkeleton";
 import { defaultLocale, isLocale, languageAlternates, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
+import { instagramHandle } from "@/lib/instagram";
 import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
 import { getPageText } from "@/sanity/lib/pageText";
 import { CONTACT_SETTINGS_QUERY } from "@/sanity/lib/queries";
@@ -67,7 +68,7 @@ async function DirectContact({ lang }: { lang: Locale }) {
             <dt className="text-sm text-fg-muted">{contact.instagramLabel}</dt>
             <dd>
               <a href={settings.instagram} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">
-                {settings.instagram.replace(/^https?:\/\/(www\.)?instagram\.com\//, "@").replace(/\/$/, "")}
+                {instagramHandle(settings.instagram)}
               </a>
             </dd>
           </div>
