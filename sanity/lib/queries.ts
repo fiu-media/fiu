@@ -84,7 +84,16 @@ export const AVAILABLE_ITEM_IDS_QUERY = defineQuery(`
   *[_type == "rentalItem" && _id in $ids && available != false]{ _id, name, brand, maxQuantity }
 `);
 
-/** Editor-written intro lines for the Rentals, Request a quote and Contact pages. */
+/** Editor-written intro lines for the Rentals, Request a quote and Contact pages, plus each page's Fiú line. */
 export const PAGE_TEXT_QUERY = defineQuery(`
-  *[_type == "siteSettings" && language == $lang][0]{ rentalsIntro, quoteIntro, contactIntro }
+  *[_type == "siteSettings" && language == $lang][0]{
+    rentalsIntro,
+    quoteIntro,
+    contactIntro,
+    aboutTagline,
+    workTagline,
+    talentTagline,
+    rentalsTagline,
+    contactTagline
+  }
 `);

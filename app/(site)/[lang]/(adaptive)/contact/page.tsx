@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { FormSkeleton } from "@/components/forms/FormSkeleton";
+import { PageTitle } from "@/components/ui/PageTitle";
 import { isLocale, languageAlternates, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
@@ -24,7 +25,7 @@ export default async function ContactPage({ params }: PageProps<"/[lang]/contact
     <main className="mx-auto grid max-w-6xl gap-12 px-4 pb-32 md:px-6 lg:grid-cols-[3fr_2fr]">
       <div>
         <header className="mb-10">
-          <h1 className="font-display text-5xl md:text-6xl">{contact.title}</h1>
+          <PageTitle title={contact.title} tagline={text.contactTagline} />
           {text.contactIntro && <p className="mt-4 max-w-2xl text-lg text-fg-muted">{text.contactIntro}</p>}
         </header>
         {/* ContactForm reads the ?type= query, which needs a boundary to keep the page static. */}

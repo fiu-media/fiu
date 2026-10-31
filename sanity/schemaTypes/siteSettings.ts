@@ -44,6 +44,23 @@ export const siteSettings = defineType({
     }),
     defineField({ name: "manifesto", type: "array", group: "about", of: [defineArrayMember({ type: "block" })] }),
     imageWithAlt("aboutStill", "About still"),
+    ...(
+      [
+        ["about", "About"],
+        ["work", "Our Work"],
+        ["talent", "Talent"],
+        ["rentals", "Rentals"],
+        ["contact", "Contact"],
+      ] as const
+    ).map(([page, label]) =>
+      defineField({
+        name: `${page}Tagline`,
+        title: `${label}: Fiú line`,
+        type: "string",
+        group: "pages",
+        description: `A playful line shown under the ${label} title. Leave empty to hide it.`,
+      }),
+    ),
     defineField({
       name: "rentalsIntro",
       title: "Rentals intro",
