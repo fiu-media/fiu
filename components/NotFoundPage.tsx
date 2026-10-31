@@ -1,10 +1,11 @@
 import { SiteNav } from "@/components/nav/SiteNav";
 import { railInset } from "@/components/nav/rail";
-import { GlassPillLink } from "@/components/ui/Glass";
-import { localizedPath, type Locale } from "@/lib/i18n/config";
+import { NotFoundBackLink } from "@/components/NotFoundBackLink";
+import type { Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
+import { getNavItems } from "@/lib/i18n/nav";
 
-export type NotFoundCopy = { eyebrow: string; heading: string; body: string; home: string };
+export type NotFoundCopy = { eyebrow: string; heading: string; body: string; home: string; backTo: string };
 
 // English only for now; the Irish text comes from Fíu.
 export const notFoundCopy: NotFoundCopy = {
@@ -12,11 +13,12 @@ export const notFoundCopy: NotFoundCopy = {
   heading: "Page not found",
   body: "That page doesn’t exist, or it has moved.",
   home: "Back home",
+  backTo: "Back to {section}",
 };
 
 /**
  * The site's 404: always dark, a slowly drifting patch of light (the #51 experiment; still when motion
- * is reduced), the rail, a link home. `className` sets the height; the default fills the viewport,
+ * is reduced), the rail, a link back to the section the URL was under, or home. `className` sets the height; the default fills the viewport,
  * /dev/not-found fits it to a preview frame.
  */
 export async function NotFoundPage({
@@ -28,7 +30,7 @@ export async function NotFoundPage({
   copy?: NotFoundCopy;
   className?: string;
 }) {
-  const { site } = await getDictionary(lang);
+  const dict = await getDictionary(lang);
   return (
     <div
       data-surface="cinematic"
@@ -44,11 +46,9 @@ export async function NotFoundPage({
         <h1 className="font-display max-w-3xl text-5xl leading-[1.02] md:text-8xl">{copy.heading}</h1>
         <p className="max-w-md text-base text-fg-muted md:text-lg">{copy.body}</p>
         <div>
-          <GlassPillLink href={localizedPath(lang, "/")} size="lg" onImage>
-            {copy.home}
-          </GlassPillLink>
+          <NotFoundBackLink lang={lang} home={copy.home} backTo={copy.backTo} sections={getNavItems(lang, dict)} />
         </div>
-        <p className="font-display text-sm text-fg-muted italic">{site.description}</p>
+        <p className="font-display text-sm text-fg-muted italic">{dict.site.description}</p>
       </main>
     </div>
   );

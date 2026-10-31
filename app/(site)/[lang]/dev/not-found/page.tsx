@@ -26,6 +26,7 @@ const copies: Record<CopyKey, { label: string; copy: Copy }> = {
       heading: "Page not found",
       body: "That page doesn’t exist, or it has moved.",
       home: "Back home",
+      backTo: "Back to {section}",
     },
   },
   brand: {
@@ -35,6 +36,7 @@ const copies: Record<CopyKey, { label: string; copy: Copy }> = {
       heading: "Lost the scene",
       body: "We couldn’t find that page. Let’s cut back to the start.",
       home: "Back home",
+      backTo: "Back to {section}",
     },
   },
 };
