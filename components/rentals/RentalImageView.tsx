@@ -1,7 +1,10 @@
 import Image from "next/image";
 import type { RentalImage } from "@/sanity/lib/rentals";
 
-/** A rental photo (or a quiet placeholder until Fiú shoots its own). */
+/**
+ * A rental photo (or a quiet placeholder until Fiú shoots its own). Product shots are padded and
+ * shot on white, so they sit whole (`object-contain`) on a white tile instead of being cropped.
+ */
 export function RentalImageView({
   image,
   placeholder,
@@ -30,8 +33,7 @@ export function RentalImageView({
       priority={priority}
       placeholder={image.blurDataURL ? "blur" : "empty"}
       blurDataURL={image.blurDataURL}
-      style={{ objectPosition: image.position }}
-      className={`object-cover ${className}`}
+      className={`bg-white object-contain ${className}`}
     />
   );
 }

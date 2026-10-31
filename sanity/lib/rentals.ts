@@ -18,8 +18,6 @@ export type RentalImage = {
   height: number;
   alt: string;
   blurDataURL?: string;
-  /** CSS object-position from the editor's hotspot. */
-  position?: string;
 };
 
 /** Result shapes of the rentals queries (hand-written until we adopt typegen). */
@@ -61,7 +59,6 @@ export function toRentalImage(image: SanityImage, width = 1200): RentalImage | n
     height: Math.round(w / aspect),
     alt: image.alt ?? "",
     blurDataURL: image.lqip ?? undefined,
-    position: image.hotspot ? `${image.hotspot.x * 100}% ${image.hotspot.y * 100}%` : undefined,
   };
 }
 
