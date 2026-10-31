@@ -10,6 +10,7 @@ import { defaultLocale, isLocale, languageAlternates, localizedPath, type Locale
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { format } from "@/lib/i18n/format";
 import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
+import { getPageText } from "@/sanity/lib/pageText";
 import { projectAttribute, type WorkResult } from "@/sanity/lib/projects";
 import { WORK_QUERY } from "@/sanity/lib/queries";
 import { toSizedImage } from "@/sanity/lib/rentals";
@@ -19,20 +20,21 @@ const SCROLL_ID = "work-scroll";
 export async function generateMetadata({ params }: PageProps<"/[lang]/work">): Promise<Metadata> {
   const { lang } = await params;
   if (!isLocale(lang)) return {};
-  const { work } = await getDictionary(lang);
-  return { title: work.title, alternates: languageAlternates(lang, "/work") };
+  const [{ work }, text] = await Promise.all([getDictionary(lang), getPageText(lang)]);
+  return { title: work.title, description: text.workIntro ?? undefined, alternates: languageAlternates(lang, "/work") };
 }
 
 export default async function WorkPage({ params, searchParams }: PageProps<"/[lang]/work">) {
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
-  const { work, common } = await getDictionary(lang);
+  const [{ work, common }, text] = await Promise.all([getDictionary(lang), getPageText(lang)]);
   return (
     <main>
       {/* snap-start: the page snaps to its slides, and without this it would skip the title. */}
       <header className="snap-start px-4 pt-24 pb-10 md:px-6 md:pt-16 md:pb-12">
         <div className="mx-auto max-w-6xl">
           <h1 className="font-display text-5xl md:text-6xl">{work.title}</h1>
+          {text.workIntro && <p className="mt-4 max-w-2xl text-lg text-fg-muted">{text.workIntro}</p>}
           <Suspense>
             <Filters lang={lang} searchParams={searchParams} />
           </Suspense>
