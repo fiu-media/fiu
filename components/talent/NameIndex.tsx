@@ -64,6 +64,8 @@ export function NameIndex({
             onPointerMove={(event) => place(event.clientX, event.clientY)}
             onFocus={(event) => {
               setActive(i);
+              // A mouse click focuses the link too, but the preview should stay under the cursor then.
+              if (!event.currentTarget.matches(":focus-visible")) return;
               const row = event.currentTarget.getBoundingClientRect();
               place(row.right - previewWidth, row.top + row.height / 2);
             }}
