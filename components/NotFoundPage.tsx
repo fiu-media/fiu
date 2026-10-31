@@ -37,7 +37,7 @@ export async function NotFoundPage({
       className={`relative isolate flex flex-col overflow-hidden bg-ink text-fg ${railInset} ${className}`}
     >
       <div aria-hidden className="absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute -top-1/4 left-1/4 h-[150%] w-3/4 animate-[light-drift_26s_ease-in-out_infinite_alternate] rounded-full bg-[radial-gradient(closest-side,rgb(214_160_110/0.38),transparent)] blur-3xl motion-reduce:animate-none" />
+        <div className="absolute -top-1/4 left-1/4 h-[150%] w-3/4 animate-[light-drift_14s_ease-in-out_infinite_alternate] rounded-full bg-[radial-gradient(closest-side,rgb(214_160_110/0.5),transparent)] blur-3xl motion-reduce:animate-none" />
         <div className="absolute inset-0 bg-gradient-to-t from-ink/80 to-transparent" />
       </div>
       <SiteNav lang={lang} onImage />

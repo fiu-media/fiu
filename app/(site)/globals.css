@@ -285,12 +285,12 @@ html:has(dialog[open]) {
   overflow: hidden;
 }
 
-/* Slow sideways drift for the lit patch on the /dev/not-found moving-light option. */
+/* Sideways drift for the lit patch on the 404 page: wide enough, and quick enough, to read as movement. */
 @keyframes light-drift {
   from {
-    transform: translate3d(-18%, 0, 0);
+    transform: translate3d(-45%, -8%, 0) scale(0.9);
   }
   to {
-    transform: translate3d(18%, 4%, 0);
+    transform: translate3d(45%, 10%, 0) scale(1.1);
   }
 }
