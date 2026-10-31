@@ -163,18 +163,28 @@ async function Profile({ lang, slug }: { lang: string; slug: string }) {
   );
 }
 
+/** Same footprint as the profile's first screen: back link, portrait beside the name, bio and button. */
 function ProfileSkeleton() {
   return (
-    <div
-      aria-busy
-      className="mx-auto grid max-w-6xl gap-8 px-4 pt-24 md:grid-cols-[5fr_6fr] md:gap-14 md:px-6 md:pt-16"
-    >
-      <Skeleton className="aspect-[4/5] w-full rounded-3xl" />
-      <div className="space-y-4 md:pt-24">
-        <Skeleton className="h-4 w-32" />
-        <Skeleton className="h-16 w-3/4" />
-        <Skeleton className="h-24 w-full" />
+    <section aria-hidden className="px-4 pt-24 pb-16 md:px-6 md:pt-16 md:pb-12">
+      <div className="mx-auto mb-6 max-w-6xl">
+        <Skeleton className="h-5 w-28" />
       </div>
-    </div>
+      <div className="mx-auto grid max-w-6xl items-center gap-8 md:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] md:gap-14 lg:min-h-[calc(100dvh-10rem)]">
+        <Skeleton className="aspect-[4/5] w-full rounded-3xl" />
+        <div className="flex flex-col items-start gap-6">
+          <div className="w-full space-y-3">
+            <Skeleton className="h-3 w-32" />
+            <Skeleton className="h-14 w-3/4 md:h-20" />
+          </div>
+          <div className="w-full max-w-prose space-y-3">
+            <Skeleton className="h-5 w-full" />
+            <Skeleton className="h-5 w-full" />
+            <Skeleton className="h-5 w-2/3" />
+          </div>
+          <Skeleton className="h-12 w-56 rounded-full" />
+        </div>
+      </div>
+    </section>
   );
 }

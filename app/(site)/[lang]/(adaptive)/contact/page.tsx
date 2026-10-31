@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { FormSkeleton } from "@/components/forms/FormSkeleton";
 import { PageTitle } from "@/components/ui/PageTitle";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { defaultLocale, isLocale, languageAlternates, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { instagramHandle } from "@/lib/instagram";
@@ -30,11 +31,11 @@ export default async function ContactPage({ params }: PageProps<"/[lang]/contact
           {text.contactIntro && <p className="mt-4 max-w-2xl text-lg text-fg-muted">{text.contactIntro}</p>}
         </header>
         {/* ContactForm reads the ?type= query, which needs a boundary to keep the page static. */}
-        <Suspense fallback={<FormSkeleton label={common.loading} fields={2} />}>
+        <Suspense fallback={<FormSkeleton label={common.loading} fields={3} />}>
           <ContactForm lang={lang} dict={{ contact, forms }} />
         </Suspense>
       </div>
-      <Suspense>
+      <Suspense fallback={<DirectContactSkeleton />}>
         <DirectContact lang={lang} />
       </Suspense>
     </main>
@@ -76,5 +77,21 @@ async function DirectContact({ lang }: { lang: Locale }) {
         )}
       </dl>
     </aside>
+  );
+}
+
+function DirectContactSkeleton() {
+  return (
+    <div aria-hidden className="lg:pt-28">
+      <Skeleton className="h-8 w-40" />
+      <div className="mt-4 space-y-4">
+        {Array.from({ length: 2 }, (_, i) => (
+          <div key={i} className="flex flex-col gap-1.5">
+            <Skeleton className="h-4 w-16" />
+            <Skeleton className="h-6 w-48" />
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }

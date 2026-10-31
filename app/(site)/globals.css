@@ -49,6 +49,7 @@
     --fg: light-dark(#151316, #f2eee8);
     --fg-muted: light-dark(#5f5a63, #a39da8);
     --line: light-dark(rgb(21 19 22 / 0.12), rgb(255 255 255 / 0.12));
+    --skeleton: light-dark(rgb(21 19 22 / 0.1), #24222a);
     --accent: light-dark(#a3122a, #ff5a6e);
     --focus: light-dark(#1d4ed8, #8ab4ff);
 
@@ -80,6 +81,7 @@ html:has([data-snap="mandatory"]) {
   --color-fg: var(--fg);
   --color-fg-muted: var(--fg-muted);
   --color-line: var(--line);
+  --color-skeleton: var(--skeleton);
   --color-accent: var(--accent);
   --color-paper: var(--paper);
   --color-ink: var(--ink);
