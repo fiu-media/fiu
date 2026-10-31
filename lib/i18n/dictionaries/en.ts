@@ -60,6 +60,8 @@ export const en = {
     noImage: "Photo coming soon",
     galleryLabel: "Photos of {name}",
     showImage: "Show photo {n} of {total}",
+    previousImage: "Previous photo",
+    nextImage: "Next photo",
     keyFeatures: "Key features",
     specs: "Specs",
     includedInKit: "Included in kit",
