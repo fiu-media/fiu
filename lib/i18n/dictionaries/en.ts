@@ -58,6 +58,8 @@ export const en = {
     viewDetails: "Details",
     backToRentals: "All rentals",
     noImage: "Photo coming soon",
+    galleryLabel: "Photos of {name}",
+    showImage: "Show photo {n} of {total}",
     keyFeatures: "Key features",
     specs: "Specs",
     includedInKit: "Included in kit",

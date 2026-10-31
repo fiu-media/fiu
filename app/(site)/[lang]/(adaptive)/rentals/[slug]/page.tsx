@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { DetailAddToQuote } from "@/components/rentals/DetailAddToQuote";
 import { ItemSkeleton } from "@/components/rentals/RentalSkeletons";
-import { RentalImageView } from "@/components/rentals/RentalImageView";
+import { RentalGallery } from "@/components/rentals/RentalGallery";
 import { defaultLocale, isLocale, languageAlternates, localizedPath, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
@@ -55,24 +55,7 @@ async function Item({ lang, slug }: { lang: string; slug: string }) {
       </Link>
 
       <div className="mt-6 grid gap-10 lg:grid-cols-2">
-        <div className="flex flex-col gap-4">
-          <RentalImageView
-            image={images[0] ?? null}
-            placeholder={rentals.noImage}
-            sizes="(min-width: 1024px) 50vw, 100vw"
-            priority
-            className="aspect-[4/3] w-full rounded-3xl"
-          />
-          {images.length > 1 && (
-            <ul className="grid grid-cols-3 gap-4">
-              {images.slice(1).map((image) => (
-                <li key={image.src}>
-                  <RentalImageView image={image} placeholder="" sizes="(min-width: 1024px) 17vw, 33vw" className="aspect-[4/3] w-full rounded-2xl" />
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+        <RentalGallery images={images} name={item.name} dict={rentals} />
 
         <div className="flex flex-col gap-8">
           <header>
