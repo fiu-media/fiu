@@ -169,18 +169,35 @@ export const TALENT_PROFILE_QUERY = defineQuery(`
   }
 `);
 
-/** The projects a person is credited on, in the editors' drag-and-drop order, with what they did on each. */
-export const TALENT_PROJECTS_QUERY = defineQuery(`
-  ${withFallback("project", " && references($talentId)")}${byRank("title")}{
+/** What a project slide needs: shared by the Our Work scroll and a talent's own scroll. */
+const PROJECT_SLIDE_FIELDS = `
     _id,
     title,
     "slug": slug.current,
+    "typeSlug": type->slug.current,
     "type": type->{ "title": ${translatedTitle("projectType")} }.title,
     "year": coalesce(year, ${DEFAULT_COUNTERPART}.year),
     "client": coalesce(client, ${DEFAULT_COUNTERPART}.client),
     "vimeoUrl": coalesce(vimeoUrl, ${DEFAULT_COUNTERPART}.vimeoUrl),
     "previewLoopUrl": coalesce(previewLoopUrl, ${DEFAULT_COUNTERPART}.previewLoopUrl),
-    "cover": select(defined(coverStill.asset) => coverStill, ${DEFAULT_COUNTERPART}.coverStill){ ${IMAGE_FIELDS} },
+    "cover": select(defined(coverStill.asset) => coverStill, ${DEFAULT_COUNTERPART}.coverStill){ ${IMAGE_FIELDS} }
+`;
+
+/** The projects a person is credited on, in the editors' drag-and-drop order, with what they did on each. */
+export const TALENT_PROJECTS_QUERY = defineQuery(`
+  ${withFallback("project", " && references($talentId)")}${byRank("title")}{
+    ${PROJECT_SLIDE_FIELDS},
     "roles": credits[talent._ref == $talentId].role->{ "title": ${translatedTitle("role")} }.title
   }
 `);
+
+/** Our Work: every project in the editors' drag-and-drop order, and the types that filter them. */
+export const WORK_QUERY = defineQuery(`{
+  "types": ${withFallback("projectType")}${byRank("title")}{
+    "slug": slug.current,
+    "title": coalesce(pluralTitle, title)
+  },
+  "projects": ${withFallback("project")}${byRank("title")}{
+    ${PROJECT_SLIDE_FIELDS}
+  }
+}`);
