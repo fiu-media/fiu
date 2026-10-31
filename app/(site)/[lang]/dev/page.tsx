@@ -49,7 +49,7 @@ const concepts: Concept[] = [
     href: "/dev/logo-playground",
     title: "Logo playground",
     kind: "Tuning",
-    note: "Tuning surface for the glass logo over the home hero stills, with a diff viewer.",
+    note: "Tuning surface for the glass logo over the home hero stills, with a diff viewer and a slowly moving light (issue #51).",
   },
 ];
 
