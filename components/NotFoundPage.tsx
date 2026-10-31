@@ -17,9 +17,9 @@ export const notFoundCopy: NotFoundCopy = {
 };
 
 /**
- * The site's 404: always dark, two slowly wandering lights (the #51 experiment; still when motion
- * is reduced), the rail, a link back to the section the URL was under, or home. `className` sets the height; the default fills the viewport,
- * /dev/not-found fits it to a preview frame.
+ * The site's 404: always dark, two slowly wandering lights (the #51 experiment; still when motion is
+ * reduced), the rail, and a link back to the section the URL was under, or home. `className` sets the
+ * height; the default fills the viewport, /dev/not-found fits it to a preview frame.
  */
 export async function NotFoundPage({
   lang,
