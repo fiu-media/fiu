@@ -28,6 +28,12 @@ const concepts: Concept[] = [
     note: "Layout options for the Our Work and Talent grids on placeholder content (issue #9).",
   },
   {
+    href: "/dev/not-found",
+    title: "404 options",
+    kind: "Sign-off",
+    note: "Three layouts for the custom not-found page (cinematic with a still, adaptive type only, cinematic with moving light) and two copy sets (issue #56).",
+  },
+  {
     href: "/dev/specimen",
     title: "Design specimen",
     kind: "Sign-off",
