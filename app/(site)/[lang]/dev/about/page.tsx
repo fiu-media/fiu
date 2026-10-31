@@ -3,7 +3,14 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { AboutContacts } from "@/components/about/AboutContacts";
 import { AboutFooter } from "@/components/about/AboutFooter";
-import { AboutLayoutA, AboutLayoutB } from "@/components/about/AboutLayouts";
+import {
+  AboutLayoutA,
+  AboutLayoutB,
+  AboutLayoutC,
+  AboutLayoutD,
+  AboutLayoutE,
+  AboutLayoutF,
+} from "@/components/about/AboutLayouts";
 import { railInset } from "@/components/nav/rail";
 import { SiteNav } from "@/components/nav/SiteNav";
 import { GlassPillLink } from "@/components/ui/Glass";
@@ -15,16 +22,31 @@ import type { AboutSettings } from "@/sanity/lib/about";
 import { ABOUT_QUERY } from "@/sanity/lib/queries";
 import { toSizedImage } from "@/sanity/lib/rentals";
 
-// Sign-off page for the About layout (issue #55): two options on the real still, slogan and gloss.
+// Sign-off page for the About layout (issue #55): six options on the real still, slogan and gloss.
 // The manifesto and contact links are sample copy because the real ones aren't written yet. Unlisted, like /dev/grids.
 export const metadata: Metadata = {
   title: "About layout options",
   robots: { index: false, follow: false },
 };
 
-const OPTIONS = ["a", "b"] as const;
+const OPTIONS = ["a", "b", "c", "d", "e", "f"] as const;
 type Option = (typeof OPTIONS)[number];
-const optionName: Record<Option, string> = { a: "Slogan first", b: "Split screen" };
+const optionName: Record<Option, string> = {
+  a: "Slogan first",
+  b: "Split screen",
+  c: "Letterbox",
+  d: "Poster",
+  e: "Statement",
+  f: "Glass caption",
+};
+const layouts = {
+  a: AboutLayoutA,
+  b: AboutLayoutB,
+  c: AboutLayoutC,
+  d: AboutLayoutD,
+  e: AboutLayoutE,
+  f: AboutLayoutF,
+} satisfies Record<Option, typeof AboutLayoutA>;
 
 const sampleManifesto = (
   <>
@@ -68,6 +90,7 @@ async function Options({
     alt: fallback.alt,
     blurDataURL: fallback.blurDataURL,
   };
+  const Layout = layouts[option];
   const props = {
     still,
     slogan: settings?.slogan ?? null,
@@ -87,11 +110,11 @@ async function Options({
   return (
     <div data-surface="cinematic" className={`relative isolate bg-ink text-fg ${railInset}`}>
       <SiteNav lang={lang} onImage />
-      {option === "a" ? <AboutLayoutA {...props} /> : <AboutLayoutB {...props} />}
+      <Layout {...props} />
 
       <nav
         aria-label="About layout options"
-        className="fixed bottom-5 left-1/2 z-40 flex -translate-x-1/2 gap-2 md:ml-8"
+        className="fixed bottom-5 left-1/2 z-40 flex -translate-x-1/2 gap-2 md:top-[calc(var(--dev-bar,2.5rem)+0.75rem)] md:bottom-auto md:ml-8"
       >
         {OPTIONS.map((o) => (
           <GlassPillLink
