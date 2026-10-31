@@ -80,6 +80,8 @@ async function main() {
       "Cameras, lenses, lighting and grip from our own kit room. Build a quote and we'll come back to you with availability and rates.",
     quoteIntro: "Tell us what you need and when, and we'll reply with availability and a quote for your dates.",
     contactIntro: "Tell us about your project, ask about our talent, or say hello.",
+    workIntro: "Original productions and commercial work, from first frame to final grade.",
+    talentIntro: "The directors, cinematographers and creatives we work with.",
     seoTitle: "Fiú Media",
     seoDescription: "Irish media company: original productions, commercial work, talent and gear rental.",
   });

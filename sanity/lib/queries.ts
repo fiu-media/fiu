@@ -126,14 +126,16 @@ export const AVAILABLE_ITEM_IDS_QUERY = defineQuery(`
   }
 `);
 
-/** Editor-written intro lines for the Rentals, Request a quote and Contact pages. */
+/** Editor-written intro lines for the Rentals, Request a quote, Contact, Our Work and Talent pages. */
 export const PAGE_TEXT_QUERY = defineQuery(`{
-  "cur": *[_type == "siteSettings" && language == $lang][0]{ rentalsIntro, quoteIntro, contactIntro },
-  "fb": *[_type == "siteSettings" && language == $fallbackLang][0]{ rentalsIntro, quoteIntro, contactIntro }
+  "cur": *[_type == "siteSettings" && language == $lang][0]{ rentalsIntro, quoteIntro, contactIntro, workIntro, talentIntro },
+  "fb": *[_type == "siteSettings" && language == $fallbackLang][0]{ rentalsIntro, quoteIntro, contactIntro, workIntro, talentIntro }
 }{
   "rentalsIntro": coalesce(cur.rentalsIntro, fb.rentalsIntro),
   "quoteIntro": coalesce(cur.quoteIntro, fb.quoteIntro),
-  "contactIntro": coalesce(cur.contactIntro, fb.contactIntro)
+  "contactIntro": coalesce(cur.contactIntro, fb.contactIntro),
+  "workIntro": coalesce(cur.workIntro, fb.workIntro),
+  "talentIntro": coalesce(cur.talentIntro, fb.talentIntro)
 }`);
 
 /** The title of a role or project type in `$lang`; those references always point at the default-language document. */
