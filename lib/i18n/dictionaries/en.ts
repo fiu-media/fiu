@@ -54,7 +54,7 @@ export const en = {
     addToQuote: "Add to quote",
     inQuote: "In quote ({qty})",
     maxReached: "Maximum in quote",
-    maxPerQuote: "Up to {max} per quote",
+    available: "{max} available",
     viewDetails: "Details",
     backToRentals: "All rentals",
     noImage: "Photo coming soon",

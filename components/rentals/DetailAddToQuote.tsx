@@ -37,7 +37,7 @@ export function DetailAddToQuote({
         </label>
         <AddToQuote itemId={itemId} itemName={itemName} dict={dict} size="lg" quantity={Math.min(qty, max)} />
       </div>
-      {maxQuantity !== null && <p className="text-sm text-fg-muted">{format(dict.maxPerQuote, { max: maxQuantity })}</p>}
+      {maxQuantity !== null && <p className="text-sm text-fg-muted">{format(dict.available, { max: maxQuantity })}</p>}
     </div>
   );
 }
