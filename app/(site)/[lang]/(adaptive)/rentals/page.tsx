@@ -48,7 +48,6 @@ async function Catalogue({ lang }: { lang: Locale }) {
     slug: item.slug,
     brand: item.brand,
     summary: item.summary,
-    keyFeatures: item.keyFeatures ?? [],
     categoryId: item.category?.slug ?? null,
     image: item.images?.[0] ? toRentalImage(item.images[0], 800) : null,
   }));

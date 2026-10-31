@@ -15,7 +15,6 @@ export type CatalogueCard = {
   slug: string;
   brand: string | null;
   summary: string | null;
-  keyFeatures: string[];
   categoryId: string | null;
   image: RentalImage | null;
 };
@@ -90,13 +89,6 @@ function ItemCard({ lang, item, dict }: { lang: Locale; item: CatalogueCard; dic
           </h3>
         </div>
         {item.summary && <p className="text-sm text-fg-muted">{item.summary}</p>}
-        {item.keyFeatures.length > 0 && (
-          <ul className="list-disc space-y-1 pl-5 text-sm marker:text-fg-muted">
-            {item.keyFeatures.slice(0, 3).map((feature) => (
-              <li key={feature}>{feature}</li>
-            ))}
-          </ul>
-        )}
         <div className="mt-auto flex flex-wrap items-center gap-2 pt-2">
           <AddToQuote itemId={item.id} itemName={item.name} dict={dict} size="sm" />
           <Link href={href} className="px-2 text-sm text-fg-muted underline-offset-4 hover:text-fg hover:underline">
