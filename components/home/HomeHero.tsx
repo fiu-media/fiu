@@ -159,7 +159,8 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
 
         {/* SVG logo: shown on the server render, while the live scene loads, and as the
             fallback. The live logo starts its spin from this same centred, front-facing pose,
-            then glides to the left on desktop (-25vw = from 50vw to 4vw + half of 42vw). */}
+            then glides to the left on desktop, to a 42vw logo that starts 2vw clear of the side rail
+            (-27vw + 4rem = from 50vw to rail + 2vw + half of 42vw). */}
         <div
           className={`pointer-events-none absolute inset-0 grid place-items-center ${splashDone && mode !== "live" ? "motion-safe:transition-opacity motion-safe:duration-700" : ""}`}
           style={{ opacity: mode === "live" && sceneReady ? 0 : 1 }}
@@ -170,7 +171,7 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
             priority
             sizes="(min-width: 768px) 42vw, 80vw"
             className={`h-auto w-[80vw] max-w-[640px] md:w-[42vw] md:max-w-none motion-safe:transition-transform motion-safe:delay-300 motion-safe:duration-1000 motion-safe:ease-in-out ${
-              logoAtLeft ? "md:-translate-x-[25vw]" : "md:translate-x-0"
+              logoAtLeft ? "md:-translate-x-[calc(27vw-4rem-env(safe-area-inset-left))]" : "md:translate-x-0"
             }`}
           />
         </div>
