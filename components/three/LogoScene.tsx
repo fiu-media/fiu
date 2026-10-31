@@ -16,6 +16,7 @@ import {
 import * as THREE from "three";
 import paths from "@/public/brand/fiu-logo-paths.json";
 import { SPLASH_FADE_MS } from "@/components/home/splash-config";
+import { RAIL_REM } from "@/components/nav/rail";
 import { buildLogoGeometry, type LogoMeshMode, type LogoPaths } from "./buildLogoGeometry";
 import { LOGO_PARAM_PRESETS, type LogoGlassParams, type LogoRimLook } from "./logoConfig";
 import type { LogoPerfStats } from "./logoPerf";
@@ -840,6 +841,9 @@ const SPIN: [seconds: number, radians: number][] = [
   [95 / 24, -Math.PI * 2],
 ];
 
+/** The side rail's width in CSS px (the notch inset can't be read from here). */
+const RAIL_PX = RAIL_REM * 16;
+
 const SPIN_END = SPIN[SPIN.length - 1][0];
 const WARMUP_FRAMES = 3;
 
@@ -1002,13 +1006,14 @@ function Logo({
     return max - min;
   }, [geometry]);
 
-  // Mirror the static layout: 42vw from 4vw on desktop, centred at up to 80vw on mobile.
+  // Mirror the static layout: 42vw starting 2vw clear of the side rail on desktop (the gutter also
+  // absorbs the glide's overshoot), centred at up to 80vw on mobile.
   const desktop = size.width >= 768;
   const targetWidth = desktop
     ? viewport.width * 0.42
     : Math.min(viewport.width * 0.8, (viewport.width * 640) / size.width);
   const scale = targetWidth / modelWidth;
-  const x = desktop ? -viewport.width / 2 + viewport.width * 0.04 + targetWidth / 2 : 0;
+  const x = desktop ? -viewport.width / 2 + (RAIL_PX + size.width * 0.02) * (viewport.width / size.width) + targetWidth / 2 : 0;
 
   useEffect(() => {
     invalidate();
