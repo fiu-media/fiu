@@ -23,6 +23,8 @@ export type ProjectSlideProps = {
   title: string;
   /** One line under the title: type, year, client. */
   meta: string;
+  /** `data-sanity` value that makes the title clickable in the Presentation tool. */
+  titleAttribute?: string;
   /** What this person did on the project (talent pages only). */
   role?: string;
   image: SlideImage | null;
@@ -60,6 +62,7 @@ export function ProjectSlide({
   label,
   title,
   meta,
+  titleAttribute,
   role,
   image,
   vimeoUrl,
@@ -124,6 +127,14 @@ export function ProjectSlide({
 
         {showLoop && loop && <PreviewLoop src={vimeoEmbedUrl(loop, { background: true })} />}
 
+        {!playing && (
+          // Keeps the white logo, filter pills and counter legible over bright covers.
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 top-0 h-44 bg-gradient-to-b from-black/45 to-transparent"
+          />
+        )}
+
         {playing && video ? (
           <iframe
             ref={player}
@@ -136,7 +147,9 @@ export function ProjectSlide({
         ) : (
           <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 bg-gradient-to-t from-black/75 via-black/30 to-transparent px-5 pt-32 pb-[max(1.5rem,env(safe-area-inset-bottom))] md:px-10 md:pb-10">
             <div className="min-w-0">
-              <h2 className="font-display text-4xl text-balance italic md:text-7xl">{title}</h2>
+              <h2 data-sanity={titleAttribute} className="font-display text-4xl text-balance italic md:text-7xl">
+                {title}
+              </h2>
               <p className="mt-1 text-sm text-white/80 md:text-base">{meta}</p>
               {role && <p className="mt-1 text-sm text-white/65">{role}</p>}
             </div>
