@@ -37,7 +37,7 @@ export async function submitQuote(_previous: FormState, formData: FormData): Pro
   // only accept items that are currently published and available.
   const qtyById = new Map<string, number>();
   for (const { itemId, qty } of data.items) qtyById.set(itemId, Math.min(99, (qtyById.get(itemId) ?? 0) + qty));
-  const found = await writeClient.fetch<{ _id: string; name: string; brand: string | null; maxQuantity: number | null }[]>(AVAILABLE_ITEM_IDS_QUERY, {
+  const found = await writeClient.fetch(AVAILABLE_ITEM_IDS_QUERY, {
     ids: [...qtyById.keys()],
     fallbackLang: defaultLocale,
   });

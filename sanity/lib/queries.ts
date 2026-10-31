@@ -4,11 +4,16 @@ import { defineQuery } from "next-sanity";
 // hasn't been translated yet falls back to its default-language counterpart instead of vanishing.
 // New queries (projects, talent, ...) should follow the same pattern.
 
-/** Documents of `type` in `$lang`, plus default-language ones with no translation (matched by slug). */
-const withFallback = (type: string, extra = "") => `(
+/**
+ * Documents of `type` in `$lang`, plus default-language ones with no translation (matched by slug).
+ * `extra` adds filter terms (pass `""` for none). The helpers in this file are generic and use literal
+ * arguments so TypeGen can evaluate each query and TypeScript keeps its exact string type.
+ */
+const withFallback = <const T extends string, const E extends string>(type: T, extra: E) =>
+  `(
     *[_type == "${type}" && language == $lang${extra}]
     + *[_type == "${type}" && language == $fallbackLang${extra} && !(slug.current in *[_type == "${type}" && language == $lang${extra}].slug.current)]
-  )`;
+  )` as const;
 
 /** The default-language document a translation was made from (they share a slug). Use inside a projection. */
 const DEFAULT_COUNTERPART = `*[_type == ^._type && language == $fallbackLang && slug.current == ^.slug.current][0]`;
@@ -24,10 +29,17 @@ const RENTAL_AVAILABLE = ` && !(slug.current in *[_type == "rentalItem" && langu
  * language's order (matched by slug); a document with no default-language counterpart uses its own
  * rank. Unranked documents tie, so `tiebreak` (a field name) keeps their order stable.
  */
-const byRank = (tiebreak: string) => `[]{
+const byRank = <const T extends string>(tiebreak: T) =>
+  `[]{
     ...,
     "rank": coalesce(${DEFAULT_COUNTERPART}.orderRank, orderRank)
-  } | order(rank asc, ${tiebreak} asc)`;
+  } | order(rank asc, ${tiebreak} asc)` as const;
+
+/** Available rental items in `$lang`, plus default-language ones with no translation. Written out (not `withFallback`) so TypeGen can resolve it. */
+const RENTAL_ITEMS = `(
+    *[_type == "rentalItem" && language == $lang${RENTAL_AVAILABLE}]
+    + *[_type == "rentalItem" && language == $fallbackLang${RENTAL_AVAILABLE} && !(slug.current in *[_type == "rentalItem" && language == $lang${RENTAL_AVAILABLE}].slug.current)]
+  )`;
 
 export const HOME_STILLS_QUERY = defineQuery(`
   coalesce(
@@ -69,12 +81,12 @@ const RENTAL_ITEM_FIELDS = `
 `;
 
 export const RENTALS_QUERY = defineQuery(`{
-  "categories": ${withFallback("rentalCategory")}${byRank("title")}{
+  "categories": ${withFallback("rentalCategory", "")}${byRank("title")}{
     _id,
     title,
     "slug": slug.current
   },
-  "items": ${withFallback("rentalItem", RENTAL_AVAILABLE)}${byRank("name")}{
+  "items": ${RENTAL_ITEMS}${byRank("name")}{
     ${RENTAL_ITEM_FIELDS}
   }
 }`);
@@ -92,7 +104,7 @@ export const RENTAL_ITEM_QUERY = defineQuery(`
 
 /** Just enough per item to label basket lines, which only store ids and quantities. */
 export const QUOTE_CATALOGUE_QUERY = defineQuery(`
-  ${withFallback("rentalItem", RENTAL_AVAILABLE)}${byRank("name")}{
+  ${RENTAL_ITEMS}${byRank("name")}{
     _id,
     name,
     brand,
@@ -127,18 +139,25 @@ export const AVAILABLE_ITEM_IDS_QUERY = defineQuery(`
 `);
 
 /** Editor-written intro lines for the Rentals, Request a quote, Contact, Our Work and Talent pages, plus each page's Fiú line. */
-const PAGE_TEXT_FIELDS = ["rentalsIntro", "quoteIntro", "contactIntro", "workIntro", "talentIntro", "aboutTagline", "workTagline", "talentTagline", "rentalsTagline", "contactTagline"];
-
 export const PAGE_TEXT_QUERY = defineQuery(`{
-  "cur": *[_type == "siteSettings" && language == $lang][0]{ ${PAGE_TEXT_FIELDS.join(", ")} },
-  "fb": *[_type == "siteSettings" && language == $fallbackLang][0]{ ${PAGE_TEXT_FIELDS.join(", ")} }
+  "cur": *[_type == "siteSettings" && language == $lang][0]{ rentalsIntro, quoteIntro, contactIntro, workIntro, talentIntro, aboutTagline, workTagline, talentTagline, rentalsTagline, contactTagline },
+  "fb": *[_type == "siteSettings" && language == $fallbackLang][0]{ rentalsIntro, quoteIntro, contactIntro, workIntro, talentIntro, aboutTagline, workTagline, talentTagline, rentalsTagline, contactTagline }
 }{
-  ${PAGE_TEXT_FIELDS.map((f) => `"${f}": coalesce(cur.${f}, fb.${f})`).join(",\n  ")}
+  "rentalsIntro": coalesce(cur.rentalsIntro, fb.rentalsIntro),
+  "quoteIntro": coalesce(cur.quoteIntro, fb.quoteIntro),
+  "contactIntro": coalesce(cur.contactIntro, fb.contactIntro),
+  "workIntro": coalesce(cur.workIntro, fb.workIntro),
+  "talentIntro": coalesce(cur.talentIntro, fb.talentIntro),
+  "aboutTagline": coalesce(cur.aboutTagline, fb.aboutTagline),
+  "workTagline": coalesce(cur.workTagline, fb.workTagline),
+  "talentTagline": coalesce(cur.talentTagline, fb.talentTagline),
+  "rentalsTagline": coalesce(cur.rentalsTagline, fb.rentalsTagline),
+  "contactTagline": coalesce(cur.contactTagline, fb.contactTagline)
 }`);
 
 /** The title of a role or project type in `$lang`; those references always point at the default-language document. */
-const translatedTitle = (type: string) =>
-  `coalesce(*[_type == "${type}" && language == $lang && slug.current == ^.slug.current][0].title, title)`;
+const translatedTitle = <const T extends string>(type: T) =>
+  `coalesce(*[_type == "${type}" && language == $lang && slug.current == ^.slug.current][0].title, title)` as const;
 
 const IMAGE_FIELDS = `alt, asset, crop, hotspot, "lqip": asset->metadata.lqip, "dimensions": asset->metadata.dimensions`;
 
@@ -148,11 +167,11 @@ const TALENT_CARD_FIELDS = `
   "slug": slug.current,
   "roles": roles[]->{ "title": ${translatedTitle("role")} }.title,
   "portrait": select(defined(portrait.asset) => portrait, ${DEFAULT_COUNTERPART}.portrait){ ${IMAGE_FIELDS} }
-`;
+` as const;
 
 /** The Talent index: the roster in the editors' drag-and-drop order. */
 export const TALENT_QUERY = defineQuery(`
-  ${withFallback("talent")}${byRank("name")}{
+  ${withFallback("talent", "")}${byRank("name")}{
     ${TALENT_CARD_FIELDS}
   }
 `);
@@ -181,7 +200,7 @@ const PROJECT_SLIDE_FIELDS = `
     "vimeoUrl": coalesce(vimeoUrl, ${DEFAULT_COUNTERPART}.vimeoUrl),
     "previewLoopUrl": coalesce(previewLoopUrl, ${DEFAULT_COUNTERPART}.previewLoopUrl),
     "cover": select(defined(coverStill.asset) => coverStill, ${DEFAULT_COUNTERPART}.coverStill){ ${IMAGE_FIELDS} }
-`;
+` as const;
 
 /** The projects a person is credited on, in the editors' drag-and-drop order, with what they did on each. */
 export const TALENT_PROJECTS_QUERY = defineQuery(`
@@ -193,11 +212,11 @@ export const TALENT_PROJECTS_QUERY = defineQuery(`
 
 /** Our Work: every project in the editors' drag-and-drop order, and the types that filter them. */
 export const WORK_QUERY = defineQuery(`{
-  "types": ${withFallback("projectType")}${byRank("title")}{
+  "types": ${withFallback("projectType", "")}${byRank("title")}{
     "slug": slug.current,
     "title": coalesce(pluralTitle, title)
   },
-  "projects": ${withFallback("project")}${byRank("title")}{
+  "projects": ${withFallback("project", "")}${byRank("title")}{
     ${PROJECT_SLIDE_FIELDS}
   }
 }`);

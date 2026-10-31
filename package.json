@@ -3,10 +3,16 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "setup": "npm install && vercel link --yes && vercel env pull --yes && npm run typegen",
+    "predev": "npm run typegen",
     "dev": "NODE_OPTIONS=--no-experimental-webstorage next dev",
+    "prebuild": "npm run typegen",
     "build": "next build",
     "start": "next start",
     "lint": "eslint . --max-warnings=0",
+    "typegen": "sanity schema extract --enforce-required-fields --force --path=sanity/extract.json && sanity typegen generate",
+    "pretypecheck": "npm run typegen",
+    "typecheck": "next typegen && tsc --noEmit",
     "seed": "tsx --env-file=.env.local scripts/seed.ts",
     "sync:dev": "tsx --env-file=.env.local scripts/sync-dev.ts",
     "prepare": "husky"

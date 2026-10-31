@@ -12,7 +12,7 @@ import { getDictionary } from "@/lib/i18n/dictionaries";
 import { format } from "@/lib/i18n/format";
 import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
 import { getPageText } from "@/sanity/lib/pageText";
-import { projectAttribute, type WorkResult } from "@/sanity/lib/projects";
+import { projectAttribute } from "@/sanity/lib/projects";
 import { WORK_QUERY } from "@/sanity/lib/queries";
 import { toSizedImage } from "@/sanity/lib/rentals";
 
@@ -59,7 +59,7 @@ async function getWork(lang: Locale, searchParams: PageProps<"/[lang]/work">["se
     variant,
     stega: false,
   });
-  const { types, projects } = (data ?? { types: [], projects: [] }) as WorkResult;
+  const { types, projects } = data;
 
   // Only offer types that have projects; an unknown ?type= falls back to everything.
   const usable = types.filter((t) => projects.some((p) => p.typeSlug === t.slug));

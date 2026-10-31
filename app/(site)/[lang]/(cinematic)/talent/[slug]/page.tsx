@@ -14,7 +14,7 @@ import { format } from "@/lib/i18n/format";
 import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
 import { TALENT_PROFILE_QUERY, TALENT_PROJECTS_QUERY } from "@/sanity/lib/queries";
 import { publishedId, toSizedImage } from "@/sanity/lib/rentals";
-import { talentAttribute, type TalentProfile, type TalentProject } from "@/sanity/lib/talent";
+import { talentAttribute } from "@/sanity/lib/talent";
 
 async function getProfile(lang: Locale, slug: string) {
   const { perspective, variant } = await getDynamicFetchOptions();
@@ -25,7 +25,7 @@ async function getProfile(lang: Locale, slug: string) {
     variant,
     stega: false,
   });
-  return (data as TalentProfile | null) ?? null;
+  return data;
 }
 
 async function getProjects(lang: Locale, talentId: string) {
@@ -37,7 +37,7 @@ async function getProjects(lang: Locale, talentId: string) {
     variant,
     stega: false,
   });
-  return (data ?? []) as TalentProject[];
+  return data;
 }
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/talent/[slug]">): Promise<Metadata> {

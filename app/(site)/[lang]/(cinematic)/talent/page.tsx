@@ -10,7 +10,6 @@ import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
 import { getPageText } from "@/sanity/lib/pageText";
 import { TALENT_QUERY } from "@/sanity/lib/queries";
 import { toSizedImage } from "@/sanity/lib/rentals";
-import type { TalentCard } from "@/sanity/lib/talent";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/talent">): Promise<Metadata> {
   const { lang } = await params;
@@ -47,7 +46,7 @@ async function Roster({ lang }: { lang: Locale }) {
     variant,
     stega: false,
   });
-  const people = (data ?? []) as TalentCard[];
+  const people = data;
   if (people.length === 0) return <p className="text-fg-muted">{talent.empty}</p>;
 
   const items: IndexItem[] = people.map((person) => ({

@@ -18,7 +18,6 @@ import { fallbackStills } from "@/lib/fallback-stills";
 import { defaultLocale, isLocale, localizedPath, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { cachedSanity } from "@/sanity/lib/live";
-import type { AboutSettings } from "@/sanity/lib/about";
 import { ABOUT_QUERY } from "@/sanity/lib/queries";
 import { toSizedImage } from "@/sanity/lib/rentals";
 
@@ -83,7 +82,7 @@ async function Options({
   const [dict, settings] = await Promise.all([getDictionary(lang), getSettings(lang)]);
 
   const fallback = fallbackStills[0];
-  const still = (settings?.still ? toSizedImage(settings.still, 2400) : null) ?? {
+  const still = (settings.still ? toSizedImage(settings.still, 2400) : null) ?? {
     src: fallback.src,
     width: fallback.width,
     height: fallback.height,
@@ -93,14 +92,14 @@ async function Options({
   const Layout = layouts[option];
   const props = {
     still,
-    slogan: settings?.slogan ?? null,
-    gloss: settings?.sloganGloss ?? null,
+    slogan: settings.slogan ?? null,
+    gloss: settings.sloganGloss ?? null,
     manifesto: sampleManifesto,
     // Sample links until the editors have set the real ones.
     contacts: (
       <AboutContacts
-        email={settings?.contactEmail ?? "hello@example.com"}
-        instagram={settings?.instagram ?? "https://www.instagram.com/example/"}
+        email={settings.contactEmail ?? "hello@example.com"}
+        instagram={settings.instagram ?? "https://www.instagram.com/example/"}
         labels={{ email: dict.about.emailLabel, instagram: dict.about.instagramLabel }}
       />
     ),
@@ -142,5 +141,5 @@ async function getSettings(lang: Locale) {
     perspective: "published",
     stega: false,
   });
-  return data as AboutSettings;
+  return data;
 }

@@ -1,4 +1,5 @@
 import { createDataAttribute } from "next-sanity";
+import type { HOME_STILLS_QUERY_RESULT } from "@/sanity.types";
 import { urlFor } from "./image";
 
 export type HeroStill = {
@@ -15,36 +16,23 @@ export type HeroStill = {
   dataSanity?: string;
 };
 
-type Source = Parameters<typeof urlFor>[0];
-
-export type SanityStill = {
-  _key: string;
-  alt: string | null;
-  lightTint?: string | null;
-  asset: unknown;
-  crop?: { top: number; bottom: number; left: number; right: number } | null;
-  hotspot?: { x: number; y: number } | null;
-  lqip: string | null;
-  dimensions: { width: number; height: number } | null;
-};
-
-/** Result shape of HOME_STILLS_QUERY (hand-written until we adopt typegen). */
-export type HomeStillsResult = { _id: string; stills: SanityStill[] | null } | null;
+/** One still of the home query. */
+export type HomeStill = NonNullable<NonNullable<HOME_STILLS_QUERY_RESULT>["stills"]>[number];
 
 const HERO_WIDTH = 2400;
 
 /** Turn a queried Sanity image into the shape the hero and the WebGL scene both consume. */
-export function toHeroStill(documentId: string, still: SanityStill): HeroStill | null {
-  if (!still.dimensions) return null;
-  const { crop } = still;
+export function toHeroStill(documentId: string, still: HomeStill): HeroStill | null {
+  const { asset, crop, dimensions, hotspot } = still;
+  if (!dimensions?.width || !dimensions.height) return null;
   // Sanity applies the crop on its CDN, so the output aspect ratio is the cropped one.
-  const cropW = crop ? 1 - crop.left - crop.right : 1;
-  const cropH = crop ? 1 - crop.top - crop.bottom : 1;
-  const aspect = (still.dimensions.width * cropW) / (still.dimensions.height * cropH);
-  const width = Math.min(HERO_WIDTH, Math.round(still.dimensions.width * cropW));
+  const cropW = crop ? 1 - (crop.left ?? 0) - (crop.right ?? 0) : 1;
+  const cropH = crop ? 1 - (crop.top ?? 0) - (crop.bottom ?? 0) : 1;
+  const aspect = (dimensions.width * cropW) / (dimensions.height * cropH);
+  const width = Math.min(HERO_WIDTH, Math.round(dimensions.width * cropW));
 
   return {
-    src: urlFor(still as unknown as Source)
+    src: urlFor({ asset, crop: crop ?? undefined, hotspot: hotspot ?? undefined })
       .width(width)
       .auto("format")
       .url(),
@@ -59,6 +47,6 @@ export function toHeroStill(documentId: string, still: SanityStill): HeroStill |
       path: `homeStills[_key=="${still._key}"]`,
       baseUrl: "/studio",
     }).toString(),
-    position: still.hotspot ? `${still.hotspot.x * 100}% ${still.hotspot.y * 100}%` : undefined,
+    position: hotspot ? `${(hotspot.x ?? 0.5) * 100}% ${(hotspot.y ?? 0.5) * 100}%` : undefined,
   };
 }

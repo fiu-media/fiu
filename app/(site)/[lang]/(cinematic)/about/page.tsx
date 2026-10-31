@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { fallbackStills } from "@/lib/fallback-stills";
 import { defaultLocale, isLocale, languageAlternates, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
-import { settingsAttribute, type AboutSettings } from "@/sanity/lib/about";
+import { settingsAttribute } from "@/sanity/lib/about";
 import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
 import { ABOUT_QUERY } from "@/sanity/lib/queries";
 import { publishedId, toSizedImage } from "@/sanity/lib/rentals";
@@ -43,28 +43,28 @@ async function About({ lang }: { lang: Locale }) {
     variant,
     stega: false,
   });
-  const settings = data as AboutSettings;
+  const settings = data;
 
   const fallback = fallbackStills[0];
-  const still = (settings?.still ? toSizedImage(settings.still, 2400) : null) ?? {
+  const still = (settings.still ? toSizedImage(settings.still, 2400) : null) ?? {
     src: fallback.src,
     width: fallback.width,
     height: fallback.height,
     alt: fallback.alt,
     blurDataURL: fallback.blurDataURL,
   };
-  const id = settings ? publishedId(settings._id) : null;
+  const id = settings._id ? publishedId(settings._id) : null;
 
   return (
     <AboutLayoutA
       still={still}
-      slogan={settings?.slogan ?? dict.about.title}
-      gloss={settings?.sloganGloss ?? null}
-      manifesto={settings?.manifesto?.length ? <PortableText value={settings.manifesto} /> : null}
+      slogan={settings.slogan ?? dict.about.title}
+      gloss={settings.sloganGloss ?? null}
+      manifesto={settings.manifesto?.length ? <PortableText value={settings.manifesto} /> : null}
       contacts={
         <AboutContacts
-          email={settings?.contactEmail ?? null}
-          instagram={settings?.instagram ?? null}
+          email={settings.contactEmail ?? null}
+          instagram={settings.instagram ?? null}
           labels={{ email: dict.about.emailLabel, instagram: dict.about.instagramLabel }}
         />
       }
