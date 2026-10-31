@@ -19,9 +19,11 @@ import { SPLASH_FADE_MS } from "@/components/home/splash-config";
 import { RAIL_REM } from "@/components/nav/rail";
 import { buildLogoGeometry, type LogoMeshMode, type LogoPaths } from "./buildLogoGeometry";
 import { LOGO_PARAM_PRESETS, type LogoGlassParams, type LogoRimLook } from "./logoConfig";
+import { MOVE_RANGE, ROTATE_RANGE, sweepAt, type LightSweep } from "./lightSweep";
 import type { LogoPerfStats } from "./logoPerf";
 
 export type { LogoMeshMode };
+export type { LightSweep } from "./lightSweep";
 export type { LogoRimLook, LogoGlassParams } from "./logoConfig";
 export type { LogoPerfStats } from "./logoPerf";
 
@@ -75,6 +77,7 @@ export default function LogoScene({
   params: paramsProp,
   measurePerf = false,
   onPerf,
+  sweep,
   introSlide = false,
   introHold = false,
   splashLift,
@@ -106,6 +109,8 @@ export default function LogoScene({
   /** Continuous frameloop + FPS sampling (playground only). */
   measurePerf?: boolean;
   onPerf?: (stats: LogoPerfStats) => void;
+  /** Slowly sweeps the studio light (the /dev/moving-light experiment). Off when undefined. */
+  sweep?: LightSweep;
 }) {
   const params = paramsProp ?? LOGO_PARAM_PRESETS[rimLook];
   const dpr = useCanvasDpr(measurePerf);
@@ -146,6 +151,7 @@ export default function LogoScene({
         meshMode={meshMode}
         params={params}
         envAlways={measurePerf}
+        sweep={sweep}
         adaptiveQuality={!measurePerf}
         introSlide={introSlide}
         introHold={introHold}
@@ -252,6 +258,7 @@ function Scene({
   meshMode,
   params,
   envAlways,
+  sweep,
   adaptiveQuality,
   introSlide,
   introHold,
@@ -266,6 +273,7 @@ function Scene({
   params: LogoGlassParams;
   /** Playground: keep cubemap live while measuring / scrubbing. */
   envAlways: boolean;
+  sweep: LightSweep | undefined;
   adaptiveQuality: boolean;
   introSlide: boolean;
   introHold: boolean;
@@ -321,6 +329,10 @@ function Scene({
     [stills, firstSrc, first, rest],
   );
   const { keepAwake, awakeRef } = useKeepAwake();
+  const sweepGroup = useRef<THREE.Group>(null);
+  const sweepLive = useRef(false);
+  // Handed to <Environment> so its own effect re-applies the current rotation instead of resetting it.
+  const [envRotation] = useState(() => new THREE.Euler());
   const fade = useRef<Fade>({ from: index, to: index, start: 0 });
   const tint = useRef(NEUTRAL_TINT.clone());
   // Logo orientation — spark lights lag behind this so highlights crawl on spin.
@@ -380,8 +392,20 @@ function Scene({
       />
       {/* Disable still layer after MTM's FBO capture so the main/bloom pass is logo-only. */}
       <BackdropLayerGate phase="afterTransmission" />
-      {/* Env cubemap re-bakes only while awake (crossfade / drag / intro); idle uses a frozen map. */}
-      <Studio tint={tint} logoPose={logoPose} params={params} fade={fade} awakeRef={awakeRef} envAlways={envAlways} />
+      {/* Mounted before Studio so the light is placed before the cubemap bakes in the same frame. */}
+      <SweepDriver sweep={sweep} groupRef={sweepGroup} liveRef={sweepLive} envRotation={envRotation} />
+      {/* Env cubemap re-bakes only while awake (crossfade / drag / intro / a moving sweep); idle uses a frozen map. */}
+      <Studio
+        tint={tint}
+        logoPose={logoPose}
+        params={params}
+        fade={fade}
+        awakeRef={awakeRef}
+        sweepLive={sweepLive}
+        sweepGroup={sweepGroup}
+        envRotation={envRotation}
+        envAlways={envAlways}
+      />
       {/* External sparkle: lagged point lights (env SoftLights do the glass streaks).
           Full-scene bloom is skipped — it was tonemapping/blooming the stills too. */}
       <SparkLights logoPose={logoPose} lights={params.lights.points} />
@@ -478,6 +502,7 @@ function useKeepAwake() {
 function useEnvFrames(
   fade: RefObject<Fade>,
   awakeRef: MutableRefObject<boolean>,
+  sweepLive: MutableRefObject<boolean>,
   envAlways: boolean,
 ) {
   const [frames, setFrames] = useState<number>(Infinity);
@@ -485,7 +510,7 @@ function useEnvFrames(
   useFrame(() => {
     const f = fade.current;
     const fading = Boolean(f?.start) && performance.now() - f.start < CROSSFADE_SECONDS * 1000;
-    const live = envAlways || awakeRef.current || fading;
+    const live = envAlways || awakeRef.current || sweepLive.current || fading;
     if (live === liveRef.current) return;
     liveRef.current = live;
     setFrames(live ? Infinity : 1);
@@ -696,6 +721,87 @@ function useFeatherMap() {
   }, []);
 }
 
+/** The sweep redraws at this rate, not every display frame: the glare is slow, and each frame costs a cubemap bake. */
+const SWEEP_FRAME_MS = 1000 / 30;
+
+/**
+ * Moves the studio light along the sweep and keeps the demand loop alive only while it is visibly
+ * moving. It stands down (no frames at all) when the sweep is paused or off, the tab is hidden, the
+ * canvas is scrolled out of view, or the user prefers reduced motion; in the last case the light
+ * rests at its centre. Without a sweep it does nothing, so the live hero is unaffected.
+ */
+function SweepDriver({
+  sweep,
+  groupRef,
+  liveRef,
+  envRotation,
+}: {
+  sweep: LightSweep | undefined;
+  groupRef: RefObject<THREE.Group | null>;
+  liveRef: MutableRefObject<boolean>;
+  envRotation: THREE.Euler;
+}) {
+  const gl = useThree((s) => s.gl);
+  const scene = useThree((s) => s.scene);
+  const invalidate = useThree((s) => s.invalidate);
+  const sweepRef = useRef(sweep);
+  const inView = useRef(true);
+  const reduced = useRef(false);
+  const timer = useRef<number | undefined>(undefined);
+
+  useEffect(() => {
+    sweepRef.current = sweep;
+    invalidate();
+  }, [sweep, invalidate]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(([entry]) => {
+      inView.current = entry.isIntersecting;
+      invalidate();
+    });
+    observer.observe(gl.domElement);
+    const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const onMotion = () => {
+      reduced.current = motion.matches;
+      invalidate();
+    };
+    onMotion();
+    motion.addEventListener("change", onMotion);
+    document.addEventListener("visibilitychange", onMotion);
+    return () => {
+      observer.disconnect();
+      motion.removeEventListener("change", onMotion);
+      document.removeEventListener("visibilitychange", onMotion);
+      window.clearTimeout(timer.current);
+    };
+  }, [gl, invalidate]);
+
+  useFrame(() => {
+    const s = sweepRef.current;
+    const running = Boolean(s) && s!.pausedAt === null && !reduced.current && inView.current && !document.hidden;
+    const o = s && !reduced.current ? sweepAt(s, performance.now()) : { x: 0, y: 0 };
+    liveRef.current = running && s!.technique === "move";
+
+    const g = groupRef.current;
+    if (g) g.position.set(s?.technique === "move" ? o.x * MOVE_RANGE : 0, s?.technique === "move" ? o.y * MOVE_RANGE : 0, 0);
+    // Turning the frozen cubemap about Y slides the glare along X, about X along Y.
+    if (s?.technique === "rotate") envRotation.set(-o.y * ROTATE_RANGE, o.x * ROTATE_RANGE, 0);
+    else envRotation.set(0, 0, 0);
+    // <Environment> copies its `environmentRotation` into the scene only when it re-renders, so the
+    // scene gets the live value directly (envRotation is what it re-applies, so they never disagree).
+    scene.environmentRotation.copy(envRotation);
+
+    if (running && timer.current === undefined) {
+      timer.current = window.setTimeout(() => {
+        timer.current = undefined;
+        invalidate();
+      }, SWEEP_FRAME_MS);
+    }
+  });
+
+  return null;
+}
+
 /**
  * Dual-key front studio: large feathered softboxes (upper-left key + lower-right fill),
  * still-tinted, plus lagged white streak lights for sparkle lines inside the glass.
@@ -706,6 +812,9 @@ function Studio({
   params,
   fade,
   awakeRef,
+  sweepLive,
+  sweepGroup,
+  envRotation,
   envAlways,
 }: {
   tint: MutableRefObject<THREE.Color>;
@@ -713,11 +822,14 @@ function Studio({
   params: LogoGlassParams;
   fade: RefObject<Fade>;
   awakeRef: MutableRefObject<boolean>;
+  sweepLive: MutableRefObject<boolean>;
+  sweepGroup: RefObject<THREE.Group | null>;
+  envRotation: THREE.Euler;
   envAlways: boolean;
 }) {
   const follow = useRef<THREE.Group>(null);
   const feather = useFeatherMap();
-  const frames = useEnvFrames(fade, awakeRef, envAlways);
+  const frames = useEnvFrames(fade, awakeRef, sweepLive, envAlways);
   const soft = params.lights.soft.filter((l) => l.enabled);
   const fixed = soft.filter((l) => !l.followPose);
   const moving = soft.filter((l) => l.followPose);
@@ -728,23 +840,9 @@ function Studio({
     g.rotation.y = THREE.MathUtils.damp(g.rotation.y, logoPose.current.y, SPARK_FOLLOW, delta);
   });
   return (
-    <Environment resolution={256} frames={frames}>
-      {fixed.map((l) => (
-        <SoftLight
-          key={l.id}
-          tint={tint}
-          mixWhite={l.mixWhite}
-          intensity={l.intensity}
-          lift={l.lift}
-          position={[l.x, l.y, l.z]}
-          scale={[l.scaleX, l.scaleY, l.scaleZ]}
-          streak={l.kind === "streak"}
-          roll={l.roll}
-          feather={l.feather ? feather : undefined}
-        />
-      ))}
-      <group ref={follow}>
-        {moving.map((l) => (
+    <Environment resolution={256} frames={frames} environmentRotation={envRotation}>
+      <group ref={sweepGroup}>
+        {fixed.map((l) => (
           <SoftLight
             key={l.id}
             tint={tint}
@@ -758,6 +856,22 @@ function Studio({
             feather={l.feather ? feather : undefined}
           />
         ))}
+        <group ref={follow}>
+          {moving.map((l) => (
+            <SoftLight
+              key={l.id}
+              tint={tint}
+              mixWhite={l.mixWhite}
+              intensity={l.intensity}
+              lift={l.lift}
+              position={[l.x, l.y, l.z]}
+              scale={[l.scaleX, l.scaleY, l.scaleZ]}
+              streak={l.kind === "streak"}
+              roll={l.roll}
+              feather={l.feather ? feather : undefined}
+            />
+          ))}
+        </group>
       </group>
     </Environment>
   );

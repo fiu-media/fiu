@@ -9,6 +9,7 @@ import {
   useMemo,
   useState,
   useSyncExternalStore,
+  type CSSProperties,
   type ReactNode,
 } from "react";
 import type { LogoMeshMode } from "@/components/three/buildLogoGeometry";
@@ -31,11 +32,13 @@ import {
   type LogoRimLook,
   type LogoSoftLightConfig,
 } from "@/components/three/logoConfig";
+import type { SweepAxis, SweepTechnique } from "@/components/three/lightSweep";
 import { diffConfigs } from "@/components/three/logoDiff";
 import { costVsPreset, type LogoPerfStats } from "@/components/three/logoPerf";
 import { GlassPillButton } from "@/components/ui/Glass";
 import logo from "@/public/brand/fiu-logo.svg";
 import { LogoDiffView } from "./LogoDiffView";
+import { useSweepState, type SweepMode } from "./useSweepState";
 
 const LogoScene = dynamic(() => import("@/components/three/LogoScene"), { ssr: false });
 
@@ -121,6 +124,24 @@ const INTERACTION_SLIDERS: SliderDef[] = [
   { key: "dragSpringPitchDamp", label: "Pitch return damp", min: 1, max: 16, step: 0.1 },
 ];
 
+const SWEEP_MODES: { value: SweepMode; label: string }[] = [
+  { value: "off", label: "Off" },
+  { value: "webgl", label: "WebGL" },
+  { value: "css", label: "CSS" },
+  { value: "both", label: "Both" },
+];
+
+const SWEEP_AXES: { value: SweepAxis; label: string }[] = [
+  { value: "x", label: "X" },
+  { value: "y", label: "Y" },
+  { value: "orbit", label: "Orbit" },
+];
+
+const SWEEP_TECHNIQUES: { value: SweepTechnique; label: string; note: string }[] = [
+  { value: "move", label: "Move lights", note: "Shifts the env lights and re-bakes the cubemap each frame." },
+  { value: "rotate", label: "Rotate env", note: "Turns the baked cubemap, with no re-bake." },
+];
+
 const EXTRUDE_SLIDERS = [
   { key: "depth" as const, label: "Extrude depth", min: 0.05, max: 0.5, step: 0.01 },
   { key: "bevelThickness" as const, label: "Bevel thickness", min: 0.02, max: 0.25, step: 0.005 },
@@ -154,6 +175,7 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
   const [importText, setImportText] = useState("");
   const [importStatus, setImportStatus] = useState<string | null>(null);
   const tab = useConfigTab();
+  const { stageRef: sweepStageRef, ...sweep } = useSweepState();
 
   const cost = useMemo(() => costVsPreset(config.params, config.rimLook), [config.params, config.rimLook]);
 
@@ -359,13 +381,27 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
               rimLook={config.rimLook}
               params={config.params}
               measurePerf
+              sweep={sweep.sweep}
               onPerf={setPerf}
             />
           </div>
         </SceneBoundary>
       )}
 
-      <header className="absolute top-0 right-0 left-0 z-30 flex items-center justify-between gap-3 p-4">
+      {/* Carries the CSS light sweep: every glass piece below inherits it. The canvas stays clickable. */}
+      <div
+        ref={sweepStageRef}
+        className="sweep-stage pointer-events-none absolute inset-0"
+        data-sweep-axis={sweep.css ? sweep.state.axis : undefined}
+        data-sweep-paused={sweep.paused ? "" : undefined}
+        style={
+          {
+            "--sweep-period": `${sweep.state.periodSeconds}s`,
+            "--sweep-amp": sweep.state.amplitude,
+          } as CSSProperties
+        }
+      >
+      <header className="pointer-events-auto absolute top-0 right-0 left-0 z-30 flex items-center justify-between gap-3 p-4">
         <div>
           <p className="text-sm font-medium tracking-wide">Fiú · logo playground</p>
           <p className="text-xs text-white/55">/dev/logo-playground · unlisted</p>
@@ -393,7 +429,7 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
       </header>
 
       {panelOpen && (
-        <aside className="absolute top-16 right-3 bottom-3 z-30 flex w-[min(100%-1.5rem,22rem)] flex-col overflow-hidden rounded-2xl border border-white/15 bg-black/55 shadow-2xl backdrop-blur-xl">
+        <aside className="pointer-events-auto absolute top-16 right-3 bottom-3 z-30 flex w-[min(100%-1.5rem,22rem)] flex-col overflow-hidden rounded-2xl border border-white/15 bg-black/55 shadow-2xl backdrop-blur-xl">
           <div className="flex shrink-0 flex-wrap items-center gap-1.5 border-b border-white/10 px-3 py-2.5">
             <div role="tablist" aria-label="Config section" className="flex flex-wrap gap-1.5">
               <GlassPillButton
@@ -740,6 +776,81 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
 
             {tab === "lighting" && (
               <>
+                <Section title="Moving light">
+                  <p className="mb-2 text-[11px] leading-snug text-white/55">
+                    Slowly sweeps a light across the scene (issue #51). Not part of the exported config.
+                  </p>
+                  <PillRow>
+                    {SWEEP_MODES.map((m) => (
+                      <GlassPillButton
+                        key={m.value}
+                        size="sm"
+                        onImage
+                        aria-pressed={sweep.state.mode === m.value}
+                        onClick={() => sweep.patch({ mode: m.value })}
+                      >
+                        {m.label}
+                      </GlassPillButton>
+                    ))}
+                  </PillRow>
+                  {sweep.state.mode !== "off" && (
+                    <div className="mt-3 space-y-3">
+                      <PillRow>
+                        {SWEEP_AXES.map((a) => (
+                          <GlassPillButton
+                            key={a.value}
+                            size="sm"
+                            onImage
+                            aria-pressed={sweep.state.axis === a.value}
+                            onClick={() => sweep.patch({ axis: a.value })}
+                          >
+                            {a.label}
+                          </GlassPillButton>
+                        ))}
+                        <GlassPillButton size="sm" onImage aria-pressed={sweep.paused} onClick={sweep.togglePause}>
+                          {sweep.paused ? "Resume" : "Pause"}
+                        </GlassPillButton>
+                      </PillRow>
+                      {sweep.state.mode !== "css" && (
+                        <div>
+                          <PillRow>
+                            {SWEEP_TECHNIQUES.map((t) => (
+                              <GlassPillButton
+                                key={t.value}
+                                size="sm"
+                                onImage
+                                aria-pressed={sweep.state.technique === t.value}
+                                onClick={() => sweep.patch({ technique: t.value })}
+                              >
+                                {t.label}
+                              </GlassPillButton>
+                            ))}
+                          </PillRow>
+                          <p className="mt-1.5 text-[11px] leading-snug text-white/55">
+                            {SWEEP_TECHNIQUES.find((t) => t.value === sweep.state.technique)?.note}
+                          </p>
+                        </div>
+                      )}
+                      <Slider
+                        label="Period (s)"
+                        min={8}
+                        max={90}
+                        step={1}
+                        value={sweep.state.periodSeconds}
+                        onChange={sweep.setPeriod}
+                      />
+                      <Slider
+                        label="Travel"
+                        min={0.1}
+                        max={1}
+                        step={0.05}
+                        value={sweep.state.amplitude}
+                        onChange={(amplitude) => sweep.patch({ amplitude })}
+                      />
+                    </div>
+                  )}
+                </Section>
+
                 <Section title="Env soft lights">
                   <div className="space-y-2">
                     {config.params.lights.soft.map((light) => (
@@ -790,6 +901,7 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
           </p>
         </aside>
       )}
+      </div>
     </div>
   );
 }

@@ -318,3 +318,115 @@ html:has(dialog[open]) {
     transform: translate3d(10%, 28%, 0) scale(1.05);
   }
 }
+
+/*
+ * Moving-light experiment (#51, the logo playground's Moving light section). A slow band of light
+ * crosses the glass pieces: a faint sheen over the face and a brighter catch along the rim. One
+ * animation on the stage drives --sweep-x / --sweep-y (0..1, 0.5 = centre) and every .glass below
+ * it inherits them. The playground sets the period and amplitude, and aligns the animation's clock
+ * with the WebGL light (see useSweepState).
+ */
+@property --sweep-x {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0.5;
+}
+
+@property --sweep-y {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0.5;
+}
+
+@keyframes sweep-x {
+  to {
+    --sweep-x: 1;
+  }
+}
+
+@keyframes sweep-y {
+  to {
+    --sweep-y: 1;
+  }
+}
+
+@layer components {
+  /* Alternating 0 → 1 over half a period with a sine ease, so it reads as one smooth oscillation. */
+  .sweep-stage[data-sweep-axis="x"] {
+    animation: sweep-x calc(var(--sweep-period) / 2) cubic-bezier(0.37, 0, 0.63, 1) infinite alternate;
+  }
+  .sweep-stage[data-sweep-axis="y"] {
+    animation: sweep-y calc(var(--sweep-period) / 2) cubic-bezier(0.37, 0, 0.63, 1) infinite alternate;
+  }
+  .sweep-stage[data-sweep-axis="orbit"] {
+    animation:
+      sweep-x calc(var(--sweep-period) / 2) cubic-bezier(0.37, 0, 0.63, 1) infinite alternate,
+      sweep-y calc(var(--sweep-period) / 2) cubic-bezier(0.37, 0, 0.63, 1) infinite alternate;
+  }
+  .sweep-stage[data-sweep-paused] {
+    animation-play-state: paused;
+  }
+
+  [data-sweep-axis] .glass {
+    /* Band centre as a share of the piece, pulled toward the middle by the amplitude. */
+    --sx: calc((0.5 + (var(--sweep-x) - 0.5) * var(--sweep-amp)) * 160% - 30%);
+    --sy: calc((0.5 + (var(--sweep-y) - 0.5) * var(--sweep-amp)) * 160% - 30%);
+    --sheen: rgb(255 255 255 / 0.12);
+    --catch: rgb(255 255 255 / 0.85);
+  }
+
+  [data-sweep-axis] .glass,
+  [data-sweep-axis] .glass::before {
+    background-image: linear-gradient(
+      100deg,
+      transparent calc(var(--sx) - 22%),
+      var(--band-color, var(--sheen)) var(--sx),
+      transparent calc(var(--sx) + 22%)
+    );
+  }
+  [data-sweep-axis="y"] .glass,
+  [data-sweep-axis="y"] .glass::before {
+    background-image: linear-gradient(
+      172deg,
+      transparent calc(var(--sy) - 22%),
+      var(--band-color, var(--sheen)) var(--sy),
+      transparent calc(var(--sy) + 22%)
+    );
+  }
+  [data-sweep-axis="orbit"] .glass,
+  [data-sweep-axis="orbit"] .glass::before {
+    background-image: radial-gradient(
+      70% 150% at var(--sx) var(--sy),
+      var(--band-color, var(--sheen)),
+      transparent 70%
+    );
+  }
+
+  /* The rim catch: the same band, masked down to a 2px ring so only the edge lights up. */
+  [data-sweep-axis] .glass::before {
+    --band-color: var(--catch);
+    content: "";
+    position: absolute;
+    inset: 0;
+    padding: 2px;
+    border-radius: inherit;
+    pointer-events: none;
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box exclude,
+      linear-gradient(#000 0 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sweep-stage {
+    animation: none !important;
+  }
+  [data-sweep-axis] .glass {
+    --sx: 50%;
+    --sy: 50%;
+  }
+}
