@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { PageTitle } from "@/components/ui/PageTitle";
 import { Skeleton, SkeletonGroup } from "@/components/ui/Skeleton";
 import { NameIndex, type IndexItem } from "@/components/talent/NameIndex";
 import { defaultLocale, isLocale, languageAlternates, localizedPath, type Locale } from "@/lib/i18n/config";
@@ -25,7 +26,7 @@ export default async function TalentPage({ params }: PageProps<"/[lang]/talent">
   return (
     <main className="mx-auto max-w-6xl px-4 pt-24 pb-32 md:px-6 md:pt-16">
       <header className="mb-10">
-        <h1 className="font-display text-5xl md:text-6xl">{talent.title}</h1>
+        <PageTitle title={talent.title} tagline={text.talentTagline} />
         {text.talentIntro && <p className="mt-4 max-w-2xl text-lg text-fg-muted">{text.talentIntro}</p>}
       </header>
       {/* Reads draft mode, so it streams in behind the static heading. */}

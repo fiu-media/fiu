@@ -126,16 +126,14 @@ export const AVAILABLE_ITEM_IDS_QUERY = defineQuery(`
   }
 `);
 
-/** Editor-written intro lines for the Rentals, Request a quote, Contact, Our Work and Talent pages. */
+/** Editor-written intro lines for the Rentals, Request a quote, Contact, Our Work and Talent pages, plus each page's Fiú line. */
+const PAGE_TEXT_FIELDS = ["rentalsIntro", "quoteIntro", "contactIntro", "workIntro", "talentIntro", "aboutTagline", "workTagline", "talentTagline", "rentalsTagline", "contactTagline"];
+
 export const PAGE_TEXT_QUERY = defineQuery(`{
-  "cur": *[_type == "siteSettings" && language == $lang][0]{ rentalsIntro, quoteIntro, contactIntro, workIntro, talentIntro },
-  "fb": *[_type == "siteSettings" && language == $fallbackLang][0]{ rentalsIntro, quoteIntro, contactIntro, workIntro, talentIntro }
+  "cur": *[_type == "siteSettings" && language == $lang][0]{ ${PAGE_TEXT_FIELDS.join(", ")} },
+  "fb": *[_type == "siteSettings" && language == $fallbackLang][0]{ ${PAGE_TEXT_FIELDS.join(", ")} }
 }{
-  "rentalsIntro": coalesce(cur.rentalsIntro, fb.rentalsIntro),
-  "quoteIntro": coalesce(cur.quoteIntro, fb.quoteIntro),
-  "contactIntro": coalesce(cur.contactIntro, fb.contactIntro),
-  "workIntro": coalesce(cur.workIntro, fb.workIntro),
-  "talentIntro": coalesce(cur.talentIntro, fb.talentIntro)
+  ${PAGE_TEXT_FIELDS.map((f) => `"${f}": coalesce(cur.${f}, fb.${f})`).join(",\n  ")}
 }`);
 
 /** The title of a role or project type in `$lang`; those references always point at the default-language document. */

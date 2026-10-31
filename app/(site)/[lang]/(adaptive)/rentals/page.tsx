@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { CatalogueSkeleton } from "@/components/rentals/RentalSkeletons";
 import { RentalCatalogue, type CatalogueCard } from "@/components/rentals/RentalCatalogue";
+import { PageTitle } from "@/components/ui/PageTitle";
 import { defaultLocale, isLocale, languageAlternates, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
@@ -24,7 +25,7 @@ export default async function RentalsPage({ params }: PageProps<"/[lang]/rentals
   return (
     <main className="mx-auto max-w-6xl px-4 pb-32 md:px-6">
       <header className="mb-10">
-        <h1 className="font-display text-5xl md:text-6xl">{rentals.title}</h1>
+        <PageTitle title={rentals.title} tagline={text.rentalsTagline} />
         {text.rentalsIntro && <p className="mt-4 max-w-2xl text-lg text-fg-muted">{text.rentalsIntro}</p>}
       </header>
       {/* Reads draft mode, so it streams in behind the static heading. */}

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { FullBleedScroll } from "@/components/ui/FullBleedScroll";
 import { GlassPillLink } from "@/components/ui/Glass";
+import { PageTitle } from "@/components/ui/PageTitle";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ProjectSlide } from "@/components/work/ProjectSlide";
 import { SlideProgress } from "@/components/work/SlideProgress";
@@ -33,7 +34,7 @@ export default async function WorkPage({ params, searchParams }: PageProps<"/[la
       {/* snap-start: the page snaps to its slides, and without this it would skip the title. */}
       <header className="snap-start px-4 pt-24 pb-10 md:px-6 md:pt-16 md:pb-12">
         <div className="mx-auto max-w-6xl">
-          <h1 className="font-display text-5xl md:text-6xl">{work.title}</h1>
+          <PageTitle title={work.title} tagline={text.workTagline} />
           {text.workIntro && <p className="mt-4 max-w-2xl text-lg text-fg-muted">{text.workIntro}</p>}
           <Suspense>
             <Filters lang={lang} searchParams={searchParams} />
