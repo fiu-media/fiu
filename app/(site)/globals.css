@@ -286,7 +286,7 @@ html:has(dialog[open]) {
 }
 
 /* The 404's two lights. Each wanders a closed loop, not a line, and they run on different cycle lengths
-   (see NotFoundPage), so their relative positions keep changing instead of repeating every few seconds. */
+   (see NotFoundPage), so they never line up the same way twice. The first and last stops match so the loop is seamless. */
 @keyframes light-drift {
   0%,
   100% {
