@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useRef } from "react";
 import { Field, Honeypot } from "@/components/forms/Field";
-import { FormSkeleton } from "@/components/forms/FormSkeleton";
+import { QuoteFormSkeleton } from "@/components/forms/FormSkeleton";
 import { FormErrorSummary, type SummaryItem } from "@/components/forms/FormErrorSummary";
 import { QuoteLines } from "@/components/rentals/QuoteLines";
 import { GlassPanel, GlassPillButton, GlassPillLink } from "@/components/ui/Glass";
@@ -31,7 +31,7 @@ export function QuoteForm({ lang, dict }: { lang: Locale; dict: QuoteDict }) {
   }, [state.status]);
 
   // The basket only exists in the browser, so until it is read the form would flash "empty".
-  if (!ready) return <FormSkeleton label={dict.common.loading} fields={4} />;
+  if (!ready) return <QuoteFormSkeleton label={dict.common.loading} />;
 
   if (state.status === "success") {
     return (

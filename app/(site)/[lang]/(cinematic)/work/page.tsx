@@ -36,7 +36,7 @@ export default async function WorkPage({ params, searchParams }: PageProps<"/[la
         <div className="mx-auto max-w-6xl">
           <PageTitle title={work.title} tagline={text.workTagline} />
           {text.workIntro && <p className="mt-4 max-w-2xl text-lg text-fg-muted">{text.workIntro}</p>}
-          <Suspense>
+          <Suspense fallback={<FiltersSkeleton />}>
             <Filters lang={lang} searchParams={searchParams} />
           </Suspense>
         </div>
@@ -145,6 +145,17 @@ async function Projects({
         ))}
       </FullBleedScroll>
     </>
+  );
+}
+
+/** Same footprint as the filter pills, so they don't push the page down when they arrive. */
+function FiltersSkeleton() {
+  return (
+    <div aria-hidden className="mt-8 flex flex-wrap gap-2">
+      {["w-14", "w-24", "w-20", "w-28"].map((width, i) => (
+        <Skeleton key={i} className={`h-8 rounded-full ${width}`} />
+      ))}
+    </div>
   );
 }
 
