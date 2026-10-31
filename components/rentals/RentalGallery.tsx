@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type KeyboardEvent } from "react";
+import { useCallback, useRef, useState, type KeyboardEvent } from "react";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { format } from "@/lib/i18n/format";
 import type { RentalImage } from "@/sanity/lib/rentals";
@@ -20,9 +20,28 @@ export function RentalGallery({
   dict: Dictionary["rentals"];
 }) {
   const [index, setIndex] = useState(0);
+  // Which ends of the thumbnail strip have more to scroll to (the scrollbar is hidden, so we fade them instead).
+  const [more, setMore] = useState({ start: false, end: false });
   const thumbs = useRef<(HTMLButtonElement | null)[]>([]);
   const current = images[index] ?? null;
   const many = images.length > 1;
+
+  const measure = useCallback((strip: HTMLElement) => {
+    const start = strip.scrollLeft > 1;
+    const end = strip.scrollLeft + strip.clientWidth < strip.scrollWidth - 1;
+    setMore((prev) => (prev.start === start && prev.end === end ? prev : { start, end }));
+  }, []);
+
+  const stripRef = useCallback(
+    (strip: HTMLUListElement | null) => {
+      if (!strip) return;
+      measure(strip);
+      const observer = new ResizeObserver(() => measure(strip));
+      observer.observe(strip);
+      return () => observer.disconnect();
+    },
+    [measure],
+  );
 
   function select(next: number) {
     const target = (next + images.length) % images.length;
@@ -67,7 +86,12 @@ export function RentalGallery({
         )}
       </div>
       {many && (
-        <ul className="flex gap-3 overflow-x-auto p-1.5 pb-2.5">
+        <ul
+          ref={stripRef}
+          onScroll={(event) => measure(event.currentTarget)}
+          style={{ maskImage: stripFade(more), WebkitMaskImage: stripFade(more) }}
+          className="flex gap-3 overflow-x-auto p-1.5 pb-2.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
           {images.map((image, i) => (
             <li key={image.src} className="shrink-0">
               <button
@@ -94,6 +118,11 @@ export function RentalGallery({
       )}
     </div>
   );
+}
+
+/** Fades the strip's edges where more thumbnails are hidden. */
+function stripFade({ start, end }: { start: boolean; end: boolean }) {
+  return `linear-gradient(to right, ${start ? "transparent" : "#000"} 0, #000 32px, #000 calc(100% - 32px), ${end ? "transparent" : "#000"} 100%)`;
 }
 
 function StepButton({ label, side, onClick }: { label: string; side: "left" | "right"; onClick: () => void }) {
