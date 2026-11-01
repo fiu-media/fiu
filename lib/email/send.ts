@@ -2,6 +2,7 @@ import "server-only";
 import type { ReactElement } from "react";
 import { render } from "@react-email/components";
 import { Resend } from "resend";
+import { env } from "@/env";
 
 const SANDBOX_FROM = "Fiú Media <onboarding@resend.dev>";
 
@@ -26,13 +27,13 @@ type Email = { to: string; subject: string; react: ReactElement; replyTo?: strin
  */
 export async function sendEmail({ to, subject, react, replyTo }: Email) {
   const text = await render(react, plainTextOptions);
-  const key = process.env.RESEND_API_KEY;
+  const key = env.RESEND_API_KEY;
   if (!key) {
     console.warn(`[email] RESEND_API_KEY is not set; skipping "${subject}" to ${to}\n${text}`);
     return;
   }
   const { error } = await new Resend(key).emails.send({
-    from: process.env.EMAIL_FROM || SANDBOX_FROM,
+    from: env.EMAIL_FROM || SANDBOX_FROM,
     to,
     subject,
     react,

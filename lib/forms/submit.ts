@@ -1,6 +1,7 @@
 import "server-only";
 import { checkBotId } from "botid/server";
 import type { z } from "zod";
+import { env } from "@/env";
 import { toErrorCode, type FormState } from "./state";
 
 type Guarded<T> = { ok: true; data: T } | { ok: false; state: FormState };
@@ -36,7 +37,7 @@ export async function guardSubmission<S extends z.ZodType>(
   // E2E_BYPASS_BOTID is set only by the Playwright web server: a production build can't reach BotID
   // without Vercel's OIDC token, so the e2e run treats every visitor as human.
   const verification = await checkBotId(
-    process.env.E2E_BYPASS_BOTID === "1" ? { developmentOptions: { isDevelopment: true } } : undefined,
+    env.E2E_BYPASS_BOTID === "1" ? { developmentOptions: { isDevelopment: true } } : undefined,
   );
   if (verification.isBot) return reject;
   if (typeof raw.website === "string" && raw.website.trim() !== "") return reject;

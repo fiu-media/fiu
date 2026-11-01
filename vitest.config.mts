@@ -13,6 +13,8 @@ export default defineConfig({
   },
   test: {
     environment: "node",
+    // Modules that import @/env validate at load time; the secret-less unit CI job needs these set.
+    env: { NEXT_PUBLIC_SANITY_PROJECT_ID: "test", NEXT_PUBLIC_SANITY_DATASET: "test" },
     include: ["**/*.test.ts"],
     exclude: ["e2e/**", "node_modules/**", ".next/**"],
   },
