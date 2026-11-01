@@ -13,6 +13,8 @@
     "typegen": "sanity schema extract --enforce-required-fields --force --path=sanity/extract.json && sanity typegen generate",
     "pretypecheck": "npm run typegen",
     "typecheck": "next typegen && tsc --noEmit",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
     "seed": "tsx --env-file=.env.local scripts/seed.ts",
     "sync:dev": "tsx --env-file=.env.local scripts/sync-dev.ts",
     "prepare": "husky"
@@ -38,8 +40,10 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
+    "@playwright/test": "^1.64.1",
     "@tailwindcss/turbopack": "^4",
-    "@types/node": "^20",
+    "@types/node": "^26.6.6",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/three": "^0.186.0",
@@ -49,7 +53,8 @@
     "lint-staged": "^17.6.0",
     "tailwindcss": "^4",
     "tsx": "^4.23.15",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^5.0.5"
   },
   "lint-staged": {
     "*.{js,jsx,mjs,ts,tsx}": "eslint --max-warnings=0 --no-warn-ignored"
