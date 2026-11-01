@@ -1,111 +1,41 @@
-import type { LogoMeshMode } from "./buildLogoGeometry";
+import {
+  formatZodError,
+  fullImportSchema,
+  interactionImportSchema,
+  interactionParamsSchema,
+  lightingImportSchema,
+  materialImportSchema,
+  type LogoDisplayMode,
+  type LogoExtrudeOverride,
+  type LogoGlassParams,
+  type LogoInteractionConfigExport,
+  type LogoInteractionParams,
+  type LogoLightingConfigExport,
+  type LogoLightsConfig,
+  type LogoMaterialConfigExport,
+  type LogoMaterialParams,
+  type LogoMeshMode,
+  type LogoPartialGlassParams,
+  type LogoPlaygroundConfig,
+  type LogoPointLightConfig,
+  type LogoRimLook,
+  type LogoSoftLightConfig,
+} from "./logoSchemas";
 
-/** Bevel/rim look: `light` lifts charcoal edges; `dark` keeps liquid-glass ink bands. */
-export type LogoRimLook = "light" | "dark";
-
-/** Playground display: live WebGL glass vs white PNG fallback. */
-export type LogoDisplayMode = "live" | "fallback";
-
-export type LogoExtrudeOverride = {
-  depth: number;
-  bevelThickness: number;
-  bevelSize: number;
-};
-
-/** Env softbox / streak (rendered inside drei Environment). */
-export type LogoSoftLightConfig = {
-  id: string;
-  label: string;
-  enabled: boolean;
-  /** When true, light rides the logo pose (sparkle streaks/cores). */
-  followPose: boolean;
-  kind: "disc" | "streak";
-  /** Feathered falloff (key softboxes). */
-  feather: boolean;
-  x: number;
-  y: number;
-  z: number;
-  /** Uniform scale for discs; streak uses scaleX/scaleY as plane size. */
-  scaleX: number;
-  scaleY: number;
-  scaleZ: number;
-  intensity: number;
-  mixWhite: number;
-  lift: number;
-  /** Radians around look-at axis (streaks). */
-  roll: number;
-};
-
-/** Scene point lights (specular fill outside the env map). */
-export type LogoPointLightConfig = {
-  id: string;
-  label: string;
-  enabled: boolean;
-  followPose: boolean;
-  x: number;
-  y: number;
-  z: number;
-  intensity: number;
-  distance: number;
-  decay: number;
-  color: string;
-};
-
-export type LogoLightsConfig = {
-  soft: LogoSoftLightConfig[];
-  points: LogoPointLightConfig[];
-};
-
-/** Tunable glass / studio / glow params (what the playground edits). */
-export type LogoGlassParams = {
-  backsideThickness: number;
-  thickness: number;
-  ior: number;
-  chromaticAberration: number;
-  anisotropicBlur: number;
-  distortion: number;
-  distortionScale: number;
-  roughness: number;
-  clearcoat: number;
-  clearcoatRoughness: number;
-  specularIntensity: number;
-  envMapIntensity: number;
-  backsideEnvMapIntensity: number;
-  attenuationDistance: number;
-  samples: number;
-  glowSat: number;
-  glowLift: number;
-  glowLMin: number;
-  glowLMax: number;
-  /** When set, overrides paths JSON extrude depth/bevel for extrude mesh mode. */
-  extrude: LogoExtrudeOverride | null;
-  /** Double-sided transmission pass — richer rims, roughly 2× the FBO cost. */
-  backside: boolean;
-  dragPitchMax: number;
-  dragSensitivity: number;
-  hoverTiltX: number;
-  hoverTiltY: number;
-  /** Hover return rate (higher = snappier). */
-  hoverLerp: number;
-  dragFriction: number;
-  dragSpring: number;
-  dragSpringDamp: number;
-  dragSpringPitch: number;
-  dragSpringPitchDamp: number;
-  lights: LogoLightsConfig;
-};
-
-export type LogoInteractionParams = {
-  dragPitchMax: number;
-  dragSensitivity: number;
-  hoverTiltX: number;
-  hoverTiltY: number;
-  hoverLerp: number;
-  dragFriction: number;
-  dragSpring: number;
-  dragSpringDamp: number;
-  dragSpringPitch: number;
-  dragSpringPitchDamp: number;
+export type {
+  LogoDisplayMode,
+  LogoExtrudeOverride,
+  LogoGlassParams,
+  LogoInteractionConfigExport,
+  LogoInteractionParams,
+  LogoLightingConfigExport,
+  LogoLightsConfig,
+  LogoMaterialConfigExport,
+  LogoMaterialParams,
+  LogoPlaygroundConfig,
+  LogoPointLightConfig,
+  LogoRimLook,
+  LogoSoftLightConfig,
 };
 
 const INTERACTION_DEFAULTS: LogoInteractionParams = {
@@ -121,15 +51,7 @@ const INTERACTION_DEFAULTS: LogoInteractionParams = {
   dragSpringPitchDamp: 5.2,
 };
 
-const INTERACTION_KEYS = Object.keys(INTERACTION_DEFAULTS) as (keyof LogoInteractionParams)[];
-
-export type LogoPlaygroundConfig = {
-  version: 1;
-  meshMode: LogoMeshMode;
-  rimLook: LogoRimLook;
-  display: LogoDisplayMode;
-  params: LogoGlassParams;
-};
+const INTERACTION_KEYS = interactionParamsSchema.keyof().options;
 
 function soft(
   partial: Omit<LogoSoftLightConfig, "feather" | "followPose" | "roll" | "lift" | "scaleZ"> &
@@ -525,30 +447,6 @@ const MATERIAL_FENCE = "fiu-logo-material";
 const LIGHTING_FENCE = "fiu-logo-lighting";
 const INTERACTION_FENCE = "fiu-logo-interaction";
 
-export type LogoMaterialParams = Omit<LogoGlassParams, "lights" | keyof LogoInteractionParams>;
-
-export type LogoMaterialConfigExport = {
-  version: 1;
-  section: "material";
-  rimLook: LogoRimLook;
-  meshMode: LogoMeshMode;
-  params: LogoMaterialParams;
-};
-
-export type LogoLightingConfigExport = {
-  version: 1;
-  section: "lighting";
-  rimLook: LogoRimLook;
-  lights: LogoLightsConfig;
-};
-
-export type LogoInteractionConfigExport = {
-  version: 1;
-  section: "interaction";
-  rimLook: LogoRimLook;
-  params: LogoInteractionParams;
-};
-
 function fence(lang: string, value: unknown): string {
   return [`\`\`\`${lang}`, JSON.stringify(value, null, 2), "```"].join("\n");
 }
@@ -648,13 +546,13 @@ export function formatInteractionConfigExport(config: LogoPlaygroundConfig): str
 }
 
 /** Fill missing param keys from the rim preset (older playground snapshots). */
-export function coalesceParams(partial: LogoGlassParams, rimLook: LogoRimLook = "light"): LogoGlassParams {
+export function coalesceParams(partial: LogoPartialGlassParams, rimLook: LogoRimLook = "light"): LogoGlassParams {
   const base = LOGO_PARAM_PRESETS[rimLook];
   return cloneParams({
     ...base,
     ...partial,
-    extrude: partial.extrude !== undefined ? (partial.extrude ? { ...partial.extrude } : null) : base.extrude,
-    lights: partial.lights ? cloneLights(partial.lights) : cloneLights(base.lights),
+    extrude: partial.extrude !== undefined ? partial.extrude : base.extrude,
+    lights: partial.lights ?? base.lights,
   });
 }
 
@@ -664,18 +562,31 @@ function extractJsonPayload(text: string): { fence: string | null; raw: string }
   return { fence: null, raw: text.trim() };
 }
 
-export function parseConfigExport(text: string): LogoPlaygroundConfig | null {
-  const { raw } = extractJsonPayload(text);
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function parseJson(raw: string): unknown {
   try {
-    const parsed = JSON.parse(raw) as LogoPlaygroundConfig;
-    if (parsed?.version !== 1 || !parsed.params || !parsed.meshMode) return null;
-    // Partial section snapshots are handled by importPlaygroundConfig.
-    if ((parsed as { section?: string }).section) return null;
-    parsed.params = coalesceParams(parsed.params, parsed.rimLook ?? "light");
-    return parsed;
+    return JSON.parse(raw);
   } catch {
-    return null;
+    return undefined;
   }
+}
+
+function parseFullConfig(json: unknown): { ok: true; config: LogoPlaygroundConfig } | { ok: false; error: string } {
+  const result = fullImportSchema.safeParse(json);
+  if (!result.success) return { ok: false, error: `Full snapshot: ${formatZodError(result.error)}` };
+  const { version, meshMode, rimLook, display, params } = result.data;
+  return { ok: true, config: { version, meshMode, rimLook, display, params: coalesceParams(params, rimLook) } };
+}
+
+export function parseConfigExport(text: string): LogoPlaygroundConfig | null {
+  const json = parseJson(extractJsonPayload(text).raw);
+  // Partial section snapshots are handled by importPlaygroundConfig.
+  if (!isRecord(json) || json.section) return null;
+  const result = parseFullConfig(json);
+  return result.ok ? result.config : null;
 }
 
 export type LogoImportKind = "full" | "material" | "lighting" | "interaction";
@@ -690,15 +601,10 @@ export function importPlaygroundConfig(current: LogoPlaygroundConfig, text: stri
   const { fence, raw } = extractJsonPayload(text);
   if (!raw) return { ok: false, error: "Paste is empty." };
 
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(raw);
-  } catch {
-    return { ok: false, error: "Could not parse JSON." };
-  }
+  const obj = parseJson(raw);
+  if (obj === undefined) return { ok: false, error: "Could not parse JSON." };
+  if (!isRecord(obj)) return { ok: false, error: "Config must be a JSON object." };
 
-  if (!parsed || typeof parsed !== "object") return { ok: false, error: "Config must be a JSON object." };
-  const obj = parsed as Record<string, unknown>;
   const section =
     typeof obj.section === "string"
       ? obj.section
@@ -713,21 +619,9 @@ export function importPlaygroundConfig(current: LogoPlaygroundConfig, text: stri
               : null;
 
   if (section === "material") {
-    const slice = obj as Partial<LogoMaterialConfigExport>;
-    if (!slice.params || typeof slice.params !== "object") {
-      return { ok: false, error: "Material snapshot is missing params." };
-    }
-    const rimLook = (slice.rimLook ?? current.rimLook) as LogoRimLook;
-    const meshMode = (slice.meshMode ?? current.meshMode) as LogoMeshMode;
-    const merged = coalesceParams(
-      {
-        ...pickMaterialParams(current.params),
-        ...(slice.params as LogoMaterialParams),
-        ...pickInteractionParams(current.params),
-        lights: current.params.lights,
-      } as LogoGlassParams,
-      rimLook,
-    );
+    const result = materialImportSchema.safeParse(obj);
+    if (!result.success) return { ok: false, error: `Material snapshot: ${formatZodError(result.error)}` };
+    const { rimLook = current.rimLook, meshMode = current.meshMode, params } = result.data;
     return {
       ok: true,
       kind: "material",
@@ -737,65 +631,34 @@ export function importPlaygroundConfig(current: LogoPlaygroundConfig, text: stri
         rimLook,
         meshMode,
         display: "live",
-        params: {
-          ...merged,
-          ...pickInteractionParams(current.params),
-          lights: cloneLights(current.params.lights),
-        },
+        params: cloneParams({ ...current.params, ...params }),
       },
     };
   }
 
   if (section === "lighting") {
-    const slice = obj as Partial<LogoLightingConfigExport>;
-    if (!slice.lights || typeof slice.lights !== "object") {
-      return { ok: false, error: "Lighting snapshot is missing lights." };
-    }
+    const result = lightingImportSchema.safeParse(obj);
+    if (!result.success) return { ok: false, error: `Lighting snapshot: ${formatZodError(result.error)}` };
     return {
       ok: true,
       kind: "lighting",
-      config: {
-        ...current,
-        version: 1,
-        display: "live",
-        params: {
-          ...current.params,
-          extrude: current.params.extrude ? { ...current.params.extrude } : null,
-          lights: cloneLights(slice.lights as LogoLightsConfig),
-        },
-      },
+      config: { ...current, version: 1, display: "live", params: cloneParams({ ...current.params, lights: result.data.lights }) },
     };
   }
 
   if (section === "interaction") {
-    const slice = obj as Partial<LogoInteractionConfigExport>;
-    if (!slice.params || typeof slice.params !== "object") {
-      return { ok: false, error: "Interaction snapshot is missing params." };
-    }
+    const result = interactionImportSchema.safeParse(obj);
+    if (!result.success) return { ok: false, error: `Interaction snapshot: ${formatZodError(result.error)}` };
     return {
       ok: true,
       kind: "interaction",
-      config: {
-        ...current,
-        version: 1,
-        display: "live",
-        params: {
-          ...current.params,
-          extrude: current.params.extrude ? { ...current.params.extrude } : null,
-          lights: cloneLights(current.params.lights),
-          ...pickInteractionParams({
-            ...INTERACTION_DEFAULTS,
-            ...(slice.params as LogoInteractionParams),
-          } as LogoGlassParams),
-        },
-      },
+      config: { ...current, version: 1, display: "live", params: cloneParams({ ...current.params, ...result.data.params }) },
     };
   }
 
-  if (section === "full" || (!obj.section && obj.params && obj.meshMode)) {
-    const full = parseConfigExport(raw) ?? parseConfigExport(text);
-    if (!full) return { ok: false, error: "Full snapshot needs version, meshMode, and params." };
-    return { ok: true, kind: "full", config: { ...full, display: full.display ?? "live" } };
+  if (section === "full" || (section === null && "params" in obj && "meshMode" in obj)) {
+    const result = parseFullConfig(obj);
+    return result.ok ? { ok: true, kind: "full", config: result.config } : result;
   }
 
   return { ok: false, error: "Unrecognized config. Use a fiu-logo-config / material / lighting / interaction snapshot." };

@@ -1,7 +1,8 @@
 import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
-export type LogoMeshMode = "tubes" | "extrude";
+import type { LogoMeshMode } from "./logoSchemas";
+export type { LogoMeshMode };
 
 export type LogoStroke = {
   /** Centreline samples: [x, y, radius] in logo-world units. */
