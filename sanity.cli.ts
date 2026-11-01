@@ -6,7 +6,7 @@ export default defineCliConfig({
     dataset: process.env.NEXT_PUBLIC_SANITY_DATASET,
   },
   typegen: {
-    path: ["app/**/*.{ts,tsx}", "components/**/*.{ts,tsx}", "lib/**/*.{ts,tsx}", "sanity/lib/**/*.ts"],
+    path: "sanity/lib/queries.ts",
     schema: "sanity/extract.json",
     generates: "sanity.types.ts",
   },

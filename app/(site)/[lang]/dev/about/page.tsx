@@ -17,7 +17,7 @@ import { GlassPillLink } from "@/components/ui/Glass";
 import { fallbackStills } from "@/lib/fallback-stills";
 import { defaultLocale, isLocale, localizedPath, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
-import { cachedSanity } from "@/sanity/lib/live";
+import { fetchQuery } from "@/sanity/lib/live";
 import { ABOUT_QUERY } from "@/sanity/lib/queries";
 import { toSizedImage } from "@/sanity/lib/rentals";
 
@@ -135,9 +135,8 @@ async function Options({
 }
 
 async function getSettings(lang: Locale) {
-  const { data } = await cachedSanity({
-    query: ABOUT_QUERY,
-    params: { lang, fallbackLang: defaultLocale },
+  const data = await fetchQuery(ABOUT_QUERY, {
+    parameters: { lang, fallbackLang: defaultLocale },
     perspective: "published",
     stega: false,
   });

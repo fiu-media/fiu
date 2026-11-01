@@ -1,5 +1,6 @@
 import { createDataAttribute } from "next-sanity";
-import type { HOME_STILLS_QUERY_RESULT } from "@/sanity.types";
+import type { InferResultType } from "groqd";
+import type { HOME_STILLS_QUERY } from "./queries";
 import { urlFor } from "./image";
 
 export type HeroStill = {
@@ -17,7 +18,7 @@ export type HeroStill = {
 };
 
 /** One still of the home query. */
-export type HomeStill = NonNullable<NonNullable<HOME_STILLS_QUERY_RESULT>["stills"]>[number];
+export type HomeStill = NonNullable<NonNullable<InferResultType<typeof HOME_STILLS_QUERY>>["stills"]>[number];
 
 const HERO_WIDTH = 2400;
 

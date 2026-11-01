@@ -6,7 +6,7 @@ import { Skeleton, SkeletonGroup } from "@/components/ui/Skeleton";
 import { NameIndex, type IndexItem } from "@/components/talent/NameIndex";
 import { defaultLocale, isLocale, languageAlternates, localizedPath, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
-import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
+import { fetchQuery, getDynamicFetchOptions } from "@/sanity/lib/live";
 import { getPageText } from "@/sanity/lib/pageText";
 import { TALENT_QUERY } from "@/sanity/lib/queries";
 import { toSizedImage } from "@/sanity/lib/rentals";
@@ -39,9 +39,8 @@ export default async function TalentPage({ params }: PageProps<"/[lang]/talent">
 async function Roster({ lang }: { lang: Locale }) {
   const { talent } = await getDictionary(lang);
   const { perspective, variant } = await getDynamicFetchOptions();
-  const { data } = await cachedSanity({
-    query: TALENT_QUERY,
-    params: { lang, fallbackLang: defaultLocale },
+  const data = await fetchQuery(TALENT_QUERY, {
+    parameters: { lang, fallbackLang: defaultLocale },
     perspective,
     variant,
     stega: false,

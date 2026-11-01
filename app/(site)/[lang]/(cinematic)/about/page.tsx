@@ -10,7 +10,7 @@ import { fallbackStills } from "@/lib/fallback-stills";
 import { defaultLocale, isLocale, languageAlternates, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { settingsAttribute } from "@/sanity/lib/about";
-import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
+import { fetchQuery, getDynamicFetchOptions } from "@/sanity/lib/live";
 import { ABOUT_QUERY } from "@/sanity/lib/queries";
 import { publishedId, toSizedImage } from "@/sanity/lib/rentals";
 
@@ -36,9 +36,8 @@ export default async function AboutPage({ params }: PageProps<"/[lang]/about">) 
 async function About({ lang }: { lang: Locale }) {
   const dict = await getDictionary(lang);
   const { perspective, variant } = await getDynamicFetchOptions();
-  const { data } = await cachedSanity({
-    query: ABOUT_QUERY,
-    params: { lang, fallbackLang: defaultLocale },
+  const data = await fetchQuery(ABOUT_QUERY, {
+    parameters: { lang, fallbackLang: defaultLocale },
     perspective,
     variant,
     stega: false,

@@ -11,16 +11,15 @@ import { ProjectSlide } from "@/components/work/ProjectSlide";
 import { defaultLocale, isLocale, languageAlternates, localizedPath, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { format } from "@/lib/i18n/format";
-import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
+import { fetchQuery, getDynamicFetchOptions } from "@/sanity/lib/live";
 import { TALENT_PROFILE_QUERY, TALENT_PROJECTS_QUERY } from "@/sanity/lib/queries";
 import { publishedId, toSizedImage } from "@/sanity/lib/rentals";
 import { talentAttribute } from "@/sanity/lib/talent";
 
 async function getProfile(lang: Locale, slug: string) {
   const { perspective, variant } = await getDynamicFetchOptions();
-  const { data } = await cachedSanity({
-    query: TALENT_PROFILE_QUERY,
-    params: { lang, fallbackLang: defaultLocale, slug },
+  const data = await fetchQuery(TALENT_PROFILE_QUERY, {
+    parameters: { lang, fallbackLang: defaultLocale, slug },
     perspective,
     variant,
     stega: false,
@@ -30,9 +29,8 @@ async function getProfile(lang: Locale, slug: string) {
 
 async function getProjects(lang: Locale, talentId: string) {
   const { perspective, variant } = await getDynamicFetchOptions();
-  const { data } = await cachedSanity({
-    query: TALENT_PROJECTS_QUERY,
-    params: { lang, fallbackLang: defaultLocale, talentId: publishedId(talentId) },
+  const data = await fetchQuery(TALENT_PROJECTS_QUERY, {
+    parameters: { lang, fallbackLang: defaultLocale, talentId: publishedId(talentId) },
     perspective,
     variant,
     stega: false,

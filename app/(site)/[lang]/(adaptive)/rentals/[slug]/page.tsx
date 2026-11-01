@@ -7,13 +7,13 @@ import { ItemSkeleton } from "@/components/rentals/RentalSkeletons";
 import { RentalGallery } from "@/components/rentals/RentalGallery";
 import { defaultLocale, isLocale, languageAlternates, localizedPath, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
-import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
+import { fetchQuery, getDynamicFetchOptions } from "@/sanity/lib/live";
 import { RENTAL_ITEM_QUERY } from "@/sanity/lib/queries";
 import { publishedId, toRentalImage } from "@/sanity/lib/rentals";
 
 async function getItem(lang: Locale, slug: string) {
   const { perspective, variant } = await getDynamicFetchOptions();
-  const { data } = await cachedSanity({ query: RENTAL_ITEM_QUERY, params: { lang, fallbackLang: defaultLocale, slug }, perspective, variant, stega: false });
+  const data = await fetchQuery(RENTAL_ITEM_QUERY, { parameters: { lang, fallbackLang: defaultLocale, slug }, perspective, variant, stega: false });
   return data;
 }
 

@@ -1,4 +1,5 @@
 import "server-only";
+import { makeSafeQueryRunner } from "groqd";
 import { createClient } from "next-sanity";
 import { apiVersion, dataset, projectId } from "../env";
 
@@ -11,3 +12,6 @@ export const writeClient = createClient({
   perspective: "published",
   token: process.env.SANITY_API_WRITE_TOKEN,
 });
+
+/** Runs a groqd query with the write client, uncached, and validates the response. */
+export const runQuery = makeSafeQueryRunner((query, { parameters }) => writeClient.fetch(query, parameters ?? {}));

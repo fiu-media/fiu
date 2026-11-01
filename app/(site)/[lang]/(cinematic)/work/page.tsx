@@ -10,7 +10,7 @@ import { SlideProgress } from "@/components/work/SlideProgress";
 import { defaultLocale, isLocale, languageAlternates, localizedPath, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { format } from "@/lib/i18n/format";
-import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
+import { fetchQuery, getDynamicFetchOptions } from "@/sanity/lib/live";
 import { getPageText } from "@/sanity/lib/pageText";
 import { projectAttribute } from "@/sanity/lib/projects";
 import { WORK_QUERY } from "@/sanity/lib/queries";
@@ -49,12 +49,11 @@ export default async function WorkPage({ params, searchParams }: PageProps<"/[la
   );
 }
 
-/** Both the filter pills and the slides read this; `cachedSanity` makes the second call free. */
+/** Both the filter pills and the slides read this; `fetchQuery` makes the second call free. */
 async function getWork(lang: Locale, searchParams: PageProps<"/[lang]/work">["searchParams"]) {
   const [{ type: requested }, { perspective, variant }] = await Promise.all([searchParams, getDynamicFetchOptions()]);
-  const { data } = await cachedSanity({
-    query: WORK_QUERY,
-    params: { lang, fallbackLang: defaultLocale },
+  const data = await fetchQuery(WORK_QUERY, {
+    parameters: { lang, fallbackLang: defaultLocale },
     perspective,
     variant,
     stega: false,
