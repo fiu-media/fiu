@@ -65,6 +65,14 @@ npm run build && npm run test:e2e   # Playwright starts `npm run start` itself
 - Axe runs on the public pages and any violation fails the test; there is no allowlist.
 - CI runs the e2e job against `dev` when the repository secrets exist (`SANITY_API_READ_TOKEN`, `SANITY_API_WRITE_TOKEN`) and the `NEXT_PUBLIC_SANITY_PROJECT_ID` variable; it is skipped on fork and Dependabot PRs.
 
+## Formatting and class names
+
+Prettier formats everything (`npm run format`; CI runs `npm run format:check`, and lint-staged formats staged files on commit). `prettier-plugin-tailwindcss` sorts Tailwind classes, including those inside `cn()`.
+
+Compose class names with `cn()` from `lib/cn.ts` (clsx + tailwind-merge). In a shared component, `cn("base classes", className)` lets the caller's classes win over the defaults, so pass `size-10 px-0` rather than `size-10! px-0!`.
+
+The one-off reformat commit is listed in `.git-blame-ignore-revs`. GitHub honours it automatically; locally run `git config blame.ignoreRevsFile .git-blame-ignore-revs`.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
