@@ -33,7 +33,11 @@ export async function guardSubmission<S extends z.ZodType>(
 ): Promise<Guarded<z.output<S>>> {
   const reject: Guarded<never> = { ok: false, state: { status: "error", error: "rejected", values: textValues(raw) } };
 
-  const verification = await checkBotId();
+  // E2E_BYPASS_BOTID is set only by the Playwright web server: a production build can't reach BotID
+  // without Vercel's OIDC token, so the e2e run treats every visitor as human.
+  const verification = await checkBotId(
+    process.env.E2E_BYPASS_BOTID === "1" ? { developmentOptions: { isDevelopment: true } } : undefined,
+  );
   if (verification.isBot) return reject;
   if (typeof raw.website === "string" && raw.website.trim() !== "") return reject;
 

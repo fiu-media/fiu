@@ -30,6 +30,27 @@ The types of Sanity query results are generated from the schema and the `defineQ
 
 After changing a schema or a query, `npm run typecheck` shows what breaks. TypeGen evaluates queries statically, so build them from string literals and the generic helpers in `queries.ts` (called with literal arguments), not from arbitrary expressions.
 
+## Tests
+
+```bash
+npm test          # Vitest unit tests: logic, schemas, server actions (Sanity, BotID and Resend mocked)
+npm run test:e2e  # Playwright + axe against a production build
+```
+
+Unit tests sit next to the code they cover (`*.test.ts`) and need no setup.
+
+The e2e tests drive a real browser through the quote request, the contact form and the mobile menu, and run axe on the public pages. They read the `dev` Sanity dataset (see `npm run sync:dev`) and submit real forms to it, so they need `.env.local` with `NEXT_PUBLIC_SANITY_DATASET=dev` and an Editor token in `SANITY_API_WRITE_TOKEN`. First time only: `npx playwright install chromium`.
+
+```bash
+npm run build && npm run test:e2e   # Playwright starts `npm run start` itself
+```
+
+- Every submission uses an `@example.test` address. When the run ends, `e2e/global-teardown.ts` deletes the quote requests and contact messages with such an address, and does nothing unless the dataset is `dev`.
+- No email is sent: the server runs without `RESEND_API_KEY`.
+- BotID can't verify a production build outside Vercel, so Playwright starts the server with `E2E_BYPASS_BOTID=1` (see `lib/forms/submit.ts`). Never set that in a deployed environment.
+- Axe runs on the public pages and any violation fails the test; there is no allowlist.
+- CI runs the e2e job against `dev` when the repository secrets exist (`SANITY_API_READ_TOKEN`, `SANITY_API_WRITE_TOKEN`) and the `NEXT_PUBLIC_SANITY_PROJECT_ID` variable; it is skipped on fork and Dependabot PRs.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

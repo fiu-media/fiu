@@ -14,7 +14,7 @@ let snapshot: Basket = EMPTY;
 let loaded = false;
 const listeners = new Set<() => void>();
 
-function parse(json: string | null): Basket {
+export function parse(json: string | null): Basket {
   if (!json) return EMPTY;
   try {
     const value = JSON.parse(json) as Partial<Basket>;
@@ -76,7 +76,7 @@ const getSnapshot = () => {
 };
 const getServerSnapshot = () => EMPTY;
 
-const clampQty = (qty: number, max = MAX_QTY) => Math.min(max, MAX_QTY, Math.max(1, Math.floor(qty)));
+export const clampQty = (qty: number, max = MAX_QTY) => Math.min(max, MAX_QTY, Math.max(1, Math.floor(qty)));
 
 export const basketActions = {
   /** `max` is the item's per-quote cap from Sanity; quantities never go above it. */
