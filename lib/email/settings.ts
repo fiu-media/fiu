@@ -1,4 +1,5 @@
 import "server-only";
+import { env } from "@/env";
 import { defaultLocale, type Locale } from "@/lib/i18n/config";
 import { writeClient } from "@/sanity/lib/writeClient";
 import { SUBMISSION_SETTINGS_QUERY } from "@/sanity/lib/queries";
@@ -13,5 +14,5 @@ export async function getRecipient(kind: "quote" | "contact", lang: Locale): Pro
     .catch(() => null);
   const fromSettings =
     kind === "quote" ? (settings?.quoteRecipient ?? settings?.contactEmail) : (settings?.contactEmail ?? settings?.quoteRecipient);
-  return fromSettings || process.env.QUOTE_TO_EMAIL || null;
+  return fromSettings || env.QUOTE_TO_EMAIL || null;
 }

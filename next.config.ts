@@ -2,6 +2,7 @@ import os from "node:os";
 import type { NextConfig } from "next";
 import { withBotId } from "botid/next/config";
 import { sanity } from "next-sanity/live/cache-life";
+import "./env";
 
 /**
  * Dev only: lets a phone on the same network load the dev server (and its HMR socket) by this
