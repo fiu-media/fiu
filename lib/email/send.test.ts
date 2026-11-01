@@ -2,13 +2,22 @@ import { createElement } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({ send: vi.fn(), env: {} as { RESEND_API_KEY?: string; EMAIL_FROM?: string } }));
-vi.mock("resend", () => ({ Resend: class { emails = { send: mocks.send }; } }));
+vi.mock("resend", () => ({
+  Resend: class {
+    emails = { send: mocks.send };
+  },
+}));
 // `env` is parsed once at import, so tests swap the values on a mock instead of stubbing process.env.
 vi.mock("@/env", () => ({ env: mocks.env }));
 
 import { sendEmail } from "./send";
 
-const email = { to: "studio@example.com", subject: "Hello", react: createElement("p", null, "Body copy"), replyTo: "a@example.com" };
+const email = {
+  to: "studio@example.com",
+  subject: "Hello",
+  react: createElement("p", null, "Body copy"),
+  replyTo: "a@example.com",
+};
 
 beforeEach(() => {
   vi.spyOn(console, "warn").mockImplementation(() => {});
@@ -24,7 +33,12 @@ describe("sendEmail", () => {
     mocks.env.RESEND_API_KEY = "re_test";
     await sendEmail(email);
     expect(mocks.send).toHaveBeenCalledOnce();
-    expect(mocks.send.mock.calls[0][0]).toMatchObject({ to: "studio@example.com", subject: "Hello", replyTo: "a@example.com", react: email.react });
+    expect(mocks.send.mock.calls[0][0]).toMatchObject({
+      to: "studio@example.com",
+      subject: "Hello",
+      replyTo: "a@example.com",
+      react: email.react,
+    });
     expect(mocks.send.mock.calls[0][0].text).toContain("Body copy");
   });
 

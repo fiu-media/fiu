@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useRef, type ComponentProps, type ReactNode } from "react";
+import { cn } from "@/lib/cn";
 import { useLiquidGlass } from "./useLiquidGlass";
 
 type Size = "sm" | "md" | "lg";
@@ -27,15 +28,13 @@ type PillStyle = {
 };
 
 function pillClass({ size = "md", onImage, className }: Omit<PillStyle, "children">) {
-  return [
+  return cn(
     "glass glass-piece glass-interactive inline-flex cursor-pointer items-center justify-center gap-2 rounded-full",
     "font-semibold tracking-[-0.01em] whitespace-nowrap select-none disabled:cursor-not-allowed",
     sizes[size],
     onImage && "glass-on-image",
     className,
-  ]
-    .filter(Boolean)
-    .join(" ");
+  );
 }
 
 export function GlassPillLink({
@@ -105,7 +104,7 @@ export function GlassPanel({
       ref={ref}
       style={{ ...glass.style, borderRadius: radius }}
       onPointerMove={glass.onPointerMove}
-      className={["glass glass-panel", onImage && "glass-on-image", className].filter(Boolean).join(" ")}
+      className={cn("glass glass-panel", onImage && "glass-on-image", className)}
     >
       {glass.filter}
       {children}

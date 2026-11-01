@@ -63,7 +63,15 @@ describe("submitQuote", () => {
   });
 
   it("merges duplicate basket lines before checking availability", async () => {
-    await submitQuote(idle, form({ items: JSON.stringify([{ itemId: "cam", qty: 2 }, { itemId: "cam", qty: 1 }]) }));
+    await submitQuote(
+      idle,
+      form({
+        items: JSON.stringify([
+          { itemId: "cam", qty: 2 },
+          { itemId: "cam", qty: 1 },
+        ]),
+      }),
+    );
     expect(mocks.fetch.mock.calls[0][1]).toMatchObject({ ids: ["cam"] });
     expect(mocks.create.mock.calls[0][0].items).toMatchObject([{ qty: 3 }]);
   });

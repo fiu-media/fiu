@@ -41,10 +41,7 @@ const copies: Record<CopyKey, { label: string; copy: Copy }> = {
   },
 };
 
-const views: Record<
-  OptionKey,
-  { title: string; note: string; render: (props: { lang: Locale; copy: Copy }) => ReactNode }
-> = {
+const views: Record<OptionKey, { title: string; note: string; render: (props: { lang: Locale; copy: Copy }) => ReactNode }> = {
   a: {
     title: "Cinematic, still behind",
     note: "Always dark with the rail, a home still under a scrim, large italic headline, Home and Our Work links, the Irish slogan as a quiet line. Matches Our Work, Talent and About.",
@@ -114,14 +111,7 @@ async function Options({
           </div>
           <div className="flex flex-wrap gap-2">
             {COPIES.map((c) => (
-              <GlassPillLink
-                key={c}
-                size="sm"
-                onImage
-                scroll={false}
-                href={href(option, c)}
-                current={c === copyKey}
-              >
+              <GlassPillLink key={c} size="sm" onImage scroll={false} href={href(option, c)} current={c === copyKey}>
                 Copy: {copies[c].label}
               </GlassPillLink>
             ))}
@@ -134,7 +124,7 @@ async function Options({
         <p className="text-xs font-medium tracking-[0.14em] text-fg-muted uppercase">
           Option {option.toUpperCase()} · {copies[copyKey].label} copy
         </p>
-        <h2 className="font-display mt-1 text-3xl md:text-4xl">{view.title}</h2>
+        <h2 className="mt-1 font-display text-3xl md:text-4xl">{view.title}</h2>
         <p className="mt-2 max-w-2xl text-sm text-fg-muted">{view.note}</p>
       </div>
 

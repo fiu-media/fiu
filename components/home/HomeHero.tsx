@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { Component, useCallback, useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
+import { cn } from "@/lib/cn";
 import logo from "@/public/brand/fiu-logo.svg";
 import type { HeroStill } from "@/sanity/lib/stills";
 import { isSplashDismissed, Splash } from "./Splash";
@@ -104,10 +105,7 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
 
   useEffect(() => {
     if (!splashDone) return;
-    const settled = window.setTimeout(
-      () => setIntroDone(true),
-      mode === "live" ? INTRO_BACKSTOP_MS : INTRO_SETTLE_MS,
-    );
+    const settled = window.setTimeout(() => setIntroDone(true), mode === "live" ? INTRO_BACKSTOP_MS : INTRO_SETTLE_MS);
     return () => window.clearTimeout(settled);
   }, [splashDone, mode]);
 
@@ -139,7 +137,7 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
       <Splash done={splashDone} />
       {/* On mobile the photo is 12rem taller than the page above and below (BLEED_CLASS): real pixels for Safari to show behind
           its status bar and toolbar. Not fixed, or Safari would tint its bars from this layer instead. */}
-      <div className={`absolute inset-0 -z-10 ${BLEED_CLASS}`}>
+      <div className={cn("absolute inset-0 -z-10", BLEED_CLASS)}>
         {stills.map((still, i) => (
           <Image
             key={still.src}
@@ -162,7 +160,10 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
             then glides to the left on desktop, to a 42vw logo that starts 2vw clear of the side rail
             (-27vw + 4rem = from 50vw to rail + 2vw + half of 42vw). */}
         <div
-          className={`pointer-events-none absolute inset-0 grid place-items-center ${splashDone && mode !== "live" ? "motion-safe:transition-opacity motion-safe:duration-700" : ""}`}
+          className={cn(
+            "pointer-events-none absolute inset-0 grid place-items-center",
+            splashDone && mode !== "live" && "motion-safe:transition-opacity motion-safe:duration-700",
+          )}
           style={{ opacity: mode === "live" && sceneReady ? 0 : 1 }}
         >
           <Image
@@ -170,9 +171,10 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
             alt=""
             priority
             sizes="(min-width: 768px) 42vw, 80vw"
-            className={`h-auto w-[80vw] max-w-[640px] md:w-[42vw] md:max-w-none motion-safe:transition-transform motion-safe:delay-300 motion-safe:duration-1000 motion-safe:ease-in-out ${
-              logoAtLeft ? "md:-translate-x-[calc(27vw-4rem-env(safe-area-inset-left))]" : "md:translate-x-0"
-            }`}
+            className={cn(
+              "h-auto w-[80vw] max-w-[640px] motion-safe:transition-transform motion-safe:delay-300 motion-safe:duration-1000 motion-safe:ease-in-out md:w-[42vw] md:max-w-none",
+              logoAtLeft ? "md:-translate-x-[calc(27vw-4rem-env(safe-area-inset-left))]" : "md:translate-x-0",
+            )}
           />
         </div>
       </div>
@@ -183,9 +185,13 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
               fade starts, then cross-faded in over the SVG logo, which fades out underneath. */}
           <div
             aria-hidden
-            className={`absolute inset-0 ${BLEED_CLASS} ${
-              introDone ? "-z-10" : "pointer-events-none z-30 transition-opacity duration-(--splash-fade) ease-out will-change-[opacity]"
-            }`}
+            className={cn(
+              "absolute inset-0",
+              BLEED_CLASS,
+              introDone
+                ? "-z-10"
+                : "pointer-events-none z-30 transition-opacity duration-(--splash-fade) ease-out will-change-[opacity]",
+            )}
             style={{ ...splashFadeVars, opacity: sceneReady && splashDone ? 1 : 0 }}
           >
             <LogoScene

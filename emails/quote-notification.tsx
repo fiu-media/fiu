@@ -28,7 +28,13 @@ export default function QuoteNotification({ emails, data, studioUrl }: Props) {
     [l.message, data.message],
   ]);
   return (
-    <Layout heading={emails.quoteNotify.heading} rows={rows} kit={data.kit} kitLabel={l.kit} link={[emails.quoteNotify.openInStudio, studioUrl]} />
+    <Layout
+      heading={emails.quoteNotify.heading}
+      rows={rows}
+      kit={data.kit}
+      kitLabel={l.kit}
+      link={[emails.quoteNotify.openInStudio, studioUrl]}
+    />
   );
 }
 

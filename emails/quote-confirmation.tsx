@@ -12,7 +12,9 @@ export default function QuoteConfirmation({ emails, data }: Props) {
     [l.production, data.production],
     [l.message, data.message],
   ]);
-  return <Layout heading={emails.quoteConfirm.heading} intro={emails.quoteConfirm.body} rows={rows} kit={data.kit} kitLabel={l.kit} />;
+  return (
+    <Layout heading={emails.quoteConfirm.heading} intro={emails.quoteConfirm.body} rows={rows} kit={data.kit} kitLabel={l.kit} />
+  );
 }
 
 QuoteConfirmation.PreviewProps = {

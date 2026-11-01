@@ -20,20 +20,12 @@ export async function OptionA({ lang, copy }: Props) {
   const { site, nav } = await getDictionary(lang);
   return (
     <div data-surface="cinematic" className={`relative isolate h-full overflow-hidden bg-ink text-fg ${railInset}`}>
-      <Image
-        src={glow}
-        alt=""
-        fill
-        priority
-        placeholder="blur"
-        sizes="100vw"
-        className="-z-20 object-cover"
-      />
+      <Image src={glow} alt="" fill priority placeholder="blur" sizes="100vw" className="-z-20 object-cover" />
       <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-t from-ink via-ink/70 to-ink/30" />
       <SiteNav lang={lang} onImage />
       <main className="flex h-full flex-col justify-end gap-6 px-6 pt-24 pb-14 md:px-12 md:pb-20">
         <p className="text-xs font-medium tracking-[0.14em] text-fg-muted uppercase">{copy.eyebrow}</p>
-        <h1 className="font-display max-w-3xl text-5xl leading-[1.02] italic md:text-8xl">{copy.heading}</h1>
+        <h1 className="max-w-3xl font-display text-5xl leading-[1.02] italic md:text-8xl">{copy.heading}</h1>
         <p className="max-w-md text-base text-fg-muted md:text-lg">{copy.body}</p>
         <div className="flex flex-wrap items-center gap-3">
           <GlassPillLink href={localizedPath(lang, "/")} size="lg" onImage>
@@ -59,7 +51,7 @@ export async function OptionB({ lang, copy }: Props) {
         <p aria-hidden className="font-display text-[clamp(7rem,28vw,18rem)] leading-[0.8] text-fg/10">
           404
         </p>
-        <h1 className="font-display -mt-4 text-4xl md:-mt-10 md:text-6xl">{copy.heading}</h1>
+        <h1 className="-mt-4 font-display text-4xl md:-mt-10 md:text-6xl">{copy.heading}</h1>
         <p className="max-w-md text-base text-fg-muted md:text-lg">{copy.body}</p>
         <div className="flex flex-wrap items-center gap-3">
           <GlassPillLink href={localizedPath(lang, "/")} size="lg">

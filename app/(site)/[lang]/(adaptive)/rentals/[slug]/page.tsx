@@ -13,7 +13,13 @@ import { publishedId, toRentalImage } from "@/sanity/lib/rentals";
 
 async function getItem(lang: Locale, slug: string) {
   const { perspective, variant } = await getDynamicFetchOptions();
-  const { data } = await cachedSanity({ query: RENTAL_ITEM_QUERY, params: { lang, fallbackLang: defaultLocale, slug }, perspective, variant, stega: false });
+  const { data } = await cachedSanity({
+    query: RENTAL_ITEM_QUERY,
+    params: { lang, fallbackLang: defaultLocale, slug },
+    perspective,
+    variant,
+    stega: false,
+  });
   return data;
 }
 
@@ -33,7 +39,11 @@ export default function RentalItemPage({ params }: PageProps<"/[lang]/rentals/[s
   // Slugs are only known at runtime, so the item streams in behind a Suspense boundary.
   return (
     <main className="mx-auto max-w-6xl px-4 pb-32 md:px-6">
-      <Suspense fallback={<ItemSkeleton />}>{params.then((p) => <Item lang={p.lang} slug={p.slug} />)}</Suspense>
+      <Suspense fallback={<ItemSkeleton />}>
+        {params.then((p) => (
+          <Item lang={p.lang} slug={p.slug} />
+        ))}
+      </Suspense>
     </main>
   );
 }
@@ -50,7 +60,10 @@ async function Item({ lang, slug }: { lang: string; slug: string }) {
 
   return (
     <article>
-      <Link href={localizedPath(lang, "/rentals")} className="text-sm text-fg-muted underline-offset-4 hover:text-fg hover:underline">
+      <Link
+        href={localizedPath(lang, "/rentals")}
+        className="text-sm text-fg-muted underline-offset-4 hover:text-fg hover:underline"
+      >
         ← {rentals.backToRentals}
       </Link>
 

@@ -43,12 +43,20 @@ describe("guardSubmission", () => {
     const result = await guardSubmission(schema, { name: "", email: "bad" });
     expect(result).toEqual({
       ok: false,
-      state: { status: "error", fieldErrors: { name: "required", email: "invalid" }, error: undefined, values: { name: "", email: "bad" } },
+      state: {
+        status: "error",
+        fieldErrors: { name: "required", email: "invalid" },
+        error: undefined,
+        values: { name: "", email: "bad" },
+      },
     });
   });
 
   it("falls back to a generic error when no field is to blame", async () => {
-    const result = await guardSubmission(z.object({ items: z.array(z.string()) }).strict(), "oops" as unknown as Record<string, unknown>);
+    const result = await guardSubmission(
+      z.object({ items: z.array(z.string()) }).strict(),
+      "oops" as unknown as Record<string, unknown>,
+    );
     expect(result).toMatchObject({ ok: false, state: { error: "invalid" } });
   });
 

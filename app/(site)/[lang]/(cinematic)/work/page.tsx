@@ -7,6 +7,7 @@ import { PageTitle } from "@/components/ui/PageTitle";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ProjectSlide } from "@/components/work/ProjectSlide";
 import { SlideProgress } from "@/components/work/SlideProgress";
+import { cn } from "@/lib/cn";
 import { defaultLocale, isLocale, languageAlternates, localizedPath, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { format } from "@/lib/i18n/format";
@@ -68,13 +69,7 @@ async function getWork(lang: Locale, searchParams: PageProps<"/[lang]/work">["se
   return { projects, usable, active, visible };
 }
 
-async function Filters({
-  lang,
-  searchParams,
-}: {
-  lang: Locale;
-  searchParams: PageProps<"/[lang]/work">["searchParams"];
-}) {
+async function Filters({ lang, searchParams }: { lang: Locale; searchParams: PageProps<"/[lang]/work">["searchParams"] }) {
   const [{ work }, { usable, active }] = await Promise.all([getDictionary(lang), getWork(lang, searchParams)]);
   if (usable.length === 0) return null;
   const base = localizedPath(lang, "/work");
@@ -98,17 +93,8 @@ async function Filters({
   );
 }
 
-async function Projects({
-  lang,
-  searchParams,
-}: {
-  lang: Locale;
-  searchParams: PageProps<"/[lang]/work">["searchParams"];
-}) {
-  const [{ work, vimeo }, { projects, active, visible }] = await Promise.all([
-    getDictionary(lang),
-    getWork(lang, searchParams),
-  ]);
+async function Projects({ lang, searchParams }: { lang: Locale; searchParams: PageProps<"/[lang]/work">["searchParams"] }) {
+  const [{ work, vimeo }, { projects, active, visible }] = await Promise.all([getDictionary(lang), getWork(lang, searchParams)]);
 
   if (projects.length === 0) {
     return (
@@ -153,7 +139,7 @@ function FiltersSkeleton() {
   return (
     <div aria-hidden className="mt-8 flex flex-wrap gap-2">
       {["w-14", "w-24", "w-20", "w-28"].map((width, i) => (
-        <Skeleton key={i} className={`h-8 rounded-full ${width}`} />
+        <Skeleton key={i} className={cn("h-8 rounded-full", width)} />
       ))}
     </div>
   );

@@ -71,10 +71,7 @@ export const project = defineType({
     defineField({ name: "featured", type: "boolean", initialValue: false, readOnly: readOnlyInTranslation }),
     orderRankField({ type: "project" }),
   ],
-  orderings: [
-    orderRankOrdering,
-    { title: "Year, newest first", name: "yearDesc", by: [{ field: "year", direction: "desc" }] },
-  ],
+  orderings: [orderRankOrdering, { title: "Year, newest first", name: "yearDesc", by: [{ field: "year", direction: "desc" }] }],
   preview: {
     select: { title: "title", type: "type.title", year: "year", media: "coverStill" },
     prepare: ({ title, type, year, media }) => ({

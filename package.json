@@ -13,6 +13,8 @@
     "typegen": "sanity schema extract --enforce-required-fields --force --path=sanity/extract.json && sanity typegen generate",
     "pretypecheck": "npm run typegen",
     "typecheck": "next typegen && tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "test": "vitest run",
     "test:e2e": "playwright test",
     "email:dev": "email dev --dir emails",
@@ -32,6 +34,7 @@
     "@t3-oss/env-nextjs": "^0.13.11",
     "@vercel/analytics": "^2.0.1",
     "botid": "^1.5.11",
+    "clsx": "^2.1.1",
     "next": "16.4.3",
     "next-sanity": "^13.4.0",
     "react": "19.3.0",
@@ -39,6 +42,7 @@
     "resend": "^6.35.0",
     "sanity": "^6.20.0",
     "styled-components": "^6.6.0",
+    "tailwind-merge": "^3.7.0",
     "three": "^0.186.1",
     "zod": "^4.6.7"
   },
@@ -55,6 +59,8 @@
     "eslint-config-next": "16.4.3",
     "husky": "^9.1.7",
     "lint-staged": "^17.6.0",
+    "prettier": "^3.9.10",
+    "prettier-plugin-tailwindcss": "^0.8.1",
     "react-email": "^6.11.6",
     "tailwindcss": "^4",
     "tsx": "^4.23.15",
@@ -62,7 +68,11 @@
     "vitest": "^5.0.5"
   },
   "lint-staged": {
-    "*.{js,jsx,mjs,ts,tsx}": "eslint --max-warnings=0 --no-warn-ignored"
+    "*.{js,jsx,mjs,ts,tsx}": [
+      "prettier --write",
+      "eslint --max-warnings=0 --no-warn-ignored"
+    ],
+    "*.{css,json,md,yml}": "prettier --write"
   },
   "overrides": {
     "@react-email/render": "2.2.0"

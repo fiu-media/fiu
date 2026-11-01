@@ -80,7 +80,11 @@ describe("submitContact", () => {
 
   it("reports failed when storing fails", async () => {
     mocks.create.mockRejectedValue(new Error("boom"));
-    expect(await submitContact(idle, form())).toMatchObject({ status: "error", error: "failed", values: { message: "Hello there" } });
+    expect(await submitContact(idle, form())).toMatchObject({
+      status: "error",
+      error: "failed",
+      values: { message: "Hello there" },
+    });
     expect(mocks.sendEmail).not.toHaveBeenCalled();
   });
 

@@ -10,7 +10,9 @@ test.describe("quote request", () => {
     await page.goto("/rentals");
     // Once added, the button's name becomes "In quote (1)", so the check looks for that name instead.
     const added = page.getByRole("button", { name: format(rentals.inQuote, { qty: 1 }) }).first();
-    await clickUntil(page.getByRole("button", { name: rentals.addToQuote }).first(), () => expect(added).toBeVisible({ timeout: 1000 }));
+    await clickUntil(page.getByRole("button", { name: rentals.addToQuote }).first(), () =>
+      expect(added).toBeVisible({ timeout: 1000 }),
+    );
     await page.goto("/rentals/quote");
   });
 

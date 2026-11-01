@@ -1,14 +1,6 @@
 /** Error codes the server returns; the client maps them to localised copy (`dict.forms.errors`). */
 export type FormErrorCode =
-  | "required"
-  | "invalid"
-  | "empty"
-  | "beforeStart"
-  | "past"
-  | "overLimit"
-  | "unavailable"
-  | "rejected"
-  | "failed";
+  "required" | "invalid" | "empty" | "beforeStart" | "past" | "overLimit" | "unavailable" | "rejected" | "failed";
 
 export type FormState = {
   status: "idle" | "success" | "error";
@@ -34,5 +26,4 @@ const codes: readonly string[] = [
   "failed",
 ] satisfies FormErrorCode[];
 
-export const toErrorCode = (message: string): FormErrorCode =>
-  codes.includes(message) ? (message as FormErrorCode) : "invalid";
+export const toErrorCode = (message: string): FormErrorCode => (codes.includes(message) ? (message as FormErrorCode) : "invalid");

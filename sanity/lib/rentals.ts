@@ -25,14 +25,20 @@ export type RentalImage = {
 export function toRentalImage(image: QueriedImage, width = 1200): RentalImage | null {
   const { asset, crop, hotspot } = image;
   if (!asset) return null;
-  const dimensions = image.dimensions?.width && image.dimensions.height ? { width: image.dimensions.width, height: image.dimensions.height } : null;
+  const dimensions =
+    image.dimensions?.width && image.dimensions.height
+      ? { width: image.dimensions.width, height: image.dimensions.height }
+      : null;
   // Cropped images have no dimensions in the catalogue lookup; fall back to a 4:3 frame.
   const cropW = crop ? 1 - (crop.left ?? 0) - (crop.right ?? 0) : 1;
   const cropH = crop ? 1 - (crop.top ?? 0) - (crop.bottom ?? 0) : 1;
   const aspect = dimensions ? (dimensions.width * cropW) / (dimensions.height * cropH) : 4 / 3;
   const w = dimensions ? Math.min(width, Math.round(dimensions.width * cropW)) : width;
   return {
-    src: urlFor({ asset, crop: crop ?? undefined, hotspot: hotspot ?? undefined }).width(w).auto("format").url(),
+    src: urlFor({ asset, crop: crop ?? undefined, hotspot: hotspot ?? undefined })
+      .width(w)
+      .auto("format")
+      .url(),
     width: w,
     height: Math.round(w / aspect),
     alt: image.alt ?? "",

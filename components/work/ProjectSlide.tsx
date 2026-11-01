@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { FullBleedSlide } from "@/components/ui/FullBleedScroll";
 import { GlassPillButton } from "@/components/ui/Glass";
+import { cn } from "@/lib/cn";
 import { format } from "@/lib/i18n/format";
 import { parseVimeo, vimeoEmbedUrl } from "@/lib/vimeo";
 
@@ -200,7 +201,10 @@ function PreviewLoop({ src }: { src: string }) {
       tabIndex={-1}
       loading="lazy"
       onLoad={() => setReady(true)}
-      className={`pointer-events-none absolute inset-0 size-full border-0 transition-opacity duration-700 motion-reduce:transition-none ${ready ? "opacity-100" : "opacity-0"}`}
+      className={cn(
+        "pointer-events-none absolute inset-0 size-full border-0 transition-opacity duration-700 motion-reduce:transition-none",
+        ready ? "opacity-100" : "opacity-0",
+      )}
     />
   );
 }

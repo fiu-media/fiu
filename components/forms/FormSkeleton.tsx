@@ -1,9 +1,10 @@
 import { Skeleton, SkeletonGroup } from "@/components/ui/Skeleton";
+import { cn } from "@/lib/cn";
 
 const Field = ({ tall }: { tall?: boolean }) => (
   <div className="flex flex-col gap-1.5">
     <Skeleton className="h-4 w-24" />
-    <Skeleton className={`w-full rounded-2xl ${tall ? "h-36" : "h-12"}`} />
+    <Skeleton className={cn("w-full rounded-2xl", tall ? "h-36" : "h-12")} />
   </div>
 );
 

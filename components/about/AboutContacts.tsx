@@ -16,10 +16,7 @@ export function AboutContacts({
       {email && (
         <li>
           <span className="sr-only">{labels.email}: </span>
-          <a
-            href={`mailto:${email}`}
-            className="text-lg underline decoration-white/40 underline-offset-4 hover:decoration-white"
-          >
+          <a href={`mailto:${email}`} className="text-lg underline decoration-white/40 underline-offset-4 hover:decoration-white">
             {email}
           </a>
         </li>

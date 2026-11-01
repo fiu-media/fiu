@@ -56,7 +56,13 @@ async function homeStills(
   perspective: Awaited<ReturnType<typeof getDynamicFetchOptions>>["perspective"],
   variant: string | undefined,
 ): Promise<HeroStill[]> {
-  const { data } = await cachedSanity({ query: HOME_STILLS_QUERY, params: { lang, fallbackLang: defaultLocale }, perspective, variant, stega: false });
+  const { data } = await cachedSanity({
+    query: HOME_STILLS_QUERY,
+    params: { lang, fallbackLang: defaultLocale },
+    perspective,
+    variant,
+    stega: false,
+  });
   const stills = (data?.stills ?? []).map((s) => toHeroStill(data!._id, s)).filter((s): s is HeroStill => s !== null);
   return stills.length > 0 ? stills : fallbackStills;
 }

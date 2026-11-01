@@ -169,8 +169,7 @@ export default function LogoScene({
  */
 const FULL_DPR: [number, number] = [1, 1.5];
 const subscribeNever = () => () => {};
-const readSaveData = () =>
-  Boolean((navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData);
+const readSaveData = () => Boolean((navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData);
 const serverSaveData = () => false;
 
 function useCanvasDpr(measurePerf: boolean): number | [number, number] {
@@ -324,10 +323,7 @@ function Scene({
     };
   }, [loadRest, restKey, firstSrc, gl]);
 
-  const textures = useMemo(
-    () => stills.map((s) => (s.src === firstSrc ? first : rest[s.src])),
-    [stills, firstSrc, first, rest],
-  );
+  const textures = useMemo(() => stills.map((s) => (s.src === firstSrc ? first : rest[s.src])), [stills, firstSrc, first, rest]);
   const { keepAwake, awakeRef } = useKeepAwake();
   const sweepGroup = useRef<THREE.Group>(null);
   const sweepLive = useRef(false);
@@ -342,10 +338,7 @@ function Scene({
     logoPose.current.y = y;
   }, []);
 
-  const tints = useMemo(
-    () => stills.map((still, i) => resolveStillTint(still, textures[i])),
-    [stills, textures],
-  );
+  const tints = useMemo(() => stills.map((still, i) => resolveStillTint(still, textures[i])), [stills, textures]);
 
   // Cover intro spin + first settle so env streaks track the logo. The hero intro skips this: the
   // live env bake is the heaviest per-frame cost (freezing it took the intro from ~28 to ~42 fps in
@@ -366,9 +359,7 @@ function Scene({
 
   useFrame(() => {
     const f = fade.current;
-    const progress = f.start
-      ? Math.min((performance.now() - f.start) / (CROSSFADE_SECONDS * 1000), 1)
-      : 1;
+    const progress = f.start ? Math.min((performance.now() - f.start) / (CROSSFADE_SECONDS * 1000), 1) : 1;
     const k = progress * progress * (3 - 2 * progress);
     tint.current.lerpColors(tints[f.from]!, tints[f.to]!, k);
   });
@@ -661,9 +652,7 @@ function Backdrop({
     u.fromAspect.value = stills[f.from]!.width / stills[f.from]!.height;
     u.toAspect.value = stills[f.to]!.width / stills[f.to]!.height;
     u.planeAspect.value = width / height;
-    u.progress.value = f.start
-      ? Math.min((performance.now() - f.start) / (CROSSFADE_SECONDS * 1000), 1)
-      : 1;
+    u.progress.value = f.start ? Math.min((performance.now() - f.start) / (CROSSFADE_SECONDS * 1000), 1) : 1;
 
     // Playground (splashLift undefined) always sees the photo.
     let reveal = 1;
@@ -1017,7 +1006,7 @@ const DRAG_ANGLE_EPS = 0.0015;
 
 /** Wrap to (-π, π] so return takes the shortest way home. */
 function shortestAngle(radians: number) {
-  const wrapped = ((radians + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) - Math.PI;
+  const wrapped = ((((radians + Math.PI) % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2)) - Math.PI;
   return wrapped === -Math.PI ? Math.PI : wrapped;
 }
 
@@ -1097,7 +1086,13 @@ function Logo({
 
   const geometry = useMemo(() => {
     const base = paths as unknown as LogoPaths;
-    if (meshMode === "extrude" && base.extrude && depth !== undefined && bevelThickness !== undefined && bevelSize !== undefined) {
+    if (
+      meshMode === "extrude" &&
+      base.extrude &&
+      depth !== undefined &&
+      bevelThickness !== undefined &&
+      bevelSize !== undefined
+    ) {
       return buildLogoGeometry({ ...base, extrude: { ...base.extrude, depth, bevelThickness, bevelSize } }, meshMode);
     }
     return buildLogoGeometry(base, meshMode);
@@ -1123,9 +1118,7 @@ function Logo({
   // Mirror the static layout: 42vw starting 2vw clear of the side rail on desktop (the gutter also
   // absorbs the glide's overshoot), centred at up to 80vw on mobile.
   const desktop = size.width >= 768;
-  const targetWidth = desktop
-    ? viewport.width * 0.42
-    : Math.min(viewport.width * 0.8, (viewport.width * 640) / size.width);
+  const targetWidth = desktop ? viewport.width * 0.42 : Math.min(viewport.width * 0.8, (viewport.width * 640) / size.width);
   const scale = targetWidth / modelWidth;
   const x = desktop ? -viewport.width / 2 + (RAIL_PX + size.width * 0.02) * (viewport.width / size.width) + targetWidth / 2 : 0;
 
@@ -1278,11 +1271,7 @@ function Logo({
     const d = drag.current;
     if (!d.active) {
       // Latch return once coasting is nearly done — don't flip back when the bounce speeds up.
-      if (
-        !d.returning &&
-        Math.abs(d.velX) < DRAG_VELOCITY_EPS &&
-        Math.abs(d.velY) < DRAG_VELOCITY_EPS
-      ) {
+      if (!d.returning && Math.abs(d.velX) < DRAG_VELOCITY_EPS && Math.abs(d.velY) < DRAG_VELOCITY_EPS) {
         d.returning = true;
         d.velX = 0;
         d.velY = 0;

@@ -31,7 +31,10 @@ export function QuoteDrawer({ lang, dict }: { lang: Locale; dict: Dictionary["ba
           aria-haspopup="dialog"
         >
           <span>{dict.title}</span>
-          <span aria-hidden className="grid min-w-6 place-items-center rounded-full bg-accent px-1.5 text-xs font-bold text-white">
+          <span
+            aria-hidden
+            className="grid min-w-6 place-items-center rounded-full bg-accent px-1.5 text-xs font-bold text-white"
+          >
             {count}
           </span>
         </GlassPillButton>

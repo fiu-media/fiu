@@ -70,7 +70,7 @@ async function main() {
   docs.push({
     _id: "siteSettings",
     _type: "siteSettings",
-      language: "en",
+    language: "en",
     slogan: "Más fiú é a dhéanamh, is fiú é a dhéanamh i gceart.",
     sloganGloss: "If it's worth doing, it's worth doing right.",
     manifesto: [text("m1", "Placeholder manifesto. Replace this with Fiú's own words in the Studio.")],

@@ -190,12 +190,8 @@ function variableRadiusTube(stroke: LogoStroke, tipCutAngle?: number): THREE.Buf
   // Oblique tip slices: ring + cap share the artwork tip-cut plane (// diamond sides).
   const startAngle = stroke.cuts?.[0] ?? tipCutAngle;
   const endAngle = stroke.cuts?.[1] ?? tipCutAngle;
-  const startCut =
-    !closed && caps[0] === "flat" && startAngle != null ? tipCutNormal(startAngle, tangents[0]) : null;
-  const endCut =
-    !closed && caps[caps.length - 1] === "flat" && endAngle != null
-      ? tipCutNormal(endAngle, tangents[n - 1])
-      : null;
+  const startCut = !closed && caps[0] === "flat" && startAngle != null ? tipCutNormal(startAngle, tangents[0]) : null;
+  const endCut = !closed && caps[caps.length - 1] === "flat" && endAngle != null ? tipCutNormal(endAngle, tangents[n - 1]) : null;
   if (startCut) rewriteRing(positions, ringIndex[0], origins[0], radii[0], startCut, binormals[0]);
   if (endCut) rewriteRing(positions, ringIndex[n - 1], origins[n - 1], radii[n - 1], endCut, binormals[n - 1]);
 
@@ -244,7 +240,10 @@ function addFlatCap(
   tangent: THREE.Vector3,
   start: boolean,
 ) {
-  const outward = tangent.clone().normalize().multiplyScalar(start ? -1 : 1);
+  const outward = tangent
+    .clone()
+    .normalize()
+    .multiplyScalar(start ? -1 : 1);
   const nudge = outward.clone().multiplyScalar(1e-3);
   // Duplicate the rim so cap normals stay independent of the tube wall.
   const rimStart = positions.length / 3;
@@ -272,7 +271,10 @@ function addPointCap(
   tangent: THREE.Vector3,
   start: boolean,
 ) {
-  const outward = tangent.clone().normalize().multiplyScalar(start ? -1 : 1);
+  const outward = tangent
+    .clone()
+    .normalize()
+    .multiplyScalar(start ? -1 : 1);
   // Tip sits just past the last ring; radius there is already ~0.
   const tip = positions.length / 3;
   const dist = 1e-3;
@@ -328,13 +330,7 @@ function distToSegment(px: number, py: number, ax: number, ay: number, bx: numbe
  * Cap every vertex near a tip at the pillow height for its distance to the artwork edge, so
  * the top rounds over the needle the same way it does along the rest of the outline.
  */
-function taperTips(
-  g: THREE.BufferGeometry,
-  tips: number[][],
-  outline: number[][][],
-  depth: number,
-  bevel: number,
-) {
+function taperTips(g: THREE.BufferGeometry, tips: number[][], outline: number[][][], depth: number, bevel: number) {
   const pos = g.getAttribute("position") as THREE.BufferAttribute;
   const edges = tips.map(([tx, ty, r]) => {
     const near: number[][] = [];
@@ -412,9 +408,7 @@ function buildExtrudedBody(paths: LogoPaths): THREE.BufferGeometry[] {
 export function buildLogoGeometry(paths: LogoPaths, mode: LogoMeshMode = "extrude"): THREE.BufferGeometry {
   const tipCutAngle = paths.tipCut?.angle;
   const parts: THREE.BufferGeometry[] =
-    mode === "extrude"
-      ? buildExtrudedBody(paths)
-      : paths.strokes.map((s) => forMerge(variableRadiusTube(s, tipCutAngle)));
+    mode === "extrude" ? buildExtrudedBody(paths) : paths.strokes.map((s) => forMerge(variableRadiusTube(s, tipCutAngle)));
 
   parts.push(...buildDiamonds(paths.diamonds));
 

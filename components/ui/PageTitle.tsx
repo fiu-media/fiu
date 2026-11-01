@@ -9,7 +9,7 @@ export function PageTitle({ title, tagline }: { title: string; tagline?: string 
     <>
       <h1 className="font-display text-5xl md:text-6xl">{title}</h1>
       {tagline && (
-        <p aria-hidden className="mt-2 font-display text-2xl italic text-fg-muted md:text-3xl">
+        <p aria-hidden className="mt-2 font-display text-2xl text-fg-muted italic md:text-3xl">
           {tagline.split(/(Fiú)/g).map((part, i) =>
             part === "Fiú" ? (
               <span key={i} lang="ga">

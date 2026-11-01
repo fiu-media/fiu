@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
+import { cn } from "@/lib/cn";
 import { format } from "@/lib/i18n/format";
 
 /** Past this many projects the ticks would overflow the screen, so only the counter is shown. */
@@ -57,7 +58,7 @@ export function SlideProgress({
     <>
       <div className="pointer-events-none fixed inset-x-0 top-0 z-20 pt-[max(1.25rem,env(safe-area-inset-top))] max-md:pt-[calc(max(1.25rem,env(safe-area-inset-top))+3.25rem)] md:left-[calc(4rem+env(safe-area-inset-left))]">
         <div className="flex items-center gap-4 px-5 md:px-10">
-          <div className="pointer-events-auto -mx-5 min-w-0 flex-1 overflow-x-auto px-5 py-1 [scrollbar-width:none] md:mx-0 md:px-0 [&::-webkit-scrollbar]:hidden">
+          <div className="pointer-events-auto -mx-5 min-w-0 flex-1 [scrollbar-width:none] overflow-x-auto px-5 py-1 md:mx-0 md:px-0 [&::-webkit-scrollbar]:hidden">
             {children}
           </div>
           {total > 1 && (
@@ -82,11 +83,10 @@ export function SlideProgress({
                 >
                   <span
                     aria-hidden
-                    className={`h-0.5 rounded-full bg-white shadow-[0_0_6px_rgb(0_0_0/0.5)] transition-[width,opacity] duration-300 motion-reduce:transition-none ${
-                      i === current
-                        ? "w-6 opacity-100"
-                        : "w-3 opacity-45 group-hover:opacity-90 group-focus-visible:opacity-90"
-                    }`}
+                    className={cn(
+                      "h-0.5 rounded-full bg-white shadow-[0_0_6px_rgb(0_0_0/0.5)] transition-[width,opacity] duration-300 motion-reduce:transition-none",
+                      i === current ? "w-6 opacity-100" : "w-3 opacity-45 group-hover:opacity-90 group-focus-visible:opacity-90",
+                    )}
                   />
                   <span
                     aria-hidden

@@ -27,7 +27,16 @@ export async function submitQuote(_previous: FormState, formData: FormData): Pro
   const guarded = await guardSubmission(quoteSchema, { ...raw, items: parseItems(raw.items) });
   if (!guarded.ok) return guarded.state;
   const data = guarded.data;
-  const values = { name: data.name, email: data.email, phone: data.phone, company: data.company, production: data.production, startDate: data.startDate, endDate: data.endDate, message: data.message };
+  const values = {
+    name: data.name,
+    email: data.email,
+    phone: data.phone,
+    company: data.company,
+    production: data.production,
+    startDate: data.startDate,
+    endDate: data.endDate,
+    message: data.message,
+  };
 
   if (data.startDate < today()) {
     return { status: "error", fieldErrors: { startDate: "past" }, values };

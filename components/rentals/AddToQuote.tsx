@@ -24,12 +24,7 @@ export function AddToQuote({
   const inQuote = lines.find((l) => l.itemId === itemId)?.qty ?? 0;
   const atMax = inQuote >= max;
   return (
-    <GlassPillButton
-      size={size}
-      onClick={() => add(itemId, quantity, max)}
-      aria-pressed={inQuote > 0}
-      disabled={atMax}
-    >
+    <GlassPillButton size={size} onClick={() => add(itemId, quantity, max)} aria-pressed={inQuote > 0} disabled={atMax}>
       <span aria-hidden>{inQuote > 0 ? "✓" : "+"}</span>
       <span>{atMax ? dict.maxReached : inQuote > 0 ? format(dict.inQuote, { qty: inQuote }) : dict.addToQuote}</span>
       <span className="sr-only">: {itemName}</span>

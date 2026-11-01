@@ -39,7 +39,13 @@ export default async function RentalsPage({ params }: PageProps<"/[lang]/rentals
 async function Catalogue({ lang }: { lang: Locale }) {
   const { rentals } = await getDictionary(lang);
   const { perspective, variant } = await getDynamicFetchOptions();
-  const { data } = await cachedSanity({ query: RENTALS_QUERY, params: { lang, fallbackLang: defaultLocale }, perspective, variant, stega: false });
+  const { data } = await cachedSanity({
+    query: RENTALS_QUERY,
+    params: { lang, fallbackLang: defaultLocale },
+    perspective,
+    variant,
+    stega: false,
+  });
   const { categories, items } = data;
 
   const cards: CatalogueCard[] = items.map((item) => ({
