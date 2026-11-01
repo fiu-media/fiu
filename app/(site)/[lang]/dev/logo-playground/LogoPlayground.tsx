@@ -19,7 +19,6 @@ import {
   formatLightingConfigExport,
   formatMaterialConfigExport,
   importPlaygroundConfig,
-  LOGO_PARAM_PRESETS,
   presetConfig,
   resetInteractionParams,
   resetLightingParams,
@@ -38,19 +37,23 @@ import { costVsPreset, type LogoPerfStats } from "@/components/three/logoPerf";
 import { GlassPillButton } from "@/components/ui/Glass";
 import logo from "@/public/brand/fiu-logo.svg";
 import { LogoDiffView } from "./LogoDiffView";
+import { DIFF_LABELS } from "./logoControls";
 import { useSweepState, type SweepMode } from "./useSweepState";
 
 const LogoScene = dynamic(() => import("@/components/three/LogoScene"), { ssr: false });
+// Leva reads Math.random while creating its store, so it renders on the client only.
+const LevaParams = dynamic(() => import("./LevaParams").then((m) => m.LevaParams), { ssr: false });
 
 const ROTATE_SECONDS = 6;
 
 type SectionTab = "material" | "lighting" | "interaction";
-type ConfigTab = SectionTab | "changes";
-const DEFAULT_TAB: ConfigTab = "material";
+type ConfigTab = "controls" | "changes";
+const SECTION_TABS: SectionTab[] = ["material", "lighting", "interaction"];
+const DEFAULT_TAB: ConfigTab = "controls";
 const TAB_EVENT = "logo-playground-tab";
 
 function isConfigTab(value: string): value is ConfigTab {
-  return value === "material" || value === "lighting" || value === "interaction" || value === "changes";
+  return value === "controls" || value === "changes";
 }
 
 function subscribeTab(onChange: () => void) {
@@ -78,52 +81,6 @@ function selectTab(tab: ConfigTab) {
 
 export type PlaygroundStill = StaticImageData & { lightTint?: string; label?: string };
 
-type SliderDef = {
-  key: keyof LogoGlassParams;
-  label: string;
-  min: number;
-  max: number;
-  step: number;
-};
-
-const MATERIAL_SLIDERS: SliderDef[] = [
-  { key: "thickness", label: "Thickness", min: 0.2, max: 4, step: 0.05 },
-  { key: "backsideThickness", label: "Backside thickness", min: 0.2, max: 3, step: 0.05 },
-  { key: "ior", label: "IOR", min: 1.1, max: 2.2, step: 0.01 },
-  { key: "chromaticAberration", label: "Chromatic aberration", min: 0, max: 1.2, step: 0.01 },
-  { key: "anisotropicBlur", label: "Anisotropic blur", min: 0, max: 1, step: 0.01 },
-  { key: "distortion", label: "Distortion", min: 0, max: 0.5, step: 0.01 },
-  { key: "distortionScale", label: "Distortion scale", min: 0, max: 1, step: 0.01 },
-  { key: "roughness", label: "Roughness", min: 0, max: 0.5, step: 0.01 },
-  { key: "clearcoat", label: "Clearcoat", min: 0, max: 1, step: 0.01 },
-  { key: "clearcoatRoughness", label: "Clearcoat roughness", min: 0, max: 1, step: 0.01 },
-  { key: "specularIntensity", label: "Specular", min: 0, max: 2, step: 0.05 },
-  { key: "envMapIntensity", label: "Env map", min: 0, max: 5, step: 0.05 },
-  { key: "backsideEnvMapIntensity", label: "Backside env", min: 0, max: 4, step: 0.05 },
-  { key: "attenuationDistance", label: "Attenuation distance", min: 0.5, max: 12, step: 0.1 },
-  { key: "samples", label: "Samples", min: 4, max: 32, step: 1 },
-];
-
-const GLOW_SLIDERS: SliderDef[] = [
-  { key: "glowSat", label: "Glow sat mult", min: 0.5, max: 2, step: 0.01 },
-  { key: "glowLift", label: "Glow lift", min: 0, max: 0.5, step: 0.01 },
-  { key: "glowLMin", label: "Glow L min", min: 0.1, max: 0.9, step: 0.01 },
-  { key: "glowLMax", label: "Glow L max", min: 0.3, max: 1, step: 0.01 },
-];
-
-const INTERACTION_SLIDERS: SliderDef[] = [
-  { key: "dragPitchMax", label: "Drag pitch max (rad)", min: 0.1, max: 1.2, step: 0.01 },
-  { key: "dragSensitivity", label: "Drag sensitivity", min: 0.001, max: 0.02, step: 0.0005 },
-  { key: "hoverTiltX", label: "Hover tilt X", min: 0, max: 0.4, step: 0.01 },
-  { key: "hoverTiltY", label: "Hover tilt Y", min: 0, max: 0.5, step: 0.01 },
-  { key: "hoverLerp", label: "Hover snappiness", min: 1, max: 12, step: 0.5 },
-  { key: "dragFriction", label: "Coast friction", min: 0.5, max: 8, step: 0.1 },
-  { key: "dragSpring", label: "Yaw return spring", min: 10, max: 120, step: 1 },
-  { key: "dragSpringDamp", label: "Yaw return damp", min: 1, max: 16, step: 0.1 },
-  { key: "dragSpringPitch", label: "Pitch return spring", min: 10, max: 140, step: 1 },
-  { key: "dragSpringPitchDamp", label: "Pitch return damp", min: 1, max: 16, step: 0.1 },
-];
-
 const SWEEP_MODES: { value: SweepMode; label: string }[] = [
   { value: "off", label: "Off" },
   { value: "webgl", label: "WebGL" },
@@ -142,22 +99,6 @@ const SWEEP_TECHNIQUES: { value: SweepTechnique; label: string; note: string }[]
   { value: "rotate", label: "Rotate env", note: "Turns the baked cubemap, with no re-bake." },
 ];
 
-const EXTRUDE_SLIDERS = [
-  { key: "depth" as const, label: "Extrude depth", min: 0.05, max: 0.5, step: 0.01 },
-  { key: "bevelThickness" as const, label: "Bevel thickness", min: 0.02, max: 0.25, step: 0.005 },
-  { key: "bevelSize" as const, label: "Bevel size", min: 0.02, max: 0.25, step: 0.005 },
-];
-
-const DIFF_LABELS: Record<string, string> = {
-  meshMode: "Mesh",
-  rimLook: "Rim preset",
-  display: "Display",
-  backside: "Backside transmission",
-  ...Object.fromEntries(
-    [...MATERIAL_SLIDERS, ...GLOW_SLIDERS, ...INTERACTION_SLIDERS, ...EXTRUDE_SLIDERS].map((s) => [s.key, s.label]),
-  ),
-};
-
 export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
   const [config, setConfig] = useState<LogoPlaygroundConfig>(() => presetConfig("light"));
   // null = diff against the committed preset; otherwise a pinned snapshot.
@@ -174,6 +115,9 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
   const [importOpen, setImportOpen] = useState(false);
   const [importText, setImportText] = useState("");
   const [importStatus, setImportStatus] = useState<string | null>(null);
+  // What the Leva panel shows. Replaced only when the config is replaced wholesale, never on a slider edit.
+  const [loaded, setLoaded] = useState(config.params);
+  const [panelSlot, setPanelSlot] = useState<HTMLDivElement | null>(null);
   const tab = useConfigTab();
   const { stageRef: sweepStageRef, ...sweep } = useSweepState();
 
@@ -205,6 +149,27 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
     return () => window.clearInterval(id);
   }, [rotate, stills.length]);
 
+  // Leva scrolls folders into view as they settle after mount, which leaves the panel at the bottom.
+  // Keep it at the top for a moment, until the user touches it.
+  useEffect(() => {
+    const scroller = panelSlot?.parentElement;
+    if (!panelSlot || !scroller) return;
+    const settled = performance.now() + 2000;
+    const pin = () => {
+      if (performance.now() < settled) scroller.scrollTo(0, 0);
+    };
+    const release = () => panelSlot.removeEventListener("transitionend", pin);
+    pin();
+    panelSlot.addEventListener("transitionend", pin);
+    scroller.addEventListener("wheel", release, { once: true });
+    scroller.addEventListener("pointerdown", release, { once: true });
+    return () => {
+      release();
+      scroller.removeEventListener("wheel", release);
+      scroller.removeEventListener("pointerdown", release);
+    };
+  }, [panelSlot]);
+
   const onReady = useCallback(() => setSceneReady(true), []);
   const onFail = useCallback(() => setFailed(true), []);
 
@@ -226,10 +191,9 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
     setFailed(false);
     // Keep sceneReady — remounting isn't needed; params update live. Clearing ready
     // without a remount left the fallback logo up forever (onReady never fires again).
-    setConfig((c) => ({
-      ...presetConfig(rimLook, c.meshMode),
-      display: "live",
-    }));
+    const next: LogoPlaygroundConfig = { ...presetConfig(rimLook, config.meshMode), display: "live" };
+    setConfig(next);
+    setLoaded(next.params);
   };
 
   const setMeshMode = (meshMode: LogoMeshMode) => {
@@ -246,15 +210,11 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
     setConfig((c) => ({ ...c, display }));
   };
 
-  const patchParams = (patch: Partial<LogoGlassParams>) => {
-    setConfig((c) => ({ ...c, params: { ...c.params, ...patch } }));
-  };
+  const setParam = useCallback(<K extends keyof LogoGlassParams>(key: K, value: LogoGlassParams[K]) => {
+    setConfig((c) => ({ ...c, params: { ...c.params, [key]: value } }));
+  }, []);
 
-  const setParam = <K extends keyof LogoGlassParams>(key: K, value: LogoGlassParams[K]) => {
-    patchParams({ [key]: value } as Partial<LogoGlassParams>);
-  };
-
-  const patchSoftLight = (id: string, patch: Partial<LogoSoftLightConfig>) => {
+  const patchSoftLight = useCallback((id: string, patch: Partial<LogoSoftLightConfig>) => {
     setConfig((c) => ({
       ...c,
       params: {
@@ -265,9 +225,9 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
         },
       },
     }));
-  };
+  }, []);
 
-  const patchPointLight = (id: string, patch: Partial<LogoPointLightConfig>) => {
+  const patchPointLight = useCallback((id: string, patch: Partial<LogoPointLightConfig>) => {
     setConfig((c) => ({
       ...c,
       params: {
@@ -278,7 +238,7 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
         },
       },
     }));
-  };
+  }, []);
 
   const writeClipboard = async (kind: "full" | SectionTab, payload: string) => {
     try {
@@ -300,9 +260,9 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
       setSceneReady(false);
     }
     setConfig(result.config);
+    setLoaded(result.config.params);
     setImportStatus(importSuccessLabel(result.kind));
     setImportText("");
-    if (result.kind !== "full") selectTab(result.kind);
     window.setTimeout(() => setImportStatus(null), 2200);
   };
 
@@ -323,19 +283,27 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
   };
 
   const resetTab = (section: SectionTab) => {
-    setConfig((c) => ({
-      ...c,
-      params:
-        section === "material"
-          ? resetMaterialParams(c.params, c.rimLook)
-          : section === "lighting"
-            ? resetLightingParams(c.params, c.rimLook)
-            : resetInteractionParams(c.params, c.rimLook),
-    }));
+    const params =
+      section === "material"
+        ? resetMaterialParams(config.params, config.rimLook)
+        : section === "lighting"
+          ? resetLightingParams(config.params, config.rimLook)
+          : resetInteractionParams(config.params, config.rimLook);
+    setConfig({ ...config, params });
+    setLoaded(params);
   };
 
   return (
     <div className="relative h-[calc(100dvh-var(--dev-bar))] overflow-hidden bg-ink text-white">
+      <LevaParams
+        params={config.params}
+        loaded={loaded}
+        meshMode={config.meshMode}
+        container={panelSlot}
+        onParam={setParam}
+        onSoft={patchSoftLight}
+        onPoint={patchPointLight}
+      />
       <div className="absolute inset-0">
         {stills.map((still, i) => (
           <Image
@@ -427,33 +395,15 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
         {panelOpen && (
           <aside className="pointer-events-auto absolute top-16 right-3 bottom-3 z-30 flex w-[min(100%-1.5rem,22rem)] flex-col overflow-hidden rounded-2xl border border-white/15 bg-black/55 shadow-2xl backdrop-blur-xl">
             <div className="flex shrink-0 flex-wrap items-center gap-1.5 border-b border-white/10 px-3 py-2.5">
-              <div role="tablist" aria-label="Config section" className="flex flex-wrap gap-1.5">
+              <div role="tablist" aria-label="Panel view" className="flex flex-wrap gap-1.5">
                 <GlassPillButton
                   size="sm"
                   onImage
                   role="tab"
-                  aria-selected={tab === "material"}
-                  onClick={() => selectTab("material")}
+                  aria-selected={tab === "controls"}
+                  onClick={() => selectTab("controls")}
                 >
-                  Material
-                </GlassPillButton>
-                <GlassPillButton
-                  size="sm"
-                  onImage
-                  role="tab"
-                  aria-selected={tab === "lighting"}
-                  onClick={() => selectTab("lighting")}
-                >
-                  Lighting
-                </GlassPillButton>
-                <GlassPillButton
-                  size="sm"
-                  onImage
-                  role="tab"
-                  aria-selected={tab === "interaction"}
-                  onClick={() => selectTab("interaction")}
-                >
-                  Interaction
+                  Controls
                 </GlassPillButton>
                 <GlassPillButton
                   size="sm"
@@ -468,16 +418,6 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
                   )}
                 </GlassPillButton>
               </div>
-              {tab !== "changes" && (
-                <>
-                  <GlassPillButton size="sm" onImage onClick={() => resetTab(tab)}>
-                    Reset
-                  </GlassPillButton>
-                  <GlassPillButton size="sm" onImage onClick={() => copyTabConfig(tab)}>
-                    {copied === tab ? "Copied" : "Copy"}
-                  </GlassPillButton>
-                </>
-              )}
             </div>
 
             <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-4 text-sm">
@@ -686,93 +626,26 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
                 </>
               )}
 
-              {tab === "material" && (
+              {tab === "controls" && (
                 <>
-                  <Section title="Material">
-                    <label className="mb-3 flex items-center gap-2 text-xs text-white/80">
-                      <input
-                        type="checkbox"
-                        checked={config.params.backside}
-                        onChange={(e) => setParam("backside", e.target.checked)}
-                        className="accent-white"
-                      />
-                      Backside transmission (richer rims, ~2× FBO cost)
-                    </label>
-                    {MATERIAL_SLIDERS.map((s) => (
-                      <Slider
-                        key={s.key}
-                        label={s.label}
-                        min={s.min}
-                        max={s.max}
-                        step={s.step}
-                        value={Number(config.params[s.key])}
-                        onChange={(v) => setParam(s.key, v as never)}
-                      />
-                    ))}
+                  <Section title="Snapshots">
+                    <div className="space-y-1.5">
+                      {SECTION_TABS.map((section) => (
+                        <div key={section} className="flex items-center justify-between gap-2">
+                          <span className="text-xs text-white/70 capitalize">{section}</span>
+                          <PillRow>
+                            <GlassPillButton size="sm" onImage onClick={() => resetTab(section)}>
+                              Reset
+                            </GlassPillButton>
+                            <GlassPillButton size="sm" onImage onClick={() => copyTabConfig(section)}>
+                              {copied === section ? "Copied" : "Copy"}
+                            </GlassPillButton>
+                          </PillRow>
+                        </div>
+                      ))}
+                    </div>
                   </Section>
 
-                  <Section title="Glow / attenuation tint">
-                    {GLOW_SLIDERS.map((s) => (
-                      <Slider
-                        key={s.key}
-                        label={s.label}
-                        min={s.min}
-                        max={s.max}
-                        step={s.step}
-                        value={Number(config.params[s.key])}
-                        onChange={(v) => setParam(s.key, v as never)}
-                      />
-                    ))}
-                  </Section>
-
-                  {config.meshMode === "extrude" && (
-                    <Section title="Extrude geometry">
-                      <label className="mb-2 flex items-center gap-2 text-xs text-white/80">
-                        <input
-                          type="checkbox"
-                          checked={Boolean(config.params.extrude)}
-                          onChange={(e) =>
-                            setParam(
-                              "extrude",
-                              e.target.checked
-                                ? {
-                                    ...(LOGO_PARAM_PRESETS.light.extrude ?? {
-                                      depth: 0.16,
-                                      bevelThickness: 0.12,
-                                      bevelSize: 0.12,
-                                    }),
-                                  }
-                                : null,
-                            )
-                          }
-                          className="accent-white"
-                        />
-                        Override extrude (off = paths JSON defaults)
-                      </label>
-                      {config.params.extrude &&
-                        EXTRUDE_SLIDERS.map((s) => (
-                          <Slider
-                            key={s.key}
-                            label={s.label}
-                            min={s.min}
-                            max={s.max}
-                            step={s.step}
-                            value={config.params.extrude![s.key]}
-                            onChange={(v) =>
-                              setParam("extrude", {
-                                ...config.params.extrude!,
-                                [s.key]: v,
-                              })
-                            }
-                          />
-                        ))}
-                    </Section>
-                  )}
-                </>
-              )}
-
-              {tab === "lighting" && (
-                <>
                   <Section title="Moving light">
                     <p className="mb-2 text-[11px] leading-snug text-white/55">
                       Slowly sweeps a light across the scene (issue #51). Not part of the exported config.
@@ -848,42 +721,12 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
                     )}
                   </Section>
 
-                  <Section title="Env soft lights">
-                    <div className="space-y-2">
-                      {config.params.lights.soft.map((light) => (
-                        <SoftLightEditor key={light.id} light={light} onChange={(patch) => patchSoftLight(light.id, patch)} />
-                      ))}
-                    </div>
-                  </Section>
-
-                  <Section title="Point lights">
-                    <div className="space-y-2">
-                      {config.params.lights.points.map((light) => (
-                        <PointLightEditor key={light.id} light={light} onChange={(patch) => patchPointLight(light.id, patch)} />
-                      ))}
-                    </div>
-                  </Section>
+                  <div ref={setPanelSlot} />
                 </>
-              )}
-
-              {tab === "interaction" && (
-                <Section title="Drag & hover">
-                  {INTERACTION_SLIDERS.map((s) => (
-                    <Slider
-                      key={s.key}
-                      label={s.label}
-                      min={s.min}
-                      max={s.max}
-                      step={s.step}
-                      value={Number(config.params[s.key])}
-                      onChange={(v) => setParam(s.key, v as never)}
-                    />
-                  ))}
-                </Section>
               )}
             </div>
             <p className="border-t border-white/10 px-4 py-2 text-[11px] leading-snug text-white/45">
-              Tab copy exports <code className="text-white/70">fiu-logo-material</code>,{" "}
+              Snapshot copy exports <code className="text-white/70">fiu-logo-material</code>,{" "}
               <code className="text-white/70">fiu-logo-lighting</code>, or{" "}
               <code className="text-white/70">fiu-logo-interaction</code>. Copy all / Import use{" "}
               <code className="text-white/70">fiu-logo-config</code> (or a tab snapshot).
@@ -1019,157 +862,6 @@ function Slider({
         className="w-full accent-white"
       />
     </label>
-  );
-}
-
-function SoftLightEditor({
-  light,
-  onChange,
-}: {
-  light: LogoSoftLightConfig;
-  onChange: (patch: Partial<LogoSoftLightConfig>) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  return (
-    <div className="rounded-xl border border-white/10 bg-white/5">
-      <button
-        type="button"
-        className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-white/85"
-        onClick={() => setOpen((o) => !o)}
-      >
-        <input
-          type="checkbox"
-          checked={light.enabled}
-          onClick={(e) => e.stopPropagation()}
-          onChange={(e) => onChange({ enabled: e.target.checked })}
-          className="accent-white"
-        />
-        <span className="flex-1 truncate">{light.label}</span>
-        <span className="text-white/40">{open ? "−" : "+"}</span>
-      </button>
-      {open && (
-        <div className="space-y-1 border-t border-white/10 px-3 pt-2 pb-2">
-          <p className="mb-1 text-[10px] tracking-wide text-white/40 uppercase">
-            {light.kind}
-            {light.followPose ? " · follows pose" : ""}
-            {light.feather ? " · feathered" : ""}
-          </p>
-          <Slider label="X" min={-16} max={16} step={0.1} value={light.x} onChange={(v) => onChange({ x: v })} />
-          <Slider label="Y" min={-16} max={16} step={0.1} value={light.y} onChange={(v) => onChange({ y: v })} />
-          <Slider label="Z" min={-16} max={16} step={0.1} value={light.z} onChange={(v) => onChange({ z: v })} />
-          <Slider label="Scale X" min={0.1} max={20} step={0.05} value={light.scaleX} onChange={(v) => onChange({ scaleX: v })} />
-          <Slider label="Scale Y" min={0.1} max={20} step={0.05} value={light.scaleY} onChange={(v) => onChange({ scaleY: v })} />
-          <Slider label="Scale Z" min={0.1} max={20} step={0.05} value={light.scaleZ} onChange={(v) => onChange({ scaleZ: v })} />
-          <Slider
-            label="Intensity"
-            min={0}
-            max={20}
-            step={0.1}
-            value={light.intensity}
-            onChange={(v) => onChange({ intensity: v })}
-          />
-          <Slider
-            label="Mix white"
-            min={0}
-            max={1}
-            step={0.01}
-            value={light.mixWhite}
-            onChange={(v) => onChange({ mixWhite: v })}
-          />
-          <Slider label="Lift" min={0} max={2} step={0.05} value={light.lift} onChange={(v) => onChange({ lift: v })} />
-          {light.kind === "streak" && (
-            <Slider
-              label="Roll (rad)"
-              min={-Math.PI}
-              max={Math.PI}
-              step={0.05}
-              value={light.roll}
-              onChange={(v) => onChange({ roll: v })}
-            />
-          )}
-          <label className="flex items-center gap-2 text-xs text-white/75">
-            <input
-              type="checkbox"
-              checked={light.followPose}
-              onChange={(e) => onChange({ followPose: e.target.checked })}
-              className="accent-white"
-            />
-            Follow logo pose
-          </label>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function PointLightEditor({
-  light,
-  onChange,
-}: {
-  light: LogoPointLightConfig;
-  onChange: (patch: Partial<LogoPointLightConfig>) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  return (
-    <div className="rounded-xl border border-white/10 bg-white/5">
-      <button
-        type="button"
-        className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-white/85"
-        onClick={() => setOpen((o) => !o)}
-      >
-        <input
-          type="checkbox"
-          checked={light.enabled}
-          onClick={(e) => e.stopPropagation()}
-          onChange={(e) => onChange({ enabled: e.target.checked })}
-          className="accent-white"
-        />
-        <span className="flex-1 truncate">{light.label}</span>
-        <span className="text-white/40">{open ? "−" : "+"}</span>
-      </button>
-      {open && (
-        <div className="space-y-1 border-t border-white/10 px-3 pt-2 pb-2">
-          <Slider label="X" min={-16} max={16} step={0.1} value={light.x} onChange={(v) => onChange({ x: v })} />
-          <Slider label="Y" min={-16} max={16} step={0.1} value={light.y} onChange={(v) => onChange({ y: v })} />
-          <Slider label="Z" min={-16} max={16} step={0.1} value={light.z} onChange={(v) => onChange({ z: v })} />
-          <Slider
-            label="Intensity"
-            min={0}
-            max={60}
-            step={0.5}
-            value={light.intensity}
-            onChange={(v) => onChange({ intensity: v })}
-          />
-          <Slider
-            label="Distance"
-            min={1}
-            max={40}
-            step={0.5}
-            value={light.distance}
-            onChange={(v) => onChange({ distance: v })}
-          />
-          <Slider label="Decay" min={0} max={4} step={0.05} value={light.decay} onChange={(v) => onChange({ decay: v })} />
-          <label className="mb-2 flex flex-col gap-1 text-xs text-white/70">
-            Color
-            <input
-              type="color"
-              value={light.color}
-              onChange={(e) => onChange({ color: e.target.value })}
-              className="h-8 w-full cursor-pointer rounded border border-white/15 bg-transparent"
-            />
-          </label>
-          <label className="flex items-center gap-2 text-xs text-white/75">
-            <input
-              type="checkbox"
-              checked={light.followPose}
-              onChange={(e) => onChange({ followPose: e.target.checked })}
-              className="accent-white"
-            />
-            Follow logo pose
-          </label>
-        </div>
-      )}
-    </div>
   );
 }
 
