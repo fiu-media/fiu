@@ -62,5 +62,8 @@
   },
   "lint-staged": {
     "*.{js,jsx,mjs,ts,tsx}": "eslint --max-warnings=0 --no-warn-ignored"
+  },
+  "overrides": {
+    "@react-email/render": "2.2.0"
   }
 }
