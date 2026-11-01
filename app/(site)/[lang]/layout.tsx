@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { notFound } from "next/navigation";
 import { Fraunces, Manrope } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { Suspense } from "react";
 import { InlineScript } from "@/components/InlineScript";
 import { SanityChrome } from "@/components/sanity/SanityChrome";
@@ -58,7 +59,7 @@ export default async function RootLayout({ children, params }: LayoutProps<"/[la
         <InlineScript html={glassRefractScript} />
       </head>
       <body className="min-h-dvh font-sans antialiased">
-        {children}
+        <NuqsAdapter>{children}</NuqsAdapter>
         <Suspense>
           <SanityChrome />
         </Suspense>

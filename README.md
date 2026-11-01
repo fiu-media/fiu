@@ -44,6 +44,31 @@ The notification emails are React Email components in `emails/`, rendered by `li
 - Empty values count as unset. `SKIP_ENV_VALIDATION=1` skips the checks for a deliberately secret-less build.
 - Server-only variables throw if read from client code, but `env.ts` itself stays importable from the browser for the `NEXT_PUBLIC_*` values.
 
+## Rate limiting
+
+`/contact` and `/rentals/quote` are protected by BotID and a honeypot, but neither caps volume, so a single client could still flood the Sanity inbox and the Resend emails (the quote form also emails the visitor). A Vercel Firewall rate-limit rule covers that. It blocks before any function runs, so there is no code for it in this repo. `vercel.json` can't hold it either (routes there only support `deny` and `challenge`), so the rule lives in the Vercel project's firewall and has to be created there once:
+
+```bash
+vercel firewall rules add "Rate limit form submissions" \
+  --condition '{"type":"method","op":"eq","value":"POST"}' \
+  --condition '{"type":"path","op":"re","value":"^(/ga)?/(contact|rentals/quote)/?$"}' \
+  --action rate_limit --rate-limit-window 600 --rate-limit-requests 10 \
+  --rate-limit-keys ip --rate-limit-action rate_limit \
+  --description "Caps contact and quote submissions per IP" --yes
+vercel firewall diff      # check the staged change
+vercel firewall publish   # make it live
+```
+
+That allows 10 submissions per IP per 10 minutes and answers the rest with a 429 until the window resets. Every POST counts, including ones that fail validation, so the limit is deliberately generous: fixing a typo and resubmitting still works.
+
+Things to know:
+
+- Visitors over the limit see Vercel's generic block page, not the localised form error.
+- Shared IPs (offices, mobile carriers) share one allowance. Raise `--rate-limit-requests` if that bites.
+- The regex already covers the `/ga/...` paths, ready for when Irish is enabled.
+- The rule is project configuration, not code: recreate it if the project is re-created or moved to another team. Rate-limit rules may depend on the Vercel plan.
+- Inspect or adjust it with `vercel firewall rules inspect|edit|disable "Rate limit form submissions"`, and see blocked traffic with `vercel firewall overview`.
+
 ## Tests
 
 ```bash

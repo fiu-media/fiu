@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { parseAsString, useQueryState } from "nuqs";
 import { GlassPillButton } from "@/components/ui/Glass";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { localizedPath, type Locale } from "@/lib/i18n/config";
@@ -30,20 +30,25 @@ export function RentalCatalogue({
   items: CatalogueCard[];
   dict: Dictionary["rentals"];
 }) {
-  const [category, setCategory] = useState<string | null>(null);
-  const visible = category ? items.filter((i) => i.categoryId === category) : items;
   // Only offer categories that actually have kit in them.
   const usable = categories.filter((c) => items.some((i) => i.categoryId === c.id));
+  // `push` so Back/Forward step through filters; an unknown ?category= falls back to everything.
+  const [requested, setRequested] = useQueryState(
+    "category",
+    parseAsString.withOptions({ history: "push", clearOnDefault: true }),
+  );
+  const category = usable.find((c) => c.id === requested)?.id ?? null;
+  const visible = category ? items.filter((i) => i.categoryId === category) : items;
 
   return (
     <div>
       {usable.length > 0 && (
         <div role="group" aria-label={dict.filterLabel} className="mb-8 flex flex-wrap gap-2">
-          <GlassPillButton size="sm" aria-pressed={category === null} onClick={() => setCategory(null)}>
+          <GlassPillButton size="sm" aria-pressed={category === null} onClick={() => setRequested(null)}>
             {dict.allCategories}
           </GlassPillButton>
           {usable.map((c) => (
-            <GlassPillButton key={c.id} size="sm" aria-pressed={category === c.id} onClick={() => setCategory(c.id)}>
+            <GlassPillButton key={c.id} size="sm" aria-pressed={category === c.id} onClick={() => setRequested(c.id)}>
               {c.title}
             </GlassPillButton>
           ))}
