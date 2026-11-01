@@ -69,13 +69,7 @@ async function getWork(lang: Locale, searchParams: PageProps<"/[lang]/work">["se
   return { projects, usable, active, visible };
 }
 
-async function Filters({
-  lang,
-  searchParams,
-}: {
-  lang: Locale;
-  searchParams: PageProps<"/[lang]/work">["searchParams"];
-}) {
+async function Filters({ lang, searchParams }: { lang: Locale; searchParams: PageProps<"/[lang]/work">["searchParams"] }) {
   const [{ work }, { usable, active }] = await Promise.all([getDictionary(lang), getWork(lang, searchParams)]);
   if (usable.length === 0) return null;
   const base = localizedPath(lang, "/work");
@@ -99,17 +93,8 @@ async function Filters({
   );
 }
 
-async function Projects({
-  lang,
-  searchParams,
-}: {
-  lang: Locale;
-  searchParams: PageProps<"/[lang]/work">["searchParams"];
-}) {
-  const [{ work, vimeo }, { projects, active, visible }] = await Promise.all([
-    getDictionary(lang),
-    getWork(lang, searchParams),
-  ]);
+async function Projects({ lang, searchParams }: { lang: Locale; searchParams: PageProps<"/[lang]/work">["searchParams"] }) {
+  const [{ work, vimeo }, { projects, active, visible }] = await Promise.all([getDictionary(lang), getWork(lang, searchParams)]);
 
   if (projects.length === 0) {
     return (

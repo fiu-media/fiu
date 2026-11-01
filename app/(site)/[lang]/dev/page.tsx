@@ -62,7 +62,7 @@ export default async function DevIndexPage({ params }: PageProps<"/[lang]/dev">)
       <div className="mx-auto max-w-6xl px-4 py-12 md:px-6 md:py-16">
         <header className="mb-8 border-b border-line pb-6">
           <p className="text-xs font-medium tracking-[0.14em] text-fg-muted uppercase">Fiú · dev</p>
-          <h1 className="font-display mt-2 text-4xl md:text-5xl">Concepts</h1>
+          <h1 className="mt-2 font-display text-4xl md:text-5xl">Concepts</h1>
           <p className="mt-2 max-w-2xl text-sm text-fg-muted">
             Everything we&rsquo;re still deciding or tuning. Unlisted and kept out of search engines.
           </p>
@@ -74,7 +74,7 @@ export default async function DevIndexPage({ params }: PageProps<"/[lang]/dev">)
               <Link href={localizedPath(lang, concept.href)} className="block h-full rounded-[28px]">
                 <GlassPanel onImage className="h-full p-6">
                   <p className="text-xs font-medium tracking-[0.14em] text-fg-muted uppercase">{concept.kind}</p>
-                  <h2 className="font-display mt-2 text-2xl md:text-3xl">{concept.title}</h2>
+                  <h2 className="mt-2 font-display text-2xl md:text-3xl">{concept.title}</h2>
                   <p className="mt-2 text-sm text-fg-muted">{concept.note}</p>
                 </GlassPanel>
               </Link>

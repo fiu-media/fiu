@@ -27,12 +27,15 @@ describe("parseConfigExport", () => {
     expect(parseConfigExport(JSON.stringify(old))?.params.lights).toEqual(current.params.lights);
   });
 
-  it.each(["", "nope", "{}", JSON.stringify({ version: 2, meshMode: "extrude", params: {} }), JSON.stringify({ version: 1, section: "material", meshMode: "extrude", params: {} })])(
-    "returns null for %j",
-    (text) => {
-      expect(parseConfigExport(text)).toBeNull();
-    },
-  );
+  it.each([
+    "",
+    "nope",
+    "{}",
+    JSON.stringify({ version: 2, meshMode: "extrude", params: {} }),
+    JSON.stringify({ version: 1, section: "material", meshMode: "extrude", params: {} }),
+  ])("returns null for %j", (text) => {
+    expect(parseConfigExport(text)).toBeNull();
+  });
 });
 
 describe("importPlaygroundConfig", () => {

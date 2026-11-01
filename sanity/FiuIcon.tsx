@@ -8,13 +8,7 @@ import Image from "next/image";
 export function FiuIcon() {
   return (
     <span style={{ display: "block", position: "relative", width: "100%", height: "100%", borderRadius: "inherit" }}>
-      <Image
-        src="/brand/fiu-avatar.png"
-        alt=""
-        fill
-        sizes="41px"
-        style={{ borderRadius: "inherit" }}
-      />
+      <Image src="/brand/fiu-avatar.png" alt="" fill sizes="41px" style={{ borderRadius: "inherit" }} />
     </span>
   );
 }

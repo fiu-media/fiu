@@ -1,14 +1,6 @@
 "use client";
 
-import {
-  useEffect,
-  useId,
-  useState,
-  type CSSProperties,
-  type PointerEvent,
-  type ReactNode,
-  type RefObject,
-} from "react";
+import { useEffect, useId, useState, type CSSProperties, type PointerEvent, type ReactNode, type RefObject } from "react";
 import { displacementMap, supportsLensing } from "@/lib/liquid-glass";
 
 export type LiquidGlassOptions = {
@@ -78,15 +70,7 @@ export function useLiquidGlass<T extends HTMLElement>(
     );
     filter = (
       <svg aria-hidden width="0" height="0" style={{ position: "absolute", pointerEvents: "none" }}>
-        <filter
-          id={id}
-          filterUnits="userSpaceOnUse"
-          x="0"
-          y="0"
-          width={size.w}
-          height={size.h}
-          colorInterpolationFilters="sRGB"
-        >
+        <filter id={id} filterUnits="userSpaceOnUse" x="0" y="0" width={size.w} height={size.h} colorInterpolationFilters="sRGB">
           <feImage href={map} x="0" y="0" width={size.w} height={size.h} preserveAspectRatio="none" result="map" />
           {channel("r", strength * (1 + aberration), "1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0 1")}
           {channel("g", strength, "0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 0 1")}

@@ -55,10 +55,7 @@ export function NavPreview({
       } ${width === "phone" ? "w-[390px] max-w-full" : "w-full"}`}
     >
       {/* The rail sits on the left edge, so the content makes room for it like a real page would. */}
-      <div
-        ref={scroller}
-        className={`absolute inset-0 overflow-y-auto overscroll-contain ${option === "e" ? "@2xl:pl-16" : ""}`}
-      >
+      <div ref={scroller} className={`absolute inset-0 overflow-y-auto overscroll-contain ${option === "e" ? "@2xl:pl-16" : ""}`}>
         <Content dark={dark} dockRoom={option === "d"} phone={width === "phone"} />
       </div>
       {option === "a" && <Capsule {...concept} />}
@@ -96,7 +93,7 @@ function Content({ dark, dockRoom, phone }: { dark: boolean; dockRoom: boolean; 
           </>
         ) : (
           <div className="flex h-full flex-col px-3 pt-24 pb-3 @2xl:px-6">
-            <p className="font-display px-2 pb-4 text-4xl tracking-tight @2xl:text-6xl">Stories worth watching</p>
+            <p className="px-2 pb-4 font-display text-4xl tracking-tight @2xl:text-6xl">Stories worth watching</p>
             <div className="relative min-h-0 flex-1 overflow-hidden rounded-2xl">
               <Image src={conservatory} alt="" fill placeholder="blur" sizes={frameSizes} className="object-cover" />
             </div>
@@ -168,12 +165,7 @@ function NavLink({
 
 function Logo({ label, className }: { label: string; className: string }) {
   return (
-    <a
-      href="#"
-      aria-label={label}
-      onClick={(event) => event.preventDefault()}
-      className="block shrink-0 rounded-md"
-    >
+    <a href="#" aria-label={label} onClick={(event) => event.preventDefault()} className="block shrink-0 rounded-md">
       <LogoMask className={className} />
     </a>
   );
@@ -235,9 +227,7 @@ function Capsule({ items, current, onSelect, homeLabel, onImage }: Concept) {
           <nav
             aria-label="Primary"
             className="relative hidden @2xl:flex"
-            onPointerLeave={(event) =>
-              slideTo(event.currentTarget.querySelector<HTMLElement>('[aria-current="page"]'))
-            }
+            onPointerLeave={(event) => slideTo(event.currentTarget.querySelector<HTMLElement>('[aria-current="page"]'))}
           >
             <span
               aria-hidden
@@ -346,7 +336,7 @@ function Overlay({
               onSelect(href);
               onClose();
             }}
-            className="font-display py-1.5 text-5xl tracking-tight text-fg/55 hover:text-fg aria-[current=page]:text-fg"
+            className="py-1.5 font-display text-5xl tracking-tight text-fg/55 hover:text-fg aria-[current=page]:text-fg"
           />
         ))}
       </nav>
@@ -363,7 +353,9 @@ function TypeOnly({ items, current, onSelect, homeLabel, onImage }: Concept) {
   const shadow = onImage ? "[text-shadow:0_1px_8px_rgb(0_0_0/0.35)]" : "";
   return (
     <>
-      {onImage && <div className="pointer-events-none absolute inset-x-0 top-0 z-20 h-28 bg-gradient-to-b from-black/45 to-transparent" />}
+      {onImage && (
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-20 h-28 bg-gradient-to-b from-black/45 to-transparent" />
+      )}
       <header className="absolute inset-x-0 top-0 z-30 flex items-center justify-between px-5 py-5 @2xl:px-8 @2xl:py-7">
         <Logo label={homeLabel} className="h-9" />
         <nav aria-label="Primary" className="hidden gap-8 @2xl:flex">
@@ -387,7 +379,14 @@ function TypeOnly({ items, current, onSelect, homeLabel, onImage }: Concept) {
           <MenuIcon className={onImage ? "drop-shadow-[0_1px_4px_rgb(0_0_0/0.4)]" : ""} />
         </button>
       </header>
-      <Overlay open={open} onClose={() => setOpen(false)} items={items} current={current} onSelect={onSelect} homeLabel={homeLabel} />
+      <Overlay
+        open={open}
+        onClose={() => setOpen(false)}
+        items={items}
+        current={current}
+        onSelect={onSelect}
+        homeLabel={homeLabel}
+      />
     </>
   );
 }
@@ -424,30 +423,30 @@ function LogoMenu({ items, current, onSelect, homeLabel, onImage }: Concept) {
       >
         <GlassPanel onImage={onImage} radius={24} className="w-56 p-2">
           <div className={`flex flex-col ${fade(open)}`}>
-          <NavLink
-            item={{ href: "", label: homeLabel }}
-            current={current}
-            onSelect={(href) => {
-              onSelect(href);
-              setOpen(false);
-            }}
-            className="flex h-10 items-center rounded-xl px-4 text-sm text-fg/60 hover:bg-fg/10 hover:text-fg"
-          >
-            Home
-          </NavLink>
-          <div className="mx-4 my-1 h-px bg-fg/15" />
-          {items.map((item) => (
             <NavLink
-              key={item.href}
-              item={item}
+              item={{ href: "", label: homeLabel }}
               current={current}
               onSelect={(href) => {
                 onSelect(href);
                 setOpen(false);
               }}
-              className="flex h-11 items-center rounded-xl px-4 text-[0.9375rem] font-medium hover:bg-fg/10 aria-[current=page]:bg-fg/12 aria-[current=page]:font-semibold"
-            />
-          ))}
+              className="flex h-10 items-center rounded-xl px-4 text-sm text-fg/60 hover:bg-fg/10 hover:text-fg"
+            >
+              Home
+            </NavLink>
+            <div className="mx-4 my-1 h-px bg-fg/15" />
+            {items.map((item) => (
+              <NavLink
+                key={item.href}
+                item={item}
+                current={current}
+                onSelect={(href) => {
+                  onSelect(href);
+                  setOpen(false);
+                }}
+                className="flex h-11 items-center rounded-xl px-4 text-[0.9375rem] font-medium hover:bg-fg/10 aria-[current=page]:bg-fg/12 aria-[current=page]:font-semibold"
+              />
+            ))}
           </div>
         </GlassPanel>
       </div>
@@ -482,7 +481,9 @@ function Dock({ items, current, onSelect, homeLabel, onImage, scroller }: Concep
   const hidden = useHiddenOnScrollDown(scroller);
   return (
     <>
-      {onImage && <div className="pointer-events-none absolute inset-x-0 top-0 z-20 h-28 bg-gradient-to-b from-black/45 to-transparent" />}
+      {onImage && (
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-20 h-28 bg-gradient-to-b from-black/45 to-transparent" />
+      )}
       <div className="absolute top-5 left-5 z-30 @2xl:top-7 @2xl:left-8">
         <Logo label={homeLabel} className="h-9" />
       </div>
@@ -548,7 +549,14 @@ function Rail({ items, current, onSelect, homeLabel, onImage }: Concept) {
           <MenuIcon />
         </GlassPillButton>
       </header>
-      <Overlay open={open} onClose={() => setOpen(false)} items={items} current={current} onSelect={onSelect} homeLabel={homeLabel} />
+      <Overlay
+        open={open}
+        onClose={() => setOpen(false)}
+        items={items}
+        current={current}
+        onSelect={onSelect}
+        homeLabel={homeLabel}
+      />
     </>
   );
 }

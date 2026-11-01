@@ -16,12 +16,17 @@ describe("parseVimeo", () => {
     expect(parseVimeo("https://vimeo.com/123456/settings")).toEqual({ id: "123456", hash: undefined });
   });
 
-  it.each([null, undefined, "", "not a url", "https://example.com/123456", "https://notvimeo.com/123456", "https://vimeo.com/about"])(
-    "returns null for %s",
-    (url) => {
-      expect(parseVimeo(url)).toBeNull();
-    },
-  );
+  it.each([
+    null,
+    undefined,
+    "",
+    "not a url",
+    "https://example.com/123456",
+    "https://notvimeo.com/123456",
+    "https://vimeo.com/about",
+  ])("returns null for %s", (url) => {
+    expect(parseVimeo(url)).toBeNull();
+  });
 });
 
 describe("vimeoEmbedUrl", () => {
@@ -34,7 +39,9 @@ describe("vimeoEmbedUrl", () => {
   });
 
   it("background wins over autoplay", () => {
-    expect(vimeoEmbedUrl({ id: "1" }, { background: true, autoplay: true })).toBe("https://player.vimeo.com/video/1?dnt=1&background=1");
+    expect(vimeoEmbedUrl({ id: "1" }, { background: true, autoplay: true })).toBe(
+      "https://player.vimeo.com/video/1?dnt=1&background=1",
+    );
     expect(vimeoEmbedUrl({ id: "1" }, { autoplay: true })).toBe("https://player.vimeo.com/video/1?dnt=1&autoplay=1");
   });
 });

@@ -20,8 +20,7 @@ export function parse(json: string | null): Basket {
     const value = JSON.parse(json) as Partial<Basket>;
     const lines = Array.isArray(value.lines)
       ? value.lines.filter(
-          (l): l is BasketLine =>
-            typeof l?.itemId === "string" && Number.isInteger(l.qty) && l.qty >= 1 && l.qty <= MAX_QTY,
+          (l): l is BasketLine => typeof l?.itemId === "string" && Number.isInteger(l.qty) && l.qty >= 1 && l.qty <= MAX_QTY,
         )
       : [];
     return {
@@ -113,7 +112,11 @@ const subscribeNever = () => () => {};
  */
 export function useQuoteBasket() {
   const basket = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
-  const ready = useSyncExternalStore(subscribeNever, () => true, () => false);
+  const ready = useSyncExternalStore(
+    subscribeNever,
+    () => true,
+    () => false,
+  );
   const count = basket.lines.reduce((sum, l) => sum + l.qty, 0);
   return { ...basket, count, ready, ...basketActions };
 }

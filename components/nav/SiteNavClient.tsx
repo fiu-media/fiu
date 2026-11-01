@@ -101,7 +101,7 @@ function Nav({ items, homeHref, labels, onImage, pathname }: NavProps & { pathna
         ref={dialog}
         id={dialogId}
         aria-label={labels.label}
-        className="fixed inset-0 m-0 h-auto max-h-none w-auto max-w-none flex-col bg-bg/80 text-fg backdrop-blur-2xl transition-opacity duration-300 backdrop:bg-transparent starting:open:opacity-0 open:flex md:hidden!"
+        className="fixed inset-0 m-0 h-auto max-h-none w-auto max-w-none flex-col bg-bg/80 text-fg backdrop-blur-2xl transition-opacity duration-300 backdrop:bg-transparent open:flex md:hidden! starting:open:opacity-0"
       >
         {/* The overlay is see-through, so solid edge bars keep the notch and chin (and Safari's tint) filled. */}
         <EdgeBars />
@@ -126,7 +126,7 @@ function Nav({ items, homeHref, labels, onImage, pathname }: NavProps & { pathna
               href={item.href}
               onClick={close}
               aria-current={isCurrent(pathname, item.href) ? "page" : undefined}
-              className="font-display py-1.5 text-5xl tracking-tight text-fg/55 hover:text-fg aria-[current=page]:text-fg"
+              className="py-1.5 font-display text-5xl tracking-tight text-fg/55 hover:text-fg aria-[current=page]:text-fg"
             >
               {item.label}
             </Link>
@@ -141,7 +141,15 @@ function Nav({ items, homeHref, labels, onImage, pathname }: NavProps & { pathna
 function MenuIcon({ open = false }: { open?: boolean }) {
   const line = "origin-center [transform-box:fill-box] transition-transform duration-300";
   return (
-    <svg aria-hidden viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" className="size-6">
+    <svg
+      aria-hidden
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.6}
+      strokeLinecap="round"
+      className="size-6"
+    >
       <line x1="5" x2="19" y1="8" y2="8" className={cn(line, open && "translate-y-[4px] rotate-45")} />
       <line x1="5" x2="19" y1="16" y2="16" className={cn(line, open && "-translate-y-[4px] -rotate-45")} />
     </svg>

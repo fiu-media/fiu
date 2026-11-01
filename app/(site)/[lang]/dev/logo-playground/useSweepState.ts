@@ -73,9 +73,7 @@ export function useSweepState() {
     () =>
       setState((s) => {
         const now = performance.now();
-        return s.pausedAt === null
-          ? { ...s, pausedAt: now }
-          : { ...s, origin: s.origin + (now - s.pausedAt), pausedAt: null };
+        return s.pausedAt === null ? { ...s, pausedAt: now } : { ...s, origin: s.origin + (now - s.pausedAt), pausedAt: null };
       }),
     [],
   );

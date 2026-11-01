@@ -105,10 +105,7 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
 
   useEffect(() => {
     if (!splashDone) return;
-    const settled = window.setTimeout(
-      () => setIntroDone(true),
-      mode === "live" ? INTRO_BACKSTOP_MS : INTRO_SETTLE_MS,
-    );
+    const settled = window.setTimeout(() => setIntroDone(true), mode === "live" ? INTRO_BACKSTOP_MS : INTRO_SETTLE_MS);
     return () => window.clearTimeout(settled);
   }, [splashDone, mode]);
 
@@ -175,7 +172,7 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
             priority
             sizes="(min-width: 768px) 42vw, 80vw"
             className={cn(
-              "h-auto w-[80vw] max-w-[640px] md:w-[42vw] md:max-w-none motion-safe:transition-transform motion-safe:delay-300 motion-safe:duration-1000 motion-safe:ease-in-out",
+              "h-auto w-[80vw] max-w-[640px] motion-safe:transition-transform motion-safe:delay-300 motion-safe:duration-1000 motion-safe:ease-in-out md:w-[42vw] md:max-w-none",
               logoAtLeft ? "md:-translate-x-[calc(27vw-4rem-env(safe-area-inset-left))]" : "md:translate-x-0",
             )}
           />
@@ -191,7 +188,9 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
             className={cn(
               "absolute inset-0",
               BLEED_CLASS,
-              introDone ? "-z-10" : "pointer-events-none z-30 transition-opacity duration-(--splash-fade) ease-out will-change-[opacity]",
+              introDone
+                ? "-z-10"
+                : "pointer-events-none z-30 transition-opacity duration-(--splash-fade) ease-out will-change-[opacity]",
             )}
             style={{ ...splashFadeVars, opacity: sceneReady && splashDone ? 1 : 0 }}
           >

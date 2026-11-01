@@ -45,7 +45,7 @@ export async function NotFoundPage({
       <SiteNav lang={lang} onImage />
       <main className="flex flex-1 flex-col justify-center gap-6 px-6 pt-24 pb-14 md:px-12 md:pt-0">
         <p className="text-xs font-medium tracking-[0.14em] text-fg-muted uppercase">{copy.eyebrow}</p>
-        <h1 className="font-display max-w-3xl text-5xl leading-[1.02] md:text-8xl">{copy.heading}</h1>
+        <h1 className="max-w-3xl font-display text-5xl leading-[1.02] md:text-8xl">{copy.heading}</h1>
         <p className="max-w-md text-base text-fg-muted md:text-lg">{copy.body}</p>
         <div>
           <NotFoundBackLink lang={lang} home={copy.home} backTo={copy.backTo} sections={getNavItems(lang, dict)} />

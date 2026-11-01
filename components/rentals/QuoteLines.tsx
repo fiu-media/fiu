@@ -29,12 +29,7 @@ export function QuoteLines({ dict, onNavigate }: { dict: Dictionary["basket"]; o
         const max = item?.max ?? 99;
         return (
           <li key={itemId} className="flex items-center gap-3 py-3">
-            <RentalImageView
-              image={item?.image ?? null}
-              placeholder=""
-              sizes="56px"
-              className="size-14 shrink-0 rounded-xl"
-            />
+            <RentalImageView image={item?.image ?? null} placeholder="" sizes="56px" className="size-14 shrink-0 rounded-xl" />
             <div className="min-w-0 flex-1">
               {item ? (
                 <Link
@@ -56,7 +51,11 @@ export function QuoteLines({ dict, onNavigate }: { dict: Dictionary["basket"]; o
               <output aria-live="polite" className="w-7 text-center text-sm tabular-nums">
                 {qty}
               </output>
-              <StepButton label={format(dict.increase, { name })} disabled={qty >= max} onClick={() => setQty(itemId, qty + 1, max)}>
+              <StepButton
+                label={format(dict.increase, { name })}
+                disabled={qty >= max}
+                onClick={() => setQty(itemId, qty + 1, max)}
+              >
                 +
               </StepButton>
             </div>

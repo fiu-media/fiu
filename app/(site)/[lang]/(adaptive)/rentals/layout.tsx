@@ -10,7 +10,12 @@ import { toRentalImage } from "@/sanity/lib/rentals";
 
 /** Labels for basket lines. Published content only, so it is cached and keeps the shell static. */
 async function catalogueLookup(lang: Locale) {
-  const { data } = await cachedSanity({ query: QUOTE_CATALOGUE_QUERY, params: { lang, fallbackLang: defaultLocale }, perspective: "published", stega: false });
+  const { data } = await cachedSanity({
+    query: QUOTE_CATALOGUE_QUERY,
+    params: { lang, fallbackLang: defaultLocale },
+    perspective: "published",
+    stega: false,
+  });
   const items: Record<string, CatalogueItem> = {};
   for (const entry of data) {
     items[entry._id] = {

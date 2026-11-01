@@ -47,7 +47,7 @@ export function AboutLayoutA({ still, slogan, gloss, manifesto, contacts, footer
       <section className="relative -mt-[100dvh] flex h-dvh flex-col justify-end bg-gradient-to-t from-black/75 via-black/20 to-black/35 px-5 pb-[max(2.5rem,env(safe-area-inset-bottom))] md:px-10 md:pb-14">
         <h1
           data-sanity={attributes?.slogan}
-          className="font-display max-w-5xl text-5xl leading-[1.02] text-balance italic md:text-8xl"
+          className="max-w-5xl font-display text-5xl leading-[1.02] text-balance italic md:text-8xl"
         >
           {slogan}
         </h1>
@@ -60,10 +60,7 @@ export function AboutLayoutA({ still, slogan, gloss, manifesto, contacts, footer
       <section className="relative bg-ink px-5 py-24 md:px-10 md:py-36">
         <div className="mx-auto flex max-w-3xl flex-col gap-14">
           {manifesto && (
-            <div
-              data-sanity={attributes?.manifesto}
-              className="space-y-6 text-xl leading-relaxed text-white/85 md:text-2xl"
-            >
+            <div data-sanity={attributes?.manifesto} className="space-y-6 text-xl leading-relaxed text-white/85 md:text-2xl">
               {manifesto}
             </div>
           )}
@@ -94,10 +91,7 @@ export function AboutLayoutB({ still, slogan, gloss, manifesto, contacts, footer
             </h1>
             {gloss && <p className="mt-3 text-base text-white/70">{gloss}</p>}
           </header>
-          <div
-            data-sanity={attributes?.manifesto}
-            className="space-y-4 text-base leading-relaxed text-white/85 md:text-lg"
-          >
+          <div data-sanity={attributes?.manifesto} className="space-y-4 text-base leading-relaxed text-white/85 md:text-lg">
             {manifesto}
           </div>
           {contacts}
@@ -120,10 +114,7 @@ export function AboutLayoutC({ still, slogan, gloss, manifesto, contacts, footer
   return (
     <main className="relative flex min-h-dvh flex-col justify-center gap-8 bg-ink px-5 py-24 text-white md:gap-10 md:px-10 md:py-16">
       <header className="max-w-5xl">
-        <h1
-          data-sanity={attributes?.slogan}
-          className="font-display text-3xl leading-[1.05] text-balance italic md:text-5xl"
-        >
+        <h1 data-sanity={attributes?.slogan} className="font-display text-3xl leading-[1.05] text-balance italic md:text-5xl">
           {slogan}
         </h1>
         {gloss && <p className="mt-3 text-base text-white/70">{gloss}</p>}
@@ -132,10 +123,7 @@ export function AboutLayoutC({ still, slogan, gloss, manifesto, contacts, footer
         <Still still={still} attribute={attributes?.still} />
       </div>
       <div className="grid gap-8 md:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] md:gap-14">
-        <div
-          data-sanity={attributes?.manifesto}
-          className="space-y-4 text-base leading-relaxed text-white/85 md:text-lg"
-        >
+        <div data-sanity={attributes?.manifesto} className="space-y-4 text-base leading-relaxed text-white/85 md:text-lg">
           {manifesto}
         </div>
         <div className="flex flex-col gap-8 md:justify-between">
@@ -160,19 +148,13 @@ export function AboutLayoutD({ still, slogan, gloss, manifesto, contacts, footer
       <section className="px-5 py-20 md:px-10 md:py-28">
         <div className="mx-auto grid max-w-6xl gap-12 md:grid-cols-[minmax(0,6fr)_minmax(0,5fr)] md:gap-16">
           <header>
-            <h1
-              data-sanity={attributes?.slogan}
-              className="font-display text-4xl leading-[1.05] text-balance italic md:text-6xl"
-            >
+            <h1 data-sanity={attributes?.slogan} className="font-display text-4xl leading-[1.05] text-balance italic md:text-6xl">
               {slogan}
             </h1>
             {gloss && <p className="mt-4 text-base text-white/70 md:text-lg">{gloss}</p>}
           </header>
           <div className="flex flex-col gap-10">
-            <div
-              data-sanity={attributes?.manifesto}
-              className="space-y-4 text-base leading-relaxed text-white/85 md:text-lg"
-            >
+            <div data-sanity={attributes?.manifesto} className="space-y-4 text-base leading-relaxed text-white/85 md:text-lg">
               {manifesto}
             </div>
             {contacts}
@@ -194,7 +176,7 @@ export function AboutLayoutE({ still, slogan, gloss, manifesto, contacts, footer
       <section className="flex min-h-dvh flex-col justify-center py-24 md:py-16">
         <h1
           data-sanity={attributes?.slogan}
-          className="font-display max-w-6xl text-5xl leading-[1.02] text-balance italic md:text-8xl"
+          className="max-w-6xl font-display text-5xl leading-[1.02] text-balance italic md:text-8xl"
         >
           {slogan}
         </h1>
@@ -230,10 +212,7 @@ export function AboutLayoutF({ still, slogan, gloss, manifesto, contacts, footer
           <Still still={still} attribute={attributes?.still} />
         </div>
         <GlassPanel onImage className="max-w-2xl p-6 md:p-9">
-          <h1
-            data-sanity={attributes?.slogan}
-            className="font-display text-3xl leading-[1.08] text-balance italic md:text-5xl"
-          >
+          <h1 data-sanity={attributes?.slogan} className="font-display text-3xl leading-[1.08] text-balance italic md:text-5xl">
             {slogan}
           </h1>
           {gloss && <p className="mt-3 text-base text-white/80">{gloss}</p>}
@@ -241,10 +220,7 @@ export function AboutLayoutF({ still, slogan, gloss, manifesto, contacts, footer
       </section>
       <section className="px-5 py-24 md:px-10 md:py-36">
         <div className="mx-auto flex max-w-3xl flex-col gap-14">
-          <div
-            data-sanity={attributes?.manifesto}
-            className="space-y-6 text-xl leading-relaxed text-white/85 md:text-2xl"
-          >
+          <div data-sanity={attributes?.manifesto} className="space-y-6 text-xl leading-relaxed text-white/85 md:text-2xl">
             {manifesto}
           </div>
           {contacts}

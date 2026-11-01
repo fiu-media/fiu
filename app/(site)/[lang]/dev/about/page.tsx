@@ -50,9 +50,9 @@ const layouts = {
 const sampleManifesto = (
   <>
     <p>
-      <strong className="font-semibold text-white">At Fíu we believe in telling a new generation of stories.</strong>{" "}
-      We&rsquo;re a production company, a home for Irish directors, cinematographers and editors, and a rental house for
-      the kit we trust on our own sets.
+      <strong className="font-semibold text-white">At Fíu we believe in telling a new generation of stories.</strong> We&rsquo;re
+      a production company, a home for Irish directors, cinematographers and editors, and a rental house for the kit we trust on
+      our own sets.
     </p>
     <p className="text-white/70">
       We make original work, we make work for clients, and we make room for the people who make it with us.

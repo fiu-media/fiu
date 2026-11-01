@@ -83,7 +83,7 @@ export function NameIndex({
                 className="hidden size-12 shrink-0 rounded-lg object-cover max-md:block pointer-coarse:block"
               />
             )}
-            <span className="font-display min-w-0 flex-1 truncate text-3xl italic md:text-6xl">{item.title}</span>
+            <span className="min-w-0 flex-1 truncate font-display text-3xl italic md:text-6xl">{item.title}</span>
             <span className="shrink-0 text-right text-xs text-fg-muted md:text-sm">{item.meta}</span>
           </Link>
         </li>

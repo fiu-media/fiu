@@ -11,15 +11,7 @@ import { RentalImageView } from "./RentalImageView";
  * The item page's photos: one large view with previous/next buttons, and a strip of thumbnails
  * that swaps it. Arrow keys (and Home/End) work from the large view or from any thumbnail.
  */
-export function RentalGallery({
-  images,
-  name,
-  dict,
-}: {
-  images: RentalImage[];
-  name: string;
-  dict: Dictionary["rentals"];
-}) {
+export function RentalGallery({ images, name, dict }: { images: RentalImage[]; name: string; dict: Dictionary["rentals"] }) {
   const [index, setIndex] = useState(0);
   // Which ends of the thumbnail strip have more to scroll to (the scrollbar is hidden, so we fade them instead).
   const [more, setMore] = useState({ start: false, end: false });
@@ -55,7 +47,15 @@ export function RentalGallery({
   function onKeyDown(event: KeyboardEvent) {
     if (!many) return;
     const target =
-      event.key === "ArrowRight" ? index + 1 : event.key === "ArrowLeft" ? index - 1 : event.key === "Home" ? 0 : event.key === "End" ? images.length - 1 : null;
+      event.key === "ArrowRight"
+        ? index + 1
+        : event.key === "ArrowLeft"
+          ? index - 1
+          : event.key === "Home"
+            ? 0
+            : event.key === "End"
+              ? images.length - 1
+              : null;
     if (target === null) return;
     event.preventDefault();
     const next = select(target);
@@ -91,7 +91,7 @@ export function RentalGallery({
           ref={stripRef}
           onScroll={(event) => measure(event.currentTarget)}
           style={{ maskImage: stripFade(more), WebkitMaskImage: stripFade(more) }}
-          className="flex gap-3 overflow-x-auto p-1.5 pb-2.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="flex [scrollbar-width:none] gap-3 overflow-x-auto p-1.5 pb-2.5 [&::-webkit-scrollbar]:hidden"
         >
           {images.map((image, i) => (
             <li key={image.src} className="shrink-0">
@@ -138,7 +138,16 @@ function StepButton({ label, side, onClick }: { label: string; side: "left" | "r
         side === "left" ? "left-3" : "right-3",
       )}
     >
-      <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <svg
+        viewBox="0 0 24 24"
+        className="size-5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden
+      >
         <path d={side === "left" ? "M15 5l-7 7 7 7" : "M9 5l7 7-7 7"} />
       </svg>
     </button>

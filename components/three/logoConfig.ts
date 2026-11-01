@@ -680,9 +680,7 @@ export function parseConfigExport(text: string): LogoPlaygroundConfig | null {
 
 export type LogoImportKind = "full" | "material" | "lighting" | "interaction";
 
-export type LogoImportResult =
-  | { ok: true; kind: LogoImportKind; config: LogoPlaygroundConfig }
-  | { ok: false; error: string };
+export type LogoImportResult = { ok: true; kind: LogoImportKind; config: LogoPlaygroundConfig } | { ok: false; error: string };
 
 /**
  * Apply a copied full or tab-scoped snapshot onto the current playground config.

@@ -9,7 +9,8 @@ import { SPLASH_FADE_MS, splashFadeVars } from "./splash-config";
 // The whole splash (backdrop and logo) fades as one, over SPLASH_FADE_MS (shared with the glass
 // logo's fade-in in HomeHero and the shader reveal in LogoScene).
 // will-change promotes the layer before the fade starts, so the first frame of it isn't a hitch.
-const FADE_CLASSES = "will-change-[opacity] motion-safe:transition-opacity motion-safe:duration-(--splash-fade) motion-safe:ease-out";
+const FADE_CLASSES =
+  "will-change-[opacity] motion-safe:transition-opacity motion-safe:duration-(--splash-fade) motion-safe:ease-out";
 
 // Once per page load: if the hero remounts (Suspense swap, client navigation back to `/`),
 // the splash must not replay.

@@ -51,7 +51,11 @@ describe("email templates", () => {
   });
 
   it("escapes the contact notification", async () => {
-    const email = contactNotification(en, { name: hostile, email: "a@example.com", enquiryType: "Talent", message: hostile }, "https://studio.test/");
+    const email = contactNotification(
+      en,
+      { name: hostile, email: "a@example.com", enquiryType: "Talent", message: hostile },
+      "https://studio.test/",
+    );
     const out = await html(email);
     expect(out).not.toContain("<script>");
     expect(out).toContain(escaped);

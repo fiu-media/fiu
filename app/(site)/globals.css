@@ -166,10 +166,8 @@ body {
 
   :root[data-glass-refract] .glass {
     --glass-blur: 0.5px;
-    -webkit-backdrop-filter: var(--lens,) blur(var(--glass-blur)) saturate(var(--glass-sat))
-      brightness(var(--glass-dim));
-    backdrop-filter: var(--lens,) blur(var(--glass-blur)) saturate(var(--glass-sat))
-      brightness(var(--glass-dim));
+    -webkit-backdrop-filter: var(--lens,) blur(var(--glass-blur)) saturate(var(--glass-sat)) brightness(var(--glass-dim));
+    backdrop-filter: var(--lens,) blur(var(--glass-blur)) saturate(var(--glass-sat)) brightness(var(--glass-dim));
   }
 
   /* Specular glint that follows the pointer (position set by useLiquidGlass). */
@@ -179,11 +177,7 @@ body {
     inset: 0;
     border-radius: inherit;
     pointer-events: none;
-    background: radial-gradient(
-      90px circle at var(--mx, 50%) var(--my, -20%),
-      rgb(255 255 255 / 0.14),
-      transparent 70%
-    );
+    background: radial-gradient(90px circle at var(--mx, 50%) var(--my, -20%), rgb(255 255 255 / 0.14), transparent 70%);
     mix-blend-mode: plus-lighter;
     opacity: 0;
     transition: opacity 300ms ease;
@@ -218,8 +212,7 @@ body {
    */
   .glass-piece {
     --press: 1;
-    transform: perspective(600px) rotateX(calc(var(--ty, 0) * -4deg)) rotateY(calc(var(--tx, 0) * 6deg))
-      scale(var(--press));
+    transform: perspective(600px) rotateX(calc(var(--ty, 0) * -4deg)) rotateY(calc(var(--tx, 0) * 6deg)) scale(var(--press));
     transition:
       transform 220ms var(--settle),
       background-color 250ms ease,
@@ -397,11 +390,7 @@ html:has(dialog[open]) {
   }
   [data-sweep-axis="orbit"] .glass,
   [data-sweep-axis="orbit"] .glass::before {
-    background-image: radial-gradient(
-      70% 150% at var(--sx) var(--sy),
-      var(--band-color, var(--sheen)),
-      transparent 70%
-    );
+    background-image: radial-gradient(70% 150% at var(--sx) var(--sy), var(--band-color, var(--sheen)), transparent 70%);
   }
 
   /* The rim catch: the same band, masked down to a 2px ring so only the edge lights up. */

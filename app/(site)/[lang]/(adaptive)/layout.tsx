@@ -9,7 +9,10 @@ export default async function AdaptiveLayout({ children, params }: LayoutProps<"
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
   return (
-    <div data-surface="adaptive" className={cn("min-h-dvh bg-bg text-fg md:pt-[max(2.5rem,env(safe-area-inset-top))]", railInset)}>
+    <div
+      data-surface="adaptive"
+      className={cn("min-h-dvh bg-bg text-fg md:pt-[max(2.5rem,env(safe-area-inset-top))]", railInset)}
+    >
       <SiteNav lang={lang} />
       {children}
     </div>

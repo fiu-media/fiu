@@ -37,7 +37,10 @@ export const quoteSchema = z
       .min(1, "empty")
       .max(100),
   })
-  .refine((v) => !ISO_DATE.test(v.startDate) || !ISO_DATE.test(v.endDate) || v.endDate >= v.startDate, { path: ["endDate"], message: "beforeStart" });
+  .refine((v) => !ISO_DATE.test(v.startDate) || !ISO_DATE.test(v.endDate) || v.endDate >= v.startDate, {
+    path: ["endDate"],
+    message: "beforeStart",
+  });
 
 export const contactSchema = z.object({
   ...common,

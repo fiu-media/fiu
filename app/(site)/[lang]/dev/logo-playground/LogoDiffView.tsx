@@ -39,9 +39,7 @@ function DiffRow({ entry }: { entry: DiffEntry }) {
     <li className="py-1 text-xs">
       <div className="flex items-baseline justify-between gap-3">
         <span className="text-white/80">{entry.label}</span>
-        {entry.delta !== null && (
-          <span className="text-[10px] tabular-nums text-white/45">{formatDelta(entry.delta)}</span>
-        )}
+        {entry.delta !== null && <span className="text-[10px] text-white/45 tabular-nums">{formatDelta(entry.delta)}</span>}
       </div>
       <div className="mt-0.5 flex flex-wrap items-baseline gap-x-1.5 font-mono text-[11px] tabular-nums">
         <span className="rounded bg-rose-400/15 px-1 text-rose-200 line-through decoration-rose-300/50">
@@ -81,7 +79,7 @@ function GroupBody({ entries }: { entries: DiffEntry[] }) {
           <details key={subject} open className="rounded-xl border border-white/10 bg-white/5">
             <summary className="flex cursor-pointer items-center justify-between gap-2 px-3 py-1.5 text-xs text-white/85">
               <span>{subject}</span>
-              <span className="text-[10px] tabular-nums text-white/45">{rows.length}</span>
+              <span className="text-[10px] text-white/45 tabular-nums">{rows.length}</span>
             </summary>
             <ul className="divide-y divide-white/5 px-3 pb-1.5">
               {rows.map((entry) => (

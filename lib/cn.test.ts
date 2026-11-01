@@ -13,7 +13,9 @@ describe("cn", () => {
   });
 
   it("keeps the site's custom classes and tokens", () => {
-    expect(cn("glass glass-piece glass-interactive", "glass-on-image")).toBe("glass glass-piece glass-interactive glass-on-image");
+    expect(cn("glass glass-piece glass-interactive", "glass-on-image")).toBe(
+      "glass glass-piece glass-interactive glass-on-image",
+    );
     expect(cn("bg-ink text-fg", "bg-bg-raised")).toBe("text-fg bg-bg-raised");
     expect(cn("text-[0.8125rem] text-fg-muted")).toBe("text-[0.8125rem] text-fg-muted");
     expect(cn("font-display font-semibold")).toBe("font-display font-semibold");

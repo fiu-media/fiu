@@ -79,7 +79,7 @@ async function Profile({ lang, slug }: { lang: string; slug: string }) {
   return (
     <>
       {/* snap-start: the page snaps to its slides, and without this it would skip the bio. */}
-      <section className="snap-start px-4 pt-24 pb-16 md:px-6 md:pt-16 md:pb-12 ">
+      <section className="snap-start px-4 pt-24 pb-16 md:px-6 md:pt-16 md:pb-12">
         <div className="mx-auto mb-6 max-w-6xl">
           <Link
             href={localizedPath(lang, "/talent")}
@@ -115,7 +115,7 @@ async function Profile({ lang, slug }: { lang: string; slug: string }) {
               {roles && <p className="text-xs font-medium tracking-[0.14em] text-fg-muted uppercase">{roles}</p>}
               <h1
                 data-sanity={talentAttribute(profile._id, "name")}
-                className="font-display mt-2 text-5xl text-balance md:text-7xl"
+                className="mt-2 font-display text-5xl text-balance md:text-7xl"
               >
                 {profile.name}
               </h1>
