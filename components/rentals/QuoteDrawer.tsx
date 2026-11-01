@@ -27,7 +27,7 @@ export function QuoteDrawer({ lang, dict }: { lang: Locale; dict: Dictionary["ba
         <GlassPillButton
           size="lg"
           onClick={() => dialog.current?.showModal()}
-          aria-label={format(dict.openWithCount, { count })}
+          aria-label={format(dict.openWithCount, { count }, lang)}
           aria-haspopup="dialog"
         >
           <span>{dict.title}</span>
