@@ -7,6 +7,7 @@ import { GlassPillButton } from "@/components/ui/Glass";
 import { cn } from "@/lib/cn";
 import { format } from "@/lib/i18n/format";
 import { parseVimeo, vimeoEmbedUrl } from "@/lib/vimeo";
+import { useVimeoPlayer } from "./useVimeoPlayer";
 
 export type SlideImage = {
   src: string;
@@ -37,7 +38,7 @@ export type ProjectSlideProps = {
   dict: { play: string; stop: string };
 };
 
-/** Mostly on screen: the preview loop runs. Mostly off: a playing video stops. */
+/** Mostly on screen: the preview loop runs. Mostly off: a playing video pauses. */
 const ACTIVE_RATIO = 0.6;
 const LEFT_RATIO = 0.25;
 
@@ -72,7 +73,8 @@ export function ProjectSlide({
   dict,
 }: ProjectSlideProps) {
   const root = useRef<HTMLDivElement>(null);
-  const player = useRef<HTMLIFrameElement>(null);
+  const [playerFrame, setPlayerFrame] = useState<HTMLIFrameElement | null>(null);
+  const away = useRef(false);
   const [onScreen, setOnScreen] = useState(false);
   const [playing, setPlaying] = useState(false);
   const reducedMotion = usePrefersReducedMotion();
@@ -80,31 +82,42 @@ export function ProjectSlide({
   const video = parseVimeo(vimeoUrl);
   const loop = parseVimeo(previewLoopUrl);
 
-  useEffect(() => {
-    const el = root.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setOnScreen(entry.intersectionRatio >= ACTIVE_RATIO);
-        if (entry.intersectionRatio < LEFT_RATIO) setPlaying(false);
-      },
-      { threshold: [0, LEFT_RATIO, ACTIVE_RATIO] },
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-
-  const showLoop = loop !== null && onScreen && !playing && !reducedMotion;
-
   const play = useCallback(() => setPlaying(true), []);
   const stop = useCallback(() => {
     setPlaying(false);
     // The player is gone; put keyboard focus back where it came from.
     requestAnimationFrame(() => root.current?.querySelector<HTMLButtonElement>("[data-play]")?.focus());
   }, []);
+
+  // A playing video pauses when its slide scrolls away, keeping its place, and stays mounted.
+  const player = useVimeoPlayer(playerFrame, {
+    ended: stop,
+    // The SDK can load after the viewer has already left the slide.
+    ready: (ready) => {
+      if (away.current) ready.pause().catch(() => {});
+    },
+  });
+
   useEffect(() => {
-    if (playing) player.current?.focus();
-  }, [playing]);
+    const el = root.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setOnScreen(entry.intersectionRatio >= ACTIVE_RATIO);
+        away.current = entry.intersectionRatio < LEFT_RATIO;
+        if (away.current) player.current?.pause().catch(() => {});
+      },
+      { threshold: [0, LEFT_RATIO, ACTIVE_RATIO] },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [player]);
+
+  const showLoop = loop !== null && onScreen && !playing && !reducedMotion;
+
+  useEffect(() => {
+    if (playing) playerFrame?.focus();
+  }, [playing, playerFrame]);
 
   return (
     <FullBleedSlide label={label}>
@@ -138,7 +151,7 @@ export function ProjectSlide({
 
         {playing && video ? (
           <iframe
-            ref={player}
+            ref={setPlayerFrame}
             src={vimeoEmbedUrl(video, { autoplay: true })}
             title={title}
             allow="autoplay; fullscreen; picture-in-picture"
@@ -190,17 +203,23 @@ function PlayIcon() {
   );
 }
 
-/** The muted loop behind the title. Mounted only while its slide is on screen, so it fades in again each time. */
+/**
+ * The muted loop behind the title. Mounted only while its slide is on screen, so it fades in again each time.
+ * It fades in once the player reports playback rather than on the iframe's load, which fires before the
+ * first frame and would show black.
+ */
 function PreviewLoop({ src }: { src: string }) {
+  const [frame, setFrame] = useState<HTMLIFrameElement | null>(null);
   const [ready, setReady] = useState(false);
+  useVimeoPlayer(frame, { play: () => setReady(true), bufferend: () => setReady(true) });
   return (
     <iframe
+      ref={setFrame}
       src={src}
       title=""
       aria-hidden
       tabIndex={-1}
       loading="lazy"
-      onLoad={() => setReady(true)}
       className={cn(
         "pointer-events-none absolute inset-0 size-full border-0 transition-opacity duration-700 motion-reduce:transition-none",
         ready ? "opacity-100" : "opacity-0",
