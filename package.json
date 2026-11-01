@@ -15,11 +15,13 @@
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "test:e2e": "playwright test",
+    "email:dev": "email dev --dir emails",
     "seed": "tsx --env-file=.env.local scripts/seed.ts",
     "sync:dev": "tsx --env-file=.env.local scripts/sync-dev.ts",
     "prepare": "husky"
   },
   "dependencies": {
+    "@react-email/components": "^1.0.12",
     "@react-three/drei": "^10.7.9",
     "@react-three/fiber": "^9.8.2",
     "@sanity/client": "^8.11.0",
@@ -42,6 +44,7 @@
   "devDependencies": {
     "@axe-core/playwright": "^4.14.0",
     "@playwright/test": "^1.64.1",
+    "@react-email/ui": "^6.11.6",
     "@tailwindcss/turbopack": "^4",
     "@types/node": "^26.6.6",
     "@types/react": "^19",
@@ -51,6 +54,7 @@
     "eslint-config-next": "16.4.3",
     "husky": "^9.1.7",
     "lint-staged": "^17.6.0",
+    "react-email": "^6.11.6",
     "tailwindcss": "^4",
     "tsx": "^4.23.15",
     "typescript": "^5",

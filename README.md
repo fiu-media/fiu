@@ -30,6 +30,10 @@ The types of Sanity query results are generated from the schema and the `defineQ
 
 After changing a schema or a query, `npm run typecheck` shows what breaks. TypeGen evaluates queries statically, so build them from string literals and the generic helpers in `queries.ts` (called with literal arguments), not from arbitrary expressions.
 
+## Emails
+
+The notification emails are React Email components in `emails/`, rendered by `lib/email/templates.tsx` and sent through Resend (`lib/email/send.ts`). Their copy comes from `dict.emails`. `npm run email:dev` starts a preview server with sample data; keep `server-only` and `@/` imports out of `emails/` so it can load them.
+
 ## Tests
 
 ```bash

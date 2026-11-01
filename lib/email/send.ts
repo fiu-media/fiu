@@ -1,15 +1,31 @@
 import "server-only";
+import type { ReactElement } from "react";
+import { render } from "@react-email/components";
 import { Resend } from "resend";
 
 const SANDBOX_FROM = "Fiú Media <onboarding@resend.dev>";
 
-type Email = { to: string; subject: string; html: string; text: string; replyTo?: string };
+/** Keep headings as written (html-to-text uppercases them) and lay the detail rows out as columns. */
+export const plainTextOptions = {
+  plainText: true,
+  htmlToTextOptions: {
+    selectors: [
+      { selector: "h1", options: { uppercase: false } },
+      { selector: "h2", options: { uppercase: false } },
+      { selector: "table", format: "dataTable" },
+    ],
+  },
+} as const;
+
+type Email = { to: string; subject: string; react: ReactElement; replyTo?: string };
 
 /**
- * Sends through Resend. Without RESEND_API_KEY (local dev, unconfigured previews) the email is
- * logged and skipped, so the form still works end to end.
+ * Sends through Resend, which renders `react` to the HTML part; the plain-text part is rendered
+ * here. Without RESEND_API_KEY (local dev, unconfigured previews) the email is logged and
+ * skipped, so the form still works end to end.
  */
-export async function sendEmail({ to, subject, html, text, replyTo }: Email) {
+export async function sendEmail({ to, subject, react, replyTo }: Email) {
+  const text = await render(react, plainTextOptions);
   const key = process.env.RESEND_API_KEY;
   if (!key) {
     console.warn(`[email] RESEND_API_KEY is not set; skipping "${subject}" to ${to}\n${text}`);
@@ -19,7 +35,7 @@ export async function sendEmail({ to, subject, html, text, replyTo }: Email) {
     from: process.env.EMAIL_FROM || SANDBOX_FROM,
     to,
     subject,
-    html,
+    react,
     text,
     replyTo,
   });
