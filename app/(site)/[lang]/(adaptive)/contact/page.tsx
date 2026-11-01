@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { defaultLocale, isLocale, languageAlternates, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { instagramHandle } from "@/lib/instagram";
-import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
+import { fetchQuery, getDynamicFetchOptions } from "@/sanity/lib/live";
 import { getPageText } from "@/sanity/lib/pageText";
 import { CONTACT_SETTINGS_QUERY } from "@/sanity/lib/queries";
 import { ContactForm } from "./ContactForm";
@@ -45,7 +45,7 @@ export default async function ContactPage({ params }: PageProps<"/[lang]/contact
 async function DirectContact({ lang }: { lang: Locale }) {
   const { contact } = await getDictionary(lang);
   const { perspective, variant } = await getDynamicFetchOptions();
-  const { data } = await cachedSanity({ query: CONTACT_SETTINGS_QUERY, params: { lang, fallbackLang: defaultLocale }, perspective, variant, stega: false });
+  const data = await fetchQuery(CONTACT_SETTINGS_QUERY, { parameters: { lang, fallbackLang: defaultLocale }, perspective, variant, stega: false });
   const settings = data;
   if (!settings?.contactEmail && !settings?.instagram) return null;
 

@@ -26,9 +26,16 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 
 ## Sanity types
 
-The types of Sanity query results are generated from the schema and the `defineQuery` queries in `sanity/lib/queries.ts`. `sanity.types.ts` and `sanity/extract.json` are not committed: `npm run typegen` creates them, and `npm run setup`, `predev`, `prebuild` and `pretypecheck` run it automatically (so Vercel builds and CI generate them too). It needs `NEXT_PUBLIC_SANITY_PROJECT_ID` and `NEXT_PUBLIC_SANITY_DATASET` (any values will do), which the CLI reads from `.env.local`.
+Sanity queries are built with [groqd](https://commerce.nearform.com/open-source/groqd/docs/) in `sanity/lib/queries.ts` (the builder `q` and shared image validators live in `sanity/lib/groqd.ts`). TypeGen only generates the schema types groqd uses: `sanity.types.ts` and `sanity/extract.json` are not committed, `npm run typegen` creates them, and `npm run setup`, `predev`, `prebuild` and `pretypecheck` run it automatically (so Vercel builds and CI generate them too). It needs `NEXT_PUBLIC_SANITY_PROJECT_ID` and `NEXT_PUBLIC_SANITY_DATASET` (any values will do), which the CLI reads from `.env.local`.
 
-After changing a schema or a query, `npm run typecheck` shows what breaks. TypeGen evaluates queries statically, so build them from string literals and the generic helpers in `queries.ts` (called with literal arguments), not from arbitrary expressions.
+Every projected field has a validator, and responses are parsed against them when a query runs, so bad content fails at the fetch with the field named. Run live queries with `fetchQuery` (`sanity/lib/live.ts`) and uncached server-side ones with `runQuery` (`sanity/lib/writeClient.ts`); both return the parsed, typed result. A few notes:
+
+- Import `z` from `sanity/lib/groqd`, not from `zod`: groqd bundles Zod 3, and the two versions' schemas are not interchangeable.
+- Reusable field sets are fragments (`q.fragment(...)`), spread into projections. Where the builder has no method (merging two lists, `^.` parent references) use `raw(expression, validator)`; those expressions are validated but not checked against the schema.
+- Use a nullable validator for anything that can be missing, and `.nullable(true)` on a query that can find nothing, or parsing throws instead of returning `null`.
+- Keep validators plain (`z.string()`, `z.number()`, ...). In draft mode strings carry invisible stega characters, so `.url()`, `.regex()` or literals on content strings would fail there.
+
+After changing a schema or a query, `npm run typecheck` shows what breaks.
 
 ## Learn More
 

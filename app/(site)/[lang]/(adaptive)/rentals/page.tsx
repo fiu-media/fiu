@@ -6,7 +6,7 @@ import { RentalCatalogue, type CatalogueCard } from "@/components/rentals/Rental
 import { PageTitle } from "@/components/ui/PageTitle";
 import { defaultLocale, isLocale, languageAlternates, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
-import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
+import { fetchQuery, getDynamicFetchOptions } from "@/sanity/lib/live";
 import { getPageText } from "@/sanity/lib/pageText";
 import { RENTALS_QUERY } from "@/sanity/lib/queries";
 import { publishedId, toRentalImage } from "@/sanity/lib/rentals";
@@ -39,7 +39,7 @@ export default async function RentalsPage({ params }: PageProps<"/[lang]/rentals
 async function Catalogue({ lang }: { lang: Locale }) {
   const { rentals } = await getDictionary(lang);
   const { perspective, variant } = await getDynamicFetchOptions();
-  const { data } = await cachedSanity({ query: RENTALS_QUERY, params: { lang, fallbackLang: defaultLocale }, perspective, variant, stega: false });
+  const data = await fetchQuery(RENTALS_QUERY, { parameters: { lang, fallbackLang: defaultLocale }, perspective, variant, stega: false });
   const { categories, items } = data;
 
   const cards: CatalogueCard[] = items.map((item) => ({

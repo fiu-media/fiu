@@ -1,19 +1,22 @@
-import { defineQuery } from "next-sanity";
+import type { Parser } from "groqd";
+import type { AllSanitySchemaTypes, SanityImageAssetReference, SanityImageCrop, SanityImageHotspot, SiteSettings } from "@/sanity.types";
+import { imageAsset, imageCrop, imageDimensions, imageHotspot, portableText, q, z } from "./groqd";
 
 // Every content query takes `$lang` and `$fallbackLang` (the default locale). A document that
 // hasn't been translated yet falls back to its default-language counterpart instead of vanishing.
 // New queries (projects, talent, ...) should follow the same pattern.
+//
+// Queries are built with groqd (see `./groqd`): every projected field has a validator, and the response
+// is parsed against it where the query is run (`fetchQuery` in `./live`). Where the builder has no
+// method (merging two lists, `^.` parent references), `raw` takes a GROQ expression plus its validator.
 
-/**
- * Documents of `type` in `$lang`, plus default-language ones with no translation (matched by slug).
- * `extra` adds filter terms (pass `""` for none). The helpers in this file are generic and use literal
- * arguments so TypeGen can evaluate each query and TypeScript keeps its exact string type.
- */
-const withFallback = <const T extends string, const E extends string>(type: T, extra: E) =>
-  `(
-    *[_type == "${type}" && language == $lang${extra}]
-    + *[_type == "${type}" && language == $fallbackLang${extra} && !(slug.current in *[_type == "${type}" && language == $lang${extra}].slug.current)]
-  )` as const;
+type Lang = { lang: string; fallbackLang: string };
+const base = q.parameters<Lang>();
+/** A query root that declares its parameters (`$lang`, `$fallbackLang`, plus whatever the query adds). */
+type Root<P extends object> = ReturnType<typeof q.parameters<P>>;
+
+type DocumentOf<T extends string> = Extract<AllSanitySchemaTypes, { _type: T }>;
+type Translatable = "rentalItem" | "rentalCategory" | "talent" | "project" | "projectType" | "role" | "siteSettings";
 
 /** The default-language document a translation was made from (they share a slug). Use inside a projection. */
 const DEFAULT_COUNTERPART = `*[_type == ^._type && language == $fallbackLang && slug.current == ^.slug.current][0]`;
@@ -25,218 +28,268 @@ const DEFAULT_COUNTERPART = `*[_type == ^._type && language == $fallbackLang && 
 const RENTAL_AVAILABLE = ` && !(slug.current in *[_type == "rentalItem" && language == $fallbackLang && available == false].slug.current)`;
 
 /**
- * Orders a document list by the editor-set drag-and-drop rank. Every language shares the default
- * language's order (matched by slug); a document with no default-language counterpart uses its own
- * rank. Unranked documents tie, so `tiebreak` (a field name) keeps their order stable.
+ * Documents of `type` in `$lang`, plus default-language ones with no translation (matched by slug),
+ * ordered by the editor-set drag-and-drop rank. Every language shares the default language's order
+ * (matched by slug); a document with no default-language counterpart uses its own rank. Unranked
+ * documents tie, so `tiebreak` (a field name) keeps their order stable. `extra` adds filter terms.
  */
-const byRank = <const T extends string>(tiebreak: T) =>
-  `[]{
+const ranked = <P extends Lang, T extends Translatable>(root: Root<P>, type: T, tiebreak: string, extra = "") =>
+  root
+    .raw<Array<DocumentOf<T>>>(
+      `(
+    *[_type == "${type}" && language == $lang${extra}]
+    + *[_type == "${type}" && language == $fallbackLang${extra} && !(slug.current in *[_type == "${type}" && language == $lang${extra}].slug.current)]
+  )`,
+    )
+    .raw(
+      `[]{
     ...,
     "rank": coalesce(${DEFAULT_COUNTERPART}.orderRank, orderRank)
-  } | order(rank asc, ${tiebreak} asc)` as const;
+  } | order(rank asc, ${tiebreak} asc)`,
+      "passthrough",
+    );
 
-/** Available rental items in `$lang`, plus default-language ones with no translation. Written out (not `withFallback`) so TypeGen can resolve it. */
-const RENTAL_ITEMS = `(
-    *[_type == "rentalItem" && language == $lang${RENTAL_AVAILABLE}]
-    + *[_type == "rentalItem" && language == $fallbackLang${RENTAL_AVAILABLE} && !(slug.current in *[_type == "rentalItem" && language == $lang${RENTAL_AVAILABLE}].slug.current)]
-  )`;
-
-export const HOME_STILLS_QUERY = defineQuery(`
-  coalesce(
-    *[_type == "siteSettings" && language == $lang && count(homeStills[defined(asset)]) > 0][0],
-    *[_type == "siteSettings" && language == $fallbackLang][0]
-  ){
-    _id,
-    "stills": homeStills[defined(asset)]{
-      _key,
-      alt,
-      lightTint,
-      asset,
-      crop,
-      hotspot,
-      "lqip": asset->metadata.lqip,
-      "dimensions": asset->metadata.dimensions
-    }
-  }
-`);
-
-const RENTAL_ITEM_FIELDS = `
-  _id,
-  name,
-  "slug": slug.current,
-  brand,
-  summary,
-  keyFeatures,
-  "maxQuantity": coalesce(${DEFAULT_COUNTERPART}.maxQuantity, maxQuantity),
-  "category": category->{ _id, title, "slug": slug.current },
-  "images": images[defined(asset)]{
-    _key,
-    alt,
-    asset,
-    crop,
-    hotspot,
-    "lqip": asset->metadata.lqip,
-    "dimensions": asset->metadata.dimensions
-  }
-`;
-
-export const RENTALS_QUERY = defineQuery(`{
-  "categories": ${withFallback("rentalCategory", "")}${byRank("title")}{
-    _id,
-    title,
-    "slug": slug.current
-  },
-  "items": ${RENTAL_ITEMS}${byRank("name")}{
-    ${RENTAL_ITEM_FIELDS}
-  }
-}`);
-
-export const RENTAL_ITEM_QUERY = defineQuery(`
-  coalesce(
-    *[_type == "rentalItem" && language == $lang && slug.current == $slug${RENTAL_AVAILABLE}][0],
-    *[_type == "rentalItem" && language == $fallbackLang && slug.current == $slug${RENTAL_AVAILABLE}][0]
-  ){
-    ${RENTAL_ITEM_FIELDS},
-    specs[]{ _key, key, value },
-    includedInKit
-  }
-`);
-
-/** Just enough per item to label basket lines, which only store ids and quantities. */
-export const QUOTE_CATALOGUE_QUERY = defineQuery(`
-  ${RENTAL_ITEMS}${byRank("name")}{
-    _id,
-    name,
-    brand,
-    "maxQuantity": coalesce(${DEFAULT_COUNTERPART}.maxQuantity, maxQuantity),
-    "slug": slug.current,
-    "image": images[defined(asset)][0]{ alt, asset, crop, hotspot, "lqip": asset->metadata.lqip }
-  }
-`);
-
-export const CONTACT_SETTINGS_QUERY = defineQuery(`{
-  "cur": *[_type == "siteSettings" && language == $lang][0]{ contactEmail, instagram },
-  "fb": *[_type == "siteSettings" && language == $fallbackLang][0]{ contactEmail, instagram }
-}{
-  "contactEmail": coalesce(cur.contactEmail, fb.contactEmail),
-  "instagram": coalesce(cur.instagram, fb.instagram)
-}`);
-
-/** Recipient addresses for form notifications, falling back to the default language's settings. */
-export const SUBMISSION_SETTINGS_QUERY = defineQuery(`
-  coalesce(
-    *[_type == "siteSettings" && language == $lang][0],
-    *[_type == "siteSettings" && language == $fallbackLang][0]
-  ){ contactEmail, quoteRecipient }
-`);
-
-/** Ids of rental items that can currently be requested (published and available). */
-export const AVAILABLE_ITEM_IDS_QUERY = defineQuery(`
-  *[_type == "rentalItem" && _id in $ids${RENTAL_AVAILABLE}]{
-    _id, name, brand,
-    "maxQuantity": coalesce(${DEFAULT_COUNTERPART}.maxQuantity, maxQuantity)
-  }
-`);
-
-/** Editor-written intro lines for the Rentals, Request a quote, Contact, Our Work and Talent pages, plus each page's Fiú line. */
-export const PAGE_TEXT_QUERY = defineQuery(`{
-  "cur": *[_type == "siteSettings" && language == $lang][0]{ rentalsIntro, quoteIntro, contactIntro, workIntro, talentIntro, aboutTagline, workTagline, talentTagline, rentalsTagline, contactTagline },
-  "fb": *[_type == "siteSettings" && language == $fallbackLang][0]{ rentalsIntro, quoteIntro, contactIntro, workIntro, talentIntro, aboutTagline, workTagline, talentTagline, rentalsTagline, contactTagline }
-}{
-  "rentalsIntro": coalesce(cur.rentalsIntro, fb.rentalsIntro),
-  "quoteIntro": coalesce(cur.quoteIntro, fb.quoteIntro),
-  "contactIntro": coalesce(cur.contactIntro, fb.contactIntro),
-  "workIntro": coalesce(cur.workIntro, fb.workIntro),
-  "talentIntro": coalesce(cur.talentIntro, fb.talentIntro),
-  "aboutTagline": coalesce(cur.aboutTagline, fb.aboutTagline),
-  "workTagline": coalesce(cur.workTagline, fb.workTagline),
-  "talentTagline": coalesce(cur.talentTagline, fb.talentTagline),
-  "rentalsTagline": coalesce(cur.rentalsTagline, fb.rentalsTagline),
-  "contactTagline": coalesce(cur.contactTagline, fb.contactTagline)
-}`);
+/** Available rental items in `$lang`, plus default-language ones with no translation. */
+const rentalItems = (root: Root<Lang>) => ranked(root, "rentalItem", "name", RENTAL_AVAILABLE);
 
 /** The title of a role or project type in `$lang`; those references always point at the default-language document. */
-const translatedTitle = <const T extends string>(type: T) =>
-  `coalesce(*[_type == "${type}" && language == $lang && slug.current == ^.slug.current][0].title, title)` as const;
+const translatedTitle = (type: "role" | "projectType") =>
+  `coalesce(*[_type == "${type}" && language == $lang && slug.current == ^.slug.current][0].title, title)`;
 
-const IMAGE_FIELDS = `alt, asset, crop, hotspot, "lqip": asset->metadata.lqip, "dimensions": asset->metadata.dimensions`;
+const nullableString = z.string().nullable();
+const nullableNumber = z.number().nullable();
 
-const TALENT_CARD_FIELDS = `
-  _id,
-  name,
-  "slug": slug.current,
-  "roles": roles[]->{ "title": ${translatedTitle("role")} }.title,
-  "portrait": select(defined(portrait.asset) => portrait, ${DEFAULT_COUNTERPART}.portrait){ ${IMAGE_FIELDS} }
-` as const;
+type ImageLike = { alt?: string; asset?: SanityImageAssetReference; crop?: SanityImageCrop; hotspot?: SanityImageHotspot };
+
+/** An image without its size: enough to label it, and for `next/image` where the catalogue shows it at a fixed frame. */
+const imageBasics = q.fragment<ImageLike>().project((sub) => ({
+  alt: nullableString,
+  asset: imageAsset,
+  crop: imageCrop,
+  hotspot: imageHotspot,
+  lqip: sub.field("asset").deref().field("metadata.lqip", nullableString),
+}));
+
+/** What every image projection returns; `lqip` and `dimensions` come from the image asset. */
+const imageFields = q.fragment<ImageLike>().project((sub) => ({
+  ...imageBasics,
+  dimensions: sub.field("asset").deref().field("metadata.dimensions", imageDimensions),
+}));
+
+/** The site settings in one language: `[0]` of the (at most one) document. */
+const siteSettings = (lang: "$lang" | "$fallbackLang", extra = "") =>
+  base.star.filterByType("siteSettings").filterRaw(`language == ${lang}${extra}`).slice(0);
+
+export const HOME_STILLS_QUERY = base
+  .coalesce(siteSettings("$lang", " && count(homeStills[defined(asset)]) > 0"), siteSettings("$fallbackLang"))
+  .project((settings) => ({
+    _id: z.string(),
+    stills: settings
+      .field("homeStills[]")
+      .filterRaw("defined(asset)")
+      .project({
+        _key: z.string(),
+        lightTint: nullableString,
+        ...imageFields,
+      })
+      .nullable(true),
+  }))
+  .nullable(true);
+
+const rentalItemFields = q.fragmentForType<"rentalItem">().project((sub) => ({
+  _id: z.string(),
+  name: z.string(),
+  slug: z.slug("slug"),
+  brand: nullableString,
+  summary: nullableString,
+  keyFeatures: z.array(z.string()).nullable(),
+  maxQuantity: sub.raw(`coalesce(${DEFAULT_COUNTERPART}.maxQuantity, maxQuantity)`, nullableNumber),
+  category: sub
+    .field("category")
+    .deref()
+    .project({
+      _id: z.string(),
+      title: z.string(),
+      slug: z.slug("slug"),
+    })
+    .nullable(),
+  images: sub
+    .field("images[]")
+    .filterRaw("defined(asset)")
+    .project({
+      _key: z.string(),
+      ...imageFields,
+    })
+    .nullable(true),
+}));
+
+export const RENTALS_QUERY = base.project({
+  categories: ranked(base, "rentalCategory", "title").project({
+    _id: z.string(),
+    title: z.string(),
+    slug: z.slug("slug"),
+  }),
+  items: rentalItems(base).project(rentalItemFields),
+});
+
+export const RENTAL_ITEM_QUERY = q
+  .parameters<Lang & { slug: string }>()
+  .coalesce(
+    q.star.filterByType("rentalItem").filterRaw(`language == $lang && slug.current == $slug${RENTAL_AVAILABLE}`).slice(0),
+    q.star.filterByType("rentalItem").filterRaw(`language == $fallbackLang && slug.current == $slug${RENTAL_AVAILABLE}`).slice(0),
+  )
+  .project((sub) => ({
+    ...rentalItemFields,
+    specs: sub.field("specs[]").project({ _key: z.string(), key: z.string(), value: z.string() }).nullable(true),
+    includedInKit: z.array(z.string()).nullable(),
+  }))
+  .nullable(true);
+
+/** Just enough per item to label basket lines, which only store ids and quantities. */
+export const QUOTE_CATALOGUE_QUERY = rentalItems(base).project((sub) => ({
+  _id: z.string(),
+  name: z.string(),
+  brand: nullableString,
+  maxQuantity: sub.raw(`coalesce(${DEFAULT_COUNTERPART}.maxQuantity, maxQuantity)`, nullableNumber),
+  slug: z.slug("slug"),
+  image: sub.field("images[]").filterRaw("defined(asset)").slice(0).project(imageBasics),
+}));
+
+/**
+ * Settings fields read from the `$lang` document first, then from the default language's. The two
+ * documents are fetched once as `cur` and `fb` (with the listed fields), and `both` picks each field.
+ */
+type SettingsField = Exclude<keyof SiteSettings, "_type" | "_createdAt" | "_updatedAt" | "_rev" | "language">;
+const settingsPair = (fields: readonly SettingsField[]) =>
+  base.raw<{ cur: unknown; fb: unknown }>(`{
+  "cur": *[_type == "siteSettings" && language == $lang][0]{ ${fields.join(", ")} },
+  "fb": *[_type == "siteSettings" && language == $fallbackLang][0]{ ${fields.join(", ")} }
+}`);
+const both = <T>(sub: { raw: typeof base.raw }, field: SettingsField, parser: Parser<unknown, T>) =>
+  sub.raw<T>(`coalesce(cur.${field}, fb.${field})`, parser);
+
+const CONTACT_FIELDS = ["contactEmail", "instagram"] as const;
+export const CONTACT_SETTINGS_QUERY = settingsPair(CONTACT_FIELDS).project((sub) => ({
+  contactEmail: both(sub, "contactEmail", nullableString),
+  instagram: both(sub, "instagram", nullableString),
+}));
+
+/** Recipient addresses for form notifications, falling back to the default language's settings. */
+export const SUBMISSION_SETTINGS_QUERY = base
+  .coalesce(siteSettings("$lang"), siteSettings("$fallbackLang"))
+  .project({ contactEmail: nullableString, quoteRecipient: nullableString })
+  .nullable(true);
+
+/** Ids of rental items that can currently be requested (published and available). */
+export const AVAILABLE_ITEM_IDS_QUERY = q
+  .parameters<{ ids: string[]; fallbackLang: string }>()
+  .star.filterByType("rentalItem")
+  .filterRaw(`_id in $ids${RENTAL_AVAILABLE}`)
+  .project((sub) => ({
+    _id: z.string(),
+    name: z.string(),
+    brand: nullableString,
+    maxQuantity: sub.raw(`coalesce(${DEFAULT_COUNTERPART}.maxQuantity, maxQuantity)`, nullableNumber),
+  }));
+
+const PAGE_TEXT_FIELDS = [
+  "rentalsIntro",
+  "quoteIntro",
+  "contactIntro",
+  "workIntro",
+  "talentIntro",
+  "aboutTagline",
+  "workTagline",
+  "talentTagline",
+  "rentalsTagline",
+  "contactTagline",
+] as const;
+
+/** Editor-written intro lines for the Rentals, Request a quote, Contact, Our Work and Talent pages, plus each page's Fiú line. */
+export const PAGE_TEXT_QUERY = settingsPair(PAGE_TEXT_FIELDS).project((sub) => ({
+  rentalsIntro: both(sub, "rentalsIntro", nullableString),
+  quoteIntro: both(sub, "quoteIntro", nullableString),
+  contactIntro: both(sub, "contactIntro", nullableString),
+  workIntro: both(sub, "workIntro", nullableString),
+  talentIntro: both(sub, "talentIntro", nullableString),
+  aboutTagline: both(sub, "aboutTagline", nullableString),
+  workTagline: both(sub, "workTagline", nullableString),
+  talentTagline: both(sub, "talentTagline", nullableString),
+  rentalsTagline: both(sub, "rentalsTagline", nullableString),
+  contactTagline: both(sub, "contactTagline", nullableString),
+}));
+
+/** An image field, or the default-language document's when this translation has none (a `select` over `^.`-style lookups). */
+const imageOrCounterpart = (field: "portrait" | "coverStill") =>
+  q.raw<ImageLike>(
+    `select(defined(${field}.asset) => ${field}, ${DEFAULT_COUNTERPART}.${field})`,
+  );
+
+const talentCardFields = q.fragmentForType<"talent">().project((sub) => ({
+  _id: z.string(),
+  name: z.string(),
+  slug: z.slug("slug"),
+  roles: sub.raw(`roles[]->{ "title": ${translatedTitle("role")} }.title`, z.array(z.string()).nullable()),
+  portrait: imageOrCounterpart("portrait").project(imageFields),
+}));
 
 /** The Talent index: the roster in the editors' drag-and-drop order. */
-export const TALENT_QUERY = defineQuery(`
-  ${withFallback("talent", "")}${byRank("name")}{
-    ${TALENT_CARD_FIELDS}
-  }
-`);
+export const TALENT_QUERY = ranked(base, "talent", "name").project(talentCardFields);
 
 /** One person for their bio page. `talentId` is the default-language document that projects credit. */
-export const TALENT_PROFILE_QUERY = defineQuery(`
-  coalesce(
-    *[_type == "talent" && language == $lang && slug.current == $slug][0],
-    *[_type == "talent" && language == $fallbackLang && slug.current == $slug][0]
-  ){
-    ${TALENT_CARD_FIELDS},
-    "bio": coalesce(bio, ${DEFAULT_COUNTERPART}.bio),
-    "talentId": coalesce(${DEFAULT_COUNTERPART}._id, _id)
-  }
-`);
+export const TALENT_PROFILE_QUERY = q
+  .parameters<Lang & { slug: string }>()
+  .coalesce(
+    q.star.filterByType("talent").filterRaw("language == $lang && slug.current == $slug").slice(0),
+    q.star.filterByType("talent").filterRaw("language == $fallbackLang && slug.current == $slug").slice(0),
+  )
+  .project((sub) => ({
+    ...talentCardFields,
+    bio: sub.raw(`coalesce(bio, ${DEFAULT_COUNTERPART}.bio)`, portableText),
+    talentId: sub.raw(`coalesce(${DEFAULT_COUNTERPART}._id, _id)`, z.string()),
+  }))
+  .nullable(true);
 
 /** What a project slide needs: shared by the Our Work scroll and a talent's own scroll. */
-const PROJECT_SLIDE_FIELDS = `
-    _id,
-    title,
-    "slug": slug.current,
-    "typeSlug": type->slug.current,
-    "type": type->{ "title": ${translatedTitle("projectType")} }.title,
-    "year": coalesce(year, ${DEFAULT_COUNTERPART}.year),
-    "client": coalesce(client, ${DEFAULT_COUNTERPART}.client),
-    "vimeoUrl": coalesce(vimeoUrl, ${DEFAULT_COUNTERPART}.vimeoUrl),
-    "previewLoopUrl": coalesce(previewLoopUrl, ${DEFAULT_COUNTERPART}.previewLoopUrl),
-    "cover": select(defined(coverStill.asset) => coverStill, ${DEFAULT_COUNTERPART}.coverStill){ ${IMAGE_FIELDS} }
-` as const;
+const projectSlideFields = q.fragmentForType<"project">().project((sub) => ({
+  _id: z.string(),
+  title: z.string(),
+  slug: z.slug("slug"),
+  typeSlug: sub.raw("type->slug.current", nullableString),
+  type: sub.raw(`type->{ "title": ${translatedTitle("projectType")} }.title`, nullableString),
+  year: sub.raw(`coalesce(year, ${DEFAULT_COUNTERPART}.year)`, nullableNumber),
+  client: sub.raw(`coalesce(client, ${DEFAULT_COUNTERPART}.client)`, nullableString),
+  vimeoUrl: sub.raw(`coalesce(vimeoUrl, ${DEFAULT_COUNTERPART}.vimeoUrl)`, nullableString),
+  previewLoopUrl: sub.raw(`coalesce(previewLoopUrl, ${DEFAULT_COUNTERPART}.previewLoopUrl)`, nullableString),
+  cover: imageOrCounterpart("coverStill").project(imageFields),
+}));
 
 /** The projects a person is credited on, in the editors' drag-and-drop order, with what they did on each. */
-export const TALENT_PROJECTS_QUERY = defineQuery(`
-  ${withFallback("project", " && references($talentId)")}${byRank("title")}{
-    ${PROJECT_SLIDE_FIELDS},
-    "roles": credits[talent._ref == $talentId].role->{ "title": ${translatedTitle("role")} }.title
-  }
-`);
+export const TALENT_PROJECTS_QUERY = ranked(q.parameters<Lang & { talentId: string }>(), "project", "title", " && references($talentId)").project((sub) => ({
+  ...projectSlideFields,
+  roles: sub.raw(`credits[talent._ref == $talentId].role->{ "title": ${translatedTitle("role")} }.title`, z.array(z.string()).nullable()),
+}));
 
 /** Our Work: every project in the editors' drag-and-drop order, and the types that filter them. */
-export const WORK_QUERY = defineQuery(`{
-  "types": ${withFallback("projectType", "")}${byRank("title")}{
-    "slug": slug.current,
-    "title": coalesce(pluralTitle, title)
-  },
-  "projects": ${withFallback("project", "")}${byRank("title")}{
-    ${PROJECT_SLIDE_FIELDS}
-  }
-}`);
+export const WORK_QUERY = base.project({
+  types: ranked(base, "projectType", "title").project((sub) => ({
+    slug: z.slug("slug"),
+    title: sub.raw("coalesce(pluralTitle, title)", z.string()),
+  })),
+  projects: ranked(base, "project", "title").project(projectSlideFields),
+});
 
 /** The About page: slogan, gloss, manifesto and still from Site settings, each falling back to the default language's. */
-export const ABOUT_QUERY = defineQuery(`{
-  "cur": *[_type == "siteSettings" && language == $lang][0]{
-    _id, slogan, sloganGloss, manifesto, contactEmail, instagram,
-    "still": aboutStill{ ${IMAGE_FIELDS} }
-  },
-  "fb": *[_type == "siteSettings" && language == $fallbackLang][0]{
-    _id, slogan, sloganGloss, manifesto, contactEmail, instagram,
-    "still": aboutStill{ ${IMAGE_FIELDS} }
-  }
-}{
-  "_id": coalesce(cur._id, fb._id),
-  "slogan": coalesce(cur.slogan, fb.slogan),
-  "sloganGloss": coalesce(cur.sloganGloss, fb.sloganGloss),
-  "manifesto": coalesce(cur.manifesto, fb.manifesto),
-  "contactEmail": coalesce(cur.contactEmail, fb.contactEmail),
-  "instagram": coalesce(cur.instagram, fb.instagram),
-  "still": select(defined(cur.still.asset) => cur.still, fb.still)
-}`);
+export const ABOUT_QUERY = settingsPair(["_id", "slogan", "sloganGloss", "manifesto", "contactEmail", "instagram", "aboutStill"]).project((sub) => ({
+  _id: both(sub, "_id", nullableString),
+  slogan: both(sub, "slogan", nullableString),
+  sloganGloss: both(sub, "sloganGloss", nullableString),
+  manifesto: both(sub, "manifesto", portableText),
+  contactEmail: both(sub, "contactEmail", nullableString),
+  instagram: both(sub, "instagram", nullableString),
+  still: sub
+    .raw<ImageLike>(
+      "select(defined(cur.aboutStill.asset) => cur.aboutStill, fb.aboutStill)",
+    )
+    .project(imageFields),
+}));

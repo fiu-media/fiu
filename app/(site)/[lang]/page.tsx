@@ -8,7 +8,7 @@ import { SiteNav } from "@/components/nav/SiteNav";
 import { fallbackStills } from "@/lib/fallback-stills";
 import { defaultLocale, isLocale, languageAlternates, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
-import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
+import { fetchQuery, getDynamicFetchOptions } from "@/sanity/lib/live";
 import { HOME_STILLS_QUERY } from "@/sanity/lib/queries";
 import { toHeroStill, type HeroStill } from "@/sanity/lib/stills";
 
@@ -56,7 +56,7 @@ async function homeStills(
   perspective: Awaited<ReturnType<typeof getDynamicFetchOptions>>["perspective"],
   variant: string | undefined,
 ): Promise<HeroStill[]> {
-  const { data } = await cachedSanity({ query: HOME_STILLS_QUERY, params: { lang, fallbackLang: defaultLocale }, perspective, variant, stega: false });
+  const data = await fetchQuery(HOME_STILLS_QUERY, { parameters: { lang, fallbackLang: defaultLocale }, perspective, variant, stega: false });
   const stills = (data?.stills ?? []).map((s) => toHeroStill(data!._id, s)).filter((s): s is HeroStill => s !== null);
   return stills.length > 0 ? stills : fallbackStills;
 }
