@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Suspense, useEffect, useId, useRef } from "react";
 import { EdgeBars } from "@/components/ui/EdgeBars";
 import { GlassPillButton } from "@/components/ui/Glass";
+import { cn } from "@/lib/cn";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import type { NavItem } from "@/lib/i18n/nav";
 import { HomeLink } from "./HomeLink";
@@ -49,9 +50,10 @@ function Nav({ items, homeHref, labels, onImage, pathname }: NavProps & { pathna
   return (
     <>
       <aside
-        className={`fixed inset-y-0 left-0 z-30 hidden w-[calc(4rem+env(safe-area-inset-left))] flex-col items-center gap-12 border-r border-line pt-[max(1.75rem,env(safe-area-inset-top))] pb-7 pl-[env(safe-area-inset-left)] md:flex ${
-          onImage ? "bg-gradient-to-r from-black/35 to-transparent [text-shadow:0_1px_6px_rgb(0_0_0/0.35)]" : ""
-        }`}
+        className={cn(
+          "fixed inset-y-0 left-0 z-30 hidden w-[calc(4rem+env(safe-area-inset-left))] flex-col items-center gap-12 border-r border-line pt-[max(1.75rem,env(safe-area-inset-top))] pb-7 pl-[env(safe-area-inset-left)] md:flex",
+          onImage && "bg-gradient-to-r from-black/35 to-transparent [text-shadow:0_1px_6px_rgb(0_0_0/0.35)]",
+        )}
       >
         {/* Sprocket rhythm: a faint, evenly spaced row of ticks, the only nod to film. */}
         <span
@@ -75,9 +77,10 @@ function Nav({ items, homeHref, labels, onImage, pathname }: NavProps & { pathna
 
       {/* On cinematic pages the bar floats over the content; on adaptive pages it takes its own row. */}
       <header
-        className={`z-30 flex items-center justify-between px-[max(1.25rem,env(safe-area-inset-left))] pt-[max(1.25rem,env(safe-area-inset-top))] pr-[max(1.25rem,env(safe-area-inset-right))] pb-4 md:hidden ${
-          onImage ? "absolute inset-x-0 top-0" : "relative"
-        }`}
+        className={cn(
+          "z-30 flex items-center justify-between px-[max(1.25rem,env(safe-area-inset-left))] pt-[max(1.25rem,env(safe-area-inset-top))] pr-[max(1.25rem,env(safe-area-inset-right))] pb-4 md:hidden",
+          onImage ? "absolute inset-x-0 top-0" : "relative",
+        )}
       >
         <HomeLink href={homeHref} label={labels.home} className="h-9" />
         <GlassPillButton
@@ -87,7 +90,7 @@ function Nav({ items, homeHref, labels, onImage, pathname }: NavProps & { pathna
           aria-haspopup="dialog"
           aria-controls={dialogId}
           onClick={() => dialog.current?.showModal()}
-          className="size-10! px-0!"
+          className="size-10 px-0"
         >
           <MenuIcon />
         </GlassPillButton>
@@ -139,8 +142,8 @@ function MenuIcon({ open = false }: { open?: boolean }) {
   const line = "origin-center [transform-box:fill-box] transition-transform duration-300";
   return (
     <svg aria-hidden viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" className="size-6">
-      <line x1="5" x2="19" y1="8" y2="8" className={`${line} ${open ? "translate-y-[4px] rotate-45" : ""}`} />
-      <line x1="5" x2="19" y1="16" y2="16" className={`${line} ${open ? "-translate-y-[4px] -rotate-45" : ""}`} />
+      <line x1="5" x2="19" y1="8" y2="8" className={cn(line, open && "translate-y-[4px] rotate-45")} />
+      <line x1="5" x2="19" y1="16" y2="16" className={cn(line, open && "-translate-y-[4px] -rotate-45")} />
     </svg>
   );
 }

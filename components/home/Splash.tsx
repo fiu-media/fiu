@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { cn } from "@/lib/cn";
 import logo from "@/public/brand/fiu-logo.svg";
 import { SPLASH_FADE_MS, splashFadeVars } from "./splash-config";
 
@@ -46,17 +47,17 @@ export function Splash({ done }: { done: boolean }) {
     <div
       aria-hidden
       style={splashFadeVars}
-      className={`fixed inset-0 z-20 grid place-items-center ${done ? "pointer-events-none" : ""}`}
+      className={cn("fixed inset-0 z-20 grid place-items-center", done && "pointer-events-none")}
     >
       {/* Backdrop and logo fade together. In live mode the glass logo fades in on top over the
           same SPLASH_FADE_MS (HomeHero), so the handoff happens inside this one fade. */}
-      <div className={`absolute inset-0 bg-ink ${FADE_CLASSES}`} style={{ opacity: done ? 0 : 1 }} />
+      <div className={cn("absolute inset-0 bg-ink", FADE_CLASSES)} style={{ opacity: done ? 0 : 1 }} />
       <Image
         src={logo}
         alt=""
         priority
         sizes="(min-width: 768px) 42vw, 80vw"
-        className={`relative h-auto w-[80vw] max-w-[640px] md:w-[42vw] md:max-w-none ${FADE_CLASSES}`}
+        className={cn("relative h-auto w-[80vw] max-w-[640px] md:w-[42vw] md:max-w-none", FADE_CLASSES)}
         style={{ opacity: done ? 0 : 1 }}
       />
     </div>

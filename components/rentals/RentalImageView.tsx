@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { cn } from "@/lib/cn";
 import type { RentalImage } from "@/sanity/lib/rentals";
 
 /**
@@ -10,7 +11,7 @@ export function RentalImageView({
   placeholder,
   sizes,
   priority,
-  className = "",
+  className,
 }: {
   image: RentalImage | null;
   placeholder: string;
@@ -20,7 +21,7 @@ export function RentalImageView({
 }) {
   if (!image) {
     return (
-      <div className={`flex items-center justify-center bg-bg-raised text-sm text-fg-muted ${className}`}>{placeholder}</div>
+      <div className={cn("flex items-center justify-center bg-bg-raised text-sm text-fg-muted", className)}>{placeholder}</div>
     );
   }
   return (
@@ -33,7 +34,7 @@ export function RentalImageView({
       priority={priority}
       placeholder={image.blurDataURL ? "blur" : "empty"}
       blurDataURL={image.blurDataURL}
-      className={`bg-white object-contain ${className}`}
+      className={cn("bg-white object-contain", className)}
     />
   );
 }

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { cn } from "@/lib/cn";
 
 /**
  * A run of full-screen slides that snap into place as the page scrolls (Our Work, a talent's
@@ -19,7 +20,7 @@ export function FullBleedScroll({ label, id, children }: { label: string; id?: s
 /** One screen of a FullBleedScroll. Put full-bleed media inside and a caption at the bottom. */
 export function FullBleedSlide({
   label,
-  className = "",
+  className,
   children,
 }: {
   /** Accessible name, e.g. "Solas, 2 of 5". */
@@ -31,7 +32,7 @@ export function FullBleedSlide({
     <section
       aria-roledescription="slide"
       aria-label={label}
-      className={`relative isolate h-dvh snap-start snap-always overflow-hidden bg-ink text-white ${className}`}
+      className={cn("relative isolate h-dvh snap-start snap-always overflow-hidden bg-ink text-white", className)}
     >
       {children}
     </section>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
+import { cn } from "@/lib/cn";
 import { format } from "@/lib/i18n/format";
 
 /** Past this many projects the ticks would overflow the screen, so only the counter is shown. */
@@ -82,11 +83,10 @@ export function SlideProgress({
                 >
                   <span
                     aria-hidden
-                    className={`h-0.5 rounded-full bg-white shadow-[0_0_6px_rgb(0_0_0/0.5)] transition-[width,opacity] duration-300 motion-reduce:transition-none ${
-                      i === current
-                        ? "w-6 opacity-100"
-                        : "w-3 opacity-45 group-hover:opacity-90 group-focus-visible:opacity-90"
-                    }`}
+                    className={cn(
+                      "h-0.5 rounded-full bg-white shadow-[0_0_6px_rgb(0_0_0/0.5)] transition-[width,opacity] duration-300 motion-reduce:transition-none",
+                      i === current ? "w-6 opacity-100" : "w-3 opacity-45 group-hover:opacity-90 group-focus-visible:opacity-90",
+                    )}
                   />
                   <span
                     aria-hidden

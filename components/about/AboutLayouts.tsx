@@ -1,6 +1,7 @@
 import Image from "next/image";
 import type { ReactNode } from "react";
 import { GlassPanel } from "@/components/ui/Glass";
+import { cn } from "@/lib/cn";
 import type { SizedImage } from "@/sanity/lib/rentals";
 
 export type AboutLayoutProps = {
@@ -14,7 +15,7 @@ export type AboutLayoutProps = {
   attributes?: { still?: string; slogan?: string; manifesto?: string };
 };
 
-function Still({ still, attribute, className = "" }: { still: SizedImage; attribute?: string; className?: string }) {
+function Still({ still, attribute, className }: { still: SizedImage; attribute?: string; className?: string }) {
   return (
     <Image
       src={still.src}
@@ -27,7 +28,7 @@ function Still({ still, attribute, className = "" }: { still: SizedImage; attrib
       blurDataURL={still.blurDataURL}
       data-sanity={attribute}
       style={{ objectPosition: still.position }}
-      className={`size-full object-cover ${className}`}
+      className={cn("size-full object-cover", className)}
     />
   );
 }

@@ -413,7 +413,7 @@ function LogoMenu({ items, current, onSelect, homeLabel, onImage }: Concept) {
         aria-expanded={open}
         aria-controls="logo-menu"
         onClick={() => setOpen(!open)}
-        className="h-12! w-12! px-0!"
+        className="h-12 w-12 px-0"
       >
         <LogoMask className="h-5" />
       </GlassPillButton>
@@ -543,7 +543,7 @@ function Rail({ items, current, onSelect, homeLabel, onImage }: Concept) {
           aria-label="Menu"
           aria-expanded={open}
           onClick={() => setOpen(true)}
-          className="size-10! px-0!"
+          className="size-10 px-0"
         >
           <MenuIcon />
         </GlassPillButton>

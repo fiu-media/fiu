@@ -7,6 +7,7 @@ import { PageTitle } from "@/components/ui/PageTitle";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ProjectSlide } from "@/components/work/ProjectSlide";
 import { SlideProgress } from "@/components/work/SlideProgress";
+import { cn } from "@/lib/cn";
 import { defaultLocale, isLocale, languageAlternates, localizedPath, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { format } from "@/lib/i18n/format";
@@ -153,7 +154,7 @@ function FiltersSkeleton() {
   return (
     <div aria-hidden className="mt-8 flex flex-wrap gap-2">
       {["w-14", "w-24", "w-20", "w-28"].map((width, i) => (
-        <Skeleton key={i} className={`h-8 rounded-full ${width}`} />
+        <Skeleton key={i} className={cn("h-8 rounded-full", width)} />
       ))}
     </div>
   );

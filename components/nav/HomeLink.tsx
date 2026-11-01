@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { cn } from "@/lib/cn";
 import logo from "@/public/brand/fiu-logo.svg";
 
 /** The logo as a mask, so it takes the surrounding text colour. Size it with a height class. */
@@ -6,7 +7,7 @@ export function LogoMask({ className = "h-9 md:h-11" }: { className?: string }) 
   return (
     <span
       aria-hidden
-      className={`block bg-current ${className}`}
+      className={cn("block bg-current", className)}
       style={{
         aspectRatio: "763.5 / 653.75",
         maskImage: `url(${logo.src})`,

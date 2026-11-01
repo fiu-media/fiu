@@ -1,6 +1,7 @@
 import { SiteNav } from "@/components/nav/SiteNav";
 import { railInset } from "@/components/nav/rail";
 import { NotFoundBackLink } from "@/components/NotFoundBackLink";
+import { cn } from "@/lib/cn";
 import type { Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getNavItems } from "@/lib/i18n/nav";
@@ -34,7 +35,7 @@ export async function NotFoundPage({
   return (
     <div
       data-surface="cinematic"
-      className={`relative isolate flex flex-col overflow-hidden bg-ink text-fg ${railInset} ${className}`}
+      className={cn("relative isolate flex flex-col overflow-hidden bg-ink text-fg", railInset, className)}
     >
       <div aria-hidden className="absolute inset-0 -z-10 overflow-hidden">
         <div className="absolute -top-1/4 left-1/4 h-[150%] w-3/4 animate-[light-drift_32s_ease-in-out_infinite] rounded-full bg-[radial-gradient(closest-side,rgb(214_160_110/0.5),transparent)] blur-3xl motion-reduce:animate-none" />
