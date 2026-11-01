@@ -144,6 +144,11 @@ export const en = {
       failed: "Something went wrong on our side. Please try again, or email us directly.",
     },
   },
+  dates: {
+    dayOne: "{count} day",
+    dayMany: "{count} days",
+    rangeSummary: "{range} · {duration}",
+  },
   emails: {
     quoteNotify: {
       subject: "Quote request from {name} ({count} in quote)",

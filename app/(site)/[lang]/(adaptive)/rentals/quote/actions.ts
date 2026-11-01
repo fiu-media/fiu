@@ -1,5 +1,6 @@
 "use server";
 
+import { todayInDublin } from "@/lib/dates";
 import { getRecipient } from "@/lib/email/settings";
 import { studioEditUrl } from "@/lib/email/studio-link";
 import { quoteConfirmation, quoteNotification, type KitLine } from "@/lib/email/templates";
@@ -11,8 +12,6 @@ import { defaultLocale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { AVAILABLE_ITEM_IDS_QUERY } from "@/sanity/lib/queries";
 import { writeClient } from "@/sanity/lib/writeClient";
-
-const today = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Dublin" }).format(new Date());
 
 function parseItems(value: string | undefined): unknown {
   try {
@@ -38,7 +37,7 @@ export async function submitQuote(_previous: FormState, formData: FormData): Pro
     message: data.message,
   };
 
-  if (data.startDate < today()) {
+  if (data.startDate < todayInDublin()) {
     return { status: "error", fieldErrors: { startDate: "past" }, values };
   }
 

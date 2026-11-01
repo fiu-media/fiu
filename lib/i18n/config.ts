@@ -1,6 +1,9 @@
 export const locales = ["en"] as const;
 export type Locale = (typeof locales)[number];
 
+/** BCP-47 tag used to format dates and numbers for each locale. */
+export const dateLocale: Record<Locale, string> = { en: "en-IE" };
+
 /** Served without a URL prefix; proxy.ts rewrites it to `/en/...` internally. */
 export const defaultLocale: Locale = "en";
 
