@@ -1,9 +1,11 @@
+import { render } from "@react-email/components";
 import { describe, expect, it } from "vitest";
+import { plainTextOptions } from "./send";
 import { en } from "@/lib/i18n/dictionaries/en";
 import { contactNotification, quoteConfirmation, quoteNotification } from "./templates";
 
 const hostile = `<script>alert("x")</script> & 'q'`;
-const escaped = "&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt; &amp; &#39;q&#39;";
+const escaped = "&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt; &amp; &#x27;q&#x27;";
 
 const quote = {
   name: hostile,
@@ -17,37 +19,42 @@ const quote = {
   kit: [{ name: hostile, brand: "<b>Brand</b>", qty: 2 }],
 };
 
+const html = (email: { react: React.ReactElement }) => render(email.react);
+const text = (email: { react: React.ReactElement }) => render(email.react, plainTextOptions);
+
 describe("email templates", () => {
-  it("escapes visitor input in the HTML of the quote notification", () => {
-    const { html } = quoteNotification(en, quote, "https://studio.test/?a=1&b=2");
-    expect(html).not.toContain("<script>");
-    expect(html).not.toContain("<b>Brand</b>");
-    expect(html).toContain(escaped);
-    expect(html).toContain("&lt;b&gt;Brand&lt;/b&gt;");
-    expect(html).toContain('href="https://studio.test/?a=1&amp;b=2"');
+  it("escapes visitor input in the HTML of the quote notification", async () => {
+    const out = await html(quoteNotification(en, quote, "https://studio.test/?a=1&b=2"));
+    expect(out).not.toContain("<script>");
+    expect(out).not.toContain("<b>Brand</b>");
+    expect(out).toContain(escaped);
+    expect(out).toContain("&lt;b&gt;Brand&lt;/b&gt;");
+    expect(out).toContain('href="https://studio.test/?a=1&amp;b=2"');
   });
 
-  it("keeps the plain-text version raw", () => {
-    const { text } = quoteNotification(en, quote, "https://studio.test/");
-    expect(text).toContain(hostile);
-    expect(text).toContain(`2 × <b>Brand</b> ${hostile}`);
+  it("keeps the plain-text version raw", async () => {
+    const out = await text(quoteNotification(en, quote, "https://studio.test/"));
+    expect(out).toContain(hostile);
+    expect(out).toContain(`2 × <b>Brand</b> ${hostile}`);
+    expect(out).toContain(en.emails.quoteNotify.heading);
   });
 
-  it("omits empty rows", () => {
-    const { text } = quoteNotification(en, quote, "https://studio.test/");
-    expect(text).not.toContain(`${en.emails.labels.phone}:`);
+  it("omits empty rows", async () => {
+    const out = await text(quoteNotification(en, quote, "https://studio.test/"));
+    expect(out).not.toContain(`${en.emails.labels.phone}`);
   });
 
-  it("escapes the confirmation email", () => {
-    const { html } = quoteConfirmation(en, quote);
-    expect(html).not.toContain("<script>");
-    expect(html).toContain(escaped);
+  it("escapes the confirmation email", async () => {
+    const out = await html(quoteConfirmation(en, quote));
+    expect(out).not.toContain("<script>");
+    expect(out).toContain(escaped);
   });
 
-  it("escapes the contact notification", () => {
-    const { html, subject } = contactNotification(en, { name: hostile, email: "a@example.com", enquiryType: "Talent", message: hostile }, "https://studio.test/");
-    expect(html).not.toContain("<script>");
-    expect(html).toContain(escaped);
-    expect(subject).toContain("Talent");
+  it("escapes the contact notification", async () => {
+    const email = contactNotification(en, { name: hostile, email: "a@example.com", enquiryType: "Talent", message: hostile }, "https://studio.test/");
+    const out = await html(email);
+    expect(out).not.toContain("<script>");
+    expect(out).toContain(escaped);
+    expect(email.subject).toContain("Talent");
   });
 });
