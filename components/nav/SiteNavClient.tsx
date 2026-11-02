@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Suspense, useEffect, useId, useRef } from "react";
-import { EdgeBars } from "@/components/ui/EdgeBars";
 import { GlassPillButton } from "@/components/ui/Glass";
 import { cn } from "@/lib/cn";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
@@ -35,6 +34,11 @@ function Nav({ items, homeHref, labels, onImage, pathname }: NavProps & { pathna
   const dialog = useRef<HTMLDialogElement>(null);
   const dialogId = useId();
   const close = () => dialog.current?.close();
+  // showModal() focuses the first focusable child, the Home link, which then shows a focus ring. Focus the dialog itself.
+  const open = () => {
+    dialog.current?.showModal();
+    dialog.current?.focus();
+  };
 
   // Navigating, or growing to the rail layout, leaves the overlay behind.
   useEffect(() => {
@@ -89,7 +93,7 @@ function Nav({ items, homeHref, labels, onImage, pathname }: NavProps & { pathna
           aria-label={labels.menu}
           aria-haspopup="dialog"
           aria-controls={dialogId}
-          onClick={() => dialog.current?.showModal()}
+          onClick={open}
           className="size-10 px-0"
         >
           <MenuIcon />
@@ -101,10 +105,12 @@ function Nav({ items, homeHref, labels, onImage, pathname }: NavProps & { pathna
         ref={dialog}
         id={dialogId}
         aria-label={labels.label}
-        className="fixed inset-0 m-0 h-auto max-h-none w-auto max-w-none flex-col bg-bg/80 text-fg backdrop-blur-2xl transition-opacity duration-300 backdrop:bg-transparent open:flex md:hidden! starting:open:opacity-0"
+        tabIndex={-1}
+        className="fixed inset-0 isolate m-0 h-auto max-h-none w-auto max-w-none flex-col overflow-visible text-fg transition-opacity duration-300 outline-none! backdrop:bg-transparent open:flex md:hidden! starting:open:opacity-0"
       >
-        {/* The overlay is see-through, so solid edge bars keep the notch and chin (and Safari's tint) filled. */}
-        <EdgeBars />
+        {/* The frosted background reaches 12rem past the screen edges, so it also fills the notch and chin (and gives
+            Safari a layer at the edges to tint its bars from) instead of stopping at the viewport. */}
+        <div aria-hidden className="absolute inset-x-0 -inset-y-48 -z-10 bg-bg/80 backdrop-blur-2xl" />
         <div className="flex items-center justify-between px-[max(1.25rem,env(safe-area-inset-left))] pt-[max(1.25rem,env(safe-area-inset-top))] pr-[max(1.25rem,env(safe-area-inset-right))]">
           <HomeLink href={homeHref} label={labels.home} className="h-9" />
           <button
