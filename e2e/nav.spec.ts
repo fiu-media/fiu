@@ -26,3 +26,16 @@ test("choosing a link closes the menu and navigates", async ({ page }) => {
   await expect(page).toHaveURL(/\/contact$/);
   await expect(dialog).toBeHidden();
 });
+
+test("leaving Home releases its mobile scroll lock", async ({ page }) => {
+  await page.goto("/");
+  const html = page.locator("html");
+  await expect(html).toHaveAttribute("data-home-lock", "");
+
+  await page.getByRole("button", { name: en.nav.menu }).first().click();
+  await page.getByRole("dialog", { name: en.nav.label }).getByRole("link", { name: en.nav.contact }).click();
+  await expect(page).toHaveURL(/\/contact$/);
+
+  await expect(html).not.toHaveAttribute("data-home-lock", "");
+  expect(await html.evaluate((el) => getComputedStyle(el).touchAction)).not.toBe("none");
+});

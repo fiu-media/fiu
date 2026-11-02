@@ -98,8 +98,8 @@ html {
 
 /* Home on mobile is a taller-than-screen document pinned in the middle (HomeScrollLock); swipes must not move it. */
 @media (max-width: 767px) {
-  html:has([data-home-lock]),
-  html:has([data-home-lock]) body {
+  html[data-home-lock],
+  html[data-home-lock] body {
     touch-action: none;
     overscroll-behavior: none;
   }
