@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { preload } from "react-dom";
+import { InlineScript } from "@/components/InlineScript";
+import { pinHomeScrollScript } from "@/components/home/bleed";
 import { HomeHero } from "@/components/home/HomeHero";
 import { HomeScrollLock } from "@/components/home/HomeScrollLock";
 import { SiteNav } from "@/components/nav/SiteNav";
@@ -37,6 +39,7 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
         </Suspense>
         <SiteNav lang={lang} onImage />
       </main>
+      <InlineScript html={pinHomeScrollScript} />
     </div>
   );
 }

@@ -1,9 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-
-/** Matches the `max-md:py-48` bleed around Home's <main> (12rem): taller than the biggest browser toolbar (Comet's is about 155pt). */
-const BLEED_PX = 192;
+import { BLEED_PX } from "./bleed";
 
 /**
  * Pins Home in the middle of a document that is taller than the screen (mobile only).
