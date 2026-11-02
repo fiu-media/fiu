@@ -1,96 +1,128 @@
 "use client";
 
 import { BaseControl, useControl } from "@conform-to/react/future";
-import { getCountryCallingCode } from "libphonenumber-js/min";
-import { forwardRef, useRef, useState, type InputHTMLAttributes } from "react";
-import PhoneInput, { type Country } from "react-phone-number-input";
-import flags from "react-phone-number-input/flags";
-import "react-phone-number-input/style.css";
+import * as flags from "country-flag-icons/react/3x2";
+import { getCountries, type CountryCode } from "libphonenumber-js/min";
+import { useLayoutEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import { cn } from "@/lib/cn";
+import { callingCode, caretWithDigitsAfter, digitsIn, initial, interpret } from "@/lib/forms/phone";
 import { controlClass, FieldFrame, type FieldProps } from "./Field";
 
-/** What an example looks like, in the national format the input uses. Countries without one show no placeholder. */
-const SAMPLE: Partial<Record<Country, string>> = { IE: "(83) 123 4567" };
+/** What an example looks like, as the number input shows it (no trunk 0, no dialling code). */
+const SAMPLE: Partial<Record<CountryCode, string>> = { IE: "(83) 123 4567" };
 
-type NumberInputProps = InputHTMLAttributes<HTMLInputElement> & { callingCode?: string };
+/** Listed first: where the studio is, and where most visitors will be calling from. */
+const PINNED: CountryCode[] = ["IE", "GB", "US"];
 
+const FLAGS = flags as unknown as Record<string, React.ComponentType<React.SVGAttributes<SVGElement>> | undefined>;
 /**
- * The number input, with the country's dialling code in front of it as plain text. The code follows the
- * country select and can't be edited, which the muted, divided look says; the input holds the national number only.
- */
-const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(function NumberInput(
-  { callingCode, className, ...props },
-  ref,
-) {
-  return (
-    <div className={cn(className, "flex min-w-0 items-center")}>
-      {callingCode && (
-        <span className="mr-3 cursor-default border-r border-line pr-3 text-fg-muted select-none">+{callingCode}</span>
-      )}
-      <input ref={ref} {...props} className="min-w-0 flex-1 bg-transparent py-3 outline-none placeholder:text-fg-muted/70" />
-    </div>
-  );
-});
-
-/**
- * A phone number with a country select (flag, then the name and dialling code in the list) and a number
- * input that formats as you type, built on libphonenumber-js. What the form submits is one E.164 value
- * ("+353871234567"), through a hidden control that Conform watches, so validation and error focus work
- * like any field.
+ * A phone number: a country select (flag; name and dialling code in the list) and the number itself. The
+ * country's dialling code sits in front of the number as plain text, so the number is written without it, and
+ * without the 0 that national numbers start with, but typing either is fine. Built on libphonenumber-js.
+ * What the form submits is one E.164 value ("+353831234567"), through a hidden control Conform watches, so
+ * validation and error focus work like any field.
  */
 export function PhoneField({
   field,
   label,
   optionalLabel,
+  countryLabel,
   autoComplete = "tel",
   defaultCountry = "IE",
 }: {
   field: FieldProps;
   label: string;
   optionalLabel?: string;
+  /** Accessible name of the country select. */
+  countryLabel: string;
   autoComplete?: string;
   /** Selected until the visitor picks another country or types an international number. */
-  defaultCountry?: Country;
+  defaultCountry?: CountryCode;
 }) {
   const input = useRef<HTMLInputElement>(null);
   const { register, change, blur, focus } = useControl({
     defaultValue: field.defaultValue,
     onFocus: () => input.current?.focus(),
   });
-  // The number input is controlled by this state; the control only carries the value into the form
-  // (and its change and blur events, which is what makes Conform validate).
-  const [value, setValue] = useState(field.defaultValue || undefined);
-  const [country, setCountry] = useState<Country | undefined>(defaultCountry);
+  const [{ country, text }, setState] = useState(() => initial(field.defaultValue, defaultCountry));
+  const caretFromEnd = useRef<number | null>(null);
+
+  useLayoutEffect(() => {
+    if (caretFromEnd.current === null || !input.current) return;
+    const at = caretWithDigitsAfter(text, caretFromEnd.current);
+    input.current.setSelectionRange(at, at);
+    caretFromEnd.current = null;
+  }, [text]);
+
+  const countries = useMemo(() => {
+    const names = new Intl.DisplayNames(["en"], { type: "region" });
+    const named = getCountries()
+      .map((code) => ({ code, name: names.of(code) ?? code }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+    return {
+      pinned: PINNED.map((code) => named.find((c) => c.code === code)!),
+      all: named.filter((c) => !PINNED.includes(c.code)),
+    };
+  }, []);
+
+  function update(raw: string, selected: CountryCode, caret?: number) {
+    const next = interpret(raw, selected);
+    if (caret !== undefined) caretFromEnd.current = digitsIn(raw.slice(caret));
+    setState({ country: next.country, text: next.shown });
+    change(next.e164);
+  }
+
+  const Flag = FLAGS[country];
+  const option = ({ code, name }: { code: CountryCode; name: string }) => (
+    <option key={code} value={code}>
+      {name} (+{callingCode(code)})
+    </option>
+  );
 
   return (
     <FieldFrame field={field} label={label} optionalLabel={optionalLabel}>
       <BaseControl name={field.name} ref={register} defaultValue={field.defaultValue} />
-      <PhoneInput
-        flags={flags}
-        defaultCountry={defaultCountry}
-        addInternationalOption={false}
-        inputComponent={NumberInput}
-        numberInputProps={{ callingCode: country && getCountryCallingCode(country) } as object}
-        placeholder={country && SAMPLE[country]}
-        value={value}
-        onChange={(next) => {
-          setValue(next);
-          change(next ?? "");
-        }}
-        onCountryChange={setCountry}
-        onBlur={() => blur()}
-        onFocus={() => focus()}
-        inputRef={input}
-        id={field.id}
-        autoComplete={autoComplete}
-        aria-invalid={field.ariaInvalid}
-        aria-describedby={field.ariaDescribedBy}
+      <div
         className={cn(
           controlClass,
-          "phone-field flex items-center gap-3 py-0 pl-3",
+          "phone-field flex items-center py-0 pr-4 pl-3",
           field.errors ? "border-accent" : "border-line",
         )}
-      />
+      >
+        <div className="relative mr-3 flex shrink-0 items-center gap-1.5">
+          <select
+            aria-label={countryLabel}
+            value={country}
+            onChange={(event) => update(text, event.target.value as CountryCode)}
+            onBlur={() => blur()}
+            className="absolute inset-0 size-full cursor-pointer opacity-0"
+          >
+            {countries.pinned.map(option)}
+            <option disabled>──────────</option>
+            {countries.all.map(option)}
+          </select>
+          {Flag && <Flag aria-hidden className="h-4 w-6 rounded-[2px] ring-1 ring-line" />}
+          <span aria-hidden className="size-1.5 -translate-y-px rotate-45 border-r border-b border-fg/50" />
+        </div>
+        <span className="mr-3 cursor-default border-r border-line pr-3 text-fg-muted select-none">+{callingCode(country)}</span>
+        <input
+          ref={input}
+          id={field.id}
+          type="tel"
+          inputMode="tel"
+          autoComplete={autoComplete}
+          aria-invalid={field.ariaInvalid}
+          aria-describedby={field.ariaDescribedBy}
+          placeholder={SAMPLE[country]}
+          value={text}
+          onChange={(event: ChangeEvent<HTMLInputElement>) =>
+            update(event.target.value, country, event.target.selectionStart ?? undefined)
+          }
+          onFocus={() => focus()}
+          onBlur={() => blur()}
+          className="min-w-0 flex-1 bg-transparent py-3 outline-none placeholder:text-fg-muted/70"
+        />
+      </div>
     </FieldFrame>
   );
 }

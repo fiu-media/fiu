@@ -105,6 +105,7 @@ export const en = {
     name: "Name",
     email: "Email",
     phone: "Phone",
+    phoneCountry: "Phone number country",
     company: "Company",
     production: "Production",
     message: "Anything else we should know?",

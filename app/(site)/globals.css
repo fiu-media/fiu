@@ -422,15 +422,10 @@ html:has(dialog[open]) {
   }
 }
 
-/* The phone field (react-phone-number-input) takes its colours from the site's tokens. */
-.phone-field {
-  --PhoneInput-color--focus: var(--focus);
-  --PhoneInputCountrySelectArrow-color: var(--fg);
-  --PhoneInputCountryFlag-borderColor: var(--line);
-  --PhoneInputCountryFlag-height: 1.1em;
-}
-/* One ring around the whole field. The global :focus-visible outline would otherwise also box the inner input
-   (it is unlayered, so Tailwind's outline utilities can't override it). */
+/*
+ * The phone field: one ring around the whole field. The global :focus-visible outline would otherwise also
+ * box the inner input (it is unlayered, so Tailwind's outline utilities can't override it).
+ */
 .phone-field:focus-within {
   outline: 2px solid var(--focus);
   outline-offset: 3px;
@@ -439,7 +434,8 @@ html:has(dialog[open]) {
 .phone-field select:focus-visible {
   outline: none;
 }
-.phone-field .PhoneInputCountrySelect {
+/* The country list is the browser's own; keep it in the site's colours. */
+.phone-field select {
   color: var(--fg);
   background: var(--bg-raised);
 }

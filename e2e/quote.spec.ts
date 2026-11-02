@@ -33,21 +33,53 @@ test.describe("quote request", () => {
     await expect(page.getByText(quote.emptyBasket)).toBeVisible();
   });
 
-  test("the phone field formats a number, offers countries, and checks it on blur", async ({ page }) => {
+  test("the phone field takes a number however it is written", async ({ page }) => {
     const number = page.getByRole("textbox", { name: /^Phone/ });
     const country = page.getByRole("combobox", { name: /country/i });
+    const prefix = page.locator(".phone-field").getByText(/^\+\d+$/);
     await expect(country).toHaveValue("IE");
+    await expect(prefix).toHaveText("+353");
     await expect(number).toHaveAttribute("placeholder", "(83) 123 4567");
-    await expect(page.getByText("+353", { exact: true })).toBeVisible();
 
-    // Irish numbers are written with a leading 0, which isn't part of the number.
-    await number.pressSequentially("0871234567");
-    await expect(number).toHaveValue("087 123 4567");
+    // With +353 shown, the 0 of a national number isn't written; people do both, and both end up the same.
+    for (const written of [
+      "0831234567",
+      "831234567",
+      "+353831234567",
+      "+353 0 83 123 4567",
+      "00353831234567",
+      "(083) 123-4567",
+    ]) {
+      await number.fill("");
+      await number.pressSequentially(written);
+      await expect(number, written).toHaveValue("83 123 4567");
+      await expect(prefix).toHaveText("+353");
+    }
+
+    // A pasted number from another country brings its country with it.
+    await number.fill("+44 20 7183 8750");
+    await expect(prefix).toHaveText("+44");
+    await expect(country).toHaveValue("GB");
+    await expect(number).toHaveValue("20 7183 8750");
+  });
+
+  test("the phone field keeps the caret where you are editing, and checks the number on blur", async ({ page }) => {
+    const number = page.getByRole("textbox", { name: /^Phone/ });
+    const country = page.getByRole("combobox", { name: /country/i });
+
+    await number.pressSequentially("831234567");
+    await expect(number).toHaveValue("83 123 4567");
     await number.blur();
     await expect(number).not.toHaveAttribute("aria-invalid", "true");
 
+    // Typing in the middle re-formats the number without throwing the caret to the end.
+    await number.focus();
+    await number.evaluate((input: HTMLInputElement) => input.setSelectionRange(2, 2));
+    await page.keyboard.type("90");
+    await expect(number).toHaveValue("83901234567");
+    expect(await number.evaluate((input: HTMLInputElement) => input.selectionStart)).toBe(4);
+
     await country.selectOption("GB");
-    await expect(page.getByText("+44", { exact: true })).toBeVisible();
     await number.fill("1");
     await number.blur();
     await expect(number).toHaveAttribute("aria-invalid", "true");

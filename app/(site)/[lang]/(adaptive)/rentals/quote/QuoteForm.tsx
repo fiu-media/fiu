@@ -116,7 +116,7 @@ export function QuoteForm({ lang, dict }: { lang: Locale; dict: QuoteDict }) {
         <div className="grid gap-4 sm:grid-cols-2">
           <Field field={fields.name} label={quote.name} required autoComplete="name" maxLength={limits.name} />
           <Field field={fields.email} type="email" label={quote.email} required autoComplete="email" maxLength={limits.email} />
-          <PhoneField field={fields.phone} label={quote.phone} optionalLabel={quote.optional} />
+          <PhoneField field={fields.phone} label={quote.phone} optionalLabel={quote.optional} countryLabel={quote.phoneCountry} />
           <Field
             field={fields.company}
             label={quote.company}
