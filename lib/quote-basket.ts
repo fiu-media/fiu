@@ -1,122 +1,127 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
-
-export type BasketLine = { itemId: string; qty: number };
-export type Basket = { lines: BasketLine[]; startDate: string; endDate: string };
+import { useEffect, useSyncExternalStore } from "react";
+import { z } from "zod";
+import { create } from "zustand";
+import { createJSONStorage, persist, type StateStorage } from "zustand/middleware";
 
 const STORAGE_KEY = "fiu:quote-basket";
 const MAX_QTY = 99;
 
+const lineSchema = z.object({ itemId: z.string(), qty: z.number().int().min(1).max(MAX_QTY) });
+
+export type BasketLine = z.infer<typeof lineSchema>;
+export type Basket = { lines: BasketLine[]; startDate: string; endDate: string };
+
 const EMPTY: Basket = { lines: [], startDate: "", endDate: "" };
 
-let snapshot: Basket = EMPTY;
-let loaded = false;
-const listeners = new Set<() => void>();
-
-export function parse(json: string | null): Basket {
-  if (!json) return EMPTY;
-  try {
-    const value = JSON.parse(json) as Partial<Basket>;
-    const lines = Array.isArray(value.lines)
-      ? value.lines.filter(
-          (l): l is BasketLine => typeof l?.itemId === "string" && Number.isInteger(l.qty) && l.qty >= 1 && l.qty <= MAX_QTY,
-        )
-      : [];
-    return {
-      lines,
-      startDate: typeof value.startDate === "string" ? value.startDate : "",
-      endDate: typeof value.endDate === "string" ? value.endDate : "",
-    };
-  } catch {
-    return EMPTY;
-  }
-}
-
-function load() {
-  if (loaded || typeof window === "undefined") return;
-  loaded = true;
-  try {
-    snapshot = parse(window.localStorage.getItem(STORAGE_KEY));
-  } catch {
-    // Storage can be blocked (private mode, policies); the basket then lives for the session only.
-  }
-  // Other tabs: keep the basket in sync.
-  window.addEventListener("storage", (event) => {
-    if (event.key !== STORAGE_KEY) return;
-    snapshot = parse(event.newValue);
-    emit();
-  });
-}
-
-function emit() {
-  for (const listener of listeners) listener();
-}
-
-function commit(next: Basket) {
-  snapshot = next;
-  try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-  } catch {
-    // See load(): persistence is best effort.
-  }
-  emit();
-}
-
-function subscribe(listener: () => void) {
-  load();
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
-
-const getSnapshot = () => {
-  load();
-  return snapshot;
-};
-const getServerSnapshot = () => EMPTY;
+/** Whatever is in storage: bad lines are dropped one by one, anything else falls back to empty. */
+export const basketSchema = z
+  .object({
+    lines: z
+      .array(lineSchema.nullable().catch(null))
+      .transform((lines) => lines.filter((line) => line !== null))
+      .catch([]),
+    startDate: z.string().catch(""),
+    endDate: z.string().catch(""),
+  })
+  .catch(EMPTY);
 
 export const clampQty = (qty: number, max = MAX_QTY) => Math.min(max, MAX_QTY, Math.max(1, Math.floor(qty)));
 
-export const basketActions = {
+type BasketActions = {
   /** `max` is the item's per-quote cap from Sanity; quantities never go above it. */
-  add(itemId: string, qty = 1, max = MAX_QTY) {
-    const { lines } = snapshot;
-    const existing = lines.find((l) => l.itemId === itemId);
-    commit({
-      ...snapshot,
-      lines: existing
-        ? lines.map((l) => (l.itemId === itemId ? { ...l, qty: clampQty(l.qty + qty, max) } : l))
-        : [...lines, { itemId, qty: clampQty(qty, max) }],
-    });
+  add: (itemId: string, qty?: number, max?: number) => void;
+  setQty: (itemId: string, qty: number, max?: number) => void;
+  remove: (itemId: string) => void;
+  setDates: (dates: Partial<Pick<Basket, "startDate" | "endDate">>) => void;
+  clear: () => void;
+};
+
+// Storage can be blocked (private mode, policies) or full; the basket then lives for the session only.
+const safeStorage: StateStorage = {
+  getItem: (name) => {
+    try {
+      return window.localStorage.getItem(name);
+    } catch {
+      return null;
+    }
   },
-  setQty(itemId: string, qty: number, max = MAX_QTY) {
-    if (qty < 1) return basketActions.remove(itemId);
-    commit({ ...snapshot, lines: snapshot.lines.map((l) => (l.itemId === itemId ? { ...l, qty: clampQty(qty, max) } : l)) });
+  setItem: (name, value) => {
+    try {
+      window.localStorage.setItem(name, value);
+    } catch {}
   },
-  remove(itemId: string) {
-    commit({ ...snapshot, lines: snapshot.lines.filter((l) => l.itemId !== itemId) });
-  },
-  setDates(dates: Partial<Pick<Basket, "startDate" | "endDate">>) {
-    commit({ ...snapshot, ...dates });
-  },
-  clear() {
-    commit(EMPTY);
+  removeItem: (name) => {
+    try {
+      window.localStorage.removeItem(name);
+    } catch {}
   },
 };
 
-const subscribeNever = () => () => {};
+export const useBasketStore = create<Basket & BasketActions>()(
+  persist(
+    (set, get) => ({
+      ...EMPTY,
+      add: (itemId, qty = 1, max = MAX_QTY) => {
+        const { lines } = get();
+        const existing = lines.find((l) => l.itemId === itemId);
+        set({
+          lines: existing
+            ? lines.map((l) => (l.itemId === itemId ? { ...l, qty: clampQty(l.qty + qty, max) } : l))
+            : [...lines, { itemId, qty: clampQty(qty, max) }],
+        });
+      },
+      setQty: (itemId, qty, max = MAX_QTY) => {
+        if (qty < 1) return get().remove(itemId);
+        set({ lines: get().lines.map((l) => (l.itemId === itemId ? { ...l, qty: clampQty(qty, max) } : l)) });
+      },
+      remove: (itemId) => set({ lines: get().lines.filter((l) => l.itemId !== itemId) }),
+      setDates: (dates) => set(dates),
+      clear: () => set(EMPTY),
+    }),
+    {
+      name: STORAGE_KEY,
+      version: 1,
+      storage: createJSONStorage(() => safeStorage),
+      partialize: ({ lines, startDate, endDate }) => ({ lines, startDate, endDate }),
+      merge: (persisted, current) => (persisted === undefined ? current : { ...current, ...basketSchema.parse(persisted) }),
+      // The server and the first client render must both be empty, so storage is read after mount.
+      skipHydration: true,
+    },
+  ),
+);
+
+export const basketActions: BasketActions = {
+  add: (...args) => useBasketStore.getState().add(...args),
+  setQty: (...args) => useBasketStore.getState().setQty(...args),
+  remove: (...args) => useBasketStore.getState().remove(...args),
+  setDates: (...args) => useBasketStore.getState().setDates(...args),
+  clear: () => useBasketStore.getState().clear(),
+};
+
+let started = false;
+
+/** Reads the stored basket once on the client and keeps it in sync with other tabs. */
+export function startBasketSync() {
+  if (started || typeof window === "undefined") return;
+  started = true;
+  void useBasketStore.persist.rehydrate();
+  window.addEventListener("storage", (event) => {
+    if (event.key !== STORAGE_KEY) return;
+    if (event.newValue === null) useBasketStore.setState(EMPTY);
+    else void useBasketStore.persist.rehydrate();
+  });
+}
 
 /**
  * The quote basket, persisted to localStorage. Empty on the server and during hydration, so
  * `ready` says whether the lines are the visitor's real ones yet.
  */
 export function useQuoteBasket() {
-  const basket = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
-  const ready = useSyncExternalStore(
-    subscribeNever,
-    () => true,
-    () => false,
-  );
+  const basket = useBasketStore();
+  const ready = useSyncExternalStore(useBasketStore.persist.onFinishHydration, useBasketStore.persist.hasHydrated, () => false);
+  useEffect(startBasketSync, []);
   const count = basket.lines.reduce((sum, l) => sum + l.qty, 0);
-  return { ...basket, count, ready, ...basketActions };
+  return { ...basket, count, ready };
 }

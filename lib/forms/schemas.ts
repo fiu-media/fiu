@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isValidRange } from "@/lib/dates";
 import { locales } from "@/lib/i18n/config";
 
 export const ENQUIRY_TYPES = ["Project", "Talent", "Rentals", "Other"] as const;
@@ -56,7 +57,7 @@ export const quoteSchema = z
     message: optionalText(4000),
     items: basket,
   })
-  .refine((v) => !ISO_DATE.test(v.startDate) || !ISO_DATE.test(v.endDate) || v.endDate >= v.startDate, {
+  .refine((v) => !ISO_DATE.test(v.startDate) || !ISO_DATE.test(v.endDate) || isValidRange(v.startDate, v.endDate), {
     path: ["endDate"],
     message: "beforeStart",
   });

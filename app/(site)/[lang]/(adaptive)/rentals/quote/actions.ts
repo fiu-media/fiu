@@ -1,5 +1,6 @@
 "use server";
 
+import { todayInDublin } from "@/lib/dates";
 import { getRecipient } from "@/lib/email/settings";
 import { studioEditUrl } from "@/lib/email/studio-link";
 import { quoteConfirmation, quoteNotification, type KitLine } from "@/lib/email/templates";
@@ -12,14 +13,12 @@ import { getDictionary } from "@/lib/i18n/dictionaries";
 import { AVAILABLE_ITEM_IDS_QUERY } from "@/sanity/lib/queries";
 import { writeClient } from "@/sanity/lib/writeClient";
 
-const today = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Dublin" }).format(new Date());
-
 export async function submitQuote(_previous: FormState, formData: FormData): Promise<FormState> {
   const guarded = await guardSubmission(quoteSchema, formData);
   if (!guarded.ok) return guarded.result;
   const { data, reply } = guarded;
 
-  if (data.startDate < today()) return reply({ fieldErrors: { startDate: ["past"] } });
+  if (data.startDate < todayInDublin()) return reply({ fieldErrors: { startDate: ["past"] } });
 
   // The basket lives in the visitor's browser, so treat it as untrusted: merge duplicates and
   // only accept items that are currently published and available.
@@ -71,7 +70,7 @@ export async function submitQuote(_previous: FormState, formData: FormData): Pro
   const emailData = { ...data, kit };
   const to = await getRecipient("quote", data.lang);
   if (!to) console.warn("[quote] no recipient configured (Site settings or QUOTE_TO_EMAIL); skipping notification");
-  const notification = quoteNotification(dict, emailData, studioEditUrl(id, "quoteRequest"));
+  const notification = quoteNotification(dict, emailData, studioEditUrl(id, "quoteRequest"), data.lang);
   await sendAll([
     to ? { to, replyTo: data.email, ...notification } : null,
     { to: data.email, ...quoteConfirmation(dict, emailData) },

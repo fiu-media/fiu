@@ -7,13 +7,14 @@ import { QuoteFormSkeleton } from "@/components/forms/FormSkeleton";
 import { useConformForm } from "@/components/forms/useConformForm";
 import { QuoteLines } from "@/components/rentals/QuoteLines";
 import { GlassPanel, GlassPillLink } from "@/components/ui/Glass";
+import { describeRange, isValidRange } from "@/lib/dates";
 import { quoteSchema } from "@/lib/forms/schemas";
 import { localizedPath, type Locale } from "@/lib/i18n/config";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { basketActions, useQuoteBasket } from "@/lib/quote-basket";
 import { submitQuote } from "./actions";
 
-type QuoteDict = Pick<Dictionary, "quote" | "basket" | "forms" | "common">;
+type QuoteDict = Pick<Dictionary, "quote" | "basket" | "forms" | "common" | "dates">;
 
 export function QuoteForm({ lang, dict }: { lang: Locale; dict: QuoteDict }) {
   const { quote, forms } = dict;
@@ -101,6 +102,9 @@ export function QuoteForm({ lang, dict }: { lang: Locale; dict: QuoteDict }) {
             onChange={(v) => setDates({ endDate: v })}
           />
         </div>
+        <p aria-live="polite" className="min-h-6 text-fg-muted">
+          {isValidRange(startDate, endDate) ? describeRange(dict.dates, lang, startDate, endDate) : null}
+        </p>
       </section>
 
       <section aria-labelledby="quote-contact" className="flex flex-col gap-4">
