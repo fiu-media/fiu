@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   checkBotId: vi.fn(),
@@ -99,6 +99,20 @@ describe("submitQuote", () => {
     const state = await submitQuote(idle, form({ startDate: "2000-01-01", endDate: "2000-01-02" }));
     expect(state).toMatchObject({ status: "error", fieldErrors: { startDate: "past" } });
     expect(mocks.create).not.toHaveBeenCalled();
+  });
+
+  describe("Dublin midnight", () => {
+    afterEach(() => vi.useRealTimers());
+
+    // 23:30 UTC on 30 Jun 2026 is 00:30 on 1 Jul in Dublin (IST, UTC+1).
+    it("accepts a pick-up on Dublin's today and rejects Dublin's yesterday", async () => {
+      vi.useFakeTimers({ toFake: ["Date"], now: new Date("2026-06-30T23:30:00Z") });
+      expect(await submitQuote(idle, form({ startDate: "2026-07-01", endDate: "2026-07-02" }))).toEqual({
+        status: "success",
+      });
+      const state = await submitQuote(idle, form({ startDate: "2026-06-30", endDate: "2026-07-02" }));
+      expect(state).toMatchObject({ status: "error", fieldErrors: { startDate: "past" } });
+    });
   });
 
   it("reports unavailable when an item is missing or no longer available", async () => {
