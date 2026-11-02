@@ -27,13 +27,11 @@ export function FormErrorSummary({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    // Conform focuses the first invalid field when it learns of errors; wait a frame so the summary wins.
-    const frame = requestAnimationFrame(() => ref.current?.focus());
-    return () => cancelAnimationFrame(frame);
+    ref.current?.focus();
   }, [attempt]);
 
   const items = labels.flatMap(([name, label]) => {
-    const message = errorMessage(messages, form.allErrors[name]);
+    const message = errorMessage(messages, form.fieldErrors[name]);
     return message ? [{ name, label, message }] : [];
   });
   const formMessage = errorMessage(messages, form.errors);
@@ -52,7 +50,7 @@ export function FormErrorSummary({
           <ul className="mt-2 list-disc space-y-1 pl-5">
             {items.map((item) => (
               <li key={item.name}>
-                <a href={`#${form.id}-${item.name}`} className="underline underline-offset-2">
+                <a href={`#${form.getField(item.name).id}`} className="underline underline-offset-2">
                   {item.label}
                 </a>
                 : {item.message}

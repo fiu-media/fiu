@@ -1,4 +1,4 @@
-import type { SubmissionResult } from "@conform-to/react";
+import type { SubmissionResult } from "@conform-to/react/future";
 
 /** Error codes the server returns; the client maps them to localised copy (`dict.forms.errors`). */
 export type FormErrorCode =
@@ -6,11 +6,10 @@ export type FormErrorCode =
 
 /**
  * What a form action returns: Conform's result (error codes per field and for the form, plus the
- * submitted values so the form repopulates), or `null` before the first submit.
+ * submitted values so the form repopulates), flagged `success` once the request went through, or
+ * `null` before the first submit.
  */
-export type FormState = SubmissionResult | null;
-
-export const formSuccess: FormState = { status: "success" };
+export type FormState = (SubmissionResult<string[]> & { success?: boolean }) | null;
 
 const codes: readonly string[] = [
   "required",

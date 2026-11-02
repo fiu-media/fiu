@@ -44,7 +44,7 @@ beforeEach(() => {
 
 describe("submitContact", () => {
   it("stores the message and notifies the studio", async () => {
-    expect(await submitContact(idle, form())).toEqual({ status: "success" });
+    expect(await submitContact(idle, form())).toMatchObject({ success: true });
     expect(mocks.create.mock.calls[0][0]).toMatchObject({
       _id: `contactMessage-${SUBMISSION_ID}`,
       _type: "contactMessage",
@@ -56,11 +56,10 @@ describe("submitContact", () => {
 
   it("rejects bots and a filled honeypot", async () => {
     mocks.checkBotId.mockResolvedValue({ isBot: true });
-    expect(await submitContact(idle, form())).toMatchObject({ status: "error", error: { "": ["rejected"] } });
+    expect(await submitContact(idle, form())).toMatchObject({ error: { formErrors: ["rejected"] } });
     mocks.checkBotId.mockResolvedValue({ isBot: false });
     expect(await submitContact(idle, form({ website: "http://spam" }))).toMatchObject({
-      status: "error",
-      error: { "": ["rejected"] },
+      error: { formErrors: ["rejected"] },
     });
     expect(mocks.create).not.toHaveBeenCalled();
   });
@@ -68,32 +67,30 @@ describe("submitContact", () => {
   it("returns field errors and keeps the entered values", async () => {
     const state = await submitContact(idle, form({ message: "", email: "nope" }));
     expect(state).toMatchObject({
-      status: "error",
-      error: { message: ["required"], email: ["invalid"] },
-      initialValue: { name: "Aoife", enquiryType: "Talent" },
+      error: { fieldErrors: { message: ["required"], email: ["invalid"] } },
+      submission: { payload: { name: "Aoife", enquiryType: "Talent" } },
     });
     expect(mocks.create).not.toHaveBeenCalled();
   });
 
   it("treats a 409 (double submit) as success without emailing again", async () => {
     mocks.create.mockRejectedValue({ statusCode: 409 });
-    expect(await submitContact(idle, form())).toEqual({ status: "success" });
+    expect(await submitContact(idle, form())).toMatchObject({ success: true });
     expect(mocks.sendEmail).not.toHaveBeenCalled();
   });
 
   it("reports failed when storing fails", async () => {
     mocks.create.mockRejectedValue(new Error("boom"));
     expect(await submitContact(idle, form())).toMatchObject({
-      status: "error",
-      error: { "": ["failed"] },
-      initialValue: { message: "Hello there" },
+      error: { formErrors: ["failed"] },
+      submission: { payload: { message: "Hello there" } },
     });
     expect(mocks.sendEmail).not.toHaveBeenCalled();
   });
 
   it("skips the notification when no recipient is configured", async () => {
     mocks.getRecipient.mockResolvedValue(null);
-    expect(await submitContact(idle, form())).toEqual({ status: "success" });
+    expect(await submitContact(idle, form())).toMatchObject({ success: true });
     expect(mocks.sendEmail).not.toHaveBeenCalled();
   });
 });

@@ -5,7 +5,7 @@ import { studioEditUrl } from "@/lib/email/studio-link";
 import { contactNotification } from "@/lib/email/templates";
 import { isConflict, sendAll } from "@/lib/forms/notify";
 import { contactSchema } from "@/lib/forms/schemas";
-import { formSuccess, type FormState } from "@/lib/forms/state";
+import type { FormState } from "@/lib/forms/state";
 import { guardSubmission } from "@/lib/forms/submit";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { writeClient } from "@/sanity/lib/writeClient";
@@ -13,7 +13,7 @@ import { writeClient } from "@/sanity/lib/writeClient";
 export async function submitContact(_previous: FormState, formData: FormData): Promise<FormState> {
   const guarded = await guardSubmission(contactSchema, formData);
   if (!guarded.ok) return guarded.result;
-  const data = guarded.data;
+  const { data, fail, succeed } = guarded;
   const id = `contactMessage-${data.submissionId}`;
 
   try {
@@ -28,9 +28,9 @@ export async function submitContact(_previous: FormState, formData: FormData): P
       createdAt: new Date().toISOString(),
     });
   } catch (error) {
-    if (isConflict(error)) return formSuccess;
+    if (isConflict(error)) return succeed();
     console.error("[contact] could not store message:", error);
-    return guarded.reply({ formErrors: ["failed"] });
+    return fail({ formErrors: ["failed"] });
   }
 
   const to = await getRecipient("contact", data.lang);
@@ -40,5 +40,5 @@ export async function submitContact(_previous: FormState, formData: FormData): P
     to ? { to, replyTo: data.email, ...contactNotification(dict, data, studioEditUrl(id, "contactMessage")) } : null,
   ]);
 
-  return formSuccess;
+  return succeed();
 }

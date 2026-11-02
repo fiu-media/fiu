@@ -1,6 +1,5 @@
 "use client";
 
-import { getInputProps, getSelectProps, getTextareaProps, type FieldMetadata } from "@conform-to/react";
 import { createContext, use, type ReactNode } from "react";
 import { toErrorCode, type FormErrorCode } from "@/lib/forms/state";
 
@@ -14,8 +13,19 @@ export function errorMessage(messages: ErrorMessages, errors?: string[]) {
   return errors?.[0] === undefined ? undefined : messages[toErrorCode(errors[0])];
 }
 
+/** The parts of Conform's field metadata a control needs. */
+export type FieldProps = {
+  id: string;
+  name: string;
+  defaultValue: string;
+  errorId: string;
+  errors: string[] | undefined;
+  ariaInvalid: boolean | undefined;
+  ariaDescribedBy: string | undefined;
+};
+
 type Props = {
-  field: FieldMetadata<string | undefined, Record<string, unknown>>;
+  field: FieldProps;
   label: string;
   /** Shown after the label for fields that aren't required, e.g. "optional". */
   optionalLabel?: string;
@@ -51,26 +61,31 @@ export function Field({
   const messages = use(FormMessages)!;
   const error = errorMessage(messages, field.errors);
   const className = `${controlClass} ${error ? "border-accent" : "border-line"}`;
-  const shared = { required, autoComplete, className };
-  // Conform's props carry a `key` that changes when the server repopulates the form: set it, don't spread it.
-  const { key: textareaKey, ...textarea } = getTextareaProps(field);
-  const { key: selectKey, ...select } = getSelectProps(field);
-  const { key: inputKey, ...input } = getInputProps(field, { type, value: value === undefined });
+  const shared = {
+    id: field.id,
+    name: field.name,
+    "aria-invalid": field.ariaInvalid,
+    "aria-describedby": field.ariaDescribedBy,
+    required,
+    autoComplete,
+    className,
+  };
   const control =
     as === "textarea" ? (
-      <textarea key={textareaKey} {...textarea} {...shared} rows={rows} />
+      <textarea {...shared} defaultValue={field.defaultValue} rows={rows} />
     ) : as === "select" ? (
-      <select key={selectKey} {...select} {...shared}>
+      <select {...shared} defaultValue={field.defaultValue}>
         {children}
       </select>
     ) : (
       // Controlled (value + onChange) or uncontrolled (Conform's defaultValue), never both.
       <input
-        key={inputKey}
-        {...input}
         {...shared}
-        {...(value === undefined ? {} : { value, onChange: (event) => onChange?.(event.target.value) })}
+        type={type}
         min={min}
+        {...(value === undefined
+          ? { defaultValue: field.defaultValue }
+          : { value, onChange: (event) => onChange?.(event.target.value) })}
       />
     );
 

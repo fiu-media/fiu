@@ -34,14 +34,14 @@ describe("guardSubmission", () => {
     const result = await guardSubmission(schema, form({ name: "", email: "bad" }));
     expect(result).toMatchObject({
       ok: false,
-      result: { status: "error", error: { "": ["rejected"] }, initialValue: { email: "bad" } },
+      result: { error: { formErrors: ["rejected"] }, submission: { payload: { email: "bad" } } },
     });
   });
 
   it("rejects a filled honeypot and doesn't echo it back", async () => {
     const result = await guardSubmission(schema, form({ name: "Aoife", email: "a@example.com", website: "http://spam" }));
-    expect(result).toMatchObject({ ok: false, result: { error: { "": ["rejected"] } } });
-    expect((result as { result: { initialValue: object } }).result.initialValue).not.toHaveProperty("website");
+    expect(result).toMatchObject({ ok: false, result: { error: { formErrors: ["rejected"] } } });
+    expect((result as { result: { submission: { payload: object } } }).result.submission.payload).not.toHaveProperty("website");
   });
 
   it("treats a whitespace-only honeypot as empty", async () => {
@@ -53,17 +53,17 @@ describe("guardSubmission", () => {
     const result = await guardSubmission(schema, form({ name: "", email: "bad" }));
     expect(result).toMatchObject({
       ok: false,
-      result: { status: "error", error: { name: ["required"], email: ["invalid"] }, initialValue: { email: "bad" } },
+      result: { error: { fieldErrors: { name: ["required"], email: ["invalid"] } }, submission: { payload: { email: "bad" } } },
     });
   });
 
-  it("lets a caller reply with the submitted values", async () => {
+  it("lets a caller fail the submission with the submitted values", async () => {
     const result = await guardSubmission(schema, form({ name: "Aoife", email: "a@example.com" }));
     if (!result.ok) throw new Error("expected a valid submission");
-    expect(result.reply({ formErrors: ["failed"] })).toMatchObject({
-      status: "error",
-      error: { "": ["failed"] },
-      initialValue: { name: "Aoife" },
+    expect(result.fail({ formErrors: ["failed"] })).toMatchObject({
+      error: { formErrors: ["failed"] },
+      submission: { payload: { name: "Aoife" } },
     });
+    expect(result.succeed()).toMatchObject({ success: true, reset: true });
   });
 });
