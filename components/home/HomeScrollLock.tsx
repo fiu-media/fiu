@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useLayoutEffect } from "react";
 import { BLEED_PX } from "./bleed";
 
 /**
@@ -8,14 +8,24 @@ import { BLEED_PX } from "./bleed";
  *
  * Safari only shows page pixels behind its status bar and toolbar when the page has content beyond the
  * viewport edges, so Home carries BLEED_PX of photo above and below. Touch scrolling is switched off in
- * CSS (touch-action, see globals.css); this keeps the scroll position at the middle regardless, e.g.
- * after Next.js restores the scroll to the top or the toolbar changes the viewport height.
+ * CSS (touch-action, keyed on `html[data-home-lock]`, see globals.css); this keeps the scroll position at the
+ * middle regardless, e.g. after Next.js restores the scroll to the top or the toolbar changes the viewport height.
+ *
+ * The flag lives on <html> and is set from an effect, not from Home's markup: Next keeps the previous route
+ * mounted but hidden (Activity), so a marker in Home's DOM would outlive the page and lock every page after it.
+ * Effect cleanups run when Home is hidden, which is what removes the flag.
  *
  * The inline script (bleed.ts) already pins the scroll before first paint, so no scroll event follows and Safari can keep
  * the bar colour it sampled while the photo was still loading. Nudging the scroll once the first photo and then the page
  * have loaded makes it sample again; the `scroll` listener below puts the position straight back.
  */
 export function HomeScrollLock() {
+  useLayoutEffect(() => {
+    document.documentElement.dataset.homeLock = "";
+    return () => {
+      delete document.documentElement.dataset.homeLock;
+    };
+  }, []);
   useEffect(() => {
     if (!window.matchMedia("(max-width: 767px)").matches) return;
     const pin = () => {
@@ -23,7 +33,7 @@ export function HomeScrollLock() {
     };
     const nudge = () => window.scrollTo({ top: BLEED_PX - 1, behavior: "instant" });
     const onImageLoad = (event: Event) => {
-      if (!(event.target instanceof HTMLImageElement) || !event.target.closest("[data-home-lock]")) return;
+      if (!(event.target instanceof HTMLImageElement) || !event.target.closest("[data-home-bleed]")) return;
       document.removeEventListener("load", onImageLoad, true);
       nudge();
     };
@@ -31,7 +41,7 @@ export function HomeScrollLock() {
     const id = window.requestAnimationFrame(() => {
       pin();
       // The photo may already be in by the time this runs (cached, fast connection).
-      if (document.querySelector<HTMLImageElement>("[data-home-lock] img")?.complete) nudge();
+      if (document.querySelector<HTMLImageElement>("[data-home-bleed] img")?.complete) nudge();
     });
     // Image `load` events don't bubble, so listen in the capture phase.
     document.addEventListener("load", onImageLoad, true);
