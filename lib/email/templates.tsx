@@ -12,7 +12,7 @@ export function quoteNotification(dict: Dictionary, data: QuoteEmailData, studio
   const { emails } = dict;
   return {
     subject: format(emails.quoteNotify.subject, { name: data.name, count: data.kit.length }),
-    react: <QuoteNotification emails={emails} data={data} studioUrl={studioUrl} />,
+    react: <QuoteNotification emails={emails} dates={dict.dates} data={data} studioUrl={studioUrl} />,
   };
 }
 
@@ -20,7 +20,7 @@ export function quoteConfirmation(dict: Dictionary, data: QuoteEmailData) {
   const { emails } = dict;
   return {
     subject: emails.quoteConfirm.subject,
-    react: <QuoteConfirmation emails={emails} data={data} />,
+    react: <QuoteConfirmation emails={emails} dates={dict.dates} data={data} />,
   };
 }
 

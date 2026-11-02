@@ -1,8 +1,11 @@
 import type { Dictionary } from "../lib/i18n/dictionaries/en";
 import { en } from "../lib/i18n/dictionaries/en";
+import { describeRange } from "../lib/dates";
+import type { Locale } from "../lib/i18n/config";
 import { Layout, present, type KitLine } from "./_layout";
 
 export type QuoteEmailData = {
+  lang: Locale;
   name: string;
   email: string;
   phone: string;
@@ -14,9 +17,9 @@ export type QuoteEmailData = {
   kit: KitLine[];
 };
 
-type Props = { emails: Dictionary["emails"]; data: QuoteEmailData; studioUrl: string };
+type Props = { emails: Dictionary["emails"]; dates: Dictionary["dates"]; data: QuoteEmailData; studioUrl: string };
 
-export default function QuoteNotification({ emails, data, studioUrl }: Props) {
+export default function QuoteNotification({ emails, dates, data, studioUrl }: Props) {
   const l = emails.labels;
   const rows = present([
     [l.name, data.name],
@@ -24,7 +27,7 @@ export default function QuoteNotification({ emails, data, studioUrl }: Props) {
     [l.phone, data.phone],
     [l.company, data.company],
     [l.production, data.production],
-    [l.dates, `${data.startDate} → ${data.endDate}`],
+    [l.dates, describeRange(dates, data.lang, data.startDate, data.endDate)],
     [l.message, data.message],
   ]);
   return (
@@ -40,8 +43,10 @@ export default function QuoteNotification({ emails, data, studioUrl }: Props) {
 
 QuoteNotification.PreviewProps = {
   emails: en.emails,
+  dates: en.dates,
   studioUrl: "http://localhost:3000/studio/intent/edit/id=abc;type=quoteRequest/",
   data: {
+    lang: "en",
     name: "Aoife Ní Bhriain",
     email: "aoife@example.com",
     phone: "+353 87 123 4567",

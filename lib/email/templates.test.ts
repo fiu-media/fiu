@@ -8,6 +8,7 @@ const hostile = `<script>alert("x")</script> & 'q'`;
 const escaped = "&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt; &amp; &#x27;q&#x27;";
 
 const quote = {
+  lang: "en" as const,
   name: hostile,
   email: "a@example.com",
   phone: "",
@@ -37,6 +38,12 @@ describe("email templates", () => {
     expect(out).toContain(hostile);
     expect(out).toContain(`2 × <b>Brand</b> ${hostile}`);
     expect(out).toContain(en.emails.quoteNotify.heading);
+  });
+
+  it("shows the dates as a localised range with its length in both quote emails", async () => {
+    const pattern = /1\s*–\s*3 Dec 2026 · 3 days/;
+    expect(await text(quoteNotification(en, quote, "https://studio.test/"))).toMatch(pattern);
+    expect(await html(quoteConfirmation(en, quote))).toMatch(pattern);
   });
 
   it("omits empty rows", async () => {

@@ -1,14 +1,15 @@
 import type { Dictionary } from "../lib/i18n/dictionaries/en";
 import { en } from "../lib/i18n/dictionaries/en";
+import { describeRange } from "../lib/dates";
 import { Layout, present } from "./_layout";
 import type { QuoteEmailData } from "./quote-notification";
 
-type Props = { emails: Dictionary["emails"]; data: QuoteEmailData };
+type Props = { emails: Dictionary["emails"]; dates: Dictionary["dates"]; data: QuoteEmailData };
 
-export default function QuoteConfirmation({ emails, data }: Props) {
+export default function QuoteConfirmation({ emails, dates, data }: Props) {
   const l = emails.labels;
   const rows = present([
-    [l.dates, `${data.startDate} → ${data.endDate}`],
+    [l.dates, describeRange(dates, data.lang, data.startDate, data.endDate)],
     [l.production, data.production],
     [l.message, data.message],
   ]);
@@ -19,7 +20,9 @@ export default function QuoteConfirmation({ emails, data }: Props) {
 
 QuoteConfirmation.PreviewProps = {
   emails: en.emails,
+  dates: en.dates,
   data: {
+    lang: "en",
     name: "Aoife Ní Bhriain",
     email: "aoife@example.com",
     phone: "",
