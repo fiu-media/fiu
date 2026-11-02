@@ -980,7 +980,13 @@ const slideSpring = spring({
   stiffness: SLIDE_OMEGA ** 2,
   damping: 2 * SLIDE_DAMPING * SLIDE_OMEGA,
   mass: 1,
+  // motion's default rest thresholds declare it "done" (and jump to exactly 1) ~0.35s early, a
+  // visible hitch as the logo lands. Keep them tight so the glide runs the full SLIDE_SECONDS.
+  restDelta: 1e-5,
+  restSpeed: 1e-4,
 });
+/** Where the spring still is at SLIDE_SECONDS; `slideAt` blends this out so landing has no jump. */
+const SLIDE_RESIDUAL = 1 - slideSpring.next(SLIDE_SECONDS * 1000).value;
 const HERO_END = Math.max(HERO_SPIN_SECONDS, SLIDE_START + SLIDE_SECONDS);
 /** Longest intro, so the demand loop stays awake for it. */
 const INTRO_END = Math.max(SPIN_END, HERO_END);
@@ -999,12 +1005,12 @@ function tossAt(t: number) {
   return Math.sin(Math.PI * k) ** 2;
 }
 
-/** Damped-spring step response: 0 → 1 with overshoot, snapped to 1 once settled. */
+/** Damped-spring step response: 0 → 1 with overshoot, landing exactly on 1 at SLIDE_SECONDS. */
 function slideAt(t: number) {
   const tau = t - SLIDE_START;
   if (tau <= 0) return 0;
   if (tau >= SLIDE_SECONDS) return 1;
-  return slideSpring.next(tau * 1000).value;
+  return slideSpring.next(tau * 1000).value + SLIDE_RESIDUAL * (tau / SLIDE_SECONDS);
 }
 
 function spinAt(t: number) {
