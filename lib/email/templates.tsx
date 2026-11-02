@@ -1,4 +1,5 @@
 import "server-only";
+import { defaultLocale, type Locale } from "@/lib/i18n/config";
 import { format } from "@/lib/i18n/format";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import ContactNotification, { type ContactEmailData } from "@/emails/contact-notification";
@@ -8,10 +9,10 @@ import QuoteNotification, { type QuoteEmailData } from "@/emails/quote-notificat
 export type { KitLine } from "@/emails/_layout";
 export type { QuoteEmailData };
 
-export function quoteNotification(dict: Dictionary, data: QuoteEmailData, studioUrl: string) {
+export function quoteNotification(dict: Dictionary, data: QuoteEmailData, studioUrl: string, lang: Locale = defaultLocale) {
   const { emails } = dict;
   return {
-    subject: format(emails.quoteNotify.subject, { name: data.name, count: data.kit.length }),
+    subject: format(emails.quoteNotify.subject, { name: data.name, count: data.kit.length }, lang),
     react: <QuoteNotification emails={emails} dates={dict.dates} data={data} studioUrl={studioUrl} />,
   };
 }

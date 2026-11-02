@@ -82,7 +82,7 @@ export const en = {
   },
   basket: {
     open: "Open quote basket",
-    openWithCount: "Open quote basket, {count} in quote",
+    openWithCount: "Open quote basket, {count, plural, one {# item} other {# items}} in quote",
     title: "Your quote",
     empty: "Your quote is empty. Add gear from the catalogue.",
     close: "Close quote basket",
@@ -151,7 +151,7 @@ export const en = {
   },
   emails: {
     quoteNotify: {
-      subject: "Quote request from {name} ({count} in quote)",
+      subject: "Quote request from {name} ({count, plural, one {# item} other {# items}} in quote)",
       heading: "New quote request",
       openInStudio: "Open in Studio",
     },
