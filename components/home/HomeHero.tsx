@@ -6,6 +6,7 @@ import { Component, useCallback, useEffect, useMemo, useState, useSyncExternalSt
 import { cn } from "@/lib/cn";
 import logo from "@/public/brand/fiu-logo.svg";
 import type { HeroStill } from "@/sanity/lib/stills";
+import { isSplashDismissed, Splash } from "./Splash";
 import { SPLASH_FADE_MS, splashFadeVars } from "./splash-config";
 
 const LogoScene = dynamic(() => import("@/components/three/LogoScene"), { ssr: false });
@@ -16,7 +17,8 @@ const SPLASH_MIN_MS = 800;
 /** Never hold the splash longer than this, even if the live scene never reports ready. */
 const SPLASH_MAX_MS = 4000;
 /**
- * The SVG logo fades out over SPLASH_FADE_MS while the glass logo fades in on top over the same time. The spin starts partway through that fade, so the two read as one
+ * The splash fades as one (backdrop + SVG logo) over SPLASH_FADE_MS while the glass logo fades in
+ * on top over the same time. The spin starts partway through that fade, so the two read as one
  * gesture. It can't start at 0: the spin front-loads its speed, and the glass would visibly turn
  * away from the SVG it is cross-fading with.
  */
@@ -34,14 +36,10 @@ const INTRO_SETTLE_MS = 2000;
  */
 const INTRO_BACKSTOP_MS = 12000;
 
-/** Mobile only: matches the padding around Home's <main> and BLEED_PX. Symmetric, so the logo stays centred. */
+/** Mobile only: matches the padding around Home's <main> and HomeScrollLock's BLEED_PX. Symmetric, so the logo stays centred. */
 const BLEED_CLASS = "max-md:-inset-y-48";
 
 type Mode = "pending" | "live" | "static";
-
-// Once per page load: if the hero remounts (Suspense swap, client navigation back to `/`),
-// the intro must not replay.
-let introPlayed = false;
 
 let liveSupport: boolean | undefined;
 function canRenderLive() {
@@ -82,10 +80,10 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
   const support = useLiveSupport();
   const mode: Mode = failed ? "static" : support;
 
-  const [minElapsed, setMinElapsed] = useState(introPlayed);
-  const [timedOut, setTimedOut] = useState(introPlayed);
-  const [spinGo, setSpinGo] = useState(introPlayed);
-  const [introDone, setIntroDone] = useState(introPlayed);
+  const [minElapsed, setMinElapsed] = useState(isSplashDismissed);
+  const [timedOut, setTimedOut] = useState(isSplashDismissed);
+  const [spinGo, setSpinGo] = useState(isSplashDismissed);
+  const [introDone, setIntroDone] = useState(isSplashDismissed);
   const splashDone = timedOut || (minElapsed && (mode === "live" ? sceneReady : mode === "static"));
   // The static SVG logo starts centred under the splash, then glides left on desktop.
   const logoAtLeft = mode === "static" && splashDone;
@@ -98,10 +96,6 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
       window.clearTimeout(max);
     };
   }, []);
-
-  useEffect(() => {
-    if (splashDone) introPlayed = true;
-  }, [splashDone]);
 
   useEffect(() => {
     if (!splashDone) return;
@@ -139,9 +133,10 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
 
   return (
     <>
+      {/* Outside the -z-10 hero so it stacks above the nav as well. */}
+      <Splash done={splashDone} />
       {/* On mobile the photo is 12rem taller than the page above and below (BLEED_CLASS): real pixels for Safari to show behind
-          its status bar and toolbar. Not fixed, or Safari would tint its bars from this layer instead. It is also what shows
-          behind the bars from first paint: there is no opaque cover over it while loading. */}
+          its status bar and toolbar. Not fixed, or Safari would tint its bars from this layer instead. */}
       <div className={cn("absolute inset-0 -z-10", BLEED_CLASS)}>
         {stills.map((still, i) => (
           <Image
@@ -165,8 +160,11 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
             then glides to the left on desktop, to a 42vw logo that starts 2vw clear of the side rail
             (-27vw + 4rem = from 50vw to rail + 2vw + half of 42vw). */}
         <div
-          className="pointer-events-none absolute inset-0 grid place-items-center motion-safe:transition-opacity motion-safe:duration-(--splash-fade) motion-safe:ease-out"
-          style={{ ...splashFadeVars, opacity: mode === "live" && sceneReady && splashDone ? 0 : 1 }}
+          className={cn(
+            "pointer-events-none absolute inset-0 grid place-items-center",
+            splashDone && mode !== "live" && "motion-safe:transition-opacity motion-safe:duration-700",
+          )}
+          style={{ opacity: mode === "live" && sceneReady ? 0 : 1 }}
         >
           <Image
             src={logo}

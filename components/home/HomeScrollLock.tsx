@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect } from "react";
-import { BLEED_PX } from "./bleed";
+import { BLEED_PX, nudgeHomeScroll } from "./bleed";
 
 /**
  * Pins Home in the middle of a document that is taller than the screen (mobile only).
@@ -17,7 +17,8 @@ import { BLEED_PX } from "./bleed";
  *
  * The inline script (bleed.ts) already pins the scroll before first paint, so no scroll event follows and Safari can keep
  * the bar colour it sampled while the photo was still loading. Nudging the scroll once the first photo and then the page
- * have loaded makes it sample again; the `scroll` listener below puts the position straight back.
+ * have loaded (and when the splash goes, see Splash) makes it sample again; the `scroll` listener below puts the position
+ * straight back.
  */
 export function HomeScrollLock() {
   useLayoutEffect(() => {
@@ -31,7 +32,7 @@ export function HomeScrollLock() {
     const pin = () => {
       if (Math.abs(window.scrollY - BLEED_PX) > 0.5) window.scrollTo({ top: BLEED_PX, behavior: "instant" });
     };
-    const nudge = () => window.scrollTo({ top: BLEED_PX - 1, behavior: "instant" });
+    const nudge = nudgeHomeScroll;
     const onImageLoad = (event: Event) => {
       if (!(event.target instanceof HTMLImageElement) || !event.target.closest("[data-home-bleed]")) return;
       document.removeEventListener("load", onImageLoad, true);
