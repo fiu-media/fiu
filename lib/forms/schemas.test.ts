@@ -8,7 +8,7 @@ const quote = {
   email: "aoife@example.com",
   startDate: "2026-12-01",
   endDate: "2026-12-03",
-  items: [{ itemId: "item-1", qty: 2 }],
+  items: JSON.stringify([{ itemId: "item-1", qty: 2 }]),
 };
 const issueCodes = (result: { success: boolean; error?: { issues: { message: string; path: PropertyKey[] }[] } }) =>
   result.error?.issues.map((i) => `${String(i.path[0])}:${i.message}`) ?? [];
@@ -40,12 +40,22 @@ describe("quoteSchema", () => {
   });
 
   it("needs at least one item and caps the list and quantities", () => {
-    expect(issueCodes(quoteSchema.safeParse({ ...quote, items: [] }))).toContain("items:empty");
+    expect(issueCodes(quoteSchema.safeParse({ ...quote, items: "[]" }))).toContain("items:empty");
     const many = Array.from({ length: 101 }, (_, i) => ({ itemId: `i${i}`, qty: 1 }));
-    expect(quoteSchema.safeParse({ ...quote, items: many }).success).toBe(false);
+    expect(quoteSchema.safeParse({ ...quote, items: JSON.stringify(many) }).success).toBe(false);
     for (const qty of [0, 100, 1.5]) {
-      expect(quoteSchema.safeParse({ ...quote, items: [{ itemId: "a", qty }] }).success).toBe(false);
+      expect(quoteSchema.safeParse({ ...quote, items: JSON.stringify([{ itemId: "a", qty }]) }).success).toBe(false);
     }
+  });
+
+  it("reads the basket from the JSON in the hidden input", () => {
+    expect(quoteSchema.parse(quote).items).toEqual([{ itemId: "item-1", qty: 2 }]);
+    expect(issueCodes(quoteSchema.safeParse({ ...quote, items: undefined }))).toContain("items:empty");
+    expect(issueCodes(quoteSchema.safeParse({ ...quote, items: "{not json" }))).toContain("items:invalid");
+  });
+
+  it("says required for a blank name, which the form sends as undefined", () => {
+    expect(issueCodes(quoteSchema.safeParse({ ...quote, name: undefined }))).toContain("name:required");
   });
 
   it("rejects an unknown locale and a non-uuid submission id", () => {

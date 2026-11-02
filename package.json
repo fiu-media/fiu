@@ -23,6 +23,8 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "@conform-to/react": "^1.21.3",
+    "@conform-to/zod": "^1.21.3",
     "@react-email/components": "^1.0.12",
     "@react-three/drei": "^10.7.9",
     "@react-three/fiber": "^9.8.2",

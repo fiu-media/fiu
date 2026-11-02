@@ -1,33 +1,44 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { fieldId } from "./Field";
+import { errorMessage, type ErrorMessages } from "./Field";
+import type { ConformForm } from "./useConformForm";
 
-export type SummaryItem = { name: string; label: string; message: string };
+/** Field names with their visible labels, in the order they appear on the page. */
+export type SummaryLabels = readonly (readonly [name: string, label: string])[];
 
 /**
  * Announced and focused when a submission fails, so keyboard and screen-reader users land on
  * what went wrong, with links down to each field.
  */
 export function FormErrorSummary({
+  form,
+  labels,
   title,
-  items,
-  message,
+  messages,
   attempt,
 }: {
+  form: ConformForm["form"];
+  labels: SummaryLabels;
   title: string;
-  items: SummaryItem[];
-  /** A form-level error that has no field. */
-  message?: string;
-  /** Changes on every failed submission so focus moves even when the errors are identical. */
+  messages: ErrorMessages;
+  /** Changes on every submit and server reply so focus moves even when the errors are identical. */
   attempt: unknown;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    ref.current?.focus();
+    // Conform focuses the first invalid field when it learns of errors; wait a frame so the summary wins.
+    const frame = requestAnimationFrame(() => ref.current?.focus());
+    return () => cancelAnimationFrame(frame);
   }, [attempt]);
 
-  if (items.length === 0 && !message) return null;
+  const items = labels.flatMap(([name, label]) => {
+    const message = errorMessage(messages, form.allErrors[name]);
+    return message ? [{ name, label, message }] : [];
+  });
+  const formMessage = errorMessage(messages, form.errors);
+
+  if (items.length === 0 && !formMessage) return null;
   return (
     <div
       ref={ref}
@@ -41,7 +52,7 @@ export function FormErrorSummary({
           <ul className="mt-2 list-disc space-y-1 pl-5">
             {items.map((item) => (
               <li key={item.name}>
-                <a href={`#${fieldId(item.name)}`} className="underline underline-offset-2">
+                <a href={`#${form.id}-${item.name}`} className="underline underline-offset-2">
                   {item.label}
                 </a>
                 : {item.message}
@@ -50,7 +61,7 @@ export function FormErrorSummary({
           </ul>
         </>
       )}
-      {message && <p className={items.length > 0 ? "mt-2" : undefined}>{message}</p>}
+      {formMessage && <p className={items.length > 0 ? "mt-2" : undefined}>{formMessage}</p>}
     </div>
   );
 }

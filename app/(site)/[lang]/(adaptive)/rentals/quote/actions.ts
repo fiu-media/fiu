@@ -5,8 +5,8 @@ import { studioEditUrl } from "@/lib/email/studio-link";
 import { quoteConfirmation, quoteNotification, type KitLine } from "@/lib/email/templates";
 import { isConflict, sendAll } from "@/lib/forms/notify";
 import { quoteSchema } from "@/lib/forms/schemas";
-import type { FormState } from "@/lib/forms/state";
-import { formDataToRecord, guardSubmission } from "@/lib/forms/submit";
+import { formSuccess, type FormState } from "@/lib/forms/state";
+import { guardSubmission } from "@/lib/forms/submit";
 import { defaultLocale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { AVAILABLE_ITEM_IDS_QUERY } from "@/sanity/lib/queries";
@@ -14,33 +14,12 @@ import { writeClient } from "@/sanity/lib/writeClient";
 
 const today = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Dublin" }).format(new Date());
 
-function parseItems(value: string | undefined): unknown {
-  try {
-    return JSON.parse(value || "[]");
-  } catch {
-    return null;
-  }
-}
-
 export async function submitQuote(_previous: FormState, formData: FormData): Promise<FormState> {
-  const raw = formDataToRecord(formData);
-  const guarded = await guardSubmission(quoteSchema, { ...raw, items: parseItems(raw.items) });
-  if (!guarded.ok) return guarded.state;
-  const data = guarded.data;
-  const values = {
-    name: data.name,
-    email: data.email,
-    phone: data.phone,
-    company: data.company,
-    production: data.production,
-    startDate: data.startDate,
-    endDate: data.endDate,
-    message: data.message,
-  };
+  const guarded = await guardSubmission(quoteSchema, formData);
+  if (!guarded.ok) return guarded.result;
+  const { data, reply } = guarded;
 
-  if (data.startDate < today()) {
-    return { status: "error", fieldErrors: { startDate: "past" }, values };
-  }
+  if (data.startDate < today()) return reply({ fieldErrors: { startDate: ["past"] } });
 
   // The basket lives in the visitor's browser, so treat it as untrusted: merge duplicates and
   // only accept items that are currently published and available.
@@ -50,10 +29,10 @@ export async function submitQuote(_previous: FormState, formData: FormData): Pro
     ids: [...qtyById.keys()],
     fallbackLang: defaultLocale,
   });
-  if (found.length !== qtyById.size) return { status: "error", error: "unavailable", values };
+  if (found.length !== qtyById.size) return reply({ formErrors: ["unavailable"] });
 
   if (found.some((item) => qtyById.get(item._id)! > (item.maxQuantity ?? 99))) {
-    return { status: "error", error: "overLimit", values };
+    return reply({ formErrors: ["overLimit"] });
   }
 
   const kit: KitLine[] = found.map((item) => ({ name: item.name, brand: item.brand, qty: qtyById.get(item._id)! }));
@@ -83,9 +62,9 @@ export async function submitQuote(_previous: FormState, formData: FormData): Pro
       createdAt: new Date().toISOString(),
     });
   } catch (error) {
-    if (isConflict(error)) return { status: "success" };
+    if (isConflict(error)) return formSuccess;
     console.error("[quote] could not store quote request:", error);
-    return { status: "error", error: "failed", values };
+    return reply({ formErrors: ["failed"] });
   }
 
   const dict = await getDictionary(data.lang);
@@ -98,5 +77,5 @@ export async function submitQuote(_previous: FormState, formData: FormData): Pro
     { to: data.email, ...quoteConfirmation(dict, emailData) },
   ]);
 
-  return { status: "success" };
+  return formSuccess;
 }

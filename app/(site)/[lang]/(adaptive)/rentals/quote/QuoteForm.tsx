@@ -1,12 +1,13 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
-import { Field, Honeypot } from "@/components/forms/Field";
+import { useEffect } from "react";
+import { Field } from "@/components/forms/Field";
+import { Form, SubmitButton } from "@/components/forms/Form";
 import { QuoteFormSkeleton } from "@/components/forms/FormSkeleton";
-import { FormErrorSummary, type SummaryItem } from "@/components/forms/FormErrorSummary";
+import { useConformForm } from "@/components/forms/useConformForm";
 import { QuoteLines } from "@/components/rentals/QuoteLines";
-import { GlassPanel, GlassPillButton, GlassPillLink } from "@/components/ui/Glass";
-import { initialFormState } from "@/lib/forms/state";
+import { GlassPanel, GlassPillLink } from "@/components/ui/Glass";
+import { quoteSchema } from "@/lib/forms/schemas";
 import { localizedPath, type Locale } from "@/lib/i18n/config";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { basketActions, useQuoteBasket } from "@/lib/quote-basket";
@@ -16,24 +17,18 @@ type QuoteDict = Pick<Dictionary, "quote" | "basket" | "forms" | "common">;
 
 export function QuoteForm({ lang, dict }: { lang: Locale; dict: QuoteDict }) {
   const { quote, forms } = dict;
-  const [state, formAction, pending] = useActionState(submitQuote, initialFormState);
+  const conform = useConformForm({ action: submitQuote, schema: quoteSchema });
+  const { fields, pending, succeeded } = conform;
   const { lines, startDate, endDate, setDates, ready } = useQuoteBasket();
-  // One id per attempt-to-submit: a retry after a failure reuses it, so the server can tell a
-  // double submit from a new request. It is created on first submit because it must not be in
-  // the server-rendered HTML.
-  const submissionId = useRef<string | null>(null);
 
   useEffect(() => {
-    if (state.status === "success") {
-      basketActions.clear();
-      submissionId.current = null;
-    }
-  }, [state.status]);
+    if (succeeded) basketActions.clear();
+  }, [succeeded]);
 
   // The basket only exists in the browser, so until it is read the form would flash "empty".
   if (!ready) return <QuoteFormSkeleton label={dict.common.loading} />;
 
-  if (state.status === "success") {
+  if (succeeded) {
     return (
       <GlassPanel className="max-w-xl p-8" role="status">
         <h2 className="font-display text-3xl">{quote.successTitle}</h2>
@@ -56,43 +51,25 @@ export function QuoteForm({ lang, dict }: { lang: Locale; dict: QuoteDict }) {
     );
   }
 
-  const message = (code?: keyof typeof forms.errors) => (code ? forms.errors[code] : undefined);
-  const fieldErrors = state.fieldErrors ?? {};
-  const labels: [string, string][] = [
-    ["items", quote.itemsHeading],
-    ["name", quote.name],
-    ["email", quote.email],
-    ["phone", quote.phone],
-    ["company", quote.company],
-    ["production", quote.production],
-    ["startDate", quote.startDate],
-    ["endDate", quote.endDate],
-    ["message", quote.message],
-  ];
-  const summary: SummaryItem[] = labels.flatMap(([name, label]) => {
-    const text = message(fieldErrors[name]);
-    return text ? [{ name, label, message: text }] : [];
-  });
-
-  const values = state.values ?? {};
-  const err = (name: string) => message(fieldErrors[name]);
-
   return (
-    <form
-      action={(formData) => {
-        submissionId.current ??= crypto.randomUUID();
-        formData.set("submissionId", submissionId.current);
-        formData.set("items", JSON.stringify(lines));
-        formAction(formData);
-      }}
-      className="relative flex max-w-2xl flex-col gap-10"
+    <Form
+      conform={conform}
+      lang={lang}
+      forms={forms}
+      labels={[
+        ["items", quote.itemsHeading],
+        ["name", quote.name],
+        ["email", quote.email],
+        ["phone", quote.phone],
+        ["company", quote.company],
+        ["production", quote.production],
+        ["startDate", quote.startDate],
+        ["endDate", quote.endDate],
+        ["message", quote.message],
+      ]}
+      className="max-w-2xl gap-10"
     >
-      <input type="hidden" name="lang" value={lang} />
-      <Honeypot />
-
-      {state.status === "error" && (
-        <FormErrorSummary title={forms.errorSummary} items={summary} message={message(state.error)} attempt={state} />
-      )}
+      <input type="hidden" name="items" value={JSON.stringify(lines)} />
 
       <section aria-labelledby="quote-kit" className="flex flex-col gap-2">
         <h2 id="quote-kit" className="font-display text-2xl">
@@ -107,23 +84,21 @@ export function QuoteForm({ lang, dict }: { lang: Locale; dict: QuoteDict }) {
         </h2>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field
-            name="startDate"
+            field={fields.startDate}
             type="date"
             label={quote.startDate}
             required
             value={startDate}
             onChange={(v) => setDates({ startDate: v })}
-            error={err("startDate")}
           />
           <Field
-            name="endDate"
+            field={fields.endDate}
             type="date"
             label={quote.endDate}
             required
             min={startDate || undefined}
             value={endDate}
             onChange={(v) => setDates({ endDate: v })}
-            error={err("endDate")}
           />
         </div>
       </section>
@@ -133,56 +108,18 @@ export function QuoteForm({ lang, dict }: { lang: Locale; dict: QuoteDict }) {
           {quote.contactHeading}
         </h2>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field name="name" label={quote.name} required autoComplete="name" defaultValue={values.name} error={err("name")} />
-          <Field
-            name="email"
-            type="email"
-            label={quote.email}
-            required
-            autoComplete="email"
-            defaultValue={values.email}
-            error={err("email")}
-          />
-          <Field
-            name="phone"
-            type="tel"
-            label={quote.phone}
-            optionalLabel={quote.optional}
-            autoComplete="tel"
-            defaultValue={values.phone}
-            error={err("phone")}
-          />
-          <Field
-            name="company"
-            label={quote.company}
-            optionalLabel={quote.optional}
-            autoComplete="organization"
-            defaultValue={values.company}
-            error={err("company")}
-          />
+          <Field field={fields.name} label={quote.name} required autoComplete="name" />
+          <Field field={fields.email} type="email" label={quote.email} required autoComplete="email" />
+          <Field field={fields.phone} type="tel" label={quote.phone} optionalLabel={quote.optional} autoComplete="tel" />
+          <Field field={fields.company} label={quote.company} optionalLabel={quote.optional} autoComplete="organization" />
         </div>
-        <Field
-          name="production"
-          label={quote.production}
-          optionalLabel={quote.optional}
-          defaultValue={values.production}
-          error={err("production")}
-        />
-        <Field
-          name="message"
-          as="textarea"
-          label={quote.message}
-          optionalLabel={quote.optional}
-          defaultValue={values.message}
-          error={err("message")}
-        />
+        <Field field={fields.production} label={quote.production} optionalLabel={quote.optional} />
+        <Field field={fields.message} as="textarea" label={quote.message} optionalLabel={quote.optional} />
       </section>
 
       <div>
-        <GlassPillButton type="submit" size="lg" disabled={pending} aria-disabled={pending}>
-          {pending ? quote.sending : quote.submit}
-        </GlassPillButton>
+        <SubmitButton pending={pending}>{pending ? quote.sending : quote.submit}</SubmitButton>
       </div>
-    </form>
+    </Form>
   );
 }

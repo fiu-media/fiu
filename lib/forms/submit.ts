@@ -1,38 +1,31 @@
 import "server-only";
+import type { Submission, SubmissionResult } from "@conform-to/react";
+import { parseWithZod } from "@conform-to/zod/v4";
 import { checkBotId } from "botid/server";
 import type { z } from "zod";
 import { env } from "@/env";
-import { toErrorCode, type FormState } from "./state";
+import { toErrorCode } from "./state";
 
-type Guarded<T> = { ok: true; data: T } | { ok: false; state: FormState };
+type ReplyOptions = Parameters<Submission<unknown>["reply"]>[0];
 
-/** Plain-text fields of a submission, returned to the form so it can repopulate. */
-function textValues(raw: Record<string, unknown>) {
-  const values: Record<string, string> = {};
-  for (const [key, value] of Object.entries(raw)) {
-    if (typeof value === "string" && key !== "website" && key !== "submissionId" && key !== "lang") values[key] = value;
-  }
-  return values;
-}
+type Guarded<T> =
+  { ok: true; data: T; reply: (options?: ReplyOptions) => SubmissionResult } | { ok: false; result: SubmissionResult };
 
-/** Read every text field of a FormData as a string (missing fields become ""), skipping React's `$ACTION_*` plumbing. */
-export function formDataToRecord(formData: FormData) {
-  const raw: Record<string, string> = {};
-  for (const [key, value] of formData.entries()) {
-    if (typeof value === "string" && !key.startsWith("$ACTION")) raw[key] = value;
-  }
-  return raw;
+/** Zod's own wording (e.g. "Invalid input: expected string") has no place on the wire: only our error codes. */
+function withCodes(result: SubmissionResult): SubmissionResult {
+  if (!result.error) return result;
+  const error = Object.fromEntries(Object.entries(result.error).map(([name, codes]) => [name, codes?.map(toErrorCode) ?? null]));
+  return { ...result, error };
 }
 
 /**
  * The shared front door for public forms: bots and filled honeypots are rejected without
- * touching Sanity or Resend; everything else is validated and returned as typed data.
+ * touching Sanity or Resend; everything else is validated and returned as typed data. `reply`
+ * answers with the submitted values, so a form-level or server-only failure repopulates the form.
  */
-export async function guardSubmission<S extends z.ZodType>(
-  schema: S,
-  raw: Record<string, unknown>,
-): Promise<Guarded<z.output<S>>> {
-  const reject: Guarded<never> = { ok: false, state: { status: "error", error: "rejected", values: textValues(raw) } };
+export async function guardSubmission<S extends z.ZodType>(schema: S, formData: FormData): Promise<Guarded<z.output<S>>> {
+  const submission = parseWithZod(formData, { schema });
+  const reject = { ok: false, result: submission.reply({ formErrors: ["rejected"], hideFields: ["website"] }) } as const;
 
   // E2E_BYPASS_BOTID is set only by the Playwright web server: a production build can't reach BotID
   // without Vercel's OIDC token, so the e2e run treats every visitor as human.
@@ -40,17 +33,9 @@ export async function guardSubmission<S extends z.ZodType>(
     env.E2E_BYPASS_BOTID === "1" ? { developmentOptions: { isDevelopment: true } } : undefined,
   );
   if (verification.isBot) return reject;
-  if (typeof raw.website === "string" && raw.website.trim() !== "") return reject;
+  const honeypot = formData.get("website");
+  if (typeof honeypot === "string" && honeypot.trim() !== "") return reject;
 
-  const parsed = schema.safeParse(raw);
-  if (parsed.success) return { ok: true, data: parsed.data };
-
-  const fieldErrors: NonNullable<FormState["fieldErrors"]> = {};
-  for (const issue of parsed.error.issues) {
-    const key = String(issue.path[0] ?? "");
-    if (key && !(key in fieldErrors)) fieldErrors[key] = toErrorCode(issue.message);
-  }
-  // Anything without a field to hang it on (e.g. a malformed hidden input) is a generic failure.
-  const error = Object.keys(fieldErrors).length === 0 ? "invalid" : undefined;
-  return { ok: false, state: { status: "error", fieldErrors, error, values: textValues(raw) } };
+  if (submission.status !== "success") return { ok: false, result: withCodes(submission.reply()) };
+  return { ok: true, data: submission.value, reply: submission.reply };
 }
