@@ -4,22 +4,28 @@ import { coerceFormValue, formatResult } from "@conform-to/zod/v4/future";
 import { checkBotId } from "botid/server";
 import type { z } from "zod";
 import { env } from "@/env";
+import { HIDDEN_FIELDS } from "./schemas";
 import { toErrorCode, type FormState } from "./state";
 
 /** Errors a caller can add on top of the schema's: for the whole form, or for named fields. */
 type Errors = { formErrors?: string[]; fieldErrors?: Record<string, string[]> };
 
 type Guarded<T> =
-  { ok: true; data: T; fail: (errors: Errors) => FormState; succeed: () => FormState } | { ok: false; result: FormState };
+  | { ok: true; data: T; fail: (errors: Errors) => FormState; succeed: (extra?: { confirmation?: boolean }) => FormState }
+  | { ok: false; result: FormState };
 
-/** Zod's own wording (e.g. "Invalid input: expected string") has no place on the wire: only our error codes. */
+/**
+ * Zod's own wording (e.g. "Invalid input: expected string") has no place on the wire: only our error
+ * codes. A problem with a field the visitor can't see becomes a problem with the whole submission.
+ */
 function withCodes(error: FormError<string[]>): FormError<string[]> {
-  return {
-    formErrors: error.formErrors?.map(toErrorCode) ?? null,
-    fieldErrors: Object.fromEntries(
-      Object.entries(error.fieldErrors).map(([name, codes]) => [name, codes?.map(toErrorCode) ?? null]),
-    ),
-  };
+  const formErrors = new Set(error.formErrors?.map(toErrorCode));
+  const fieldErrors: FormError<string[]>["fieldErrors"] = {};
+  for (const [name, codes] of Object.entries(error.fieldErrors)) {
+    if (!HIDDEN_FIELDS.includes(name)) fieldErrors[name] = codes?.map(toErrorCode) ?? null;
+    else if (codes?.length) formErrors.add("rejected");
+  }
+  return { formErrors: formErrors.size > 0 ? [...formErrors] : null, fieldErrors };
 }
 
 /**
@@ -59,5 +65,10 @@ export async function guardSubmission<S extends z.ZodType>(schema: S, formData: 
     const error = formatResult(parsed);
     return { ok: false, result: reply(error && withCodes(error)) };
   }
-  return { ok: true, data: parsed.data, fail, succeed: () => ({ ...reply(null, { reset: true }), success: true }) };
+  return {
+    ok: true,
+    data: parsed.data,
+    fail,
+    succeed: (extra) => ({ ...reply(null, { reset: true }), ...extra, success: true }),
+  };
 }

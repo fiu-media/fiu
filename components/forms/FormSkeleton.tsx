@@ -44,7 +44,7 @@ export function QuoteFormSkeleton({ label }: { label: string }) {
       </section>
       <section className="flex flex-col gap-4">
         <Heading />
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4">
           <Field />
           <Field />
         </div>

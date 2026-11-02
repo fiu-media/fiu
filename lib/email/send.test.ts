@@ -42,6 +42,25 @@ describe("sendEmail", () => {
     expect(mocks.send.mock.calls[0][0].text).toContain("Body copy");
   });
 
+  it("sends an internationalised domain as punycode", async () => {
+    mocks.env.RESEND_API_KEY = "re_test";
+    await sendEmail({ ...email, to: "anna@exämple.de", replyTo: "anna@exämple.de" });
+    expect(mocks.send.mock.calls[0][0]).toMatchObject({ to: "anna@xn--exmple-cua.de", replyTo: "anna@xn--exmple-cua.de" });
+  });
+
+  it("doesn't try to send to an accented local part, which Resend rejects", async () => {
+    mocks.env.RESEND_API_KEY = "re_test";
+    await sendEmail({ ...email, to: "séan@example.ie" });
+    expect(mocks.send).not.toHaveBeenCalled();
+  });
+
+  it("leaves out a reply-to it can't deliver to, but still sends", async () => {
+    mocks.env.RESEND_API_KEY = "re_test";
+    await sendEmail({ ...email, replyTo: "séan@example.ie" });
+    expect(mocks.send).toHaveBeenCalledOnce();
+    expect(mocks.send.mock.calls[0][0].replyTo).toBeUndefined();
+  });
+
   it("skips the send without RESEND_API_KEY", async () => {
     await sendEmail(email);
     expect(mocks.send).not.toHaveBeenCalled();

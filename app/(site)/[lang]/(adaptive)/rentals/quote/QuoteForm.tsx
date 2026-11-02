@@ -3,12 +3,13 @@
 import { useEffect } from "react";
 import { Field } from "@/components/forms/Field";
 import { Form, SubmitButton } from "@/components/forms/Form";
+import { PhoneField } from "@/components/forms/PhoneField";
 import { QuoteFormSkeleton } from "@/components/forms/FormSkeleton";
 import { useConformForm } from "@/components/forms/useConformForm";
 import { QuoteLines } from "@/components/rentals/QuoteLines";
 import { GlassPanel, GlassPillLink } from "@/components/ui/Glass";
-import { describeRange, isValidRange } from "@/lib/dates";
-import { quoteSchema } from "@/lib/forms/schemas";
+import { describeRange, isValidRange, todayInDublin } from "@/lib/dates";
+import { limits, quoteSchema } from "@/lib/forms/schemas";
 import { localizedPath, type Locale } from "@/lib/i18n/config";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { basketActions, useQuoteBasket } from "@/lib/quote-basket";
@@ -19,7 +20,7 @@ type QuoteDict = Pick<Dictionary, "quote" | "basket" | "forms" | "common" | "dat
 export function QuoteForm({ lang, dict }: { lang: Locale; dict: QuoteDict }) {
   const { quote, forms } = dict;
   const conform = useConformForm({ action: submitQuote, schema: quoteSchema });
-  const { fields, pending, succeeded } = conform;
+  const { fields, pending, succeeded, confirmed } = conform;
   const { lines, startDate, endDate, setDates, ready } = useQuoteBasket();
 
   useEffect(() => {
@@ -33,7 +34,7 @@ export function QuoteForm({ lang, dict }: { lang: Locale; dict: QuoteDict }) {
     return (
       <GlassPanel className="max-w-xl p-8" role="status">
         <h2 className="font-display text-3xl">{quote.successTitle}</h2>
-        <p className="mt-3 text-fg-muted">{quote.successBody}</p>
+        <p className="mt-3 text-fg-muted">{confirmed ? quote.successBody : quote.successBodyNoEmail}</p>
         <GlassPillLink href={localizedPath(lang, "/rentals")} className="mt-6">
           {quote.successAction}
         </GlassPillLink>
@@ -72,7 +73,7 @@ export function QuoteForm({ lang, dict }: { lang: Locale; dict: QuoteDict }) {
     >
       <input type="hidden" name="items" value={JSON.stringify(lines)} />
 
-      <section aria-labelledby="quote-kit" className="flex flex-col gap-2">
+      <section id={fields.items.id} aria-labelledby="quote-kit" className="flex flex-col gap-2">
         <h2 id="quote-kit" className="font-display text-2xl">
           {quote.itemsHeading}
         </h2>
@@ -83,12 +84,13 @@ export function QuoteForm({ lang, dict }: { lang: Locale; dict: QuoteDict }) {
         <h2 id="quote-dates" className="font-display text-2xl">
           {quote.datesHeading}
         </h2>
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4">
           <Field
             field={fields.startDate}
             type="date"
             label={quote.startDate}
             required
+            min={todayInDublin()}
             value={startDate}
             onChange={(v) => setDates({ startDate: v })}
           />
@@ -112,13 +114,25 @@ export function QuoteForm({ lang, dict }: { lang: Locale; dict: QuoteDict }) {
           {quote.contactHeading}
         </h2>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field field={fields.name} label={quote.name} required autoComplete="name" />
-          <Field field={fields.email} type="email" label={quote.email} required autoComplete="email" />
-          <Field field={fields.phone} type="tel" label={quote.phone} optionalLabel={quote.optional} autoComplete="tel" />
-          <Field field={fields.company} label={quote.company} optionalLabel={quote.optional} autoComplete="organization" />
+          <Field field={fields.name} label={quote.name} required autoComplete="name" maxLength={limits.name} />
+          <Field field={fields.email} type="email" label={quote.email} required autoComplete="email" maxLength={limits.email} />
+          <PhoneField field={fields.phone} label={quote.phone} optionalLabel={quote.optional} />
+          <Field
+            field={fields.company}
+            label={quote.company}
+            optionalLabel={quote.optional}
+            autoComplete="organization"
+            maxLength={limits.company}
+          />
         </div>
-        <Field field={fields.production} label={quote.production} optionalLabel={quote.optional} />
-        <Field field={fields.message} as="textarea" label={quote.message} optionalLabel={quote.optional} />
+        <Field field={fields.production} label={quote.production} optionalLabel={quote.optional} maxLength={limits.production} />
+        <Field
+          field={fields.message}
+          as="textarea"
+          label={quote.message}
+          optionalLabel={quote.optional}
+          maxLength={limits.message}
+        />
       </section>
 
       <div>

@@ -113,6 +113,8 @@ export const en = {
     sending: "Sending…",
     successTitle: "Request sent",
     successBody: "Thanks, we've received your quote request and sent a confirmation to your email. We'll be in touch soon.",
+    successBodyNoEmail:
+      "Thanks, we've received your quote request. We can't email a confirmation to that address, but we'll be in touch soon.",
     successAction: "Back to rentals",
   },
   contact: {
@@ -135,11 +137,17 @@ export const en = {
     errors: {
       required: "This field is required.",
       invalid: "Please check this value.",
+      emailInvalid: "Enter an email address like name@example.com.",
+      phoneInvalid: "Enter a valid phone number for the selected country.",
+      dateInvalid: "Choose a date.",
+      tooLong: "That's too long. Please shorten it.",
       empty: "Add at least one item to your quote.",
       beforeStart: "Return must be on or after pick-up.",
       past: "Pick-up can't be in the past.",
-      overLimit: "Some items are over the maximum we can offer in one quote. Please review your quote.",
-      unavailable: "Some items in your quote are no longer available. Please review your quote.",
+      tooFar: "Pick-up can't be more than two years away.",
+      hireTooLong: "A hire can't run longer than a year. For longer hires, email us.",
+      overLimit: "Some quantities are over the maximum we can offer. Please review the quantities in your quote.",
+      unavailable: "Some items in your quote are no longer available. Remove the ones marked below and try again.",
       rejected: "We couldn't verify this submission. Please try again.",
       failed: "Something went wrong on our side. Please try again, or email us directly.",
     },

@@ -50,6 +50,8 @@ export function useConformForm({ action, schema, defaultValue }: Options) {
     attempt,
     submissionId,
     succeeded: state?.success === true,
+    /** False when the request went through but there's no way to email the visitor a confirmation. */
+    confirmed: state?.confirmation !== false,
     /** True once the visitor has tried to submit, so the summary doesn't appear for a lone blur. */
     attempted: submits > 0 || (state !== null && !state.success && Boolean(state.error)),
     formProps: {

@@ -5,6 +5,16 @@ import { testEmail } from "./helpers";
 const { contact, forms } = en;
 
 test.describe("contact form", () => {
+  test("an address with an accent, which Irish names often have, is accepted", async ({ page }) => {
+    await page.goto("/contact");
+    await page.getByLabel(contact.name).fill("Seán Ó Súilleabháin");
+    await page.getByLabel(contact.email).fill(testEmail().replace("e2e-", "seán-"));
+    await page.getByLabel(contact.message).fill("Hello from an address with a fada.");
+    await page.getByRole("button", { name: contact.submit }).click();
+
+    await expect(page.getByRole("heading", { name: contact.successTitle })).toBeVisible();
+  });
+
   test("?type= preselects the enquiry type", async ({ page }) => {
     await page.goto("/contact?type=Talent");
     await expect(page.getByLabel(contact.enquiryType)).toHaveValue("Talent");
@@ -22,9 +32,20 @@ test.describe("contact form", () => {
     await page.getByLabel(contact.message).focus();
 
     await expect(email).toHaveAttribute("aria-invalid", "true");
-    await expect(page.getByText(forms.errors.invalid)).toBeVisible();
+    await expect(page.getByText(forms.errors.emailInvalid)).toBeVisible();
     // Nothing has been submitted yet, so no summary.
     await expect(page.getByRole("alert").filter({ hasText: forms.errorSummary })).toHaveCount(0);
+  });
+
+  test("a pasted email with stray spaces is accepted, and the fields stop at their limit", async ({ page }) => {
+    await page.goto("/contact");
+    await page.getByLabel(contact.name).fill("x".repeat(200));
+    await expect(page.getByLabel(contact.name)).toHaveValue("x".repeat(120));
+
+    const email = page.getByLabel(contact.email);
+    await email.fill("  a@example.com ");
+    await page.getByLabel(contact.message).focus();
+    await expect(email).not.toHaveAttribute("aria-invalid", "true");
   });
 
   test("a failed submission moves focus to the error summary", async ({ page }) => {

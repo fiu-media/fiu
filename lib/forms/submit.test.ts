@@ -57,6 +57,12 @@ describe("guardSubmission", () => {
     });
   });
 
+  it("turns a problem with a hidden field into a form-level rejection", async () => {
+    const hidden = z.object({ lang: z.literal("en"), name: z.string({ error: "required" }) });
+    const result = await guardSubmission(hidden, form({ lang: "fr", name: "Aoife" }));
+    expect(result).toMatchObject({ ok: false, result: { error: { formErrors: ["rejected"], fieldErrors: {} } } });
+  });
+
   it("lets a caller fail the submission with the submitted values", async () => {
     const result = await guardSubmission(schema, form({ name: "Aoife", email: "a@example.com" }));
     if (!result.ok) throw new Error("expected a valid submission");

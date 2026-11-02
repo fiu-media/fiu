@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, use, type ReactNode } from "react";
+import { cn } from "@/lib/cn";
 import { toErrorCode, type FormErrorCode } from "@/lib/forms/state";
 
 export type ErrorMessages = Record<FormErrorCode, string>;
@@ -38,11 +39,39 @@ type Props = {
   required?: boolean;
   rows?: number;
   min?: string;
+  /** Stops typing and pasting past the limit the schema enforces. */
+  maxLength?: number;
   children?: ReactNode;
 };
 
-const controlClass =
+export const controlClass =
   "w-full rounded-2xl border bg-bg-raised px-4 py-3 text-base text-fg placeholder:text-fg-muted/70 aria-[invalid=true]:border-accent";
+
+/** The label above a control and the localised error below it; the control itself is the caller's. */
+export function FieldFrame({
+  field,
+  label,
+  optionalLabel,
+  required,
+  children,
+}: Pick<Props, "field" | "label" | "optionalLabel" | "required" | "children">) {
+  const messages = use(FormMessages)!;
+  const error = errorMessage(messages, field.errors);
+  return (
+    <div className="flex min-w-0 flex-col gap-1.5">
+      <label htmlFor={field.id} className="text-sm font-medium">
+        {label}
+        {!required && optionalLabel && <span className="ml-1.5 font-normal text-fg-muted">({optionalLabel})</span>}
+      </label>
+      {children}
+      {error && (
+        <p id={field.errorId} className="text-sm text-accent">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
 
 export function Field({
   field,
@@ -56,11 +85,13 @@ export function Field({
   required,
   rows = 5,
   min,
+  maxLength,
   children,
 }: Props) {
   const messages = use(FormMessages)!;
   const error = errorMessage(messages, field.errors);
-  const className = `${controlClass} ${error ? "border-accent" : "border-line"}`;
+  // A date needs about 11 characters, so on a phone two fit side by side if the padding is trimmed.
+  const className = cn(controlClass, error ? "border-accent" : "border-line", type === "date" && "min-w-0 px-3 sm:px-4");
   const shared = {
     id: field.id,
     name: field.name,
@@ -68,6 +99,7 @@ export function Field({
     "aria-describedby": field.ariaDescribedBy,
     required,
     autoComplete,
+    maxLength,
     className,
   };
   const control =
@@ -90,18 +122,9 @@ export function Field({
     );
 
   return (
-    <div className="flex flex-col gap-1.5">
-      <label htmlFor={field.id} className="text-sm font-medium">
-        {label}
-        {!required && optionalLabel && <span className="ml-1.5 font-normal text-fg-muted">({optionalLabel})</span>}
-      </label>
+    <FieldFrame field={field} label={label} optionalLabel={optionalLabel} required={required}>
       {control}
-      {error && (
-        <p id={field.errorId} className="text-sm text-accent">
-          {error}
-        </p>
-      )}
-    </div>
+    </FieldFrame>
   );
 }
 

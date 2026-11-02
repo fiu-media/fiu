@@ -25,8 +25,8 @@ const form = (overrides: Record<string, string> = {}) => {
     submissionId: SUBMISSION_ID,
     name: "Aoife",
     email: "aoife@example.com",
-    startDate: "2999-01-01",
-    endDate: "2999-01-03",
+    startDate: "2026-07-01",
+    endDate: "2026-07-03",
     items: JSON.stringify([{ itemId: "cam", qty: 2 }]),
     ...overrides,
   };
@@ -38,6 +38,8 @@ const camera = { _id: "cam", name: "Camera", brand: "Arri", maxQuantity: 5 };
 
 beforeEach(() => {
   vi.resetAllMocks();
+  // Dates are checked against today, so pin it.
+  vi.useFakeTimers({ toFake: ["Date"], now: new Date("2026-06-01T12:00:00Z") });
   vi.spyOn(console, "error").mockImplementation(() => {});
   vi.spyOn(console, "warn").mockImplementation(() => {});
   mocks.checkBotId.mockResolvedValue({ isBot: false });
@@ -46,6 +48,8 @@ beforeEach(() => {
   mocks.sendEmail.mockResolvedValue(undefined);
   mocks.getRecipient.mockResolvedValue("studio@example.com");
 });
+
+afterEach(() => vi.useRealTimers());
 
 describe("submitQuote", () => {
   it("stores the request and emails the studio and the visitor", async () => {
@@ -87,7 +91,7 @@ describe("submitQuote", () => {
   it("returns field errors for invalid input", async () => {
     const state = await submitQuote(idle, form({ email: "nope", name: "" }));
     expect(state).toMatchObject({
-      error: { fieldErrors: { email: ["invalid"], name: ["required"] } },
+      error: { fieldErrors: { email: ["emailInvalid"], name: ["required"] } },
       submission: { payload: { email: "nope" } },
     });
     expect(mocks.create).not.toHaveBeenCalled();
@@ -161,6 +165,13 @@ describe("submitQuote", () => {
   it("still succeeds when email delivery fails", async () => {
     mocks.sendEmail.mockRejectedValue(new Error("resend down"));
     expect(await submitQuote(idle, form())).toMatchObject({ success: true });
+  });
+
+  it("stores an accented address but can only email the studio, and says so", async () => {
+    const state = await submitQuote(idle, form({ email: "séan@example.ie" }));
+    expect(state).toMatchObject({ success: true, confirmation: false });
+    expect(mocks.create.mock.calls[0][0]).toMatchObject({ email: "séan@example.ie" });
+    expect(mocks.sendEmail.mock.calls.map(([email]) => email.to)).toEqual(["studio@example.com", "séan@example.ie"]);
   });
 
   it("only emails the visitor when no studio recipient is configured", async () => {

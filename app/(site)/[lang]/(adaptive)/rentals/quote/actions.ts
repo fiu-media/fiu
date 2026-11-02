@@ -1,6 +1,6 @@
 "use server";
 
-import { todayInDublin } from "@/lib/dates";
+import { toDeliverable } from "@/lib/email/address";
 import { getRecipient } from "@/lib/email/settings";
 import { studioEditUrl } from "@/lib/email/studio-link";
 import { quoteConfirmation, quoteNotification, type KitLine } from "@/lib/email/templates";
@@ -17,8 +17,6 @@ export async function submitQuote(_previous: FormState, formData: FormData): Pro
   const guarded = await guardSubmission(quoteSchema, formData);
   if (!guarded.ok) return guarded.result;
   const { data, fail, succeed } = guarded;
-
-  if (data.startDate < todayInDublin()) return fail({ fieldErrors: { startDate: ["past"] } });
 
   // The basket lives in the visitor's browser, so treat it as untrusted: merge duplicates and
   // only accept items that are currently published and available.
@@ -76,5 +74,5 @@ export async function submitQuote(_previous: FormState, formData: FormData): Pro
     { to: data.email, ...quoteConfirmation(dict, emailData) },
   ]);
 
-  return succeed();
+  return succeed({ confirmation: toDeliverable(data.email) !== null });
 }

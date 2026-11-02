@@ -3,6 +3,7 @@ import type { ReactElement } from "react";
 import { render } from "@react-email/components";
 import { Resend } from "resend";
 import { env } from "@/env";
+import { toDeliverable } from "./address";
 
 const SANDBOX_FROM = "Fiú Media <onboarding@resend.dev>";
 
@@ -26,6 +27,14 @@ type Email = { to: string; subject: string; react: ReactElement; replyTo?: strin
  * skipped, so the form still works end to end.
  */
 export async function sendEmail({ to, subject, react, replyTo }: Email) {
+  // Resend speaks ASCII SMTP: an internationalised domain goes out as punycode, and an address with an
+  // accented local part can't go out at all (the visitor's address is still in the body of the studio's copy).
+  const recipient = toDeliverable(to);
+  if (!recipient) {
+    console.warn(`[email] "${subject}" not sent: ${to} can't be delivered through Resend (non-ASCII before the @)`);
+    return;
+  }
+  const replyAddress = replyTo === undefined ? undefined : (toDeliverable(replyTo) ?? undefined);
   const text = await render(react, plainTextOptions);
   const key = env.RESEND_API_KEY;
   if (!key) {
@@ -34,11 +43,11 @@ export async function sendEmail({ to, subject, react, replyTo }: Email) {
   }
   const { error } = await new Resend(key).emails.send({
     from: env.EMAIL_FROM || SANDBOX_FROM,
-    to,
+    to: recipient,
     subject,
     react,
     text,
-    replyTo,
+    replyTo: replyAddress,
   });
   if (error) throw new Error(`Resend rejected "${subject}": ${error.name}: ${error.message}`);
 }

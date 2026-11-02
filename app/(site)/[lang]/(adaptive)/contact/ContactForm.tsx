@@ -5,7 +5,7 @@ import { Field } from "@/components/forms/Field";
 import { Form, SubmitButton } from "@/components/forms/Form";
 import { useConformForm } from "@/components/forms/useConformForm";
 import { GlassPanel } from "@/components/ui/Glass";
-import { contactSchema, ENQUIRY_TYPES, isEnquiryType } from "@/lib/forms/schemas";
+import { contactSchema, ENQUIRY_TYPES, isEnquiryType, limits } from "@/lib/forms/schemas";
 import type { Locale } from "@/lib/i18n/config";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { submitContact } from "./actions";
@@ -50,9 +50,9 @@ export function ContactForm({ lang, dict }: { lang: Locale; dict: Pick<Dictionar
           </option>
         ))}
       </Field>
-      <Field field={fields.name} label={contact.name} required autoComplete="name" />
-      <Field field={fields.email} type="email" label={contact.email} required autoComplete="email" />
-      <Field field={fields.message} as="textarea" label={contact.message} required />
+      <Field field={fields.name} label={contact.name} required autoComplete="name" maxLength={limits.name} />
+      <Field field={fields.email} type="email" label={contact.email} required autoComplete="email" maxLength={limits.email} />
+      <Field field={fields.message} as="textarea" label={contact.message} required maxLength={limits.message} />
 
       <div>
         <SubmitButton pending={pending}>{pending ? contact.sending : contact.submit}</SubmitButton>
