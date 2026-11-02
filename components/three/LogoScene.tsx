@@ -2,6 +2,8 @@
 
 import { Environment, MeshTransmissionMaterial, useCursor, useTexture } from "@react-three/drei";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { easing } from "maath";
+import { spring } from "motion";
 import {
   useCallback,
   useEffect,
@@ -414,8 +416,22 @@ function BackdropLayerGate({ phase = "beforeTransmission" }: { phase?: "beforeTr
   return null;
 }
 
-/** How quickly spark lights catch the logo pose — lower = slower highlight travel. */
-const SPARK_FOLLOW = 1.1;
+/**
+ * How quickly spark and soft lights catch the logo pose, as a maath smooth time (≈ seconds to
+ * arrive) — higher = slower highlight travel. 0.85 is the best fit to the old exponential
+ * damping at rate 1.1.
+ */
+const SPARK_SMOOTH_TIME = 0.85;
+
+/** `hoverLerp` is an exponential rate; maath wants a smooth time. 0.85 / 1.1 is the fitted ratio. */
+const HOVER_SMOOTH_PER_RATE = 0.935;
+
+/** Eases a light group's rotation toward the logo pose. Plain `damp` (not `dampE`/`dampAngle`):
+ * the spin runs past a full turn and the lights must follow it round, not take the short way. */
+function followPose(g: THREE.Group, pose: { x: number; y: number }, delta: number) {
+  easing.damp(g.rotation, "x", pose.x, SPARK_SMOOTH_TIME, delta);
+  easing.damp(g.rotation, "y", pose.y, SPARK_SMOOTH_TIME, delta);
+}
 
 /**
  * Soft fill only — point lights make round specular blobs. Streaks come from
@@ -434,8 +450,7 @@ function SparkLights({
   useFrame((_, delta) => {
     const g = follow.current;
     if (!g) return;
-    g.rotation.x = THREE.MathUtils.damp(g.rotation.x, logoPose.current.x, SPARK_FOLLOW, delta);
-    g.rotation.y = THREE.MathUtils.damp(g.rotation.y, logoPose.current.y, SPARK_FOLLOW, delta);
+    followPose(g, logoPose.current, delta);
   });
   return (
     <>
@@ -825,8 +840,7 @@ function Studio({
   useFrame((_, delta) => {
     const g = follow.current;
     if (!g) return;
-    g.rotation.x = THREE.MathUtils.damp(g.rotation.x, logoPose.current.x, SPARK_FOLLOW, delta);
-    g.rotation.y = THREE.MathUtils.damp(g.rotation.y, logoPose.current.y, SPARK_FOLLOW, delta);
+    followPose(g, logoPose.current, delta);
   });
   return (
     <Environment resolution={256} frames={frames} environmentRotation={envRotation}>
@@ -960,6 +974,19 @@ const SLIDE_SECONDS = 1.8;
 /** Spring: damping ratio < 1 overshoots (0.65 ≈ 7% past the target); omega sets the speed. */
 const SLIDE_DAMPING = 0.65;
 const SLIDE_OMEGA = 5.5;
+/** Same spring as ζ/ω above (mass 1: stiffness = ω², damping = 2ζω); pure in time, so it rides the intro clock. */
+const slideSpring = spring({
+  keyframes: [0, 1],
+  stiffness: SLIDE_OMEGA ** 2,
+  damping: 2 * SLIDE_DAMPING * SLIDE_OMEGA,
+  mass: 1,
+  // motion's default rest thresholds declare it "done" (and jump to exactly 1) ~0.35s early, a
+  // visible hitch as the logo lands. Keep them tight so the glide runs the full SLIDE_SECONDS.
+  restDelta: 1e-5,
+  restSpeed: 1e-4,
+});
+/** Where the spring still is at SLIDE_SECONDS; `slideAt` blends this out so landing has no jump. */
+const SLIDE_RESIDUAL = 1 - slideSpring.next(SLIDE_SECONDS * 1000).value;
 const HERO_END = Math.max(HERO_SPIN_SECONDS, SLIDE_START + SLIDE_SECONDS);
 /** Longest intro, so the demand loop stays awake for it. */
 const INTRO_END = Math.max(SPIN_END, HERO_END);
@@ -978,14 +1005,12 @@ function tossAt(t: number) {
   return Math.sin(Math.PI * k) ** 2;
 }
 
-/** Damped-spring step response: 0 → 1 with overshoot, snapped to 1 once settled. */
+/** Damped-spring step response: 0 → 1 with overshoot, landing exactly on 1 at SLIDE_SECONDS. */
 function slideAt(t: number) {
   const tau = t - SLIDE_START;
   if (tau <= 0) return 0;
   if (tau >= SLIDE_SECONDS) return 1;
-  const z = SLIDE_DAMPING;
-  const wd = SLIDE_OMEGA * Math.sqrt(1 - z * z);
-  return 1 - Math.exp(-z * SLIDE_OMEGA * tau) * (Math.cos(wd * tau) + ((z * SLIDE_OMEGA) / wd) * Math.sin(wd * tau));
+  return slideSpring.next(tau * 1000).value + SLIDE_RESIDUAL * (tau / SLIDE_SECONDS);
 }
 
 function spinAt(t: number) {
@@ -1262,11 +1287,11 @@ function Logo({
     g.position.y = introSlide && !desktop ? viewport.height * MOBILE_TOSS * tossAt(t) : 0;
 
     // Wobble only while hovering the logo (and not dragging); ease back to rest on leave.
-    const k = 1 - Math.exp(-delta * look.hoverLerp);
+    const hoverSmooth = HOVER_SMOOTH_PER_RATE / look.hoverLerp;
     const targetX = hover.current.active && !drag.current.active ? hover.current.y * look.hoverTiltX : 0;
     const targetY = hover.current.active && !drag.current.active ? hover.current.x * look.hoverTiltY : 0;
-    tilt.current.x = THREE.MathUtils.lerp(tilt.current.x, targetX, k);
-    tilt.current.y = THREE.MathUtils.lerp(tilt.current.y, targetY, k);
+    easing.damp(tilt.current, "x", targetX, hoverSmooth, delta);
+    easing.damp(tilt.current, "y", targetY, hoverSmooth, delta);
 
     const d = drag.current;
     if (!d.active) {
