@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect } from "react";
-import { BLEED_PX, nudgeHomeScroll } from "./bleed";
+import { BLEED_PX, homeIsLocked, nudgeHomeScroll } from "./bleed";
 
 /**
  * Pins Home in the middle of a document that is taller than the screen (mobile only).
@@ -30,7 +30,9 @@ export function HomeScrollLock() {
   useEffect(() => {
     if (!window.matchMedia("(max-width: 767px)").matches) return;
     const pin = () => {
-      if (Math.abs(window.scrollY - BLEED_PX) > 0.5) window.scrollTo({ top: BLEED_PX, behavior: "instant" });
+      if (homeIsLocked() && Math.abs(window.scrollY - BLEED_PX) > 0.5) {
+        window.scrollTo({ top: BLEED_PX, behavior: "instant" });
+      }
     };
     const nudge = nudgeHomeScroll;
     const onImageLoad = (event: Event) => {

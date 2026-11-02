@@ -12,5 +12,15 @@ export const pinHomeScrollScript = `if(matchMedia("(max-width:767px)").matches)s
  * again. Needed when whatever Safari last sampled has just gone, e.g. the fixed splash.
  */
 export function nudgeHomeScroll() {
-  if (window.matchMedia("(max-width: 767px)").matches) window.scrollTo({ top: BLEED_PX - 1, behavior: "instant" });
+  if (homeIsLocked() && window.matchMedia("(max-width: 767px)").matches) {
+    window.scrollTo({ top: BLEED_PX - 1, behavior: "instant" });
+  }
+}
+
+/**
+ * Whether Home is the page on screen. HomeScrollLock sets the flag in a layout effect and removes it as soon as Home is
+ * hidden, which is before Next scrolls the next page to the top. Pinning or nudging after that would fight the navigation.
+ */
+export function homeIsLocked() {
+  return document.documentElement.hasAttribute("data-home-lock");
 }
