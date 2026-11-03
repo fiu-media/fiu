@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Suspense, useEffect, useId, useRef } from "react";
+import { Suspense, useEffect, useId, useRef, useState } from "react";
+import { EdgeBars } from "@/components/ui/EdgeBars";
 import { GlassPillButton } from "@/components/ui/Glass";
 import { cn } from "@/lib/cn";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
@@ -32,10 +33,12 @@ const isCurrent = (pathname: string, href: string) => pathname === href || pathn
 
 function Nav({ items, homeHref, labels, onImage, pathname }: NavProps & { pathname: string }) {
   const dialog = useRef<HTMLDialogElement>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
   const dialogId = useId();
   const close = () => dialog.current?.close();
   // showModal() focuses the first focusable child, the Home link, which then shows a focus ring. Focus the dialog itself.
   const open = () => {
+    setMenuOpen(true);
     dialog.current?.showModal();
     dialog.current?.focus();
   };
@@ -100,6 +103,10 @@ function Nav({ items, homeHref, labels, onImage, pathname }: NavProps & { pathna
         </GlassPillButton>
       </header>
 
+      {/* Safari tints its bars from fixed elements in the page, not from the dialog (it lives in the top layer). These sit
+          under the dialog while it is open, so the notch and chin take the surface colour instead of falling back to black. */}
+      {menuOpen && <EdgeBars />}
+
       {/* A native modal dialog: focus is trapped, Esc closes, and focus returns to the Menu button. */}
       <dialog
         ref={dialog}
@@ -107,6 +114,7 @@ function Nav({ items, homeHref, labels, onImage, pathname }: NavProps & { pathna
         aria-label={labels.label}
         tabIndex={-1}
         data-nav-overlay
+        onClose={() => setMenuOpen(false)}
         className="fixed inset-0 isolate m-0 h-auto max-h-none w-auto max-w-none touch-none flex-col overflow-visible overscroll-none text-fg outline-none! backdrop:bg-transparent open:flex md:hidden!"
       >
         {/* The frosted background reaches 12rem past the screen edges, so it also fills the notch and chin (and gives
