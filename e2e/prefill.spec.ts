@@ -1,4 +1,5 @@
-import { expect, test, type Page } from "@playwright/test";
+import AxeBuilder from "@axe-core/playwright";
+import { devices, expect, test, type Page } from "@playwright/test";
 import { en } from "../lib/i18n/dictionaries/en";
 import { isoDateFromNow } from "./helpers";
 
@@ -82,6 +83,16 @@ test.describe("quote deep links", () => {
 test.describe("copy link", () => {
   test.use({ permissions: ["clipboard-read", "clipboard-write"] });
 
+  test("the quote form with its copy button has no accessibility violations", async ({ page }) => {
+    const rental = await firstRental(page);
+    test.skip(!rental, "No rental items in this dataset");
+    await page.goto(`/rentals/quote?pickup=${isoDateFromNow(14)}&return=${isoDateFromNow(16)}&item=${rental!.slug}`);
+    await expect(page.getByRole("button", { name: quote.copyLink })).toBeVisible();
+    await page.waitForLoadState("networkidle");
+    const { violations } = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
+    expect(violations.map((v) => `${v.id}: ${v.help}`)).toEqual([]);
+  });
+
   test("copies a link that reopens the quote, with nothing personal in it", async ({ page, context }) => {
     const rental = await firstRental(page);
     test.skip(!rental, "No rental items in this dataset");
@@ -96,8 +107,12 @@ test.describe("copy link", () => {
     await page.getByLabel(quote.email).fill("aoife@example.com");
     await page.getByRole("textbox", { name: /^Phone/ }).fill("871234567");
     await page.getByLabel(quote.message).fill("Private note");
-    await page.getByRole("button", { name: quote.copyLink }).click();
+    const button = page.getByRole("button", { name: quote.copyLink });
+    await button.click();
     await expect(page.getByRole("status").filter({ hasText: quote.linkCopied })).toHaveCount(1);
+    // The button says so too, then goes back to what it was.
+    await expect(page.getByRole("button", { name: quote.linkCopied })).toBeVisible();
+    await expect(button).toBeVisible({ timeout: 5000 });
 
     const copied = await page.evaluate(() => navigator.clipboard.readText());
     const url = new URL(copied);
@@ -117,5 +132,70 @@ test.describe("copy link", () => {
     await expect(other.getByLabel(quote.startDate)).toHaveValue(pickup);
     await expect(other.getByLabel(quote.company)).toHaveValue("Murphy & Co");
     await expect(other.getByLabel(quote.name)).toHaveValue("");
+  });
+});
+
+// The browser is the project's (chromium); only the phone's screen, touch and user agent are taken from the device.
+const { viewport, userAgent, deviceScaleFactor, isMobile, hasTouch } = devices["Pixel 7"];
+const phone = { viewport, userAgent, deviceScaleFactor, isMobile, hasTouch };
+
+test.describe("share link on a phone", () => {
+  // A touch device that can open the share sheet offers that instead of copying.
+  test.use({ ...phone, permissions: ["clipboard-read", "clipboard-write"] });
+
+  const stub = (share: string) =>
+    `(() => {
+      window.__shared = [];
+      window.__copied = [];
+      navigator.share = async (data) => { window.__shared.push(data); ${share} };
+      const original = navigator.clipboard.writeText.bind(navigator.clipboard);
+      navigator.clipboard.writeText = async (text) => { window.__copied.push(text); return original(text); };
+    })();`;
+
+  async function openQuote(page: Page, share = "") {
+    const rental = await firstRental(page);
+    test.skip(!rental, "No rental items in this dataset");
+    await page.addInitScript(stub(share));
+    await page.goto(`/rentals/quote?pickup=${isoDateFromNow(14)}&return=${isoDateFromNow(16)}&item=${rental!.slug}`);
+    await expect(page.getByLabel(quote.company)).toBeVisible();
+    await page.getByLabel(quote.name).fill("Aoife Murphy");
+    await page.getByLabel(quote.email).fill("aoife@example.com");
+  }
+
+  const read = (page: Page) =>
+    page.evaluate(() => ({
+      shared: (window as unknown as { __shared: { url: string; title: string }[] }).__shared,
+      copied: (window as unknown as { __copied: string[] }).__copied,
+    }));
+
+  test("opens the share sheet with the link, and doesn't copy", async ({ page }) => {
+    await openQuote(page);
+    await page.getByRole("button", { name: quote.shareLink }).click();
+    await expect.poll(async () => (await read(page)).shared.length).toBe(1);
+    const { shared, copied } = await read(page);
+    expect(shared[0]!.title).toBe(en.quote.shareTitle);
+    const url = new URL(shared[0]!.url);
+    expect(url.pathname).toBe("/rentals/quote");
+    expect(url.searchParams.get("pickup")).toBe(isoDateFromNow(14));
+    for (const secret of ["Aoife", "example.com"]) expect(shared[0]!.url).not.toContain(secret);
+    expect(copied).toEqual([]);
+  });
+
+  test("closing the share sheet is not an error", async ({ page }) => {
+    await openQuote(page, 'throw new DOMException("closed", "AbortError");');
+    await page.getByRole("button", { name: quote.shareLink }).click();
+    await expect.poll(async () => (await read(page)).shared.length).toBe(1);
+    // Nothing is announced, nothing is shown as copied or as failed.
+    await expect(page.locator("p[role=status]")).toHaveText("");
+    await expect(page.getByRole("button", { name: quote.shareLink })).toBeVisible();
+    await expect(page.getByText(quote.linkCopyFailed)).toHaveCount(0);
+    expect((await read(page)).copied).toEqual([]);
+  });
+
+  test("falls back to copying when sharing is refused", async ({ page }) => {
+    await openQuote(page, 'throw new DOMException("refused", "NotAllowedError");');
+    await page.getByRole("button", { name: quote.shareLink }).click();
+    await expect(page.getByRole("button", { name: quote.linkCopied })).toBeVisible();
+    expect((await read(page)).copied).toHaveLength(1);
   });
 });

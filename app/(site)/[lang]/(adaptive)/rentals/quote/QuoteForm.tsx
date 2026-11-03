@@ -212,14 +212,14 @@ function QuoteFormFields({ lang, dict }: Props) {
         />
       </section>
 
-      <div className="flex flex-col gap-4">
-        <div>
-          <SubmitButton pending={pending}>{pending ? quote.sending : quote.submit}</SubmitButton>
-        </div>
+      <div className="flex flex-wrap items-center gap-3">
+        <SubmitButton pending={pending}>{pending ? quote.sending : quote.submit}</SubmitButton>
         <CopyLinkButton
           label={quote.copyLink}
           copiedLabel={quote.linkCopied}
           failedLabel={quote.linkCopyFailed}
+          shareLabel={quote.shareLink}
+          shareTitle={quote.shareTitle}
           hint={quote.copyLinkHint}
           getLink={shareLink}
         />
