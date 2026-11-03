@@ -130,6 +130,19 @@ export const SUBMISSION_SETTINGS_QUERY = defineQuery(`
   ){ contactEmail, quoteRecipient }
 `);
 
+/**
+ * Talent the default-language document has marked unavailable (see RENTAL_AVAILABLE): still on the roster and their
+ * own page, but not someone to ask for. The field is required, but a document without a value (a new draft) counts
+ * as available rather than vanishing from the form.
+ */
+const TALENT_AVAILABLE = ` && !(slug.current in *[_type == "talent" && language == $fallbackLang && available == false].slug.current)`;
+
+/** Available talent in `$lang`, plus default-language ones with no translation. Written out (not `withFallback`) so TypeGen can resolve it. */
+const AVAILABLE_TALENT = `(
+    *[_type == "talent" && language == $lang${TALENT_AVAILABLE}]
+    + *[_type == "talent" && language == $fallbackLang${TALENT_AVAILABLE} && !(slug.current in *[_type == "talent" && language == $lang${TALENT_AVAILABLE}].slug.current)]
+  )`;
+
 /** Ids of rental items that can currently be requested (published and available). */
 export const AVAILABLE_ITEM_IDS_QUERY = defineQuery(`
   *[_type == "rentalItem" && _id in $ids${RENTAL_AVAILABLE}]{
@@ -177,20 +190,20 @@ export const TALENT_QUERY = defineQuery(`
 `);
 
 /**
- * The people a visitor can ask about on the contact form. `_id` is the default-language document, which is what a
+ * The people a visitor can ask about on the contact form: those who are available. `_id` is the default-language document, which is what a
  * contact message references (and what projects credit); the name is the same in every language.
  */
 export const TALENT_OPTIONS_QUERY = defineQuery(`
-  ${withFallback("talent", "")}${byRank("name")}{
+  ${AVAILABLE_TALENT}${byRank("name")}{
     "id": coalesce(${DEFAULT_COUNTERPART}._id, _id),
     name,
     "slug": slug.current
   }
 `);
 
-/** The talent a contact message names, checked against the roster before it is stored. */
+/** The talent a contact message names, checked against who is on offer before it is stored. */
 export const TALENTS_BY_ID_QUERY = defineQuery(`
-  *[_type == "talent" && language == $fallbackLang && _id in $ids]{ _id, name }
+  *[_type == "talent" && language == $fallbackLang && _id in $ids && available != false]{ _id, name }
 `);
 
 /** One person for their bio page. `talentId` is the default-language document that projects credit. */
@@ -201,6 +214,7 @@ export const TALENT_PROFILE_QUERY = defineQuery(`
   ){
     ${TALENT_CARD_FIELDS},
     "bio": coalesce(bio, ${DEFAULT_COUNTERPART}.bio),
+    "available": coalesce(${DEFAULT_COUNTERPART}.available, available) != false,
     "talentId": coalesce(${DEFAULT_COUNTERPART}._id, _id)
   }
 `);

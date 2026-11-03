@@ -130,9 +130,11 @@ async function Profile({ lang, slug }: { lang: string; slug: string }) {
               </div>
             )}
             <div className="flex flex-wrap items-center gap-3">
-              <GlassPillLink href={contactHref} size="lg">
-                {format(talent.workWith, { name: profile.name })}
-              </GlassPillLink>
+              {profile.available && (
+                <GlassPillLink href={contactHref} size="lg">
+                  {format(talent.workWith, { name: profile.name })}
+                </GlassPillLink>
+              )}
               {projects.length > 0 && (
                 <a href="#work" className="text-sm text-fg-muted underline-offset-4 hover:text-fg hover:underline">
                   {workLabel} ↓
