@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { format } from "@/lib/i18n/format";
 import { AddToQuote } from "./AddToQuote";
 import { useCatalogue } from "./CatalogueContext";
+import { QuantityField } from "./QuantityField";
 
 /** Quantity picker + "Add to quote" for the item page. */
 export function DetailAddToQuote({
@@ -19,22 +20,23 @@ export function DetailAddToQuote({
   /** The item's per-quote cap from Sanity, if one is set. */
   maxQuantity: number | null;
 }) {
+  const id = useId();
   const [qty, setQty] = useState(1);
   const max = useCatalogue()[itemId]?.max ?? maxQuantity ?? 99;
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-wrap items-center gap-3">
-        <label className="flex items-center gap-2 text-sm">
-          <span>{dict.quantity}</span>
-          <input
-            type="number"
-            min={1}
-            max={max}
+        <div className="flex items-center gap-2 text-sm">
+          <label htmlFor={id}>{dict.quantity}</label>
+          <QuantityField
+            id={id}
             value={Math.min(qty, max)}
-            onChange={(event) => setQty(Math.min(max, Math.max(1, Math.floor(Number(event.target.value)) || 1)))}
-            className="w-20 rounded-2xl border border-line bg-bg-raised px-3 py-2 text-base"
+            max={max}
+            onChange={setQty}
+            decreaseLabel={dict.fewer}
+            increaseLabel={dict.more}
           />
-        </label>
+        </div>
         <AddToQuote itemId={itemId} itemName={itemName} dict={dict} size="lg" quantity={Math.min(qty, max)} />
       </div>
       {maxQuantity !== null && <p className="text-sm text-fg-muted">{format(dict.available, { max: maxQuantity })}</p>}

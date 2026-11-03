@@ -1,5 +1,7 @@
 "use client";
 
+import { Toggle } from "@base-ui/react/toggle";
+import { ToggleGroup } from "@base-ui/react/toggle-group";
 import Link from "next/link";
 import { parseAsString, useQueryState } from "nuqs";
 import { GlassPillButton } from "@/components/ui/Glass";
@@ -18,6 +20,9 @@ export type CatalogueCard = {
   categoryId: string | null;
   image: RentalImage | null;
 };
+
+/** The "All" pill's value: Sanity ids can't contain `*`, so no category can claim it. */
+const ALL = "*";
 
 export function RentalCatalogue({
   lang,
@@ -43,16 +48,22 @@ export function RentalCatalogue({
   return (
     <div>
       {usable.length > 0 && (
-        <div role="group" aria-label={dict.filterLabel} className="mb-8 flex flex-wrap gap-2">
-          <GlassPillButton size="sm" aria-pressed={category === null} onClick={() => setRequested(null)}>
+        // One pill is always pressed: pressing the current one again would leave nothing chosen, so it is ignored.
+        <ToggleGroup
+          aria-label={dict.filterLabel}
+          value={[category ?? ALL]}
+          onValueChange={([next]) => next !== undefined && setRequested(next === ALL ? null : next)}
+          className="mb-8 flex flex-wrap gap-2"
+        >
+          <Toggle value={ALL} render={<GlassPillButton size="sm" />}>
             {dict.allCategories}
-          </GlassPillButton>
+          </Toggle>
           {usable.map((c) => (
-            <GlassPillButton key={c.id} size="sm" aria-pressed={category === c.id} onClick={() => setRequested(c.id)}>
+            <Toggle key={c.id} value={c.id} render={<GlassPillButton size="sm" />}>
               {c.title}
-            </GlassPillButton>
+            </Toggle>
           ))}
-        </div>
+        </ToggleGroup>
       )}
 
       {items.length === 0 ? (

@@ -78,6 +78,8 @@ export const en = {
     specs: "Specs",
     includedInKit: "Included in kit",
     quantity: "Quantity",
+    fewer: "One fewer",
+    more: "One more",
     notFoundTitle: "Rental item",
   },
   basket: {
