@@ -40,6 +40,12 @@ const concepts: Concept[] = [
     note: "Three layouts for the custom not-found page (cinematic with a still, adaptive type only, cinematic with moving light) and two copy sets (issue #56).",
   },
   {
+    href: "/dev/treatments",
+    title: "Design treatments",
+    kind: "Sign-off",
+    note: "Expressive (live), a middle ground, and cold + clinical, side by side and then in full on the hero, nav, work cards and a form (issue #50).",
+  },
+  {
     href: "/dev/specimen",
     title: "Design specimen",
     kind: "Sign-off",
