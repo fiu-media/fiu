@@ -18,7 +18,7 @@ async function firstRental(page: Page) {
   return { slug: href.split("/").pop()!.split("?")[0]! };
 }
 
-const quantities = (page: Page) => page.getByRole("group", { name: /^Quantity of / }).locator("output");
+const quantities = (page: Page) => page.getByRole("textbox", { name: /^Quantity of / });
 
 test.describe("quote deep links", () => {
   test("a link prefills the dates, company, production and kit", async ({ page }) => {
@@ -36,7 +36,7 @@ test.describe("quote deep links", () => {
     await expect(page.getByLabel(quote.production)).toHaveValue("Spring shoot");
     // The item is in the quote at no more than the cap, whatever number the link asked for.
     await expect(quantities(page)).toHaveCount(1);
-    const quantity = Number(await quantities(page).first().innerText());
+    const quantity = Number(await quantities(page).first().inputValue());
     expect(quantity).toBeGreaterThanOrEqual(1);
     expect(quantity).toBeLessThan(99);
     await expect(page.getByRole("button", { name: /^Add one more / })).toBeDisabled();
@@ -68,10 +68,10 @@ test.describe("quote deep links", () => {
     const link = `/rentals/quote?item=${rental!.slug}`;
     await page.goto(link);
     await expect(quantities(page)).toHaveCount(1);
-    const first = await quantities(page).first().innerText();
+    const first = await quantities(page).first().inputValue();
     await page.goto(link);
     await expect(quantities(page)).toHaveCount(1);
-    await expect(quantities(page).first()).toHaveText(first);
+    await expect(quantities(page).first()).toHaveValue(first);
   });
 
   test("a link with no items shows the empty quote, as before", async ({ page }) => {

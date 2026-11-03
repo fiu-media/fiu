@@ -1,5 +1,6 @@
 "use client";
 
+import { Tabs } from "@base-ui/react/tabs";
 import useEmblaCarousel from "embla-carousel-react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
@@ -14,7 +15,9 @@ const SWIPE_DISTANCE = 40;
 
 /**
  * The item page's photos: a swipeable large view that cross-fades, with previous/next buttons, and a strip of
- * thumbnails kept in sync with it. Arrow keys (and Home/End) work from the large view or from any thumbnail.
+ * thumbnails kept in sync with it. It is the APG "tabbed carousel": the thumbnails are Base UI tabs (one Tab stop,
+ * arrows and Home/End move between them and show the photo) and the photos are their panels. Arrow keys on the large
+ * view change the photo too, without moving focus.
  */
 export function RentalGallery({ images, name, dict }: { images: RentalImage[]; name: string; dict: Dictionary["rentals"] }) {
   const many = images.length > 1;
@@ -38,7 +41,6 @@ function Carousel({ images, name, dict }: { images: RentalImage[]; name: string;
   const [index, setIndex] = useState(0);
   // Which ends of the thumbnail strip have more to scroll to (the strip has no scrollbar, so we fade them instead).
   const [more, setMore] = useState({ start: false, end: false });
-  const thumbs = useRef<(HTMLButtonElement | null)[]>([]);
   const swipeFrom = useRef<number | null>(null);
 
   useEffect(() => {
@@ -60,9 +62,7 @@ function Carousel({ images, name, dict }: { images: RentalImage[]; name: string;
   }, [strip, index]);
 
   function select(next: number) {
-    const target = (next + images.length) % images.length;
-    setIndex(target);
-    return target;
+    setIndex((next + images.length) % images.length);
   }
 
   function onPointerUp(event: PointerEvent) {
@@ -72,6 +72,7 @@ function Carousel({ images, name, dict }: { images: RentalImage[]; name: string;
     if (Math.abs(distance) >= SWIPE_DISTANCE) select(index + (distance < 0 ? 1 : -1));
   }
 
+  // The thumbnails handle their own keys; this is the large view's.
   function onKeyDown(event: KeyboardEvent) {
     const target =
       event.key === "ArrowRight"
@@ -85,20 +86,19 @@ function Carousel({ images, name, dict }: { images: RentalImage[]; name: string;
               : null;
     if (target === null) return;
     event.preventDefault();
-    const next = select(target);
-    // From a thumbnail, focus follows the selection; from the large view it stays put.
-    if (thumbs.current.includes(event.target as HTMLButtonElement)) thumbs.current[next]?.focus();
+    select(target);
   }
 
   return (
-    <div
+    <Tabs.Root
+      value={index}
+      onValueChange={(next: number) => setIndex(next)}
       role="group"
       aria-roledescription="carousel"
       aria-label={format(dict.galleryLabel, { name })}
-      onKeyDown={onKeyDown}
       className="flex flex-col gap-4"
     >
-      <div tabIndex={0} className="relative rounded-3xl">
+      <div tabIndex={0} onKeyDown={onKeyDown} className="relative rounded-3xl">
         <div
           onPointerDown={(event) => {
             swipeFrom.current = event.clientX;
@@ -111,16 +111,21 @@ function Carousel({ images, name, dict }: { images: RentalImage[]; name: string;
           className="touch-pan-y overflow-hidden rounded-3xl bg-white"
         >
           <div className="grid">
+            {/* Every panel stays laid out (Base UI's `hidden` is overridden) so they can cross-fade; the hidden ones are
+                inert, which keeps them out of the accessibility tree and the tab order. */}
             {images.map((image, i) => (
-              <div
+              <Tabs.Panel
                 key={image.src}
-                role="group"
+                value={i}
+                keepMounted
                 aria-roledescription="slide"
+                // Named for what it shows, not after its thumbnail ("Show photo…"), as in the APG tabbed carousel.
+                aria-labelledby={undefined}
                 aria-label={format(dict.photoOf, { n: i + 1, total: images.length })}
-                aria-hidden={i !== index}
                 inert={i !== index}
+                tabIndex={-1}
                 className={cn(
-                  "col-start-1 row-start-1 transition-opacity duration-500 ease-[cubic-bezier(0.2,0.7,0.2,1)] motion-reduce:transition-none",
+                  "col-start-1 row-start-1 transition-opacity duration-500 ease-[cubic-bezier(0.2,0.7,0.2,1)] motion-reduce:transition-none [&[hidden]]:block",
                   i === index ? "opacity-100" : "opacity-0",
                 )}
               >
@@ -132,7 +137,7 @@ function Carousel({ images, name, dict }: { images: RentalImage[]; name: string;
                   loading={isNear(i, index, images.length) ? "eager" : undefined}
                   className="aspect-[4/3] w-full"
                 />
-              </div>
+              </Tabs.Panel>
             ))}
           </div>
         </div>
@@ -144,33 +149,25 @@ function Carousel({ images, name, dict }: { images: RentalImage[]; name: string;
         style={{ maskImage: stripFade(more), WebkitMaskImage: stripFade(more) }}
         className="overflow-hidden"
       >
-        <ul className="flex gap-3 p-1.5 pb-2.5">
+        {/* The tab list is Embla's container, so the tabs are its slides. */}
+        <Tabs.List activateOnFocus className="flex gap-3 p-1.5 pb-2.5">
           {images.map((image, i) => (
-            <li key={image.src} className="shrink-0">
-              <button
-                type="button"
-                ref={(node) => {
-                  thumbs.current[i] = node;
-                }}
-                onClick={(event) => {
-                  select(i);
-                  // Safari doesn't focus a button on click, which would leave the arrow keys dead.
-                  event.currentTarget.focus();
-                }}
-                aria-label={format(dict.showImage, { n: i + 1, total: images.length })}
-                aria-current={i === index}
-                className={cn(
-                  "block cursor-pointer overflow-hidden rounded-2xl ring-offset-2 ring-offset-bg transition-shadow",
-                  i === index ? "ring-2 ring-fg" : "ring-1 ring-line hover:ring-fg-muted",
-                )}
-              >
-                <RentalImageView image={image} placeholder="" sizes="96px" className="size-20 sm:size-24" />
-              </button>
-            </li>
+            <Tabs.Tab
+              key={image.src}
+              value={i}
+              onClick={(event) => {
+                // Safari doesn't focus a button on click, which would leave the arrow keys dead.
+                event.currentTarget.focus();
+              }}
+              aria-label={format(dict.showImage, { n: i + 1, total: images.length })}
+              className="block shrink-0 cursor-pointer overflow-hidden rounded-2xl ring-1 ring-line ring-offset-2 ring-offset-bg transition-shadow hover:ring-fg-muted data-active:ring-2 data-active:ring-fg"
+            >
+              <RentalImageView image={image} placeholder="" sizes="96px" className="size-20 sm:size-24" />
+            </Tabs.Tab>
           ))}
-        </ul>
+        </Tabs.List>
       </div>
-    </div>
+    </Tabs.Root>
   );
 }
 

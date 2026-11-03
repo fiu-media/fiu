@@ -1,9 +1,10 @@
 "use client";
 
+import { Dialog } from "@base-ui/react/dialog";
 import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Suspense, useEffect, useId, useRef } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { GlassPillButton } from "@/components/ui/Glass";
 import { cn } from "@/lib/cn";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
@@ -33,27 +34,21 @@ function RouteNav(props: NavProps) {
 const isCurrent = (pathname: string, href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
 function Nav({ items, homeHref, labels, onImage, pathname }: NavProps & { pathname: string }) {
-  const dialog = useRef<HTMLDialogElement>(null);
-  const dialogId = useId();
+  // The overlay is open for the page it was opened on, so navigating leaves it behind.
+  const [openOn, setOpenOn] = useState<string | null>(null);
+  const popup = useRef<HTMLDivElement>(null);
   // On Home the photo is what Safari should tint its bars from again once the opaque menu is gone, but it only samples
-  // when the page scrolls, so nudge right away (the dialog's `close` event, for Esc, arrives a task later).
-  const close = () => {
-    dialog.current?.close();
-    nudgeHomeScrollRepeatedly();
+  // when the page scrolls, so nudge right away.
+  const onOpenChange = (next: boolean) => {
+    setOpenOn(next ? pathname : null);
+    if (!next) nudgeHomeScrollRepeatedly();
   };
-  // showModal() focuses the first focusable child, the Home link, which then shows a focus ring. Focus the dialog itself.
-  const open = () => {
-    dialog.current?.showModal();
-    dialog.current?.focus();
-  };
+  const close = () => onOpenChange(false);
 
-  // Navigating, or growing to the rail layout, leaves the overlay behind.
-  useEffect(() => {
-    dialog.current?.close();
-  }, [pathname]);
+  // Growing to the rail layout leaves it behind too.
   useEffect(() => {
     const wide = window.matchMedia("(min-width: 48rem)");
-    const onChange = () => wide.matches && dialog.current?.close();
+    const onChange = () => wide.matches && setOpenOn(null);
     wide.addEventListener("change", onChange);
     return () => wide.removeEventListener("change", onChange);
   }, []);
@@ -94,60 +89,56 @@ function Nav({ items, homeHref, labels, onImage, pathname }: NavProps & { pathna
         )}
       >
         <HomeLink href={homeHref} label={labels.home} className="h-9" />
-        <GlassPillButton
-          size="sm"
-          onImage={onImage}
-          aria-label={labels.menu}
-          aria-haspopup="dialog"
-          aria-controls={dialogId}
-          onClick={open}
-          className="size-10 px-0"
-        >
-          <Menu aria-hidden className="size-6" />
-        </GlassPillButton>
-      </header>
-
-      {/* A native modal dialog: focus is trapped, Esc closes, and focus returns to the Menu button. */}
-      <dialog
-        ref={dialog}
-        id={dialogId}
-        aria-label={labels.label}
-        tabIndex={-1}
-        data-nav-overlay
-        onClose={nudgeHomeScrollRepeatedly}
-        className="fixed inset-0 isolate m-0 h-auto max-h-none w-auto max-w-none touch-none flex-col overflow-visible overscroll-none bg-bg text-fg outline-none! backdrop:bg-transparent open:flex md:hidden!"
-      >
-        {/* The background is an opaque colour on the dialog itself, not a translucent layer inside it: Safari takes the
-            colour for its status bar and toolbar from the element at the screen edge, and a transparent or see-through
-            one comes out black. Only the content fades in. */}
-        <div className="flex items-center justify-between px-[max(1.25rem,env(safe-area-inset-left))] pt-[max(1.25rem,env(safe-area-inset-top))] pr-[max(1.25rem,env(safe-area-inset-right))] transition-opacity duration-300 starting:opacity-0">
-          <HomeLink href={homeHref} label={labels.home} className="h-9" />
-          <button
-            type="button"
-            aria-label={labels.closeMenu}
-            onClick={close}
-            className="-mr-2 grid size-10 cursor-pointer place-items-center rounded-full hover:bg-fg/10"
+        {/* Focus is trapped, Esc closes, and focus returns to the Menu button. The root isn't scroll-locked, though: a
+            locked root stops WebKit painting past the viewport edge, and Safari then tints its bars from the html
+            background (black). The overlay holds the page still with touch-action instead. */}
+        <Dialog.Root open={openOn === pathname} onOpenChange={onOpenChange} modal="trap-focus">
+          <Dialog.Trigger
+            aria-label={labels.menu}
+            render={<GlassPillButton size="sm" onImage={onImage} className="size-10 px-0" />}
           >
-            <X aria-hidden className="size-6" />
-          </button>
-        </div>
-        <nav
-          aria-label={labels.label}
-          className="flex flex-1 flex-col justify-center gap-1 px-[max(1.25rem,env(safe-area-inset-left))] pb-[max(5rem,env(safe-area-inset-bottom))] transition-opacity duration-300 starting:opacity-0"
-        >
-          {items.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={close}
-              aria-current={isCurrent(pathname, item.href) ? "page" : undefined}
-              className="py-1.5 font-display text-5xl tracking-tight text-fg/55 hover:text-fg aria-[current=page]:text-fg"
+            <Menu aria-hidden className="size-6" />
+          </Dialog.Trigger>
+          <Dialog.Portal>
+            {/* The background is an opaque colour on the popup itself, not a translucent layer inside it: Safari takes
+                the colour for its status bar and toolbar from the element at the screen edge, and a transparent or
+                see-through one comes out black. Only the content fades in. */}
+            <Dialog.Popup
+              ref={popup}
+              aria-label={labels.label}
+              // Focusing the first link would put a focus ring on the Home link. Focus the overlay itself.
+              initialFocus={popup}
+              className="group fixed inset-0 isolate z-50 flex touch-none flex-col overscroll-none bg-bg text-fg outline-none md:hidden"
             >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-      </dialog>
+              <div className="flex items-center justify-between px-[max(1.25rem,env(safe-area-inset-left))] pt-[max(1.25rem,env(safe-area-inset-top))] pr-[max(1.25rem,env(safe-area-inset-right))] transition-opacity duration-300 group-data-starting-style:opacity-0">
+                <HomeLink href={homeHref} label={labels.home} className="h-9" />
+                <Dialog.Close
+                  aria-label={labels.closeMenu}
+                  className="-mr-2 grid size-10 cursor-pointer place-items-center rounded-full hover:bg-fg/10"
+                >
+                  <X aria-hidden className="size-6" />
+                </Dialog.Close>
+              </div>
+              <nav
+                aria-label={labels.label}
+                className="flex flex-1 flex-col justify-center gap-1 px-[max(1.25rem,env(safe-area-inset-left))] pb-[max(5rem,env(safe-area-inset-bottom))] transition-opacity duration-300 group-data-starting-style:opacity-0"
+              >
+                {items.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={close}
+                    aria-current={isCurrent(pathname, item.href) ? "page" : undefined}
+                    className="py-1.5 font-display text-5xl tracking-tight text-fg/55 hover:text-fg aria-[current=page]:text-fg"
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </nav>
+            </Dialog.Popup>
+          </Dialog.Portal>
+        </Dialog.Root>
+      </header>
     </>
   );
 }

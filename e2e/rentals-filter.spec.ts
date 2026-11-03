@@ -47,3 +47,19 @@ test("/rentals?category= opens filtered, and an unknown category shows everythin
   await page.goto("/rentals?category=not-a-category");
   await expect(all(page)).toHaveAttribute("aria-pressed", "true");
 });
+
+test("the category pills are one Tab stop with arrow keys between them, and one is always pressed", async ({ page }) => {
+  await page.goto("/rentals");
+  const pills = await categoryPills(page);
+  test.skip((await pills.count()) === 0, "No rental categories in this dataset");
+
+  const first = pills.first();
+  await clickUntil(first, () => expect(first).toHaveAttribute("aria-pressed", "true"));
+  // Pressing the chosen pill again doesn't leave nothing chosen.
+  await first.click();
+  await expect(first).toHaveAttribute("aria-pressed", "true");
+
+  await all(page).focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(first).toBeFocused();
+});
