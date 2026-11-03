@@ -5,7 +5,7 @@ import { Suspense } from "react";
 import { AboutContacts } from "@/components/about/AboutContacts";
 import { AboutFooter } from "@/components/about/AboutFooter";
 import { AboutLayoutA } from "@/components/about/AboutLayouts";
-import { Skeleton } from "@/components/ui/Skeleton";
+import { FullScreenSkeleton } from "@/components/ui/Skeleton";
 import { fallbackStills } from "@/lib/fallback-stills";
 import { defaultLocale, isLocale, languageAlternates, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
@@ -27,7 +27,7 @@ export default async function AboutPage({ params }: PageProps<"/[lang]/about">) 
   const { common } = await getDictionary(lang);
   // Draft mode makes the content dynamic, so it streams in behind a full-screen placeholder.
   return (
-    <Suspense fallback={<AboutSkeleton label={common.loading} />}>
+    <Suspense fallback={<FullScreenSkeleton label={common.loading} />}>
       <About lang={lang} />
     </Suspense>
   );
@@ -79,14 +79,5 @@ async function About({ lang }: { lang: Locale }) {
           : undefined
       }
     />
-  );
-}
-
-function AboutSkeleton({ label }: { label: string }) {
-  return (
-    <div role="status" aria-busy className="h-dvh">
-      <span className="sr-only">{label}</span>
-      <Skeleton className="size-full rounded-none" />
-    </div>
   );
 }

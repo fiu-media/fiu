@@ -5,7 +5,7 @@ import { floatingBarInset, pageGutter, pageTop } from "@/components/nav/rail";
 import { FullBleedScroll } from "@/components/ui/FullBleedScroll";
 import { GlassPillLink } from "@/components/ui/Glass";
 import { PageTitle } from "@/components/ui/PageTitle";
-import { Skeleton } from "@/components/ui/Skeleton";
+import { FullScreenSkeleton, Skeleton } from "@/components/ui/Skeleton";
 import { ProjectSlide } from "@/components/work/ProjectSlide";
 import { SlideProgress } from "@/components/work/SlideProgress";
 import { cn } from "@/lib/cn";
@@ -44,7 +44,7 @@ export default async function WorkPage({ params, searchParams }: PageProps<"/[la
         </div>
       </header>
       {/* ?type= and draft mode are dynamic, so the slides stream in behind a full-screen placeholder. */}
-      <Suspense fallback={<WorkSkeleton label={common.loading} />}>
+      <Suspense fallback={<FullScreenSkeleton label={common.loading} />}>
         <Projects lang={lang} searchParams={searchParams} />
       </Suspense>
     </main>
@@ -99,8 +99,9 @@ async function Projects({ lang, searchParams }: { lang: Locale; searchParams: Pa
 
   if (projects.length === 0) {
     return (
-      <div className="grid place-items-center px-6 py-24 text-center">
-        <p className="text-fg-muted">{work.emptyAll}</p>
+      // Under the heading, in line with it, like the other pages' empty states.
+      <div className={cn("pb-32", pageGutter)}>
+        <p className="mx-auto max-w-6xl text-fg-muted">{work.emptyAll}</p>
       </div>
     );
   }
@@ -142,15 +143,6 @@ function FiltersSkeleton() {
       {["w-14", "w-24", "w-20", "w-28"].map((width, i) => (
         <Skeleton key={i} className={cn("h-8 rounded-full", width)} />
       ))}
-    </div>
-  );
-}
-
-function WorkSkeleton({ label }: { label: string }) {
-  return (
-    <div role="status" aria-busy className="h-dvh">
-      <span className="sr-only">{label}</span>
-      <Skeleton className="size-full rounded-none" />
     </div>
   );
 }

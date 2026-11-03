@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { pageGutter } from "@/components/nav/rail";
 import { QuoteFormSkeleton } from "@/components/forms/FormSkeleton";
+import { PageTitle } from "@/components/ui/PageTitle";
 import { cn } from "@/lib/cn";
 import { isLocale, languageAlternates } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
@@ -23,7 +24,7 @@ export default async function QuotePage({ params }: PageProps<"/[lang]/rentals/q
   return (
     <main className={cn("mx-auto max-w-6xl pb-32", pageGutter)}>
       <header className="mb-10">
-        <h1 className="font-display text-5xl md:text-6xl">{quote.title}</h1>
+        <PageTitle title={quote.title} />
         {text.quoteIntro && <p className="mt-4 max-w-2xl text-lg text-fg-muted">{text.quoteIntro}</p>}
       </header>
       {/* QuoteForm reads the link's query (prefill), which needs a boundary to keep the page static. */}
