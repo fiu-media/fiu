@@ -1,13 +1,18 @@
 import "server-only";
 import { env } from "@/env";
 
+/** The site's public origin, for links and images in emails, which can't be relative. */
+export function siteOrigin() {
+  const origin =
+    env.NEXT_PUBLIC_SITE_URL ||
+    (env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${env.VERCEL_PROJECT_PRODUCTION_URL}` : "http://localhost:3000");
+  return origin.replace(/\/$/, "");
+}
+
 /**
  * Deep link to a document in the Studio. Intent URLs resolve whatever the structure looks like.
  * Needs NEXT_PUBLIC_SITE_URL (or Vercel's production URL) so emailed links aren't relative.
  */
 export function studioEditUrl(id: string, type: string) {
-  const origin =
-    env.NEXT_PUBLIC_SITE_URL ||
-    (env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${env.VERCEL_PROJECT_PRODUCTION_URL}` : "http://localhost:3000");
-  return `${origin.replace(/\/$/, "")}/studio/intent/edit/id=${encodeURIComponent(id)};type=${type}/`;
+  return `${siteOrigin()}/studio/intent/edit/id=${encodeURIComponent(id)};type=${type}/`;
 }

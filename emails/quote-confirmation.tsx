@@ -4,9 +4,9 @@ import { describeRange } from "../lib/dates";
 import { Layout, present } from "./_layout";
 import type { QuoteEmailData } from "./quote-notification";
 
-type Props = { emails: Dictionary["emails"]; dates: Dictionary["dates"]; data: QuoteEmailData };
+type Props = { emails: Dictionary["emails"]; dates: Dictionary["dates"]; data: QuoteEmailData; siteUrl: string };
 
-export default function QuoteConfirmation({ emails, dates, data }: Props) {
+export default function QuoteConfirmation({ emails, dates, data, siteUrl }: Props) {
   const l = emails.labels;
   const rows = present([
     [l.dates, describeRange(dates, data.lang, data.startDate, data.endDate)],
@@ -14,12 +14,21 @@ export default function QuoteConfirmation({ emails, dates, data }: Props) {
     [l.message, data.message],
   ]);
   return (
-    <Layout heading={emails.quoteConfirm.heading} intro={emails.quoteConfirm.body} rows={rows} kit={data.kit} kitLabel={l.kit} />
+    <Layout
+      heading={emails.quoteConfirm.heading}
+      siteUrl={siteUrl}
+      intro={emails.quoteConfirm.body}
+      rows={rows}
+      kit={data.kit}
+      kitLabel={l.kit}
+      signoff={emails.quoteConfirm.signoff}
+    />
   );
 }
 
 QuoteConfirmation.PreviewProps = {
   emails: en.emails,
+  siteUrl: "http://localhost:3000",
   dates: en.dates,
   data: {
     lang: "en",
