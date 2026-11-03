@@ -9,6 +9,13 @@ const PAGES = ["/", "/about", "/work", "/talent", "/rentals", "/rentals/quote", 
 
 async function firstLink(page: Page, listing: string, prefix: string, exclude: string[] = []) {
   await page.goto(listing);
+  // The listing renders its links after the page loads; wait for one so "none" means none, not "not yet".
+  await page
+    .locator(`a[href^="${prefix}"]`)
+    .filter({ hasNot: page.locator(`[href="${exclude[0] ?? ""}"]`) })
+    .first()
+    .waitFor({ timeout: 15_000 })
+    .catch(() => {});
   const hrefs = await page.locator(`a[href^="${prefix}"]`).evaluateAll((links) => links.map((a) => a.getAttribute("href")!));
   return hrefs.find((href) => href.length > prefix.length && !exclude.includes(href));
 }

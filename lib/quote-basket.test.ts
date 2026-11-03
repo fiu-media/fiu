@@ -103,6 +103,25 @@ describe("basket store", () => {
     expect(useBasketStore.getState()).toMatchObject({ startDate: "2026-12-01", endDate: "2026-12-03" });
   });
 
+  it("ensures an item is in at exactly that quantity, so doing it twice changes nothing", async () => {
+    const { basketActions, useBasketStore } = await load();
+    basketActions.add("other", 4);
+    basketActions.ensure("a", 2, 5);
+    basketActions.ensure("a", 2, 5);
+    expect(useBasketStore.getState().lines).toEqual([
+      { itemId: "other", qty: 4 },
+      { itemId: "a", qty: 2 },
+    ]);
+    // Sets rather than adds, in either direction, and still respects the cap; other lines are left alone.
+    basketActions.ensure("a", 9, 5);
+    expect(useBasketStore.getState().lines[1]).toEqual({ itemId: "a", qty: 5 });
+    basketActions.ensure("a", 1, 5);
+    expect(useBasketStore.getState().lines).toEqual([
+      { itemId: "other", qty: 4 },
+      { itemId: "a", qty: 1 },
+    ]);
+  });
+
   it("persists changes and clears", async () => {
     const { basketActions, useBasketStore } = await load();
     basketActions.add("a");

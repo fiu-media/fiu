@@ -8,6 +8,7 @@ import { FullBleedScroll } from "@/components/ui/FullBleedScroll";
 import { GlassPillLink } from "@/components/ui/Glass";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ProjectSlide } from "@/components/work/ProjectSlide";
+import { contactHref } from "@/lib/forms/prefill";
 import { defaultLocale, isLocale, languageAlternates, localizedPath, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { format } from "@/lib/i18n/format";
@@ -74,7 +75,7 @@ async function Profile({ lang, slug }: { lang: string; slug: string }) {
   const portrait = profile.portrait ? toSizedImage(profile.portrait, 1200) : null;
   const roles = (profile.roles ?? []).join(", ");
   // The contact form preselects the enquiry type and ticks this person.
-  const contactHref = `${localizedPath(lang, "/contact")}?${new URLSearchParams({ type: "Talent", talent: slug })}`;
+  const contactLink = contactHref(lang, { type: "Talent", talent: [slug] });
   const workLabel = format(talent.projectsOf, { name: profile.name });
 
   return (
@@ -131,7 +132,7 @@ async function Profile({ lang, slug }: { lang: string; slug: string }) {
             )}
             <div className="flex flex-wrap items-center gap-3">
               {profile.available && (
-                <GlassPillLink href={contactHref} size="lg">
+                <GlassPillLink href={contactLink} size="lg">
                   {format(talent.workWith, { name: profile.name })}
                 </GlassPillLink>
               )}

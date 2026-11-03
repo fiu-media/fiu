@@ -1,14 +1,19 @@
 "use client";
 
-import { useEffect } from "react";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
+import { CopyLinkButton } from "@/components/forms/CopyLinkButton";
 import { Field } from "@/components/forms/Field";
 import { Form, SubmitButton } from "@/components/forms/Form";
 import { PhoneField } from "@/components/forms/PhoneField";
 import { QuoteFormSkeleton } from "@/components/forms/FormSkeleton";
 import { useConformForm } from "@/components/forms/useConformForm";
+import { useFreshOnArrival } from "@/components/forms/useFreshOnArrival";
+import { useCatalogue } from "@/components/rentals/CatalogueContext";
 import { QuoteLines } from "@/components/rentals/QuoteLines";
 import { GlassPanel, GlassPillLink } from "@/components/ui/Glass";
-import { describeRange, isValidRange, todayInDublin } from "@/lib/dates";
+import { describeRange, isIsoDate, isValidRange, todayInDublin } from "@/lib/dates";
+import { catalogueSlug, prefillKey, QUOTE_PARAMS, quoteHref, quotePrefill } from "@/lib/forms/prefill";
 import { limits, quoteSchema } from "@/lib/forms/schemas";
 import { localizedPath, type Locale } from "@/lib/i18n/config";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
@@ -17,11 +22,60 @@ import { submitQuote } from "./actions";
 
 type QuoteDict = Pick<Dictionary, "quote" | "basket" | "forms" | "common" | "dates">;
 
-export function QuoteForm({ lang, dict }: { lang: Locale; dict: QuoteDict }) {
+type Props = { lang: Locale; dict: QuoteDict };
+
+/** The form, which starts over whenever a link arrives with something to prefill (see `useFreshOnArrival`). */
+export function QuoteForm(props: Props) {
+  const params = useSearchParams();
+  const fresh = useFreshOnArrival(prefillKey(params, QUOTE_PARAMS));
+  return <QuoteFormFields key={fresh} {...props} />;
+}
+
+function QuoteFormFields({ lang, dict }: Props) {
   const { quote, forms } = dict;
-  const conform = useConformForm({ action: submitQuote, schema: quoteSchema });
+  // `/rentals/quote?pickup=…&return=…&company=…&production=…&item=slug:2` prefills what isn't personal; see
+  // lib/forms/prefill.ts. Text goes into the form; dates and items go into the basket, which is where they live.
+  const params = useSearchParams();
+  const catalogue = useCatalogue();
+  const prefill = useMemo(() => quotePrefill(params, catalogue, todayInDublin()), [params, catalogue]);
+  const conform = useConformForm({
+    action: submitQuote,
+    schema: quoteSchema,
+    defaultValue: {
+      ...(prefill.company && { company: prefill.company }),
+      ...(prefill.production && { production: prefill.production }),
+    },
+  });
   const { fields, pending, succeeded, confirmed } = conform;
   const { lines, startDate, endDate, setDates, ready } = useQuoteBasket();
+
+  // The basket is read from the browser after mount, so a link's dates and items go in once that has happened. Before
+  // paint, so the form never shows "Your quote is empty" for a link that has items. Setting rather than adding, so the
+  // same link twice changes nothing; the basket's other items are kept. This form remounts on every arrival.
+  const applied = useRef(false);
+  useLayoutEffect(() => {
+    if (!ready || applied.current) return;
+    applied.current = true;
+    if (prefill.start) setDates({ startDate: prefill.start });
+    if (prefill.end) setDates({ endDate: prefill.end });
+    for (const { itemId, qty, max } of prefill.items) basketActions.ensure(itemId, qty, max);
+  }, [ready, prefill, setDates]);
+
+  /** A link that reopens this quote, for sending to someone else. Nothing personal goes in it. */
+  const shareLink = () => {
+    const data = new FormData(document.getElementById(conform.form.id) as HTMLFormElement);
+    const text = (name: string) => (typeof data.get(name) === "string" ? (data.get(name) as string) : "");
+    const path = quoteHref(lang, {
+      start: isIsoDate(startDate) ? startDate : undefined,
+      end: isIsoDate(endDate) ? endDate : undefined,
+      company: text("company").trim() || undefined,
+      production: text("production").trim() || undefined,
+      items: lines.flatMap(({ itemId, qty }) =>
+        catalogue[itemId] ? [{ slug: catalogueSlug(catalogue[itemId].href), qty }] : [],
+      ),
+    });
+    return `${window.location.origin}${path}`;
+  };
 
   useEffect(() => {
     if (succeeded) basketActions.clear();
@@ -158,8 +212,17 @@ export function QuoteForm({ lang, dict }: { lang: Locale; dict: QuoteDict }) {
         />
       </section>
 
-      <div>
-        <SubmitButton pending={pending}>{pending ? quote.sending : quote.submit}</SubmitButton>
+      <div className="flex flex-col gap-4">
+        <div>
+          <SubmitButton pending={pending}>{pending ? quote.sending : quote.submit}</SubmitButton>
+        </div>
+        <CopyLinkButton
+          label={quote.copyLink}
+          copiedLabel={quote.linkCopied}
+          failedLabel={quote.linkCopyFailed}
+          hint={quote.copyLinkHint}
+          getLink={shareLink}
+        />
       </div>
     </Form>
   );

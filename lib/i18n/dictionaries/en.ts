@@ -110,6 +110,10 @@ export const en = {
     production: "Production",
     message: "Anything else we should know?",
     optional: "optional",
+    copyLink: "Copy link to this quote",
+    linkCopied: "Link copied",
+    linkCopyFailed: "Couldn't copy automatically. Copy this link:",
+    copyLinkHint: "Shares the kit, dates, company and production. Not your contact details.",
     placeholders: {
       name: "Aoife Murphy",
       email: "name@example.com",

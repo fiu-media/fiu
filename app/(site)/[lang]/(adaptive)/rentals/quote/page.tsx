@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
+import { QuoteFormSkeleton } from "@/components/forms/FormSkeleton";
 import { isLocale, languageAlternates } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getPageText } from "@/sanity/lib/pageText";
@@ -22,7 +24,10 @@ export default async function QuotePage({ params }: PageProps<"/[lang]/rentals/q
         <h1 className="font-display text-5xl md:text-6xl">{quote.title}</h1>
         {text.quoteIntro && <p className="mt-4 max-w-2xl text-lg text-fg-muted">{text.quoteIntro}</p>}
       </header>
-      <QuoteForm lang={lang} dict={{ quote, basket, forms, common, dates }} />
+      {/* QuoteForm reads the link's query (prefill), which needs a boundary to keep the page static. */}
+      <Suspense fallback={<QuoteFormSkeleton label={common.loading} />}>
+        <QuoteForm lang={lang} dict={{ quote, basket, forms, common, dates }} />
+      </Suspense>
     </main>
   );
 }
