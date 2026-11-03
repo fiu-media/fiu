@@ -3,11 +3,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Suspense, useEffect, useId, useRef } from "react";
-import { EdgeBars } from "@/components/ui/EdgeBars";
 import { GlassPillButton } from "@/components/ui/Glass";
 import { cn } from "@/lib/cn";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import type { NavItem } from "@/lib/i18n/nav";
+import { nudgeHomeScrollRepeatedly } from "@/components/home/bleed";
 import { HomeLink } from "./HomeLink";
 
 type NavProps = {
@@ -34,7 +34,17 @@ const isCurrent = (pathname: string, href: string) => pathname === href || pathn
 function Nav({ items, homeHref, labels, onImage, pathname }: NavProps & { pathname: string }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const dialogId = useId();
-  const close = () => dialog.current?.close();
+  // On Home the photo is what Safari should tint its bars from again once the opaque menu is gone, but it only samples
+  // when the page scrolls, so nudge right away (the dialog's `close` event, for Esc, arrives a task later).
+  const close = () => {
+    dialog.current?.close();
+    nudgeHomeScrollRepeatedly();
+  };
+  // showModal() focuses the first focusable child, the Home link, which then shows a focus ring. Focus the dialog itself.
+  const open = () => {
+    dialog.current?.showModal();
+    dialog.current?.focus();
+  };
 
   // Navigating, or growing to the rail layout, leaves the overlay behind.
   useEffect(() => {
@@ -89,7 +99,7 @@ function Nav({ items, homeHref, labels, onImage, pathname }: NavProps & { pathna
           aria-label={labels.menu}
           aria-haspopup="dialog"
           aria-controls={dialogId}
-          onClick={() => dialog.current?.showModal()}
+          onClick={open}
           className="size-10 px-0"
         >
           <MenuIcon />
@@ -101,11 +111,15 @@ function Nav({ items, homeHref, labels, onImage, pathname }: NavProps & { pathna
         ref={dialog}
         id={dialogId}
         aria-label={labels.label}
-        className="fixed inset-0 m-0 h-auto max-h-none w-auto max-w-none flex-col bg-bg/80 text-fg backdrop-blur-2xl transition-opacity duration-300 backdrop:bg-transparent open:flex md:hidden! starting:open:opacity-0"
+        tabIndex={-1}
+        data-nav-overlay
+        onClose={nudgeHomeScrollRepeatedly}
+        className="fixed inset-0 isolate m-0 h-auto max-h-none w-auto max-w-none touch-none flex-col overflow-visible overscroll-none bg-bg text-fg outline-none! backdrop:bg-transparent open:flex md:hidden!"
       >
-        {/* The overlay is see-through, so solid edge bars keep the notch and chin (and Safari's tint) filled. */}
-        <EdgeBars />
-        <div className="flex items-center justify-between px-[max(1.25rem,env(safe-area-inset-left))] pt-[max(1.25rem,env(safe-area-inset-top))] pr-[max(1.25rem,env(safe-area-inset-right))]">
+        {/* The background is an opaque colour on the dialog itself, not a translucent layer inside it: Safari takes the
+            colour for its status bar and toolbar from the element at the screen edge, and a transparent or see-through
+            one comes out black. Only the content fades in. */}
+        <div className="flex items-center justify-between px-[max(1.25rem,env(safe-area-inset-left))] pt-[max(1.25rem,env(safe-area-inset-top))] pr-[max(1.25rem,env(safe-area-inset-right))] transition-opacity duration-300 starting:opacity-0">
           <HomeLink href={homeHref} label={labels.home} className="h-9" />
           <button
             type="button"
@@ -118,7 +132,7 @@ function Nav({ items, homeHref, labels, onImage, pathname }: NavProps & { pathna
         </div>
         <nav
           aria-label={labels.label}
-          className="flex flex-1 flex-col justify-center gap-1 px-[max(1.25rem,env(safe-area-inset-left))] pb-[max(5rem,env(safe-area-inset-bottom))]"
+          className="flex flex-1 flex-col justify-center gap-1 px-[max(1.25rem,env(safe-area-inset-left))] pb-[max(5rem,env(safe-area-inset-bottom))] transition-opacity duration-300 starting:opacity-0"
         >
           {items.map((item) => (
             <Link

@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { preload } from "react-dom";
+import { InlineScript } from "@/components/InlineScript";
+import { pinHomeScrollScript } from "@/components/home/bleed";
 import { HomeHero } from "@/components/home/HomeHero";
 import { HomeScrollLock } from "@/components/home/HomeScrollLock";
 import { SiteNav } from "@/components/nav/SiteNav";
@@ -27,9 +29,10 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
     // On mobile the photo bleeds 12rem past the page above and below, inside a document that is pinned in the middle
     // (HomeScrollLock), so Safari has real pixels to show behind its status bar and toolbar. Off from md up, Home is a
     // plain h-dvh page.
-    <div data-surface="cinematic" className="bg-ink max-md:py-48">
+    <div data-surface="cinematic" data-home-bleed className="bg-ink max-md:py-48">
       <HomeScrollLock />
-      <main className="relative isolate h-dvh bg-ink md:overflow-hidden">
+      <main className="relative isolate h-dvh bg-ink select-none md:overflow-hidden">
+        {/* The hero is imagery only: select-none stops a select-all or long-press copying the stills' alt texts as one string. */}
         <h1 className="sr-only">{dict.site.name}</h1>
         {/* Reads draft mode, so it streams; the fallback stills keep the first paint identical. */}
         <Suspense fallback={<HomeHero stills={fallbackStills} />}>
@@ -37,6 +40,7 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
         </Suspense>
         <SiteNav lang={lang} onImage />
       </main>
+      <InlineScript html={pinHomeScrollScript} />
     </div>
   );
 }
