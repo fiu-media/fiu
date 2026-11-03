@@ -106,12 +106,13 @@ function Nav({ items, homeHref, labels, onImage, pathname }: NavProps & { pathna
         id={dialogId}
         aria-label={labels.label}
         tabIndex={-1}
-        className="fixed inset-0 isolate m-0 h-auto max-h-none w-auto max-w-none flex-col overflow-visible text-fg transition-opacity duration-300 outline-none! backdrop:bg-transparent open:flex md:hidden! starting:open:opacity-0"
+        className="fixed inset-0 isolate m-0 h-auto max-h-none w-auto max-w-none flex-col overflow-visible text-fg outline-none! backdrop:bg-transparent open:flex md:hidden!"
       >
         {/* The frosted background reaches 12rem past the screen edges, so it also fills the notch and chin (and gives
-            Safari a layer at the edges to tint its bars from) instead of stopping at the viewport. */}
+            Safari a layer at the edges to tint its bars from) instead of stopping at the viewport. It appears at once:
+            Safari waits for a fading layer to settle before tinting its bars from it, so only the content fades in. */}
         <div aria-hidden className="absolute inset-x-0 -inset-y-48 -z-10 bg-bg/80 backdrop-blur-2xl" />
-        <div className="flex items-center justify-between px-[max(1.25rem,env(safe-area-inset-left))] pt-[max(1.25rem,env(safe-area-inset-top))] pr-[max(1.25rem,env(safe-area-inset-right))]">
+        <div className="flex items-center justify-between px-[max(1.25rem,env(safe-area-inset-left))] pt-[max(1.25rem,env(safe-area-inset-top))] pr-[max(1.25rem,env(safe-area-inset-right))] transition-opacity duration-300 starting:opacity-0">
           <HomeLink href={homeHref} label={labels.home} className="h-9" />
           <button
             type="button"
@@ -124,7 +125,7 @@ function Nav({ items, homeHref, labels, onImage, pathname }: NavProps & { pathna
         </div>
         <nav
           aria-label={labels.label}
-          className="flex flex-1 flex-col justify-center gap-1 px-[max(1.25rem,env(safe-area-inset-left))] pb-[max(5rem,env(safe-area-inset-bottom))]"
+          className="flex flex-1 flex-col justify-center gap-1 px-[max(1.25rem,env(safe-area-inset-left))] pb-[max(5rem,env(safe-area-inset-bottom))] transition-opacity duration-300 starting:opacity-0"
         >
           {items.map((item) => (
             <Link
