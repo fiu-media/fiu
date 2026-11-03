@@ -1,0 +1,46 @@
+name: CodeQL
+
+# Replaces CodeQL's default setup, which creates no run (so no `Analyze (...)` check) for PRs that
+# only touch files it doesn't analyze, such as Dependabot's package.json bumps. Branch protection
+# requires those checks, so those PRs were blocked forever. Here the jobs run on every PR.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 6 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    # Keep this name: branch protection requires `Analyze (javascript-typescript)` and
+    # `Analyze (python)`. Don't skip the job itself with `if:`, a skipped matrix job never
+    # reports under these names.
+    name: Analyze (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [actions, javascript-typescript, python]
+    # Dependabot's token is read-only, so it can't upload results. Its PRs only change manifests
+    # and workflow pins, which dependency-review covers, so the steps are skipped and the job
+    # still reports success.
+    env:
+      SKIP: ${{ github.actor == 'dependabot[bot]' }}
+    steps:
+      - uses: actions/checkout@v7
+        if: env.SKIP != 'true'
+      - uses: github/codeql-action/init@v4
+        if: env.SKIP != 'true'
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: none
+      - uses: github/codeql-action/analyze@v4
+        if: env.SKIP != 'true'
+        with:
+          category: /language:${{ matrix.language }}
