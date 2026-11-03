@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Component, useCallback, useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import { prefersReducedMotion, subscribeToReducedMotion } from "@/lib/reduced-motion";
+import { decideLogoTier, rememberTooSlow, type LogoDecision, type LogoTier } from "@/components/three/logoTier";
 import logo from "@/public/brand/fiu-logo.svg";
 import type { HeroStill } from "@/sanity/lib/stills";
 import { isSplashDismissed, Splash } from "./Splash";
@@ -39,28 +40,27 @@ const INTRO_BACKSTOP_MS = 12000;
 
 /** Mobile only: matches the padding around Home's <main> and HomeScrollLock's BLEED_PX. Symmetric, so the logo stays centred. */
 const BLEED_CLASS = "max-md:-inset-y-48";
+/** A scene that turns out too slow fades out over the SVG's own fade-in (`duration-700` below), then unmounts. */
+const SLOW_FADE_MS = 700;
+/**
+ * The hidden canvas is never fully transparent: at 0 the browser stops compositing it, and then
+ * the scene's quality probe (which runs while it is hidden) misses that cost and reads a slow
+ * device as fast. At this it is still invisible.
+ */
+const HIDDEN_SCENE_OPACITY = 0.001;
 
 type Mode = "pending" | "live" | "static";
 /** splash up, then the logo spinning, then settled (stills rotate, scene interactive). */
 type Stage = "splash" | "spin" | "settled";
 
-let liveSupport: boolean | undefined;
-function canRenderLive() {
-  if (liveSupport === undefined) {
-    try {
-      liveSupport = Boolean(document.createElement("canvas").getContext("webgl2"));
-    } catch {
-      liveSupport = false;
-    }
-  }
-  return liveSupport && !prefersReducedMotion();
-}
-
-/** "pending" on the server and during hydration, then live/static once known on the client. */
-function useLiveSupport(): Mode {
+/**
+ * "pending" on the server and during hydration, then the glass logo's starting tier, or "static"
+ * (the SVG) for reduced motion and devices below the floor. See `logoTier.ts`.
+ */
+function useLiveSupport(): "pending" | LogoDecision {
   return useSyncExternalStore(
     subscribeToReducedMotion,
-    () => (canRenderLive() ? "live" : "static"),
+    () => (prefersReducedMotion() ? "static" : decideLogoTier()),
     () => "pending",
   );
 }
@@ -73,9 +73,16 @@ function useLiveSupport(): Mode {
 export function HomeHero({ stills }: { stills: HeroStill[] }) {
   const [index, setIndex] = useState(0);
   const [failed, setFailed] = useState(false);
+  /**
+   * The scene ran but was too slow: it fades out over the SVG (`fading`), then unmounts. Keeps the
+   * scene's tier, since the device's own decision turns to "static" at once.
+   */
+  const [slow, setSlow] = useState<{ fading: boolean; settled: boolean; tier: LogoTier } | null>(null);
   const [sceneReady, setSceneReady] = useState(false);
   const support = useLiveSupport();
-  const mode: Mode = failed ? "static" : support;
+  const tier: LogoTier | null = support === "pending" || support === "static" ? null : support;
+  const mode: Mode = failed || slow ? "static" : support === "pending" ? "pending" : tier ? "live" : "static";
+  const sceneTier = failed ? null : slow ? (slow.fading ? slow.tier : null) : tier;
 
   // The intro is one schedule: the splash lifts, the glass logo starts to spin partway through the fade, and the
   // intro settles. Held in "splash" until the gates below open, and skipped when the splash was already dismissed.
@@ -85,8 +92,10 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
   const splashDone = timedOut || (minElapsed && (mode === "live" ? sceneReady : mode === "static"));
   const spinGo = stage !== "splash";
   const introDone = stage === "settled";
-  // The static SVG logo starts centred under the splash, then glides left on desktop.
+  // The static SVG logo starts centred under the splash, then glides left on desktop. Taking over from a
+  // settled glass logo, it is already there.
   const logoAtLeft = mode === "static" && splashDone;
+  const snapToLeft = Boolean(slow?.settled);
 
   useEffect(() => {
     const timers = [
@@ -117,6 +126,17 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
   const onReady = useCallback(() => setSceneReady(true), []);
   const onIntroEnd = useCallback(() => setStage("settled"), []);
   const onFail = useCallback(() => setFailed(true), []);
+  const onTooSlow = useCallback(() => {
+    if (!tier) return;
+    rememberTooSlow();
+    setSlow({ fading: true, settled: introDone, tier });
+  }, [introDone, tier]);
+
+  useEffect(() => {
+    if (!slow?.fading) return;
+    const id = window.setTimeout(() => setSlow((s) => s && { ...s, fading: false }), SLOW_FADE_MS);
+    return () => window.clearTimeout(id);
+  }, [slow?.fading]);
   const sceneStills = useMemo(
     () =>
       stills.map(({ src, width, height, lightTint }) => ({
@@ -169,14 +189,16 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
             priority
             sizes="(min-width: 768px) 42vw, 80vw"
             className={cn(
-              "h-auto w-[80vw] max-w-[640px] motion-safe:transition-transform motion-safe:delay-300 motion-safe:duration-1000 motion-safe:ease-in-out md:w-[42vw] md:max-w-none",
+              "h-auto w-[80vw] max-w-[640px] md:w-[42vw] md:max-w-none",
+              !snapToLeft &&
+                "motion-safe:transition-transform motion-safe:delay-300 motion-safe:duration-1000 motion-safe:ease-in-out",
               logoAtLeft ? "md:-translate-x-[calc(27vw-4rem-env(safe-area-inset-left))]" : "md:translate-x-0",
             )}
           />
         </div>
       </div>
 
-      {mode === "live" && (
+      {sceneTier && (
         <SceneBoundary onError={onFail}>
           {/* Never `fixed`: WebKit tints its bars from a viewport-sized fixed layer over a canvas, which hides the photo behind them. Lifted above the splash while it fades, then dropped back under the nav once the intro has settled. Hidden until the
               fade starts, then cross-faded in over the SVG logo, which fades out underneath. */}
@@ -188,8 +210,9 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
               introDone
                 ? "-z-10"
                 : "pointer-events-none z-30 transition-opacity duration-(--splash-fade) ease-out will-change-[opacity]",
+              slow && "pointer-events-none transition-opacity duration-700",
             )}
-            style={{ ...splashFadeVars, opacity: sceneReady && splashDone ? 1 : 0 }}
+            style={{ ...splashFadeVars, opacity: sceneReady && splashDone && !slow ? 1 : HIDDEN_SCENE_OPACITY }}
           >
             <LogoScene
               stills={sceneStills}
@@ -203,6 +226,8 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
               interactive={introDone}
               onIntroEnd={onIntroEnd}
               onContextLost={onFail}
+              tier={sceneTier}
+              onTooSlow={onTooSlow}
             />
           </div>
         </SceneBoundary>
