@@ -1,3 +1,4 @@
+import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -62,9 +63,10 @@ async function Item({ lang, slug }: { lang: string; slug: string }) {
     <article>
       <Link
         href={localizedPath(lang, "/rentals")}
-        className="text-sm text-fg-muted underline-offset-4 hover:text-fg hover:underline"
+        className="inline-flex items-center gap-1.5 text-sm text-fg-muted underline-offset-4 hover:text-fg hover:underline"
       >
-        ← {rentals.backToRentals}
+        <ArrowLeft aria-hidden className="size-4" />
+        {rentals.backToRentals}
       </Link>
 
       <div className="mt-6 grid gap-10 lg:grid-cols-2">

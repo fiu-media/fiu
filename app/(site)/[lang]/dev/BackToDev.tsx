@@ -1,5 +1,6 @@
 "use client";
 
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useSelectedLayoutSegment } from "next/navigation";
 
@@ -16,7 +17,7 @@ export function BackToDev({ href }: { href: string }) {
         href={href}
         className="-mx-2 inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-[0.8125rem] font-medium text-fg-muted transition-colors hover:text-fg"
       >
-        <span aria-hidden>←</span> Dev
+        <ArrowLeft aria-hidden className="size-4" /> Dev
       </Link>
     </nav>
   );

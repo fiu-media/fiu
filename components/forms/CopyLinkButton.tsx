@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, useSyncExternalStore, type SVGProps } from "react";
+import { Check, Link, Lock, Share } from "lucide-react";
+import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
 
 type Props = {
   label: string;
@@ -15,43 +16,6 @@ type Props = {
   /** Called when the button is pressed, so the link reflects the form as it is then. */
   getLink: () => string;
 };
-
-const icon = (props: SVGProps<SVGSVGElement>) => ({
-  width: 16,
-  height: 16,
-  viewBox: "0 0 24 24",
-  fill: "none",
-  stroke: "currentColor",
-  strokeWidth: 2,
-  strokeLinecap: "round" as const,
-  strokeLinejoin: "round" as const,
-  "aria-hidden": true,
-  ...props,
-});
-const LinkIcon = (props: SVGProps<SVGSVGElement>) => (
-  <svg {...icon(props)}>
-    <path d="M10 13a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07l-1.5 1.5" />
-    <path d="M14 11a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07l1.5-1.5" />
-  </svg>
-);
-const CheckIcon = (props: SVGProps<SVGSVGElement>) => (
-  <svg {...icon(props)}>
-    <path d="m5 12.5 4.5 4.5L19 7.5" />
-  </svg>
-);
-const ShareIcon = (props: SVGProps<SVGSVGElement>) => (
-  <svg {...icon(props)}>
-    <path d="M12 15V3" />
-    <path d="m7.5 7.5 4.5-4.5 4.5 4.5" />
-    <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7" />
-  </svg>
-);
-const LockIcon = (props: SVGProps<SVGSVGElement>) => (
-  <svg {...icon({ width: 12, height: 12, ...props })}>
-    <rect x="4.5" y="11" width="15" height="10" rx="2" />
-    <path d="M8 11V7.5a4 4 0 0 1 8 0V11" />
-  </svg>
-);
 
 // A touch device that can open the system share sheet (Messages, Mail, AirDrop…) offers that instead of copying.
 const subscribeToPointer = (onChange: () => void) => {
@@ -114,7 +78,13 @@ export function CopyLinkButton({ label, copiedLabel, failedLabel, shareLabel, sh
         aria-describedby={hintId}
         className="inline-flex h-12 min-w-40 cursor-pointer items-center justify-center gap-2 rounded-full border border-line px-6 text-base font-semibold tracking-[-0.01em] whitespace-nowrap transition-colors select-none hover:border-fg/40 hover:bg-line/40 motion-reduce:transition-none"
       >
-        {copied ? <CheckIcon /> : sharing ? <ShareIcon /> : <LinkIcon />}
+        {copied ? (
+          <Check aria-hidden className="size-4" />
+        ) : sharing ? (
+          <Share aria-hidden className="size-4" />
+        ) : (
+          <Link aria-hidden className="size-4" />
+        )}
         {copied ? copiedLabel : sharing ? shareLabel : label}
       </button>
       {/* Always rendered, so the change is announced. */}
@@ -122,7 +92,7 @@ export function CopyLinkButton({ label, copiedLabel, failedLabel, shareLabel, sh
         {copied ? copiedLabel : ""}
       </p>
       <p id={hintId} className="flex min-w-0 flex-1 basis-56 items-start gap-1.5 text-xs text-fg-muted">
-        <LockIcon className="mt-0.5 shrink-0" />
+        <Lock aria-hidden className="mt-0.5 size-3 shrink-0" />
         {hint}
       </p>
       {status === "failed" && (

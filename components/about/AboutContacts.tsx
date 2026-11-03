@@ -1,3 +1,5 @@
+import { siInstagram } from "simple-icons";
+import { BrandIcon } from "@/components/ui/BrandIcon";
 import { instagramHandle } from "@/lib/instagram";
 
 /** Email and Instagram as two plain links; renders nothing when the editors haven't set either. */
@@ -28,8 +30,9 @@ export function AboutContacts({
             href={instagram}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-lg underline decoration-white/40 underline-offset-4 hover:decoration-white"
+            className="inline-flex items-center gap-2 text-lg underline decoration-white/40 underline-offset-4 hover:decoration-white"
           >
+            <BrandIcon icon={siInstagram} />
             {instagramHandle(instagram)}
           </a>
         </li>

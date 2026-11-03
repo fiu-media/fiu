@@ -1,5 +1,6 @@
 "use client";
 
+import { Menu, X } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from "react";
 import { LogoMask } from "@/components/nav/HomeLink";
@@ -171,23 +172,9 @@ function Logo({ label, className }: { label: string; className: string }) {
   );
 }
 
-/** Two quiet lines that fold into a cross while the menu is open. */
 function MenuIcon({ open = false, className = "" }: { open?: boolean; className?: string }) {
-  const line = "origin-center [transform-box:fill-box] transition-transform duration-300";
-  return (
-    <svg
-      aria-hidden
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.6}
-      strokeLinecap="round"
-      className={`size-6 ${className}`}
-    >
-      <line x1="5" x2="19" y1="8" y2="8" className={`${line} ${open ? "translate-y-[4px] rotate-45" : ""}`} />
-      <line x1="5" x2="19" y1="16" y2="16" className={`${line} ${open ? "-translate-y-[4px] -rotate-45" : ""}`} />
-    </svg>
-  );
+  const Icon = open ? X : Menu;
+  return <Icon aria-hidden className={`size-6 ${className}`} />;
 }
 
 /*

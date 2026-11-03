@@ -1,5 +1,6 @@
 "use client";
 
+import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Suspense, useEffect, useId, useRef } from "react";
@@ -102,7 +103,7 @@ function Nav({ items, homeHref, labels, onImage, pathname }: NavProps & { pathna
           onClick={open}
           className="size-10 px-0"
         >
-          <MenuIcon />
+          <Menu aria-hidden className="size-6" />
         </GlassPillButton>
       </header>
 
@@ -127,7 +128,7 @@ function Nav({ items, homeHref, labels, onImage, pathname }: NavProps & { pathna
             onClick={close}
             className="-mr-2 grid size-10 cursor-pointer place-items-center rounded-full hover:bg-fg/10"
           >
-            <MenuIcon open />
+            <X aria-hidden className="size-6" />
           </button>
         </div>
         <nav
@@ -148,24 +149,5 @@ function Nav({ items, homeHref, labels, onImage, pathname }: NavProps & { pathna
         </nav>
       </dialog>
     </>
-  );
-}
-
-/** Two quiet lines that fold into a cross while the menu is open. */
-function MenuIcon({ open = false }: { open?: boolean }) {
-  const line = "origin-center [transform-box:fill-box] transition-transform duration-300";
-  return (
-    <svg
-      aria-hidden
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.6}
-      strokeLinecap="round"
-      className="size-6"
-    >
-      <line x1="5" x2="19" y1="8" y2="8" className={cn(line, open && "translate-y-[4px] rotate-45")} />
-      <line x1="5" x2="19" y1="16" y2="16" className={cn(line, open && "-translate-y-[4px] -rotate-45")} />
-    </svg>
   );
 }

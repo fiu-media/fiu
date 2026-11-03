@@ -20,6 +20,8 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: devLanOrigins(),
   experimental: {
     agentFeedback: false,
+    // simple-icons ships all ~3,400 icons from one barrel, so only the ones imported get bundled. lucide-react is covered by Next's defaults.
+    optimizePackageImports: ["simple-icons"],
   },
   cacheComponents: true,
   partialPrefetching: true,

@@ -1,3 +1,4 @@
+import { ArrowDown, ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 import { PortableText } from "next-sanity";
 import Image from "next/image";
@@ -85,9 +86,10 @@ async function Profile({ lang, slug }: { lang: string; slug: string }) {
         <div className="mx-auto mb-6 max-w-6xl">
           <Link
             href={localizedPath(lang, "/talent")}
-            className="text-sm text-fg-muted underline-offset-4 hover:text-fg hover:underline"
+            className="inline-flex items-center gap-1.5 text-sm text-fg-muted underline-offset-4 hover:text-fg hover:underline"
           >
-            ← {talent.back}
+            <ArrowLeft aria-hidden className="size-4" />
+            {talent.back}
           </Link>
         </div>
         <div className="mx-auto grid max-w-6xl items-center gap-8 md:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] md:gap-14 lg:min-h-[calc(100dvh-10rem)]">
@@ -137,8 +139,12 @@ async function Profile({ lang, slug }: { lang: string; slug: string }) {
                 </GlassPillLink>
               )}
               {projects.length > 0 && (
-                <a href="#work" className="text-sm text-fg-muted underline-offset-4 hover:text-fg hover:underline">
-                  {workLabel} ↓
+                <a
+                  href="#work"
+                  className="inline-flex items-center gap-1.5 text-sm text-fg-muted underline-offset-4 hover:text-fg hover:underline"
+                >
+                  {workLabel}
+                  <ArrowDown aria-hidden className="size-4" />
                 </a>
               )}
             </div>

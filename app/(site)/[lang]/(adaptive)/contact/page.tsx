@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { siInstagram } from "simple-icons";
 import { Suspense, type ComponentProps } from "react";
 import { FormSkeleton } from "@/components/forms/FormSkeleton";
+import { BrandIcon } from "@/components/ui/BrandIcon";
 import { PageTitle } from "@/components/ui/PageTitle";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { defaultLocale, isLocale, languageAlternates, type Locale } from "@/lib/i18n/config";
@@ -88,7 +90,13 @@ async function DirectContact({ lang }: { lang: Locale }) {
           <div>
             <dt className="text-sm text-fg-muted">{contact.instagramLabel}</dt>
             <dd>
-              <a href={settings.instagram} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">
+              <a
+                href={settings.instagram}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 underline underline-offset-4"
+              >
+                <BrandIcon icon={siInstagram} />
                 {instagramHandle(settings.instagram)}
               </a>
             </dd>
