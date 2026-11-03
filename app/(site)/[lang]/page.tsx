@@ -31,7 +31,8 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
     // plain h-dvh page.
     <div data-surface="cinematic" data-home-bleed className="bg-ink max-md:py-48">
       <HomeScrollLock />
-      <main className="relative isolate h-dvh bg-ink md:overflow-hidden">
+      <main className="relative isolate h-dvh bg-ink select-none md:overflow-hidden">
+        {/* The hero is imagery only: select-none stops a select-all or long-press copying the stills' alt texts as one string. */}
         <h1 className="sr-only">{dict.site.name}</h1>
         {/* Reads draft mode, so it streams; the fallback stills keep the first paint identical. */}
         <Suspense fallback={<HomeHero stills={fallbackStills} />}>
