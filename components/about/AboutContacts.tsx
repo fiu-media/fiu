@@ -18,7 +18,7 @@ export function AboutContacts({
       {email && (
         <li>
           <span className="sr-only">{labels.email}: </span>
-          <a href={`mailto:${email}`} className="text-lg underline decoration-white/40 underline-offset-4 hover:decoration-white">
+          <a href={`mailto:${email}`} className="text-lg link-inline">
             {email}
           </a>
         </li>
@@ -30,7 +30,7 @@ export function AboutContacts({
             href={instagram}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-lg underline decoration-white/40 underline-offset-4 hover:decoration-white"
+            className="inline-flex items-center gap-2 text-lg link-inline"
           >
             <BrandIcon icon={siInstagram} />
             {instagramHandle(instagram)}

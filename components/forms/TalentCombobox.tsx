@@ -1,11 +1,12 @@
 "use client";
 
 import { Combobox } from "@base-ui/react/combobox";
+import { Check, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { cn } from "@/lib/cn";
 import { MAX_TALENT } from "@/lib/forms/schemas";
 import { format } from "@/lib/i18n/format";
-import { FieldFrame, placeholderClass, type FieldProps } from "./Field";
+import { chevron, FieldFrame, placeholderClass, type FieldProps } from "./Field";
 
 /** `id` is what the form submits; `slug` is what a link uses to preselect them. */
 export type TalentOption = { id: string; name: string; slug: string };
@@ -30,8 +31,6 @@ type Props = {
   labels: TalentComboboxLabels;
   options: TalentOption[];
 };
-
-const chevron = <span aria-hidden className="size-1.5 -translate-y-px rotate-45 border-r border-b border-fg/50" />;
 
 /**
  * A multi-select that scales with the roster: type to narrow the list, pick from it, and each pick becomes a chip
@@ -85,9 +84,7 @@ export function TalentCombobox({ field, labels, options }: Props) {
                       aria-label={format(labels.remove, { name: nameOf(id) })}
                       className="grid size-6 cursor-pointer place-items-center rounded-full text-bg/80 hover:bg-bg/20 hover:text-bg"
                     >
-                      <span aria-hidden className="text-base leading-none">
-                        ×
-                      </span>
+                      <X aria-hidden className="size-3.5" />
                     </Combobox.ChipRemove>
                   </Combobox.Chip>
                 ))}
@@ -127,7 +124,9 @@ export function TalentCombobox({ field, labels, options }: Props) {
                     disabled={atLimit && !value.includes(person.id)}
                     className="grid cursor-pointer grid-cols-[1.25rem_1fr] items-center gap-2 px-4 py-2 text-base outline-none select-none data-disabled:cursor-default data-disabled:text-fg-muted data-highlighted:bg-line"
                   >
-                    <Combobox.ItemIndicator className="col-start-1 text-sm">✓</Combobox.ItemIndicator>
+                    <Combobox.ItemIndicator className="col-start-1">
+                      <Check aria-hidden className="size-4" />
+                    </Combobox.ItemIndicator>
                     <span className="col-start-2">{person.name}</span>
                   </Combobox.Item>
                 )}

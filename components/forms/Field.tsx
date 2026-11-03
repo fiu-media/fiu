@@ -56,6 +56,9 @@ type Props = {
 export const placeholderClass = "placeholder:text-fg-muted/70";
 const emptyDateClass = "[&[data-empty]:not(:focus)]:text-fg-muted/70";
 
+/** The down chevron on every control that opens a list: the select, the phone's country, the talent picker. */
+export const chevron = <span aria-hidden className="size-1.5 -translate-y-px rotate-45 border-r border-b border-fg/50" />;
+
 export const controlClass = `w-full rounded-2xl border bg-bg-raised px-4 py-3 text-base text-fg aria-[invalid=true]:border-accent ${placeholderClass}`;
 
 /** The label above a control and the localised error below it; the control itself is the caller's. */
@@ -140,9 +143,13 @@ export function Field({
         rows={minRows}
       />
     ) : as === "select" ? (
-      <select {...shared} defaultValue={field.defaultValue}>
-        {children}
-      </select>
+      // The browser's own arrow is swapped for the chevron the other pickers in the form use.
+      <div className="relative">
+        <select {...shared} className={cn(className, "cursor-pointer appearance-none pr-10")} defaultValue={field.defaultValue}>
+          {children}
+        </select>
+        <span className="pointer-events-none absolute inset-y-0 right-4 grid place-items-center">{chevron}</span>
+      </div>
     ) : (
       // Controlled (value + onChange) or uncontrolled (Conform's defaultValue), never both.
       <input

@@ -82,7 +82,7 @@ async function DirectContact({ lang }: { lang: Locale }) {
           <div>
             <dt className="text-sm text-fg-muted">{contact.emailLabel}</dt>
             <dd>
-              <a href={`mailto:${settings.contactEmail}`} className="underline underline-offset-4">
+              <a href={`mailto:${settings.contactEmail}`} className="link-inline">
                 {settings.contactEmail}
               </a>
             </dd>
@@ -96,7 +96,7 @@ async function DirectContact({ lang }: { lang: Locale }) {
                 href={settings.instagram}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 underline underline-offset-4"
+                className="inline-flex items-center gap-2 link-inline"
               >
                 <BrandIcon icon={siInstagram} />
                 {instagramHandle(settings.instagram)}
