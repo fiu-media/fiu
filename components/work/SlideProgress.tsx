@@ -3,6 +3,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import { format } from "@/lib/i18n/format";
+import { prefersReducedMotion } from "@/lib/reduced-motion";
 
 /** Past this many projects the ticks would overflow the screen, so only the counter is shown. */
 const MAX_TICKS = 24;
@@ -49,7 +50,7 @@ export function SlideProgress({
 
   function jump(index: number) {
     const slide = document.querySelectorAll(`#${containerId} > [aria-roledescription="slide"]`)[index];
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reduced = prefersReducedMotion();
     slide?.scrollIntoView({ behavior: reduced ? "auto" : "smooth" });
   }
 

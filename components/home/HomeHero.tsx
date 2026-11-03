@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import Image from "next/image";
 import { Component, useCallback, useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
 import { cn } from "@/lib/cn";
+import { prefersReducedMotion, subscribeToReducedMotion } from "@/lib/reduced-motion";
 import logo from "@/public/brand/fiu-logo.svg";
 import type { HeroStill } from "@/sanity/lib/stills";
 import { isSplashDismissed, Splash } from "./Splash";
@@ -40,6 +41,8 @@ const INTRO_BACKSTOP_MS = 12000;
 const BLEED_CLASS = "max-md:-inset-y-48";
 
 type Mode = "pending" | "live" | "static";
+/** splash up, then the logo spinning, then settled (stills rotate, scene interactive). */
+type Stage = "splash" | "spin" | "settled";
 
 let liveSupport: boolean | undefined;
 function canRenderLive() {
@@ -50,19 +53,13 @@ function canRenderLive() {
       liveSupport = false;
     }
   }
-  return liveSupport && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-}
-
-function subscribeToMotionPreference(onChange: () => void) {
-  const query = window.matchMedia("(prefers-reduced-motion: reduce)");
-  query.addEventListener("change", onChange);
-  return () => query.removeEventListener("change", onChange);
+  return liveSupport && !prefersReducedMotion();
 }
 
 /** "pending" on the server and during hydration, then live/static once known on the client. */
 function useLiveSupport(): Mode {
   return useSyncExternalStore(
-    subscribeToMotionPreference,
+    subscribeToReducedMotion,
     () => (canRenderLive() ? "live" : "static"),
     () => "pending",
   );
@@ -80,33 +77,33 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
   const support = useLiveSupport();
   const mode: Mode = failed ? "static" : support;
 
+  // The intro is one schedule: the splash lifts, the glass logo starts to spin partway through the fade, and the
+  // intro settles. Held in "splash" until the gates below open, and skipped when the splash was already dismissed.
   const [minElapsed, setMinElapsed] = useState(isSplashDismissed);
   const [timedOut, setTimedOut] = useState(isSplashDismissed);
-  const [spinGo, setSpinGo] = useState(isSplashDismissed);
-  const [introDone, setIntroDone] = useState(isSplashDismissed);
+  const [stage, setStage] = useState<Stage>(isSplashDismissed() ? "settled" : "splash");
   const splashDone = timedOut || (minElapsed && (mode === "live" ? sceneReady : mode === "static"));
+  const spinGo = stage !== "splash";
+  const introDone = stage === "settled";
   // The static SVG logo starts centred under the splash, then glides left on desktop.
   const logoAtLeft = mode === "static" && splashDone;
 
   useEffect(() => {
-    const min = window.setTimeout(() => setMinElapsed(true), SPLASH_MIN_MS);
-    const max = window.setTimeout(() => setTimedOut(true), SPLASH_MAX_MS);
-    return () => {
-      window.clearTimeout(min);
-      window.clearTimeout(max);
-    };
+    const timers = [
+      window.setTimeout(() => setMinElapsed(true), SPLASH_MIN_MS),
+      window.setTimeout(() => setTimedOut(true), SPLASH_MAX_MS),
+    ];
+    return () => timers.forEach(window.clearTimeout);
   }, []);
 
   useEffect(() => {
     if (!splashDone) return;
-    const spin = window.setTimeout(() => setSpinGo(true), SPIN_DELAY_MS);
-    return () => window.clearTimeout(spin);
-  }, [splashDone]);
-
-  useEffect(() => {
-    if (!splashDone) return;
-    const settled = window.setTimeout(() => setIntroDone(true), mode === "live" ? INTRO_BACKSTOP_MS : INTRO_SETTLE_MS);
-    return () => window.clearTimeout(settled);
+    // A scene that ends its intro first settles the stage itself (onIntroEnd), so these never move it backwards.
+    const timers = [
+      window.setTimeout(() => setStage((s) => (s === "splash" ? "spin" : s)), SPIN_DELAY_MS),
+      window.setTimeout(() => setStage("settled"), mode === "live" ? INTRO_BACKSTOP_MS : INTRO_SETTLE_MS),
+    ];
+    return () => timers.forEach(window.clearTimeout);
   }, [splashDone, mode]);
 
   // Held until the intro is over so a still crossfade (and its extra rendering) never lands
@@ -118,7 +115,7 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
   }, [introDone, stills.length]);
 
   const onReady = useCallback(() => setSceneReady(true), []);
-  const onIntroEnd = useCallback(() => setIntroDone(true), []);
+  const onIntroEnd = useCallback(() => setStage("settled"), []);
   const onFail = useCallback(() => setFailed(true), []);
   const sceneStills = useMemo(
     () =>

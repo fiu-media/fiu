@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/cn";
+import { prefersReducedMotion } from "@/lib/reduced-motion";
 import logo from "@/public/brand/fiu-logo.svg";
 import { nudgeHomeScroll } from "./bleed";
 import { SPLASH_FADE_MS, splashFadeVars } from "./splash-config";
@@ -36,7 +37,7 @@ export function Splash({ done }: { done: boolean }) {
   useEffect(() => {
     if (!done) return;
     // Under reduced motion the fade is instant, so there is nothing to wait for.
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reduced = prefersReducedMotion();
     const id = window.setTimeout(
       () => {
         dismissed = true;

@@ -102,15 +102,17 @@ function Nav({ items, homeHref, labels, onImage, pathname }: NavProps & { pathna
           <Dialog.Portal>
             {/* The background is an opaque colour on the popup itself, not a translucent layer inside it: Safari takes
                 the colour for its status bar and toolbar from the element at the screen edge, and a transparent or
-                see-through one comes out black. Only the content fades in. */}
+                see-through one comes out black. Only the content fades, in and out. Base UI keeps the popup mounted
+                only for animations on the popup itself, not its children, so it carries a transition no one can see
+                (the outline colour, under outline-none) whose duration matches the content fade. */}
             <Dialog.Popup
               ref={popup}
               aria-label={labels.label}
               // Focusing the first link would put a focus ring on the Home link. Focus the overlay itself.
               initialFocus={popup}
-              className="group fixed inset-0 isolate z-50 flex touch-none flex-col overscroll-none bg-bg text-fg outline-none md:hidden"
+              className="group fixed inset-0 isolate z-50 flex touch-none flex-col overscroll-none bg-bg text-fg transition-[outline-color] duration-300 outline-none data-ending-style:outline-transparent motion-reduce:transition-none md:hidden"
             >
-              <div className="flex items-center justify-between px-[max(1.25rem,env(safe-area-inset-left))] pt-[max(1.25rem,env(safe-area-inset-top))] pr-[max(1.25rem,env(safe-area-inset-right))] transition-opacity duration-300 group-data-starting-style:opacity-0">
+              <div className="flex items-center justify-between px-[max(1.25rem,env(safe-area-inset-left))] pt-[max(1.25rem,env(safe-area-inset-top))] pr-[max(1.25rem,env(safe-area-inset-right))] transition-opacity duration-300 group-data-ending-style:opacity-0 group-data-starting-style:opacity-0 motion-reduce:transition-none">
                 <HomeLink href={homeHref} label={labels.home} className="h-9" />
                 <Dialog.Close
                   aria-label={labels.closeMenu}
@@ -121,7 +123,7 @@ function Nav({ items, homeHref, labels, onImage, pathname }: NavProps & { pathna
               </div>
               <nav
                 aria-label={labels.label}
-                className="flex flex-1 flex-col justify-center gap-1 px-[max(1.25rem,env(safe-area-inset-left))] pb-[max(5rem,env(safe-area-inset-bottom))] transition-opacity duration-300 group-data-starting-style:opacity-0"
+                className="flex flex-1 flex-col justify-center gap-1 px-[max(1.25rem,env(safe-area-inset-left))] pb-[max(5rem,env(safe-area-inset-bottom))] transition-opacity duration-300 group-data-ending-style:opacity-0 group-data-starting-style:opacity-0 motion-reduce:transition-none"
               >
                 {items.map((item) => (
                   <Link
