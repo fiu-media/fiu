@@ -143,12 +143,12 @@ export function Field({
         rows={minRows}
       />
     ) : as === "select" ? (
-      // The browser's own arrow is swapped for the chevron the other pickers in the form use.
+      // The browser's own arrow is swapped for the chevron the other pickers use, in the same place as the combobox's.
       <div className="relative">
         <select {...shared} className={cn(className, "cursor-pointer appearance-none pr-10")} defaultValue={field.defaultValue}>
           {children}
         </select>
-        <span className="pointer-events-none absolute inset-y-0 right-4 grid place-items-center">{chevron}</span>
+        <span className="pointer-events-none absolute inset-y-0 right-2 grid w-8 place-items-center">{chevron}</span>
       </div>
     ) : (
       // Controlled (value + onChange) or uncontrolled (Conform's defaultValue), never both.

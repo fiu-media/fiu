@@ -62,7 +62,7 @@ export function TalentCombobox({ field, labels, options }: Props) {
       >
         <Combobox.InputGroup
           className={cn(
-            "composite-field flex min-h-12 w-full cursor-text flex-wrap items-center gap-1.5 rounded-2xl border bg-bg-raised py-2 pr-2 pl-3",
+            "composite-field flex min-h-12 w-full cursor-text flex-wrap items-center gap-1.5 rounded-2xl border bg-bg-raised py-2 pr-2 pl-4",
             field.errors ? "border-accent" : "border-line",
           )}
         >

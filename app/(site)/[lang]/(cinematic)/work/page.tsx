@@ -34,8 +34,9 @@ export default async function WorkPage({ params, searchParams }: PageProps<"/[la
   return (
     <main>
       {/* snap-start: the page snaps to its slides, and without this it would skip the title. */}
-      <header className={cn("snap-start pb-10 md:pb-12", pageGutter, floatingBarInset, pageTop)}>
-        <div className="mx-auto max-w-6xl">
+      {/* The gutter is inside the max-width box, as on the other pages, so the title lines up with theirs. */}
+      <header className={cn("snap-start pb-10 md:pb-12", floatingBarInset, pageTop)}>
+        <div className={cn("mx-auto max-w-6xl", pageGutter)}>
           <PageTitle title={work.title} tagline={text.workTagline} />
           {text.workIntro && <p className="mt-4 max-w-2xl text-lg text-fg-muted">{text.workIntro}</p>}
           <Suspense fallback={<FiltersSkeleton />}>
@@ -100,9 +101,7 @@ async function Projects({ lang, searchParams }: { lang: Locale; searchParams: Pa
   if (projects.length === 0) {
     return (
       // Under the heading, in line with it, like the other pages' empty states.
-      <div className={cn("pb-32", pageGutter)}>
-        <p className="mx-auto max-w-6xl text-fg-muted">{work.emptyAll}</p>
-      </div>
+      <p className={cn("mx-auto max-w-6xl pb-32 text-fg-muted", pageGutter)}>{work.emptyAll}</p>
     );
   }
 
