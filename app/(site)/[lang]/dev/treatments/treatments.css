@@ -1,0 +1,188 @@
+/*
+ * Design treatments (issue #50)
+ * -----------------------------
+ * Three looks for Fiú to compare on /dev/treatments. Everything here is scoped to a `[data-treatment]` wrapper, and only
+ * that page renders one, so the live site is untouched. A (expressive) declares none of the site tokens: it inherits
+ * them from globals.css, so it is always what is live.
+ *
+ * The rules are unlayered on purpose: they have to win over globals.css's base and components layers and the Tailwind
+ * utilities on the page (`rounded-full`, `font-display`), whatever their specificity.
+ *
+ * The site tokens are re-declared on nested surfaces and on glass over photography, like globals.css does, because
+ * custom properties resolve where they are declared.
+ */
+
+/* Page-local tokens, which the page's markup reads. */
+[data-treatment="expressive"] {
+  --radius-card: 24px;
+  --radius-field: 16px;
+  --motion-ms: 500ms;
+  --grade: none;
+  --grade-wash: transparent;
+  --marker: currentColor;
+}
+
+[data-treatment="middle"] {
+  --radius-card: 18px;
+  --radius-field: 12px;
+  --motion-ms: 300ms;
+  --grade: saturate(0.85) contrast(1.04);
+  --grade-wash: transparent;
+  --marker: currentColor;
+}
+
+[data-treatment="clinical"] {
+  --radius-card: 8px;
+  --radius-field: 6px;
+  --radius-pill: 6px;
+  --motion-ms: 150ms;
+  --grade: saturate(0.45) contrast(1.08) brightness(0.98);
+  --grade-wash: rgb(70 120 190 / 0.45);
+  --marker: var(--accent);
+}
+
+/* B: neutral, the warmth taken out. */
+[data-treatment="middle"],
+[data-treatment="middle"] [data-surface],
+[data-treatment="middle"] .glass-on-image {
+  --paper: #f2f2f0;
+  --ink: #0b0b0c;
+
+  --bg: light-dark(#f2f2f0, #0b0b0c);
+  --bg-raised: light-dark(#ffffff, #161618);
+  --fg: light-dark(#141415, #efefed);
+  --fg-muted: light-dark(#5c5c61, #a2a2a8);
+  --line: light-dark(rgb(20 20 21 / 0.12), rgb(255 255 255 / 0.12));
+  --skeleton: light-dark(rgb(20 20 21 / 0.1), #232326);
+  --accent: light-dark(#961a2b, #f5606f);
+  --on-accent: light-dark(#ffffff, #0b0b0c);
+
+  --glass-spec: light-dark(rgb(255 255 255 / 0.7), rgb(255 255 255 / 0.35));
+  --glass-spec-soft: light-dark(rgb(255 255 255 / 0.3), rgb(255 255 255 / 0.1));
+  --glass-shade: transparent;
+}
+
+/* C: cool greys, the maroon kept for what needs attention. */
+[data-treatment="clinical"],
+[data-treatment="clinical"] [data-surface],
+[data-treatment="clinical"] .glass-on-image {
+  --paper: #f3f5f7;
+  --ink: #0a0c0f;
+
+  --bg: light-dark(#f3f5f7, #0a0c0f);
+  --bg-raised: light-dark(#ffffff, #12161b);
+  --fg: light-dark(#0e1116, #e8ecf1);
+  --fg-muted: light-dark(#56606c, #939eab);
+  --line: light-dark(rgb(14 17 22 / 0.14), rgb(220 230 245 / 0.13));
+  --skeleton: light-dark(rgb(14 17 22 / 0.08), #1d222a);
+  --accent: light-dark(#a3122a, #ff5a6e);
+  --on-accent: light-dark(#ffffff, #0a0c0f);
+  --focus: var(--accent);
+
+  /* Flat glass: a hairline edge and nothing else. */
+  --glass-tint: light-dark(rgb(255 255 255 / 0.08), rgb(255 255 255 / 0.03));
+  --glass-tint-strong: light-dark(rgb(255 255 255 / 0.5), rgb(255 255 255 / 0.1));
+  --glass-edge: light-dark(rgb(14 17 22 / 0.24), rgb(220 230 245 / 0.26));
+  --glass-bevel: transparent;
+  --glass-bevel-strong: transparent;
+  --glass-spec: transparent;
+  --glass-spec-soft: transparent;
+  --glass-shade: transparent;
+}
+
+/* Type. A keeps the site's soft Fraunces; B turns the softness off; C swaps in a grotesk. */
+[data-treatment="middle"] .font-display {
+  font-weight: 500;
+  letter-spacing: -0.025em;
+  font-variation-settings:
+    "SOFT" 0,
+    "opsz" 144;
+}
+
+[data-treatment="clinical"] .font-display {
+  font-family: var(--font-grotesk), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  font-variation-settings: normal;
+}
+
+[data-treatment="clinical"] .eyebrow {
+  letter-spacing: 0.2em;
+}
+
+/* Italic accents: project titles (`t-title`) in A only, the slogan (`t-slogan`) in A and B. */
+[data-treatment="expressive"] :is(.t-title, .t-slogan),
+[data-treatment="middle"] .t-slogan {
+  font-style: italic;
+}
+
+/* Imagery grade: a filter on the still, and a wash laid over it. */
+[data-treatment] .t-still {
+  filter: var(--grade);
+}
+
+[data-treatment] .t-wash {
+  background: var(--grade-wash);
+  mix-blend-mode: soft-light;
+  pointer-events: none;
+}
+
+/* Glass. B: half the tilt, a quicker settle, a fainter glint. */
+[data-treatment="middle"] .glass-piece {
+  transform: perspective(600px) rotateX(calc(var(--ty, 0) * -2deg)) rotateY(calc(var(--tx, 0) * 3deg)) scale(var(--press));
+  transition-duration: 220ms;
+}
+
+[data-treatment="middle"] .glass::after {
+  background: radial-gradient(90px circle at var(--mx, 50%) var(--my, -20%), rgb(255 255 255 / 0.07), transparent 70%);
+}
+
+/* C: no lens, no glint, no tilt or press; square-ish pills; the current-page dot in the accent. */
+[data-treatment="clinical"] .glass {
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat)) brightness(var(--glass-dim));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat)) brightness(var(--glass-dim));
+  transition-duration: 120ms;
+  transition-timing-function: ease-out;
+}
+
+[data-treatment="clinical"] .glass::after {
+  display: none;
+}
+
+[data-treatment="clinical"] .glass-panel {
+  --glass-blur: 18px;
+  --glass-tint: light-dark(rgb(243 245 247 / 0.55), rgb(18 22 27 / 0.5));
+}
+
+[data-treatment="clinical"] .glass-piece {
+  border-radius: var(--radius-pill);
+  transform: none;
+}
+
+[data-treatment="clinical"] .glass-piece[aria-current="page"]::before,
+[data-treatment="clinical"] .glass-piece[data-filter][aria-pressed="true"]::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 5px;
+  width: 10px;
+  height: 1.5px;
+  margin-left: -5px;
+  border-radius: 0;
+  background: var(--accent);
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-treatment] .glass-piece {
+    transform: none;
+    transition: none;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  [data-treatment="clinical"] .glass {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
