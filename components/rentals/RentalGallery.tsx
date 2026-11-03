@@ -1,15 +1,18 @@
 "use client";
 
 import useEmblaCarousel from "embla-carousel-react";
-import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
 import { cn } from "@/lib/cn";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { format } from "@/lib/i18n/format";
 import type { RentalImage } from "@/sanity/lib/rentals";
 import { RentalImageView } from "./RentalImageView";
 
+/** How far (px) a pointer must travel sideways on the large view to count as a swipe. */
+const SWIPE_DISTANCE = 40;
+
 /**
- * The item page's photos: a swipeable large view with previous/next buttons, and a strip of
+ * The item page's photos: a swipeable large view that cross-fades, with previous/next buttons, and a strip of
  * thumbnails kept in sync with it. Arrow keys (and Home/End) work from the large view or from any thumbnail.
  */
 export function RentalGallery({ images, name, dict }: { images: RentalImage[]; name: string; dict: Dictionary["rentals"] }) {
@@ -30,26 +33,12 @@ export function RentalGallery({ images, name, dict }: { images: RentalImage[]; n
 }
 
 function Carousel({ images, name, dict }: { images: RentalImage[]; name: string; dict: Dictionary["rentals"] }) {
-  const [viewport, main] = useEmblaCarousel({
-    loop: true,
-    duration: 25,
-    breakpoints: { "(prefers-reduced-motion: reduce)": { duration: 0 } },
-  });
   const [stripViewport, strip] = useEmblaCarousel({ containScroll: "keepSnaps", dragFree: true });
   const [index, setIndex] = useState(0);
   // Which ends of the thumbnail strip have more to scroll to (the strip has no scrollbar, so we fade them instead).
   const [more, setMore] = useState({ start: false, end: false });
   const thumbs = useRef<(HTMLButtonElement | null)[]>([]);
-
-  useEffect(() => {
-    if (!main) return;
-    const sync = () => setIndex(main.selectedScrollSnap());
-    sync();
-    main.on("select", sync).on("reInit", sync);
-    return () => {
-      main.off("select", sync).off("reInit", sync);
-    };
-  }, [main]);
+  const swipeFrom = useRef<number | null>(null);
 
   useEffect(() => {
     if (!strip) return;
@@ -69,14 +58,18 @@ function Carousel({ images, name, dict }: { images: RentalImage[]; name: string;
     strip?.scrollTo(index);
   }, [strip, index]);
 
-  const select = useCallback(
-    (next: number) => {
-      const target = (next + images.length) % images.length;
-      main?.scrollTo(target);
-      return target;
-    },
-    [main, images.length],
-  );
+  function select(next: number) {
+    const target = (next + images.length) % images.length;
+    setIndex(target);
+    return target;
+  }
+
+  function onPointerUp(event: PointerEvent) {
+    if (swipeFrom.current === null) return;
+    const distance = event.clientX - swipeFrom.current;
+    swipeFrom.current = null;
+    if (Math.abs(distance) >= SWIPE_DISTANCE) select(index + (distance < 0 ? 1 : -1));
+  }
 
   function onKeyDown(event: KeyboardEvent) {
     const target =
@@ -105,8 +98,18 @@ function Carousel({ images, name, dict }: { images: RentalImage[]; name: string;
       className="flex flex-col gap-4"
     >
       <div tabIndex={0} className="relative rounded-3xl">
-        <div ref={viewport} className="touch-pan-y overflow-hidden rounded-3xl">
-          <div className="flex">
+        <div
+          onPointerDown={(event) => {
+            swipeFrom.current = event.clientX;
+          }}
+          onPointerUp={onPointerUp}
+          onPointerCancel={() => {
+            swipeFrom.current = null;
+          }}
+          onDragStart={(event) => event.preventDefault()}
+          className="touch-pan-y overflow-hidden rounded-3xl bg-white"
+        >
+          <div className="grid">
             {images.map((image, i) => (
               <div
                 key={image.src}
@@ -115,14 +118,18 @@ function Carousel({ images, name, dict }: { images: RentalImage[]; name: string;
                 aria-label={format(dict.photoOf, { n: i + 1, total: images.length })}
                 aria-hidden={i !== index}
                 inert={i !== index}
-                className="min-w-0 flex-[0_0_100%]"
+                className={cn(
+                  "col-start-1 row-start-1 transition-opacity duration-500 ease-[cubic-bezier(0.2,0.7,0.2,1)] motion-reduce:transition-none",
+                  i === index ? "opacity-100" : "opacity-0",
+                )}
               >
                 <RentalImageView
                   image={image}
                   placeholder={dict.noImage}
                   sizes="(min-width: 1024px) 50vw, 100vw"
                   priority={i === 0}
-                  className="aspect-[4/3] w-full rounded-3xl"
+                  loading={isNear(i, index, images.length) ? "eager" : undefined}
+                  className="aspect-[4/3] w-full"
                 />
               </div>
             ))}
@@ -164,6 +171,12 @@ function Carousel({ images, name, dict }: { images: RentalImage[]; name: string;
       </div>
     </div>
   );
+}
+
+/** Whether slide `i` is the current slide or one step either side of it (wrapping), so it is loaded before it fades in. */
+function isNear(i: number, current: number, total: number) {
+  const gap = Math.abs(i - current);
+  return Math.min(gap, total - gap) <= 1;
 }
 
 /** Fades the strip's edges where more thumbnails are hidden. */

@@ -11,12 +11,14 @@ export function RentalImageView({
   placeholder,
   sizes,
   priority,
+  loading,
   className,
 }: {
   image: RentalImage | null;
   placeholder: string;
   sizes: string;
   priority?: boolean;
+  loading?: "eager" | "lazy";
   className?: string;
 }) {
   if (!image) {
@@ -32,6 +34,7 @@ export function RentalImageView({
       alt={image.alt}
       sizes={sizes}
       priority={priority}
+      loading={loading}
       placeholder={image.blurDataURL ? "blur" : "empty"}
       blurDataURL={image.blurDataURL}
       className={cn("bg-white object-contain", className)}
