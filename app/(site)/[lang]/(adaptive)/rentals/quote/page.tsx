@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { pageGutter } from "@/components/nav/rail";
 import { QuoteFormSkeleton } from "@/components/forms/FormSkeleton";
+import { cn } from "@/lib/cn";
 import { isLocale, languageAlternates } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getPageText } from "@/sanity/lib/pageText";
@@ -19,7 +21,7 @@ export default async function QuotePage({ params }: PageProps<"/[lang]/rentals/q
   if (!isLocale(lang)) notFound();
   const [{ quote, basket, forms, common, dates }, text] = await Promise.all([getDictionary(lang), getPageText(lang)]);
   return (
-    <main className="mx-auto max-w-6xl px-4 pb-32 md:px-6">
+    <main className={cn("mx-auto max-w-6xl pb-32", pageGutter)}>
       <header className="mb-10">
         <h1 className="font-display text-5xl md:text-6xl">{quote.title}</h1>
         {text.quoteIntro && <p className="mt-4 max-w-2xl text-lg text-fg-muted">{text.quoteIntro}</p>}

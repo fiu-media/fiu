@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { siInstagram } from "simple-icons";
 import { Suspense, type ComponentProps } from "react";
+import { pageGutter } from "@/components/nav/rail";
 import { FormSkeleton } from "@/components/forms/FormSkeleton";
 import { BrandIcon } from "@/components/ui/BrandIcon";
 import { PageTitle } from "@/components/ui/PageTitle";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { cn } from "@/lib/cn";
 import { defaultLocale, isLocale, languageAlternates, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { instagramHandle } from "@/lib/instagram";
@@ -26,7 +28,7 @@ export default async function ContactPage({ params }: PageProps<"/[lang]/contact
   if (!isLocale(lang)) notFound();
   const [{ contact, forms, common }, text] = await Promise.all([getDictionary(lang), getPageText(lang)]);
   return (
-    <main className="mx-auto grid max-w-6xl gap-12 px-4 pb-32 md:px-6 lg:grid-cols-[3fr_2fr]">
+    <main className={cn("mx-auto grid max-w-6xl gap-12 pb-32 lg:grid-cols-[3fr_2fr]", pageGutter)}>
       <div>
         <header className="mb-10">
           <PageTitle title={contact.title} tagline={text.contactTagline} />

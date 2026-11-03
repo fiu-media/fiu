@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { pageGutter } from "@/components/nav/rail";
 import { CatalogueSkeleton } from "@/components/rentals/RentalSkeletons";
 import { RentalCatalogue, type CatalogueCard } from "@/components/rentals/RentalCatalogue";
 import { PageTitle } from "@/components/ui/PageTitle";
+import { cn } from "@/lib/cn";
 import { defaultLocale, isLocale, languageAlternates, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
@@ -23,7 +25,7 @@ export default async function RentalsPage({ params }: PageProps<"/[lang]/rentals
   if (!isLocale(lang)) notFound();
   const [{ rentals, common }, text] = await Promise.all([getDictionary(lang), getPageText(lang)]);
   return (
-    <main className="mx-auto max-w-6xl px-4 pb-32 md:px-6">
+    <main className={cn("mx-auto max-w-6xl pb-32", pageGutter)}>
       <header className="mb-10">
         <PageTitle title={rentals.title} tagline={text.rentalsTagline} />
         {text.rentalsIntro && <p className="mt-4 max-w-2xl text-lg text-fg-muted">{text.rentalsIntro}</p>}

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { floatingBarInset, pageGutter, pageTop } from "@/components/nav/rail";
 import { FullBleedScroll } from "@/components/ui/FullBleedScroll";
 import { GlassPillLink } from "@/components/ui/Glass";
 import { PageTitle } from "@/components/ui/PageTitle";
@@ -33,7 +34,7 @@ export default async function WorkPage({ params, searchParams }: PageProps<"/[la
   return (
     <main>
       {/* snap-start: the page snaps to its slides, and without this it would skip the title. */}
-      <header className="snap-start px-4 pt-24 pb-10 md:px-6 md:pt-16 md:pb-12">
+      <header className={cn("snap-start pb-10 md:pb-12", pageGutter, floatingBarInset, pageTop)}>
         <div className="mx-auto max-w-6xl">
           <PageTitle title={work.title} tagline={text.workTagline} />
           {text.workIntro && <p className="mt-4 max-w-2xl text-lg text-fg-muted">{text.workIntro}</p>}

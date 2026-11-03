@@ -1,5 +1,5 @@
 import { SiteNav } from "@/components/nav/SiteNav";
-import { railInset } from "@/components/nav/rail";
+import { pageGutter, railInset } from "@/components/nav/rail";
 import { NotFoundBackLink } from "@/components/NotFoundBackLink";
 import { cn } from "@/lib/cn";
 import type { Locale } from "@/lib/i18n/config";
@@ -43,7 +43,7 @@ export async function NotFoundPage({
         <div className="absolute inset-0 bg-gradient-to-t from-ink/80 to-transparent" />
       </div>
       <SiteNav lang={lang} onImage />
-      <main className="flex flex-1 flex-col justify-center gap-6 px-6 pt-24 pb-14 md:px-12 md:pt-0">
+      <main className={cn("flex flex-1 flex-col justify-center gap-6 pt-24 pb-14 md:pt-0", pageGutter)}>
         <p className="text-xs font-medium tracking-[0.14em] text-fg-muted uppercase">{copy.eyebrow}</p>
         <h1 className="max-w-3xl font-display text-5xl leading-[1.02] md:text-8xl">{copy.heading}</h1>
         <p className="max-w-md text-base text-fg-muted md:text-lg">{copy.body}</p>
