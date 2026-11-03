@@ -8,7 +8,7 @@ import { clickUntil } from "./helpers";
  * Axe's automated rules catch roughly a third of WCAG problems, so a pass is a floor, not a
  * verdict (manual review lives in #11). Any violation fails the test.
  */
-const PAGES = ["/", "/about", "/work", "/talent", "/rentals", "/rentals/quote", "/contact", "/contact?type=Talent"];
+const PAGES = ["/about", "/work", "/talent", "/rentals", "/rentals/quote", "/contact", "/contact?type=Talent"];
 
 async function firstLink(page: Page, listing: string, prefix: string, exclude: string[] = []) {
   await page.goto(listing);
@@ -40,6 +40,16 @@ for (const path of PAGES) {
     await audit(page, path);
   });
 }
+
+test.describe("home", () => {
+  // The live hero is a WebGL scene. On CI's software renderer it saturates the main thread and axe never
+  // finishes, so audit the static hero reduced-motion visitors get (HomeHero's "static" mode).
+  test.use({ reducedMotion: "reduce" });
+
+  test("axe: /", async ({ page }) => {
+    await audit(page, "/");
+  });
+});
 
 test("axe: a rental item page", async ({ page }) => {
   const href = await firstLink(page, "/rentals", "/rentals/", ["/rentals/quote"]);
