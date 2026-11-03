@@ -24,3 +24,9 @@ export function nudgeHomeScroll() {
 export function homeIsLocked() {
   return document.documentElement.hasAttribute("data-home-lock");
 }
+
+/** Nudges now and twice more over the next 300 ms, for when a single nudge lands before Safari has painted the change. */
+export function nudgeHomeScrollRepeatedly() {
+  nudgeHomeScroll();
+  for (const delay of [120, 300]) window.setTimeout(nudgeHomeScroll, delay);
+}
