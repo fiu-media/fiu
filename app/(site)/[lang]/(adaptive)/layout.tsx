@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { railInset } from "@/components/nav/rail";
+import { pageTop, railInset } from "@/components/nav/rail";
 import { SiteNav } from "@/components/nav/SiteNav";
 import { cn } from "@/lib/cn";
 import { isLocale } from "@/lib/i18n/config";
@@ -9,10 +9,7 @@ export default async function AdaptiveLayout({ children, params }: LayoutProps<"
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
   return (
-    <div
-      data-surface="adaptive"
-      className={cn("min-h-dvh bg-bg text-fg md:pt-[max(2.5rem,env(safe-area-inset-top))]", railInset)}
-    >
+    <div data-surface="adaptive" className={cn("min-h-dvh bg-bg text-fg", pageTop, railInset)}>
       <SiteNav lang={lang} />
       {children}
     </div>

@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { floatingBarInset, pageGutter, pageTop } from "@/components/nav/rail";
 import { FullBleedScroll } from "@/components/ui/FullBleedScroll";
 import { GlassPillLink } from "@/components/ui/Glass";
 import { PageTitle } from "@/components/ui/PageTitle";
-import { Skeleton } from "@/components/ui/Skeleton";
+import { FullScreenSkeleton, Skeleton } from "@/components/ui/Skeleton";
 import { ProjectSlide } from "@/components/work/ProjectSlide";
 import { SlideProgress } from "@/components/work/SlideProgress";
 import { cn } from "@/lib/cn";
@@ -33,8 +34,9 @@ export default async function WorkPage({ params, searchParams }: PageProps<"/[la
   return (
     <main>
       {/* snap-start: the page snaps to its slides, and without this it would skip the title. */}
-      <header className="snap-start px-4 pt-24 pb-10 md:px-6 md:pt-16 md:pb-12">
-        <div className="mx-auto max-w-6xl">
+      {/* The gutter is inside the max-width box, as on the other pages, so the title lines up with theirs. */}
+      <header className={cn("snap-start pb-10 md:pb-12", floatingBarInset, pageTop)}>
+        <div className={cn("mx-auto max-w-6xl", pageGutter)}>
           <PageTitle title={work.title} tagline={text.workTagline} />
           {text.workIntro && <p className="mt-4 max-w-2xl text-lg text-fg-muted">{text.workIntro}</p>}
           <Suspense fallback={<FiltersSkeleton />}>
@@ -43,7 +45,7 @@ export default async function WorkPage({ params, searchParams }: PageProps<"/[la
         </div>
       </header>
       {/* ?type= and draft mode are dynamic, so the slides stream in behind a full-screen placeholder. */}
-      <Suspense fallback={<WorkSkeleton label={common.loading} />}>
+      <Suspense fallback={<FullScreenSkeleton label={common.loading} />}>
         <Projects lang={lang} searchParams={searchParams} />
       </Suspense>
     </main>
@@ -98,9 +100,8 @@ async function Projects({ lang, searchParams }: { lang: Locale; searchParams: Pa
 
   if (projects.length === 0) {
     return (
-      <div className="grid place-items-center px-6 py-24 text-center">
-        <p className="text-fg-muted">{work.emptyAll}</p>
-      </div>
+      // Under the heading, in line with it, like the other pages' empty states.
+      <p className={cn("mx-auto max-w-6xl pb-32 text-fg-muted", pageGutter)}>{work.emptyAll}</p>
     );
   }
 
@@ -141,15 +142,6 @@ function FiltersSkeleton() {
       {["w-14", "w-24", "w-20", "w-28"].map((width, i) => (
         <Skeleton key={i} className={cn("h-8 rounded-full", width)} />
       ))}
-    </div>
-  );
-}
-
-function WorkSkeleton({ label }: { label: string }) {
-  return (
-    <div role="status" aria-busy className="h-dvh">
-      <span className="sr-only">{label}</span>
-      <Skeleton className="size-full rounded-none" />
     </div>
   );
 }

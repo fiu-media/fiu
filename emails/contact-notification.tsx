@@ -5,13 +5,14 @@ import { Layout, present } from "./_layout";
 /** `talent` is the names of the people the visitor asked about. */
 export type ContactEmailData = { name: string; email: string; enquiryType: string; talent: string[]; message: string };
 
-type Props = { emails: Dictionary["emails"]; data: ContactEmailData; studioUrl: string };
+type Props = { emails: Dictionary["emails"]; data: ContactEmailData; studioUrl: string; siteUrl: string };
 
-export default function ContactNotification({ emails, data, studioUrl }: Props) {
+export default function ContactNotification({ emails, data, studioUrl, siteUrl }: Props) {
   const l = emails.labels;
   return (
     <Layout
       heading={emails.contactNotify.heading}
+      siteUrl={siteUrl}
       rows={present([
         [l.name, data.name],
         [l.email, data.email],
@@ -26,6 +27,7 @@ export default function ContactNotification({ emails, data, studioUrl }: Props) 
 
 ContactNotification.PreviewProps = {
   emails: en.emails,
+  siteUrl: "http://localhost:3000",
   studioUrl: "http://localhost:3000/studio/intent/edit/id=abc;type=contactMessage/",
   data: {
     name: "Aoife Ní Bhriain",

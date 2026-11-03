@@ -5,10 +5,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { floatingBarInset, pageGutter, pageTop } from "@/components/nav/rail";
 import { FullBleedScroll } from "@/components/ui/FullBleedScroll";
 import { GlassPillLink } from "@/components/ui/Glass";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ProjectSlide } from "@/components/work/ProjectSlide";
+import { cn } from "@/lib/cn";
 import { contactHref } from "@/lib/forms/prefill";
 import { defaultLocale, isLocale, languageAlternates, localizedPath, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
@@ -82,12 +84,9 @@ async function Profile({ lang, slug }: { lang: string; slug: string }) {
   return (
     <>
       {/* snap-start: the page snaps to its slides, and without this it would skip the bio. */}
-      <section className="snap-start px-4 pt-24 pb-16 md:px-6 md:pt-16 md:pb-12">
+      <section className={cn("snap-start pb-16 md:pb-12", pageGutter, floatingBarInset, pageTop)}>
         <div className="mx-auto mb-6 max-w-6xl">
-          <Link
-            href={localizedPath(lang, "/talent")}
-            className="inline-flex items-center gap-1.5 text-sm text-fg-muted underline-offset-4 hover:text-fg hover:underline"
-          >
+          <Link href={localizedPath(lang, "/talent")} className="inline-flex items-center gap-1.5 text-sm link-quiet">
             <ArrowLeft aria-hidden className="size-4" />
             {talent.back}
           </Link>
@@ -116,10 +115,10 @@ async function Profile({ lang, slug }: { lang: string; slug: string }) {
 
           <div className="flex flex-col items-start gap-6">
             <header>
-              {roles && <p className="text-xs font-medium tracking-[0.14em] text-fg-muted uppercase">{roles}</p>}
+              {roles && <p className="eyebrow">{roles}</p>}
               <h1
                 data-sanity={talentAttribute(profile._id, "name")}
-                className="mt-2 font-display text-5xl text-balance md:text-7xl"
+                className="mt-2 font-display text-5xl text-balance italic md:text-7xl"
               >
                 {profile.name}
               </h1>
@@ -139,10 +138,7 @@ async function Profile({ lang, slug }: { lang: string; slug: string }) {
                 </GlassPillLink>
               )}
               {projects.length > 0 && (
-                <a
-                  href="#work"
-                  className="inline-flex items-center gap-1.5 text-sm text-fg-muted underline-offset-4 hover:text-fg hover:underline"
-                >
+                <a href="#work" className="inline-flex items-center gap-1.5 text-sm link-quiet">
                   {workLabel}
                   <ArrowDown aria-hidden className="size-4" />
                 </a>
@@ -176,7 +172,7 @@ async function Profile({ lang, slug }: { lang: string; slug: string }) {
 /** Same footprint as the profile's first screen: back link, portrait beside the name, bio and button. */
 function ProfileSkeleton() {
   return (
-    <section aria-hidden className="px-4 pt-24 pb-16 md:px-6 md:pt-16 md:pb-12">
+    <section aria-hidden className={cn("pb-16 md:pb-12", pageGutter, floatingBarInset, pageTop)}>
       <div className="mx-auto mb-6 max-w-6xl">
         <Skeleton className="h-5 w-28" />
       </div>

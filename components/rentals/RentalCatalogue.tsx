@@ -55,11 +55,11 @@ export function RentalCatalogue({
           onValueChange={([next]) => next !== undefined && setRequested(next === ALL ? null : next)}
           className="mb-8 flex flex-wrap gap-2"
         >
-          <Toggle value={ALL} render={<GlassPillButton size="sm" />}>
+          <Toggle value={ALL} data-filter="" render={<GlassPillButton size="sm" />}>
             {dict.allCategories}
           </Toggle>
           {usable.map((c) => (
-            <Toggle key={c.id} value={c.id} render={<GlassPillButton size="sm" />}>
+            <Toggle key={c.id} value={c.id} data-filter="" render={<GlassPillButton size="sm" />}>
               {c.title}
             </Toggle>
           ))}
@@ -97,9 +97,9 @@ function ItemCard({ lang, item, dict }: { lang: Locale; item: CatalogueCard; dic
       </Link>
       <div className="flex flex-1 flex-col gap-3 p-5">
         <div>
-          {item.brand && <p className="text-xs font-medium tracking-wide text-fg-muted uppercase">{item.brand}</p>}
+          {item.brand && <p className="eyebrow">{item.brand}</p>}
           <h3 className="font-display text-2xl leading-tight">
-            <Link href={href} className="hover:underline">
+            <Link href={href} className="underline-offset-4 hover:underline">
               {item.name}
             </Link>
           </h3>
@@ -107,7 +107,7 @@ function ItemCard({ lang, item, dict }: { lang: Locale; item: CatalogueCard; dic
         {item.summary && <p className="text-sm text-fg-muted">{item.summary}</p>}
         <div className="mt-auto flex flex-wrap items-center gap-2 pt-2">
           <AddToQuote itemId={item.id} itemName={item.name} dict={dict} size="sm" />
-          <Link href={href} className="px-2 text-sm text-fg-muted underline-offset-4 hover:text-fg hover:underline">
+          <Link href={href} className="px-2 text-sm link-quiet">
             {dict.viewDetails}
           </Link>
         </div>

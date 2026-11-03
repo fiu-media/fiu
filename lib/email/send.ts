@@ -15,6 +15,8 @@ export const plainTextOptions = {
       { selector: "h1", options: { uppercase: false } },
       { selector: "h2", options: { uppercase: false } },
       { selector: "table", format: "dataTable" },
+      // The logo is an image link home; as text it would only open the email with a bare URL.
+      { selector: "a.logo", format: "skip" },
     ],
   },
 } as const;

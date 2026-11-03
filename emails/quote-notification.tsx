@@ -17,9 +17,15 @@ export type QuoteEmailData = {
   kit: KitLine[];
 };
 
-type Props = { emails: Dictionary["emails"]; dates: Dictionary["dates"]; data: QuoteEmailData; studioUrl: string };
+type Props = {
+  emails: Dictionary["emails"];
+  dates: Dictionary["dates"];
+  data: QuoteEmailData;
+  studioUrl: string;
+  siteUrl: string;
+};
 
-export default function QuoteNotification({ emails, dates, data, studioUrl }: Props) {
+export default function QuoteNotification({ emails, dates, data, studioUrl, siteUrl }: Props) {
   const l = emails.labels;
   const rows = present([
     [l.name, data.name],
@@ -33,6 +39,7 @@ export default function QuoteNotification({ emails, dates, data, studioUrl }: Pr
   return (
     <Layout
       heading={emails.quoteNotify.heading}
+      siteUrl={siteUrl}
       rows={rows}
       kit={data.kit}
       kitLabel={l.kit}
@@ -43,6 +50,7 @@ export default function QuoteNotification({ emails, dates, data, studioUrl }: Pr
 
 QuoteNotification.PreviewProps = {
   emails: en.emails,
+  siteUrl: "http://localhost:3000",
   dates: en.dates,
   studioUrl: "http://localhost:3000/studio/intent/edit/id=abc;type=quoteRequest/",
   data: {

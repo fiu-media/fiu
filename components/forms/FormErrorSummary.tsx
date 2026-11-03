@@ -56,7 +56,7 @@ export function FormErrorSummary({
           <ul className="mt-2 list-disc space-y-1 pl-5">
             {items.map((item) => (
               <li key={item.name}>
-                <a href={`#${form.getField(item.name).id}`} className="underline underline-offset-2">
+                <a href={`#${form.getField(item.name).id}`} className="link-inline">
                   {item.label}
                 </a>
                 : {item.message}

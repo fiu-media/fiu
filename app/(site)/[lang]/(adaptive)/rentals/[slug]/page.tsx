@@ -3,9 +3,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { pageGutter } from "@/components/nav/rail";
 import { DetailAddToQuote } from "@/components/rentals/DetailAddToQuote";
 import { ItemSkeleton } from "@/components/rentals/RentalSkeletons";
 import { RentalGallery } from "@/components/rentals/RentalGallery";
+import { cn } from "@/lib/cn";
 import { defaultLocale, isLocale, languageAlternates, localizedPath, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
@@ -39,7 +41,7 @@ export async function generateMetadata({ params }: PageProps<"/[lang]/rentals/[s
 export default function RentalItemPage({ params }: PageProps<"/[lang]/rentals/[slug]">) {
   // Slugs are only known at runtime, so the item streams in behind a Suspense boundary.
   return (
-    <main className="mx-auto max-w-6xl px-4 pb-32 md:px-6">
+    <main className={cn("mx-auto max-w-6xl pb-32", pageGutter)}>
       <Suspense fallback={<ItemSkeleton />}>
         {params.then((p) => (
           <Item lang={p.lang} slug={p.slug} />
@@ -61,10 +63,7 @@ async function Item({ lang, slug }: { lang: string; slug: string }) {
 
   return (
     <article>
-      <Link
-        href={localizedPath(lang, "/rentals")}
-        className="inline-flex items-center gap-1.5 text-sm text-fg-muted underline-offset-4 hover:text-fg hover:underline"
-      >
+      <Link href={localizedPath(lang, "/rentals")} className="inline-flex items-center gap-1.5 text-sm link-quiet">
         <ArrowLeft aria-hidden className="size-4" />
         {rentals.backToRentals}
       </Link>
@@ -74,7 +73,7 @@ async function Item({ lang, slug }: { lang: string; slug: string }) {
 
         <div className="flex flex-col gap-8">
           <header>
-            {item.brand && <p className="text-xs font-medium tracking-wide text-fg-muted uppercase">{item.brand}</p>}
+            {item.brand && <p className="eyebrow">{item.brand}</p>}
             <h1 className="font-display text-4xl md:text-5xl">{item.name}</h1>
             {item.category && <p className="mt-2 text-fg-muted">{item.category.title}</p>}
             {item.summary && <p className="mt-4 text-lg">{item.summary}</p>}

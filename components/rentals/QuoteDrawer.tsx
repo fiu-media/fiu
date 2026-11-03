@@ -30,7 +30,7 @@ export function QuoteDrawer({ lang, dict }: { lang: Locale; dict: Dictionary["ba
           <span>{dict.title}</span>
           <span
             aria-hidden
-            className="grid min-w-6 place-items-center rounded-full bg-accent px-1.5 text-xs font-bold text-white"
+            className="grid min-w-6 place-items-center rounded-full bg-accent px-1.5 text-xs font-bold text-on-accent"
           >
             {count}
           </span>

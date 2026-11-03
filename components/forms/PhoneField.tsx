@@ -6,7 +6,7 @@ import { getCountries, type CountryCode } from "libphonenumber-js/min";
 import { useLayoutEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import { cn } from "@/lib/cn";
 import { callingCode, caretWithDigitsAfter, digitsIn, initial, interpret } from "@/lib/forms/phone";
-import { controlClass, FieldFrame, placeholderClass, type FieldProps } from "./Field";
+import { chevron, controlClass, FieldFrame, placeholderClass, type FieldProps } from "./Field";
 
 /** What an example looks like, as the number input shows it (no trunk 0, no dialling code). */
 const SAMPLE: Partial<Record<CountryCode, string>> = { IE: "(83) 123 4567" };
@@ -102,7 +102,7 @@ export function PhoneField({
             {countries.all.map(option)}
           </select>
           {Flag && <Flag aria-hidden className="h-4 w-6 rounded-[2px] ring-1 ring-line" />}
-          <span aria-hidden className="size-1.5 -translate-y-px rotate-45 border-r border-b border-fg/50" />
+          {chevron}
         </div>
         <span className="mr-3 cursor-default border-r border-line pr-3 text-fg-muted select-none">+{callingCode(country)}</span>
         <input

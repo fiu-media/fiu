@@ -1,3 +1,4 @@
+import { ArrowDown } from "lucide-react";
 import Image from "next/image";
 import type { ReactNode } from "react";
 import { GlassPanel } from "@/components/ui/Glass";
@@ -52,15 +53,14 @@ export function AboutLayoutA({ still, slogan, gloss, manifesto, contacts, footer
           {slogan}
         </h1>
         {gloss && <p className="mt-4 max-w-xl text-base text-white/80 md:text-lg">{gloss}</p>}
-        <p aria-hidden className="mt-8 text-sm text-white/60">
-          ↓
-        </p>
+        <ArrowDown aria-hidden className="mt-8 size-5 text-white/60" />
       </section>
 
-      <section className="relative bg-ink px-5 py-24 md:px-10 md:py-36">
+      {/* Plain dark from here, so the surface's colours rather than the white kept for text over the photo. */}
+      <section className="relative bg-ink px-5 py-24 text-fg md:px-10 md:py-36">
         <div className="mx-auto flex max-w-3xl flex-col gap-14">
           {manifesto && (
-            <div data-sanity={attributes?.manifesto} className="space-y-6 text-xl leading-relaxed text-white/85 md:text-2xl">
+            <div data-sanity={attributes?.manifesto} className="space-y-6 text-xl leading-relaxed text-fg/90 md:text-2xl">
               {manifesto}
             </div>
           )}

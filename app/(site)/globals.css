@@ -51,6 +51,8 @@
     --line: light-dark(rgb(21 19 22 / 0.12), rgb(255 255 255 / 0.12));
     --skeleton: light-dark(rgb(21 19 22 / 0.1), #24222a);
     --accent: light-dark(#a3122a, #ff5a6e);
+    /* Text on an accent fill. The dark accent is too light for white text to pass AA, so it takes ink. */
+    --on-accent: light-dark(#ffffff, #0c0b0d);
     --focus: light-dark(#1d4ed8, #8ab4ff);
 
     /*
@@ -83,6 +85,7 @@ html:has([data-snap="mandatory"]) {
   --color-line: var(--line);
   --color-skeleton: var(--skeleton);
   --color-accent: var(--accent);
+  --color-on-accent: var(--on-accent);
   --color-paper: var(--paper);
   --color-ink: var(--ink);
 
@@ -122,6 +125,36 @@ body {
   font-variation-settings:
     "SOFT" 100,
     "opsz" 144;
+}
+
+/* Small spaced capitals above a heading: a brand, a person's roles, "404". */
+@utility eyebrow {
+  @apply text-xs font-medium tracking-[0.14em] text-fg-muted uppercase;
+}
+
+/* A link that stays out of the way until it is hovered: back links, "View details". */
+@utility link-quiet {
+  color: var(--fg-muted);
+  text-underline-offset: 4px;
+  @media (hover: hover) {
+    &:hover {
+      color: var(--fg);
+      text-decoration-line: underline;
+    }
+  }
+}
+
+/* A link inside content (an email address, an error summary): always underlined, the line firming up on hover. */
+@utility link-inline {
+  text-decoration-line: underline;
+  text-decoration-color: color-mix(in oklab, currentColor 40%, transparent);
+  text-underline-offset: 4px;
+  transition: text-decoration-color 150ms ease;
+  @media (hover: hover) {
+    &:hover {
+      text-decoration-color: currentColor;
+    }
+  }
 }
 
 :focus-visible {
@@ -223,8 +256,10 @@ body {
     --press: 0.97;
   }
 
-  /* Current page: a small dot under the label. The material does the rest. */
-  .glass-piece[aria-current="page"]::before {
+  /* Current page, or the chosen filter: a small dot under the label. The material does the rest. Filters that are
+     toggles (`data-filter`) get it too, so they match the ones that are links; other pressed pills (Add to quote) don't. */
+  .glass-piece[aria-current="page"]::before,
+  .glass-piece[data-filter][aria-pressed="true"]::before {
     content: "";
     position: absolute;
     left: 50%;

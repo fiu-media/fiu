@@ -5,6 +5,7 @@ import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import ContactNotification, { type ContactEmailData } from "@/emails/contact-notification";
 import QuoteConfirmation from "@/emails/quote-confirmation";
 import QuoteNotification, { type QuoteEmailData } from "@/emails/quote-notification";
+import { siteOrigin } from "./studio-link";
 
 export type { KitLine } from "@/emails/_layout";
 export type { QuoteEmailData };
@@ -13,7 +14,7 @@ export function quoteNotification(dict: Dictionary, data: QuoteEmailData, studio
   const { emails } = dict;
   return {
     subject: format(emails.quoteNotify.subject, { name: data.name, count: data.kit.length }, lang),
-    react: <QuoteNotification emails={emails} dates={dict.dates} data={data} studioUrl={studioUrl} />,
+    react: <QuoteNotification emails={emails} dates={dict.dates} data={data} studioUrl={studioUrl} siteUrl={siteOrigin()} />,
   };
 }
 
@@ -21,7 +22,7 @@ export function quoteConfirmation(dict: Dictionary, data: QuoteEmailData) {
   const { emails } = dict;
   return {
     subject: emails.quoteConfirm.subject,
-    react: <QuoteConfirmation emails={emails} dates={dict.dates} data={data} />,
+    react: <QuoteConfirmation emails={emails} dates={dict.dates} data={data} siteUrl={siteOrigin()} />,
   };
 }
 
@@ -29,6 +30,6 @@ export function contactNotification(dict: Dictionary, data: ContactEmailData, st
   const { emails } = dict;
   return {
     subject: format(emails.contactNotify.subject, { name: data.name, type: data.enquiryType }),
-    react: <ContactNotification emails={emails} data={data} studioUrl={studioUrl} />,
+    react: <ContactNotification emails={emails} data={data} studioUrl={studioUrl} siteUrl={siteOrigin()} />,
   };
 }
