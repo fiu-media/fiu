@@ -1,8 +1,10 @@
 "use client";
 
+import { LazyMotion, m, useSpring } from "motion/react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRef, useState } from "react";
+import { useReducedMotion } from "@/lib/reduced-motion";
 
 export type IndexItem = {
   title: string;
@@ -13,8 +15,13 @@ export type IndexItem = {
   image?: { src: string; width: number; height: number; blurDataURL?: string; position?: string } | null;
 };
 
+const loadMotionFeatures = () => import("./motion-features").then((module) => module.default);
+
+/** Soft enough to read as a glide, stiff enough that the preview never trails far behind the cursor. */
+const FOLLOW = { stiffness: 350, damping: 35 };
+
 /**
- * Big-type index list. On a fine pointer the row's image follows the cursor; the same preview
+ * Big-type index list. On a fine pointer the row's image follows the cursor on a spring; the same preview
  * appears beside a row on keyboard focus. Without a pointer to hover with, each row carries a
  * small thumbnail instead, so nothing depends on hover: every row is a plain link with its
  * meta text always visible.
@@ -32,13 +39,18 @@ export function NameIndex({
 }) {
   const box = useRef<HTMLUListElement>(null);
   const [active, setActive] = useState<number | null>(null);
+  const reduced = useReducedMotion();
+  const x = useSpring(0, FOLLOW);
+  const y = useSpring(0, FOLLOW);
 
-  function place(x: number, y: number) {
+  /** `snap` jumps there instead of gliding: used when the preview is hidden, so it never flies in from its last spot. */
+  function place(clientX: number, clientY: number, snap = false) {
     const el = box.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();
-    el.style.setProperty("--x", `${x - rect.left}px`);
-    el.style.setProperty("--y", `${y - rect.top}px`);
+    const move = snap || reduced ? "jump" : "set";
+    x[move](clientX - rect.left);
+    y[move](clientY - rect.top);
   }
 
   return (
@@ -59,15 +71,16 @@ export function NameIndex({
             style={{ opacity: active === null || active === i ? 1 : 0.35 }}
             onPointerEnter={(event) => {
               setActive(i);
-              place(event.clientX, event.clientY);
+              place(event.clientX, event.clientY, active === null);
             }}
             onPointerMove={(event) => place(event.clientX, event.clientY)}
             onFocus={(event) => {
+              const wasHidden = active === null;
               setActive(i);
               // A mouse click focuses the link too, but the preview should stay under the cursor then.
               if (!event.currentTarget.matches(":focus-visible")) return;
               const row = event.currentTarget.getBoundingClientRect();
-              place(row.right - previewWidth, row.top + row.height / 2);
+              place(row.right - previewWidth, row.top + row.height / 2, wasHidden);
             }}
           >
             {item.image && (
@@ -93,33 +106,31 @@ export function NameIndex({
         </li>
       ))}
 
-      <li
-        aria-hidden
-        className="pointer-events-none absolute top-0 left-0 z-10 hidden overflow-hidden rounded-xl border-0 transition-opacity duration-200 motion-reduce:transition-none md:pointer-fine:block"
-        style={{
-          width: previewWidth,
-          aspectRatio: ratio,
-          opacity: active === null ? 0 : 1,
-          // The preview is centred on the cursor, nudged right so it never hides the pointer.
-          transform: `translate(calc(var(--x, 0px) + 24px), calc(var(--y, 0px) - 50%))`,
-        }}
-      >
-        {items.map((item, i) =>
-          item.image ? (
-            <Image
-              key={item.href}
-              src={item.image.src}
-              alt=""
-              fill
-              sizes={`${previewWidth}px`}
-              placeholder={item.image.blurDataURL ? "blur" : "empty"}
-              blurDataURL={item.image.blurDataURL}
-              className="object-cover transition-opacity duration-200 motion-reduce:transition-none"
-              style={{ opacity: i === active ? 1 : 0, objectPosition: item.image.position }}
-            />
-          ) : null,
-        )}
-      </li>
+      {/* Centred on the cursor and nudged right so it never hides the pointer. Motion drives `transform` with the
+          spring; the nudge and the centring use the separate `margin` and `translate`, which compose with it. */}
+      <LazyMotion features={loadMotionFeatures}>
+        <m.li
+          aria-hidden
+          className="pointer-events-none absolute top-0 left-0 z-10 ml-6 hidden -translate-y-1/2 overflow-hidden rounded-xl border-0 transition-opacity duration-200 motion-reduce:transition-none md:pointer-fine:block"
+          style={{ x, y, width: previewWidth, aspectRatio: ratio, opacity: active === null ? 0 : 1 }}
+        >
+          {items.map((item, i) =>
+            item.image ? (
+              <Image
+                key={item.href}
+                src={item.image.src}
+                alt=""
+                fill
+                sizes={`${previewWidth}px`}
+                placeholder={item.image.blurDataURL ? "blur" : "empty"}
+                blurDataURL={item.image.blurDataURL}
+                className="object-cover transition-opacity duration-200 motion-reduce:transition-none"
+                style={{ opacity: i === active ? 1 : 0, objectPosition: item.image.position }}
+              />
+            ) : null,
+          )}
+        </m.li>
+      </LazyMotion>
     </ul>
   );
 }

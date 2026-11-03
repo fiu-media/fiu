@@ -27,15 +27,22 @@ test("choosing a link closes the menu and navigates", async ({ page }) => {
   await expect(dialog).toBeHidden();
 });
 
-test("leaving Home releases its mobile scroll lock", async ({ page }) => {
-  await page.goto("/");
-  const html = page.locator("html");
-  await expect(html).toHaveAttribute("data-home-lock", "");
+// Home runs its live WebGL logo unless motion is reduced. On a CI runner that is software-rendered, and it
+// starves the page's main thread, so the click on the menu link can stall past the test timeout. The scroll lock
+// has nothing to do with the scene, so this test runs against the static hero.
+test.describe("on Home", () => {
+  test.use({ reducedMotion: "reduce" });
 
-  await page.getByRole("button", { name: en.nav.menu }).first().click();
-  await page.getByRole("dialog", { name: en.nav.label }).getByRole("link", { name: en.nav.contact }).click();
-  await expect(page).toHaveURL(/\/contact$/);
+  test("leaving Home releases its mobile scroll lock", async ({ page }) => {
+    await page.goto("/");
+    const html = page.locator("html");
+    await expect(html).toHaveAttribute("data-home-lock", "");
 
-  await expect(html).not.toHaveAttribute("data-home-lock", "");
-  expect(await html.evaluate((el) => getComputedStyle(el).touchAction)).not.toBe("none");
+    await page.getByRole("button", { name: en.nav.menu }).first().click();
+    await page.getByRole("dialog", { name: en.nav.label }).getByRole("link", { name: en.nav.contact }).click();
+    await expect(page).toHaveURL(/\/contact$/);
+
+    await expect(html).not.toHaveAttribute("data-home-lock", "");
+    expect(await html.evaluate((el) => getComputedStyle(el).touchAction)).not.toBe("none");
+  });
 });

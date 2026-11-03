@@ -2,11 +2,12 @@
 
 import { Play } from "lucide-react";
 import Image from "next/image";
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { FullBleedSlide } from "@/components/ui/FullBleedScroll";
 import { GlassPillButton } from "@/components/ui/Glass";
 import { cn } from "@/lib/cn";
 import { format } from "@/lib/i18n/format";
+import { useReducedMotion } from "@/lib/reduced-motion";
 import { parseVimeo, vimeoEmbedUrl } from "@/lib/vimeo";
 import { useVimeoPlayer } from "./useVimeoPlayer";
 
@@ -43,20 +44,6 @@ export type ProjectSlideProps = {
 const ACTIVE_RATIO = 0.6;
 const LEFT_RATIO = 0.25;
 
-function subscribeToMotionPreference(onChange: () => void) {
-  const query = window.matchMedia("(prefers-reduced-motion: reduce)");
-  query.addEventListener("change", onChange);
-  return () => query.removeEventListener("change", onChange);
-}
-
-function usePrefersReducedMotion() {
-  return useSyncExternalStore(
-    subscribeToMotionPreference,
-    () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
-    () => true,
-  );
-}
-
 /**
  * One full-bleed project: the cover still, a preview loop behind it when the project has one, and
  * a play button that swaps the Vimeo player into the slide. Without a Vimeo URL it is just the cover.
@@ -78,7 +65,7 @@ export function ProjectSlide({
   const away = useRef(false);
   const [onScreen, setOnScreen] = useState(false);
   const [playing, setPlaying] = useState(false);
-  const reducedMotion = usePrefersReducedMotion();
+  const reducedMotion = useReducedMotion();
 
   const video = parseVimeo(vimeoUrl);
   const loop = parseVimeo(previewLoopUrl);
