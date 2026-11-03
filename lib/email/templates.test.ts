@@ -51,6 +51,27 @@ describe("email templates", () => {
     expect(out).not.toContain(`${en.emails.labels.phone}`);
   });
 
+  it("links the visitor's email and phone with mailto: and tel:", async () => {
+    const quoteOut = await html(quoteNotification(en, { ...quote, phone: "+353 (87) 123-4567" }, "https://studio.test/"));
+    expect(quoteOut).toContain('href="mailto:a@example.com"');
+    expect(quoteOut).toContain('href="tel:+353871234567"');
+    // Shown the Irish way, with the first group in brackets; the link stays plain digits.
+    expect(quoteOut).toContain("+353 (87) 123 4567");
+    const contactOut = await html(
+      contactNotification(
+        en,
+        { name: "Aoife", email: "a@example.com", enquiryType: "Rentals", talent: [], message: "Hi" },
+        "https://studio.test/",
+      ),
+    );
+    expect(contactOut).toContain('href="mailto:a@example.com"');
+  });
+
+  it("does not link a phone number that has no digits", async () => {
+    const out = await html(quoteNotification(en, { ...quote, phone: "n/a" }, "https://studio.test/"));
+    expect(out).not.toContain('href="tel:');
+  });
+
   it("escapes the confirmation email", async () => {
     const out = await html(quoteConfirmation(en, quote));
     expect(out).not.toContain("<script>");

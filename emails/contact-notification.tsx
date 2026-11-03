@@ -1,6 +1,6 @@
 import type { Dictionary } from "../lib/i18n/dictionaries/en";
 import { en } from "../lib/i18n/dictionaries/en";
-import { Layout, present } from "./_layout";
+import { Layout, mailto, present } from "./_layout";
 
 /** `talent` is the names of the people the visitor asked about. */
 export type ContactEmailData = { name: string; email: string; enquiryType: string; talent: string[]; message: string };
@@ -15,7 +15,7 @@ export default function ContactNotification({ emails, data, studioUrl, siteUrl }
       siteUrl={siteUrl}
       rows={present([
         [l.name, data.name],
-        [l.email, data.email],
+        [l.email, data.email, mailto(data.email)],
         [l.enquiryType, data.enquiryType],
         [l.talent, data.talent.join(", ")],
         [l.message, data.message],

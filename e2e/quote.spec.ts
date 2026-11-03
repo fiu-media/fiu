@@ -52,7 +52,7 @@ test.describe("quote request", () => {
     ]) {
       await number.fill("");
       await number.pressSequentially(written);
-      await expect(number, written).toHaveValue("83 123 4567");
+      await expect(number, written).toHaveValue("(83) 123 4567");
       await expect(prefix).toHaveText("+353");
     }
 
@@ -68,13 +68,13 @@ test.describe("quote request", () => {
     const country = page.getByRole("combobox", { name: /country/i });
 
     await number.pressSequentially("831234567");
-    await expect(number).toHaveValue("83 123 4567");
+    await expect(number).toHaveValue("(83) 123 4567");
     await number.blur();
     await expect(number).not.toHaveAttribute("aria-invalid", "true");
 
     // Typing in the middle re-formats the number without throwing the caret to the end.
     await number.focus();
-    await number.evaluate((input: HTMLInputElement) => input.setSelectionRange(2, 2));
+    await number.evaluate((input: HTMLInputElement) => input.setSelectionRange(3, 3));
     await page.keyboard.type("90");
     await expect(number).toHaveValue("83901234567");
     expect(await number.evaluate((input: HTMLInputElement) => input.selectionStart)).toBe(4);

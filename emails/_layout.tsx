@@ -1,12 +1,22 @@
 import { Body, Button, Container, Head, Heading, Html, Img, Link, Preview, Text } from "@react-email/components";
 
-export type Row = [label: string, value: string];
+/** A row with an `href` renders its value as a link. */
+export type Row = [label: string, value: string, href?: string];
 export type KitLine = { name: string; brand?: string | null; qty: number };
 
 export const kitLineLabel = ({ name, brand, qty }: KitLine) => `${qty} × ${brand ? `${brand} ` : ""}${name}`;
 
 /** Rows without a value are left out. */
 export const present = (rows: Row[]) => rows.filter(([, value]) => value.trim() !== "");
+
+/** An empty value has nothing to link to, so it gets no href (and `present` drops the row anyway). */
+export const mailto = (email: string): string | undefined => (email.trim() ? `mailto:${email.trim()}` : undefined);
+
+/** Dialling needs only the digits and a leading +, not the spaces and brackets people type. */
+export const tel = (phone: string): string | undefined => {
+  const number = phone.trim().replace(/(?!^\+)\D/g, "");
+  return number ? `tel:${number}` : undefined;
+};
 
 /*
  * The site's light surface (globals.css), as plain hex: email clients don't read custom properties or light-dark().
@@ -89,7 +99,7 @@ export function Layout({ heading, rows, siteUrl, intro, kit, kitLabel, link, sig
           {intro ? <Text style={{ fontSize: 15, margin: "0 0 20px" }}>{intro}</Text> : null}
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <tbody>
-              {rows.map(([label, value]) => (
+              {rows.map(([label, value, href]) => (
                 <tr key={label}>
                   <td
                     style={{
@@ -102,7 +112,15 @@ export function Layout({ heading, rows, siteUrl, intro, kit, kitLabel, link, sig
                   >
                     {label}
                   </td>
-                  <td style={{ padding: "10px 0", borderTop: `1px solid ${colors.line}`, whiteSpace: "pre-wrap" }}>{value}</td>
+                  <td style={{ padding: "10px 0", borderTop: `1px solid ${colors.line}`, whiteSpace: "pre-wrap" }}>
+                    {href ? (
+                      <Link href={href} style={{ color: "inherit", textDecoration: "underline" }}>
+                        {value}
+                      </Link>
+                    ) : (
+                      value
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>

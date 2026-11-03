@@ -10,10 +10,21 @@ import {
 export const callingCode = (country: CountryCode) => getCountryCallingCode(country);
 export const digitsIn = (text: string) => text.replace(/\D/g, "").length;
 
-/** A number written in international form, as the input shows it: "+353 83 123 4567" → "83 123 4567". */
+/** Irish numbers set the first group, the mobile prefix or the area code, in brackets: "83 123 4567" → "(83) 123 4567". */
+const bracketAreaCode = (country: CountryCode, formatted: string) =>
+  country === "IE" ? formatted.replace(/^(\d{1,3}) /, "($1) ") : formatted;
+
+/** A number written in international form, as the input shows it: "+353 83 123 4567" → "(83) 123 4567". */
 function formatNational(country: CountryCode, national: string) {
   const prefix = `+${callingCode(country)}`;
-  return new AsYouType(country).input(`${prefix}${national}`).slice(prefix.length).trim();
+  return bracketAreaCode(country, new AsYouType(country).input(`${prefix}${national}`).slice(prefix.length).trim());
+}
+
+/** A stored E.164 number as people write it, with its dialling code: "+353831234567" → "+353 (83) 123 4567". Anything unreadable comes back as it was. */
+export function formatPhone(value: string) {
+  const parsed = parsePhoneNumberFromString(value);
+  if (!parsed?.country) return value;
+  return `+${parsed.countryCallingCode} ${formatNational(parsed.country, parsed.nationalNumber)}`;
 }
 
 /**

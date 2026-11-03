@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { caretWithDigitsAfter, initial, interpret } from "./phone";
+import { caretWithDigitsAfter, formatPhone, initial, interpret } from "./phone";
 
 describe("interpret", () => {
   it("reads an Irish number however it is written, to the same number", () => {
@@ -15,8 +15,23 @@ describe("interpret", () => {
       "00353 83 123 4567",
     ];
     for (const text of written) {
-      expect(interpret(text, "IE"), text).toEqual({ country: "IE", shown: "83 123 4567", e164: "+353831234567" });
+      expect(interpret(text, "IE"), text).toEqual({ country: "IE", shown: "(83) 123 4567", e164: "+353831234567" });
     }
+  });
+
+  it("sets the first group of an Irish number in brackets once there is more after it", () => {
+    expect(interpret("83", "IE").shown).toBe("83");
+    expect(interpret("831", "IE").shown).toBe("(83) 1");
+    expect(interpret("1 234 5678", "IE").shown).toBe("(1) 234 5678");
+    expect(interpret("1800 123 456", "IE").shown).toBe("1800 123 456");
+  });
+
+  it("reads landlines: Dublin's 01, and the longer area codes", () => {
+    for (const text of ["01 234 5678", "(01) 234 5678", "+353 (0)1 234 5678", "+353 (1) 234 5678"]) {
+      expect(interpret(text, "IE"), text).toMatchObject({ shown: "(1) 234 5678", e164: "+35312345678" });
+    }
+    expect(interpret("021 456 7890", "IE")).toMatchObject({ shown: "(21) 456 7890", e164: "+353214567890" });
+    expect(interpret("091 234567", "IE")).toMatchObject({ shown: "(91) 234 567", e164: "+35391234567" });
   });
 
   it("shows neither the dialling code nor the trunk 0, since the field shows the code", () => {
@@ -50,12 +65,28 @@ describe("interpret", () => {
 
 describe("initial", () => {
   it("splits a stored number into its country and the text to show", () => {
-    expect(initial("+353831234567", "GB")).toEqual({ country: "IE", text: "83 123 4567" });
+    expect(initial("+353831234567", "GB")).toEqual({ country: "IE", text: "(83) 123 4567" });
   });
 
   it("falls back to the default country for nothing or for something unparseable", () => {
     expect(initial("", "IE")).toEqual({ country: "IE", text: "" });
     expect(initial("nonsense", "IE")).toEqual({ country: "IE", text: "" });
+  });
+});
+
+describe("formatPhone", () => {
+  it("writes an Irish number with its first group in brackets", () => {
+    expect(formatPhone("+353831234567")).toBe("+353 (83) 123 4567");
+    expect(formatPhone("+35312345678")).toBe("+353 (1) 234 5678");
+  });
+
+  it("leaves other countries' numbers as libphonenumber groups them", () => {
+    expect(formatPhone("+442071838750")).toBe("+44 20 7183 8750");
+  });
+
+  it("returns what it can't read as it was", () => {
+    expect(formatPhone("call me")).toBe("call me");
+    expect(formatPhone("")).toBe("");
   });
 });
 
