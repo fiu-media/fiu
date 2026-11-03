@@ -114,8 +114,23 @@ export function QuoteForm({ lang, dict }: { lang: Locale; dict: QuoteDict }) {
           {quote.contactHeading}
         </h2>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field field={fields.name} label={quote.name} required autoComplete="name" maxLength={limits.name} />
-          <Field field={fields.email} type="email" label={quote.email} required autoComplete="email" maxLength={limits.email} />
+          <Field
+            field={fields.name}
+            label={quote.name}
+            required
+            autoComplete="name"
+            maxLength={limits.name}
+            placeholder={quote.placeholders.name}
+          />
+          <Field
+            field={fields.email}
+            type="email"
+            label={quote.email}
+            required
+            autoComplete="email"
+            maxLength={limits.email}
+            placeholder={quote.placeholders.email}
+          />
           <PhoneField field={fields.phone} label={quote.phone} optionalLabel={quote.optional} countryLabel={quote.phoneCountry} />
           <Field
             field={fields.company}
@@ -123,15 +138,23 @@ export function QuoteForm({ lang, dict }: { lang: Locale; dict: QuoteDict }) {
             optionalLabel={quote.optional}
             autoComplete="organization"
             maxLength={limits.company}
+            placeholder={quote.placeholders.company}
           />
         </div>
-        <Field field={fields.production} label={quote.production} optionalLabel={quote.optional} maxLength={limits.production} />
+        <Field
+          field={fields.production}
+          label={quote.production}
+          optionalLabel={quote.optional}
+          maxLength={limits.production}
+          placeholder={quote.placeholders.production}
+        />
         <Field
           field={fields.message}
           as="textarea"
           label={quote.message}
           optionalLabel={quote.optional}
           maxLength={limits.message}
+          placeholder={quote.placeholders.message}
         />
       </section>
 

@@ -106,11 +106,16 @@ export const quoteSchema = z
     }
   });
 
+/** Most people one enquiry can name. */
+export const MAX_TALENT = 20;
+
 export const contactSchema = z.object({
   ...common,
   name: required(limits.name),
   email,
   enquiryType: z.enum(ENQUIRY_TYPES),
+  // Ids of the talent the visitor picked (only offered for "Talent" enquiries); no pick is an empty list.
+  talent: z.array(z.string().min(1).max(200)).max(MAX_TALENT).default([]),
   message: required(limits.message),
 });
 

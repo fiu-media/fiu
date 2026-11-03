@@ -41,11 +41,19 @@ type Props = {
   min?: string;
   /** Stops typing and pasting past the limit the schema enforces. */
   maxLength?: number;
+  /** An example of what to type, not a repeat of the label. Every text field has one. */
+  placeholder?: string;
   children?: ReactNode;
 };
 
-export const controlClass =
-  "w-full rounded-2xl border bg-bg-raised px-4 py-3 text-base text-fg placeholder:text-fg-muted/70 aria-[invalid=true]:border-accent";
+/**
+ * How every placeholder looks: an example of what to type, muted. The browser's own placeholders (an empty date's
+ * "dd/mm/yyyy") are given the same colour, so the form doesn't show two different greys.
+ */
+export const placeholderClass = "placeholder:text-fg-muted/70";
+const emptyDateClass = "[&[data-empty]:not(:focus)]:text-fg-muted/70";
+
+export const controlClass = `w-full rounded-2xl border bg-bg-raised px-4 py-3 text-base text-fg aria-[invalid=true]:border-accent ${placeholderClass}`;
 
 /** The label above a control and the localised error below it; the control itself is the caller's. */
 export function FieldFrame({
@@ -86,12 +94,17 @@ export function Field({
   rows = 5,
   min,
   maxLength,
+  placeholder,
   children,
 }: Props) {
   const messages = use(FormMessages)!;
   const error = errorMessage(messages, field.errors);
   // A date needs about 11 characters, so on a phone two fit side by side if the padding is trimmed.
-  const className = cn(controlClass, error ? "border-accent" : "border-line", type === "date" && "min-w-0 px-3 sm:px-4");
+  const className = cn(
+    controlClass,
+    error ? "border-accent" : "border-line",
+    type === "date" && cn("min-w-0 px-3 sm:px-4", emptyDateClass),
+  );
   const shared = {
     id: field.id,
     name: field.name,
@@ -100,6 +113,7 @@ export function Field({
     required,
     autoComplete,
     maxLength,
+    placeholder,
     className,
   };
   const control =
@@ -115,6 +129,7 @@ export function Field({
         {...shared}
         type={type}
         min={min}
+        data-empty={type === "date" && !value ? "" : undefined}
         {...(value === undefined
           ? { defaultValue: field.defaultValue }
           : { value, onChange: (event) => onChange?.(event.target.value) })}

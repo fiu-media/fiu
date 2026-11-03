@@ -6,7 +6,7 @@ import { getCountries, type CountryCode } from "libphonenumber-js/min";
 import { useLayoutEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import { cn } from "@/lib/cn";
 import { callingCode, caretWithDigitsAfter, digitsIn, initial, interpret } from "@/lib/forms/phone";
-import { controlClass, FieldFrame, type FieldProps } from "./Field";
+import { controlClass, FieldFrame, placeholderClass, type FieldProps } from "./Field";
 
 /** What an example looks like, as the number input shows it (no trunk 0, no dialling code). */
 const SAMPLE: Partial<Record<CountryCode, string>> = { IE: "(83) 123 4567" };
@@ -120,7 +120,7 @@ export function PhoneField({
           }
           onFocus={() => focus()}
           onBlur={() => blur()}
-          className="min-w-0 flex-1 bg-transparent py-3 outline-none placeholder:text-fg-muted/70"
+          className={cn("min-w-0 flex-1 bg-transparent py-3 outline-none", placeholderClass)}
         />
       </div>
     </FieldFrame>

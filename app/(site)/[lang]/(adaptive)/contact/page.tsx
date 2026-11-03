@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, type ComponentProps } from "react";
 import { FormSkeleton } from "@/components/forms/FormSkeleton";
 import { PageTitle } from "@/components/ui/PageTitle";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -9,7 +9,7 @@ import { getDictionary } from "@/lib/i18n/dictionaries";
 import { instagramHandle } from "@/lib/instagram";
 import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
 import { getPageText } from "@/sanity/lib/pageText";
-import { CONTACT_SETTINGS_QUERY } from "@/sanity/lib/queries";
+import { CONTACT_SETTINGS_QUERY, TALENT_OPTIONS_QUERY } from "@/sanity/lib/queries";
 import { ContactForm } from "./ContactForm";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/contact">): Promise<Metadata> {
@@ -32,7 +32,7 @@ export default async function ContactPage({ params }: PageProps<"/[lang]/contact
         </header>
         {/* ContactForm reads the ?type= query, which needs a boundary to keep the page static. */}
         <Suspense fallback={<FormSkeleton label={common.loading} fields={3} />}>
-          <ContactForm lang={lang} dict={{ contact, forms }} />
+          <ContactFormWithTalent lang={lang} dict={{ contact, forms }} />
         </Suspense>
       </div>
       <Suspense fallback={<DirectContactSkeleton />}>
@@ -40,6 +40,19 @@ export default async function ContactPage({ params }: PageProps<"/[lang]/contact
       </Suspense>
     </main>
   );
+}
+
+/** The form, with the roster a Talent enquiry can pick from. */
+async function ContactFormWithTalent({ lang, dict }: { lang: Locale; dict: ComponentProps<typeof ContactForm>["dict"] }) {
+  const { perspective, variant } = await getDynamicFetchOptions();
+  const { data } = await cachedSanity({
+    query: TALENT_OPTIONS_QUERY,
+    params: { lang, fallbackLang: defaultLocale },
+    perspective,
+    variant,
+    stega: false,
+  });
+  return <ContactForm lang={lang} dict={dict} talent={data} />;
 }
 
 async function DirectContact({ lang }: { lang: Locale }) {

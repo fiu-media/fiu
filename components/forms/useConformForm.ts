@@ -12,7 +12,7 @@ type Options = {
   action: (previous: FormState, formData: FormData) => Promise<FormState>;
   /** The same schema the action parses with, so the browser and the server agree. */
   schema: z.ZodType<unknown, Record<string, unknown>>;
-  defaultValue?: Record<string, string>;
+  defaultValue?: Record<string, string | string[]>;
 };
 
 /**

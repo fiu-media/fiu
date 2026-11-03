@@ -73,7 +73,8 @@ async function Profile({ lang, slug }: { lang: string; slug: string }) {
 
   const portrait = profile.portrait ? toSizedImage(profile.portrait, 1200) : null;
   const roles = (profile.roles ?? []).join(", ");
-  const contactHref = `${localizedPath(lang, "/contact")}?type=Talent`;
+  // The contact form preselects the enquiry type and ticks this person.
+  const contactHref = `${localizedPath(lang, "/contact")}?${new URLSearchParams({ type: "Talent", talent: slug })}`;
   const workLabel = format(talent.projectsOf, { name: profile.name });
 
   return (

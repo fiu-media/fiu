@@ -5,7 +5,7 @@ import { expect, test, type Page } from "@playwright/test";
  * Axe's automated rules catch roughly a third of WCAG problems, so a pass is a floor, not a
  * verdict (manual review lives in #11). Any violation fails the test.
  */
-const PAGES = ["/", "/about", "/work", "/talent", "/rentals", "/rentals/quote", "/contact"];
+const PAGES = ["/", "/about", "/work", "/talent", "/rentals", "/rentals/quote", "/contact", "/contact?type=Talent"];
 
 async function firstLink(page: Page, listing: string, prefix: string, exclude: string[] = []) {
   await page.goto(listing);

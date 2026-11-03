@@ -176,6 +176,23 @@ export const TALENT_QUERY = defineQuery(`
   }
 `);
 
+/**
+ * The people a visitor can ask about on the contact form. `_id` is the default-language document, which is what a
+ * contact message references (and what projects credit); the name is the same in every language.
+ */
+export const TALENT_OPTIONS_QUERY = defineQuery(`
+  ${withFallback("talent", "")}${byRank("name")}{
+    "id": coalesce(${DEFAULT_COUNTERPART}._id, _id),
+    name,
+    "slug": slug.current
+  }
+`);
+
+/** The talent a contact message names, checked against the roster before it is stored. */
+export const TALENTS_BY_ID_QUERY = defineQuery(`
+  *[_type == "talent" && language == $fallbackLang && _id in $ids]{ _id, name }
+`);
+
 /** One person for their bio page. `talentId` is the default-language document that projects credit. */
 export const TALENT_PROFILE_QUERY = defineQuery(`
   coalesce(
