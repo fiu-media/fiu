@@ -106,7 +106,8 @@ function Nav({ items, homeHref, labels, onImage, pathname }: NavProps & { pathna
         id={dialogId}
         aria-label={labels.label}
         tabIndex={-1}
-        className="fixed inset-0 isolate m-0 h-auto max-h-none w-auto max-w-none flex-col overflow-visible text-fg outline-none! backdrop:bg-transparent open:flex md:hidden!"
+        data-nav-overlay
+        className="fixed inset-0 isolate m-0 h-auto max-h-none w-auto max-w-none touch-none flex-col overflow-visible overscroll-none text-fg outline-none! backdrop:bg-transparent open:flex md:hidden!"
       >
         {/* The frosted background reaches 12rem past the screen edges, so it also fills the notch and chin (and gives
             Safari a layer at the edges to tint its bars from) instead of stopping at the viewport. It appears at once:

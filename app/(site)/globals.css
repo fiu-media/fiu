@@ -275,8 +275,9 @@ body {
   }
 }
 
-/* An open modal (nav overlay, quote drawer) holds the page still behind it. */
-html:has(dialog[open]) {
+/* An open modal (quote drawer) holds the page still behind it. The nav overlay does it with touch-action instead: a locked
+   root stops WebKit painting past the viewport edge, and Safari then tints its bars from the html background (black). */
+html:has(dialog[open]:not([data-nav-overlay])) {
   overflow: hidden;
 }
 
