@@ -1,5 +1,6 @@
 "use client";
 
+import { ArrowRight } from "lucide-react";
 import { useMemo } from "react";
 import {
   DIFF_GROUP_LABELS,
@@ -45,9 +46,7 @@ function DiffRow({ entry }: { entry: DiffEntry }) {
         <span className="rounded bg-rose-400/15 px-1 text-rose-200 line-through decoration-rose-300/50">
           {formatValue(entry.before)}
         </span>
-        <span className="text-white/35" aria-hidden>
-          →
-        </span>
+        <ArrowRight aria-hidden className="size-3 text-white/35" />
         <span className="rounded bg-emerald-400/15 px-1 text-emerald-200">{formatValue(entry.after)}</span>
       </div>
     </li>

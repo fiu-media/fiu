@@ -1,5 +1,6 @@
 "use client";
 
+import { Play } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { FullBleedSlide } from "@/components/ui/FullBleedScroll";
@@ -176,7 +177,7 @@ export function ProjectSlide({
                 aria-label={format(dict.play, { title })}
                 className="shrink-0"
               >
-                <PlayIcon />
+                <Play aria-hidden fill="currentColor" className="size-4" />
                 <span className="max-sm:sr-only">{dict.play.replace(/\s*\{title\}/, "")}</span>
               </GlassPillButton>
             )}
@@ -192,14 +193,6 @@ export function ProjectSlide({
         )}
       </div>
     </FullBleedSlide>
-  );
-}
-
-function PlayIcon() {
-  return (
-    <svg aria-hidden viewBox="0 0 24 24" fill="currentColor" className="size-4">
-      <path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z" />
-    </svg>
   );
 }
 

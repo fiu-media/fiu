@@ -1,5 +1,6 @@
 "use client";
 
+import { X } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useRef } from "react";
 import { GlassPanel, GlassPillButton, GlassPillLink } from "@/components/ui/Glass";
@@ -55,7 +56,7 @@ export function QuoteDrawer({ lang, dict }: { lang: Locale; dict: Dictionary["ba
               aria-label={dict.close}
               className="grid size-9 cursor-pointer place-items-center rounded-full hover:bg-line"
             >
-              <span aria-hidden>×</span>
+              <X aria-hidden className="size-5" />
             </button>
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto">

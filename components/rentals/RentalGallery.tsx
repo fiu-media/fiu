@@ -1,6 +1,7 @@
 "use client";
 
 import useEmblaCarousel from "embla-carousel-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
 import { cn } from "@/lib/cn";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
@@ -195,18 +196,7 @@ function StepButton({ label, side, onClick }: { label: string; side: "left" | "r
         side === "left" ? "left-3" : "right-3",
       )}
     >
-      <svg
-        viewBox="0 0 24 24"
-        className="size-5"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden
-      >
-        <path d={side === "left" ? "M15 5l-7 7 7 7" : "M9 5l7 7-7 7"} />
-      </svg>
+      {side === "left" ? <ChevronLeft aria-hidden className="size-5" /> : <ChevronRight aria-hidden className="size-5" />}
     </button>
   );
 }
