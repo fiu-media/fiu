@@ -105,21 +105,6 @@ html {
   }
 }
 
-/* On Home the nav overlay is positioned like the bleeding page instead of fixed to the viewport, so Safari tints its bars
-   from page pixels (as it does for the splash) and follows the menu closing without a lag. It covers the same 12rem
-   (BLEED_PX) above and below the screen as the photo; the padding keeps its content inside the visible part. The
-   containing block of a top-layer element is the document's first screen, which is where Home's bleed starts. */
-@media (max-width: 767px) {
-  html[data-home-lock] dialog[data-nav-overlay] {
-    position: absolute;
-    inset: 0 auto auto 0;
-    box-sizing: border-box;
-    width: 100%;
-    height: calc(100dvh + 24rem);
-    padding-block: 12rem;
-  }
-}
-
 html:has([data-surface="cinematic"]) {
   background: var(--ink);
 }
