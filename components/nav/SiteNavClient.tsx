@@ -131,7 +131,7 @@ function Nav({ items, homeHref, labels, onImage, pathname }: NavProps & { pathna
                     href={item.href}
                     onClick={close}
                     aria-current={isCurrent(pathname, item.href) ? "page" : undefined}
-                    className="py-1.5 font-display text-5xl tracking-tight text-fg/55 hover:text-fg aria-[current=page]:text-fg"
+                    className="py-1.5 font-display text-5xl tracking-tight text-fg/60 hover:text-fg aria-[current=page]:text-fg"
                   >
                     {item.label}
                   </Link>
