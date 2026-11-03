@@ -8,7 +8,6 @@ import {
   useMemo,
   useRef,
   useState,
-  useSyncExternalStore,
   type ComponentRef,
   type MutableRefObject,
   type RefObject,
@@ -21,11 +20,25 @@ import { buildLogoGeometry, type LogoMeshMode, type LogoPaths } from "./buildLog
 import { LOGO_PARAM_PRESETS, type LogoGlassParams, type LogoRimLook } from "./logoConfig";
 import { MOVE_RANGE, ROTATE_RANGE, sweepAt, type LightSweep } from "./lightSweep";
 import type { LogoPerfStats } from "./logoPerf";
+import {
+  applyLogoTier,
+  FLOOR_SECONDS,
+  higherTier,
+  lowerTier,
+  medianFps,
+  MIDSESSION_FLOOR_FPS,
+  probeComplete,
+  PROBE_WARMUP_FRAMES,
+  probeVerdict,
+  TIER_SETTINGS,
+  type LogoTier,
+} from "./logoTier";
 
 export type { LogoMeshMode };
 export type { LightSweep } from "./lightSweep";
 export type { LogoRimLook, LogoGlassParams } from "./logoConfig";
 export type { LogoPerfStats } from "./logoPerf";
+export type { LogoTier } from "./logoTier";
 
 const BACKDROP_Z = -4;
 // A distant, narrow camera keeps the slab's front face from projecting wider than its back, so the
@@ -67,6 +80,9 @@ type Fade = { from: number; to: number; start: number };
  *
  * Rendering is on demand. Frames are only drawn while something moves (intro spin,
  * crossfade, pointer parallax), so an idle hero costs nothing.
+ *
+ * Quality starts at `tier`. Before reporting ready, the scene times a few frames and may drop to a
+ * cheaper tier, or call `onTooSlow` if even the cheapest can't hold the floor (see `logoTier.ts`).
  */
 export default function LogoScene({
   stills,
@@ -84,6 +100,8 @@ export default function LogoScene({
   interactive = true,
   onIntroEnd,
   onContextLost,
+  tier = "high",
+  onTooSlow,
 }: {
   stills: SceneStill[];
   index: number;
@@ -111,9 +129,15 @@ export default function LogoScene({
   onPerf?: (stats: LogoPerfStats) => void;
   /** Slowly sweeps the studio light (the /dev/moving-light experiment). Off when undefined. */
   sweep?: LightSweep;
+  /** Starting quality. Read once: antialiasing and the env map size can't change after mount. */
+  tier?: LogoTier;
+  /** Even the cheapest tier is below the floor; the caller should swap in the SVG. */
+  onTooSlow?: () => void;
 }) {
   const params = paramsProp ?? LOGO_PARAM_PRESETS[rimLook];
-  const dpr = useCanvasDpr(measurePerf);
+  // The playground measures the preset as set, so it always runs at full quality and never adapts.
+  const [startTier] = useState<LogoTier>(measurePerf ? "high" : tier);
+  const settings = TIER_SETTINGS[startTier];
   // Start loading the first still before the canvas mounts. If it has resolved by the time Scene
   // first renders, useTexture reads it from cache and never suspends. A suspend would cost
   // React's 300 ms Suspense reveal throttle, even with the image already in the HTTP cache.
@@ -123,11 +147,11 @@ export default function LogoScene({
       frameloop={measurePerf ? "always" : "demand"}
       // R3F gives its root div an inline `pointer-events: auto`, which a class on a wrapper cannot override.
       style={interactive ? undefined : { pointerEvents: "none" }}
-      dpr={dpr}
+      dpr={settings.dpr}
       camera={{ position: [0, 0, CAMERA_Z], fov: CAMERA_FOV }}
       gl={{
         alpha: true,
-        antialias: true,
+        antialias: settings.antialias,
         powerPreference: "high-performance",
         toneMapping: THREE.ACESFilmicToneMapping,
         toneMappingExposure: 1,
@@ -153,6 +177,8 @@ export default function LogoScene({
         envAlways={measurePerf}
         sweep={sweep}
         adaptiveQuality={!measurePerf}
+        startTier={startTier}
+        onTooSlow={onTooSlow}
         introSlide={introSlide}
         introHold={introHold}
         splashLift={splashLift}
@@ -163,61 +189,191 @@ export default function LogoScene({
   );
 }
 
-/**
- * Pixel ratio for the canvas and, because the transmission buffers are sized from it, the glass
- * refraction too. Only Save-Data drops to 1; slow GPUs step down later via `useAdaptiveTransmission`.
- */
-const FULL_DPR: [number, number] = [1, 1.5];
-const subscribeNever = () => () => {};
-const readSaveData = () => Boolean((navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData);
-const serverSaveData = () => false;
-
-function useCanvasDpr(measurePerf: boolean): number | [number, number] {
-  const saveData = useSyncExternalStore(subscribeNever, readSaveData, serverSaveData);
-  return saveData && !measurePerf ? 1 : FULL_DPR;
-}
+/** A gap this long between frames is the demand loop waking from idle, not a slow frame. */
+const IDLE_GAP_SECONDS = 0.5;
 
 /**
- * Step samples down (and, in `Logo`, the pixel ratio) if FPS stays low, recover when it climbs back.
- * Disabled in the playground so slider values stay honest.
+ * Picks and keeps the quality tier. First a probe: once the shaders have compiled, time
+ * `PROBE_FRAMES` frames (behind the splash, which hides the canvas) and step down, or give up, by
+ * `probeVerdict`. Only then is the scene reported ready. Once the intro is over, step down while
+ * frames stay slow and back up (never past the starting tier) once they recover; at `low`, a
+ * sustained crawl gives up too. No steps during the intro: a step recompiles the material, and a
+ * hitch mid-spin is worse than a slightly slow spin (a crawl still gives up). Without `adaptive`
+ * (the playground) it only waits out the warm-up.
  */
-function useAdaptiveTransmission(enabled: boolean, samples: number) {
-  const [tier, setTier] = useState(0);
-  const lowAcc = useRef(0);
-  const highAcc = useRef(0);
-  const tierRef = useRef(0);
+function useLogoQuality({
+  adaptive,
+  startTier,
+  tier,
+  setTier,
+  readyRef,
+  introOver,
+  onReady,
+  onTooSlow,
+}: {
+  adaptive: boolean;
+  introOver: boolean;
+  startTier: LogoTier;
+  tier: LogoTier;
+  setTier: (tier: LogoTier) => void;
+  readyRef: MutableRefObject<boolean>;
+  onReady: () => void;
+  onTooSlow: (() => void) | undefined;
+}) {
+  const invalidate = useThree((s) => s.invalidate);
+  const setDpr = useThree((s) => s.setDpr);
+  const gl = useThree((s) => s.gl);
+  const probe = useRef({
+    phase: "warmup" as "warmup" | "measure" | "done",
+    frames: 0,
+    ms: [] as number[],
+    want: startTier,
+    measured: false,
+  });
+  const run = useRef({ slow: 0, fast: 0, crawl: 0, cooldown: 0, gaveUp: false });
+  const pacing = useRef({ fences: [] as WebGLSync[], waiting: null as WebGLSync | null, timer: 0 });
+
+  // The canvas was created at the starting tier's pixel ratio; follow later steps.
+  const dprTier = useRef(startTier);
   useEffect(() => {
-    tierRef.current = tier;
-  }, [tier]);
+    if (tier === dprTier.current) return;
+    dprTier.current = tier;
+    setDpr(TIER_SETTINGS[tier].dpr);
+  }, [tier, setDpr]);
 
-  useFrame((_, delta) => {
-    if (!enabled) {
-      if (tierRef.current !== 0) setTier(0);
+  const releaseFences = useCallback(() => {
+    const ctx = gl.getContext() as WebGL2RenderingContext;
+    const q = pacing.current;
+    window.clearTimeout(q.timer);
+    for (const sync of q.waiting ? [q.waiting, ...q.fences] : q.fences) ctx.deleteSync(sync);
+    q.fences = [];
+    q.waiting = null;
+  }, [gl]);
+  useEffect(() => releaseFences, [releaseFences]);
+
+  const log = (message: string) => {
+    if (process.env.NODE_ENV !== "production") console.info(`[logo tier] ${message}`);
+  };
+  const step = (next: LogoTier) => {
+    probe.current.want = next;
+    run.current.cooldown = PROBE_WARMUP_FRAMES;
+    setTier(next);
+  };
+  const giveUp = (why: string) => {
+    probe.current.phase = "done";
+    run.current.gaveUp = true;
+    log(`too slow ${why}, falling back to the SVG`);
+    onTooSlow?.();
+  };
+
+  /**
+   * Asks for the next probe frame, holding it back while the GPU is more than a frame behind, so
+   * frame times include the GPU's work. Browsers normally hold rAF back like this for a slow GPU,
+   * but not all do (headless Chromium doesn't): frames then queue up faster than they're drawn, the
+   * probe reads them as fast, and the stall lands later, on screen.
+   */
+  const nextProbeFrame = () => {
+    const ctx = gl.getContext() as WebGL2RenderingContext;
+    const q = pacing.current;
+    // Placed before this frame renders, so it covers everything up to the previous frame.
+    const sync = ctx.fenceSync(ctx.SYNC_GPU_COMMANDS_COMPLETE, 0);
+    if (!sync) return invalidate();
+    ctx.flush();
+    q.fences.push(sync);
+    // The fence placed a frame ago: once it has signalled, only one frame is still in flight.
+    const behind = q.fences.length > 1 ? q.fences.shift()! : null;
+    if (!behind) return invalidate();
+    q.waiting = behind;
+    // A sync's status only updates between tasks, so a GPU that's behind is polled from timers.
+    const check = () => {
+      if (ctx.getSyncParameter(behind, ctx.SYNC_STATUS) !== ctx.SIGNALED) {
+        q.timer = window.setTimeout(check, 1);
+        return;
+      }
+      ctx.deleteSync(behind);
+      q.waiting = null;
+      invalidate();
+    };
+    check();
+  };
+
+  // A function so TypeScript doesn't keep its narrowing from before `probeFrame` ran.
+  const stillProbing = () => probe.current.phase !== "done";
+  const probeFrame = (delta: number) => {
+    const p = probe.current;
+    // A tier switch recompiles the material: wait for it to render, then warm it up again.
+    if (tier !== p.want) return;
+    if (p.phase === "warmup") {
+      if (++p.frames < PROBE_WARMUP_FRAMES) return;
+      if (adaptive && !p.measured) {
+        p.phase = "measure";
+        p.ms = [];
+        return;
+      }
+      p.phase = "done";
+      readyRef.current = true;
+      onReady();
       return;
     }
-    const fps = delta > 0 ? 1 / delta : 60;
+    p.ms.push(delta * 1000);
+    // A device far below the floor would take ages to draw every probe frame, so it can stop early.
+    if (!probeComplete(p.ms)) return;
+    const { next, reprobe } = probeVerdict(p.ms, tier);
+    log(`probe at ${tier}: ${medianFps(p.ms).toFixed(0)} fps over ${p.ms.length} frames → ${next}`);
+    if (next === "static") return giveUp(`at ${tier}`);
+    p.measured = !reprobe;
+    p.phase = "warmup";
+    p.frames = next === tier ? PROBE_WARMUP_FRAMES - 1 : 0;
+    if (next !== tier) step(next);
+  };
+
+  useFrame((_, delta) => {
+    const p = probe.current;
+    if (p.phase !== "done") {
+      probeFrame(delta);
+      if (!stillProbing()) return releaseFences();
+      if (adaptive) nextProbeFrame();
+      else invalidate();
+      return;
+    }
+
+    const r = run.current;
+    if (!adaptive || r.gaveUp || delta > IDLE_GAP_SECONDS) return;
+    if (r.cooldown > 0) {
+      r.cooldown--;
+      return;
+    }
+    const fps = 1 / delta;
+    // A crawl gives up on the glass: during the intro at any tier (its clock is frame-capped, so a
+    // crawling intro also drags on), afterwards once there's no cheaper tier left to try.
+    if (!introOver || tier === "low") {
+      r.crawl = fps < MIDSESSION_FLOOR_FPS ? r.crawl + delta : 0;
+      if (r.crawl > FLOOR_SECONDS) return giveUp(introOver ? "mid-session" : "during the intro");
+    }
+    if (!introOver) return;
     if (fps < 30) {
-      lowAcc.current += delta;
-      highAcc.current = 0;
-      if (lowAcc.current > 1.2 && tierRef.current < 2) {
-        lowAcc.current = 0;
-        setTier((t) => Math.min(2, t + 1));
+      r.slow += delta;
+      r.fast = 0;
+      const lower = lowerTier(tier);
+      if (r.slow > 1.2 && lower) {
+        r.slow = 0;
+        log(`slow, stepping down to ${lower}`);
+        step(lower);
       }
     } else if (fps > 48) {
-      highAcc.current += delta;
-      lowAcc.current = 0;
-      if (highAcc.current > 2 && tierRef.current > 0) {
-        highAcc.current = 0;
-        setTier((t) => Math.max(0, t - 1));
+      r.fast += delta;
+      r.slow = 0;
+      const higher = higherTier(tier, startTier);
+      if (r.fast > 2 && higher) {
+        r.fast = 0;
+        log(`recovered, stepping up to ${higher}`);
+        step(higher);
       }
     } else {
-      lowAcc.current = 0;
-      highAcc.current = 0;
+      r.slow = 0;
+      r.fast = 0;
     }
   });
-
-  if (!enabled || tier === 0) return { samples, tier: 0 };
-  return { samples: Math.max(4, samples - tier * 2), tier };
 }
 
 /** Samples FPS / frame time and renderer info ~2×/sec for the playground HUD. */
@@ -259,6 +415,8 @@ function Scene({
   envAlways,
   sweep,
   adaptiveQuality,
+  startTier,
+  onTooSlow,
   introSlide,
   introHold,
   splashLift,
@@ -268,6 +426,8 @@ function Scene({
   index: number;
   onReady: () => void;
   onIntroEnd: (() => void) | undefined;
+  startTier: LogoTier;
+  onTooSlow: (() => void) | undefined;
   meshMode: LogoMeshMode;
   params: LogoGlassParams;
   /** Playground: keep cubemap live while measuring / scrubbing. */
@@ -279,6 +439,9 @@ function Scene({
   splashLift: boolean | undefined;
 }) {
   const gl = useThree((s) => s.gl);
+  const [tier, setTier] = useState(startTier);
+  const readyRef = useRef(false);
+  const tieredParams = useMemo(() => (adaptiveQuality ? applyLogoTier(params, tier) : params), [adaptiveQuality, params, tier]);
   // Only the still on screen at mount gates the first paint (useTexture suspends until it has
   // loaded, so .image is available on first paint here). Decoding and uploading all of them
   // up front cost ~600 ms of the splash for stills nobody sees for another six seconds.
@@ -290,6 +453,16 @@ function Scene({
   // The rest stream in once the intro is over (uploading them mid-spin would hitch it), or
   // sooner if the hero has already moved on to another still.
   const [introOver, setIntroOver] = useState(!introSlide);
+  useLogoQuality({
+    adaptive: adaptiveQuality,
+    startTier,
+    tier,
+    setTier,
+    readyRef,
+    introOver,
+    onReady,
+    onTooSlow,
+  });
   const handleIntroEnd = useCallback(() => {
     setIntroOver(true);
     onIntroEnd?.();
@@ -370,13 +543,12 @@ function Scene({
       <BackdropLayerGate />
       <Backdrop stills={stills} textures={textures} fade={fade} splashLift={splashLift} />
       <Logo
-        onReady={onReady}
+        readyRef={readyRef}
         tint={tint}
         onPose={setLogoPose}
         meshMode={meshMode}
-        params={params}
+        params={tieredParams}
         keepAwake={keepAwake}
-        adaptiveQuality={adaptiveQuality}
         introSlide={introSlide}
         introHold={introHold}
         onIntroEnd={handleIntroEnd}
@@ -396,6 +568,7 @@ function Scene({
         sweepGroup={sweepGroup}
         envRotation={envRotation}
         envAlways={envAlways}
+        envResolution={TIER_SETTINGS[startTier].envResolution}
       />
       {/* External sparkle: lagged point lights (env SoftLights do the glass streaks).
           Full-scene bloom is skipped — it was tonemapping/blooming the stills too. */}
@@ -805,6 +978,7 @@ function Studio({
   sweepGroup,
   envRotation,
   envAlways,
+  envResolution,
 }: {
   tint: MutableRefObject<THREE.Color>;
   logoPose: MutableRefObject<{ x: number; y: number }>;
@@ -815,6 +989,8 @@ function Studio({
   sweepGroup: RefObject<THREE.Group | null>;
   envRotation: THREE.Euler;
   envAlways: boolean;
+  /** Fixed per canvas: a new size would rebuild the cube render target. */
+  envResolution: number;
 }) {
   const follow = useRef<THREE.Group>(null);
   const feather = useFeatherMap();
@@ -829,7 +1005,7 @@ function Studio({
     g.rotation.y = THREE.MathUtils.damp(g.rotation.y, logoPose.current.y, SPARK_FOLLOW, delta);
   });
   return (
-    <Environment resolution={256} frames={frames} environmentRotation={envRotation}>
+    <Environment resolution={envResolution} frames={frames} environmentRotation={envRotation}>
       <group ref={sweepGroup}>
         {fixed.map((l) => (
           <SoftLight
@@ -948,7 +1124,6 @@ const SPIN: [seconds: number, radians: number][] = [
 const RAIL_PX = RAIL_REM * 16;
 
 const SPIN_END = SPIN[SPIN.length - 1][0];
-const WARMUP_FRAMES = 3;
 
 // Hero intro (`introSlide`): `HERO_TURNS` turns that spin up fast and decelerate like a spun coin,
 // then a springy glide to the left that overshoots and settles. Times in seconds.
@@ -1011,31 +1186,29 @@ function shortestAngle(radians: number) {
 }
 
 function Logo({
-  onReady,
+  readyRef,
   tint,
   onPose,
   meshMode,
   params,
   keepAwake,
-  adaptiveQuality,
   introSlide,
   introHold,
   onIntroEnd,
 }: {
-  onReady: () => void;
+  /** Set by `useLogoQuality` once the shaders are warm and the tier is settled; the intro waits for it. */
+  readyRef: MutableRefObject<boolean>;
   onIntroEnd: (() => void) | undefined;
   tint: MutableRefObject<THREE.Color>;
   onPose: (x: number, y: number) => void;
   meshMode: LogoMeshMode;
   params: LogoGlassParams;
   keepAwake: (seconds: number) => void;
-  adaptiveQuality: boolean;
   introSlide: boolean;
   introHold: boolean;
 }) {
   const size = useThree((s) => s.size);
   const viewport = useThree((s) => s.viewport);
-  const gl = useThree((s) => s.gl);
   const group = useRef<THREE.Group>(null);
   const mesh = useRef<THREE.Mesh>(null);
   // drei types MeshTransmissionMaterial's ref as its props shape, not MeshPhysicalMaterial.
@@ -1053,7 +1226,7 @@ function Logo({
     velX: 0,
     velY: 0,
   });
-  const intro = useRef({ frames: 0, time: 0, ended: false });
+  const intro = useRef({ time: 0, ended: false });
   const introStats = useRef({ frames: 0, ms: 0, worst: 0, logged: false });
   const invalidate = useThree((s) => s.invalidate);
   const glow = useMemo(() => new THREE.Color(), []);
@@ -1062,19 +1235,6 @@ function Logo({
   useEffect(() => {
     paramsRef.current = params;
   }, [params]);
-  const quality = useAdaptiveTransmission(adaptiveQuality, params.samples);
-  // Struggling: trim the pixel ratio along with the samples, and restore it on recovery.
-  const setDpr = useThree((s) => s.setDpr);
-  const fullDpr = useRef<number | null>(null);
-  useEffect(() => {
-    if (quality.tier >= 1) {
-      fullDpr.current ??= gl.getPixelRatio();
-      setDpr(Math.min(fullDpr.current, quality.tier >= 2 ? 1 : 1.25));
-    } else if (fullDpr.current !== null) {
-      setDpr(fullDpr.current);
-      fullDpr.current = null;
-    }
-  }, [quality.tier, setDpr, gl]);
   const [hovered, setHovered] = useState(false);
   const [dragging, setDragging] = useState(false);
   useCursor(hovered || dragging, dragging ? "grabbing" : "grab");
@@ -1125,6 +1285,12 @@ function Logo({
   useEffect(() => {
     invalidate();
   }, [invalidate]);
+
+  // Nothing moves while the intro is held, so no frames are drawn then (beyond the quality probe's);
+  // the release has to restart them.
+  useEffect(() => {
+    if (!introHold) invalidate();
+  }, [introHold, invalidate]);
 
   // Redraw after mesh / material param changes without resetting intro spin state.
   useEffect(() => {
@@ -1224,15 +1390,14 @@ function Logo({
 
     // The first frames compile shaders and can stall for a long time, so the intro is
     // driven by capped frame deltas rather than wall-clock time: it always plays in full,
-    // just slower on a struggling device. The canvas is only revealed once frames flow.
+    // just slower on a struggling device. It (and the canvas reveal) waits for the quality probe.
     const a = intro.current;
-    a.frames++;
-    if (a.frames === WARMUP_FRAMES) onReady();
-    if (a.frames > WARMUP_FRAMES && !introHold) a.time += delta;
+    const ready = readyRef.current;
+    if (ready && !introHold) a.time += delta;
     // The hero intro is shorter than the playground's Blender spin, so it ends (and stops
     // drawing) on its own clock.
     const introEnd = introSlide ? HERO_END : INTRO_END;
-    if (a.time < introEnd) invalidate();
+    if (a.time < introEnd && !introHold) invalidate();
     const t = a.time;
     if (introSlide && !a.ended && t >= introEnd) {
       a.ended = true;
@@ -1241,7 +1406,7 @@ function Logo({
 
     // Dev only: how smooth the hero intro really is on this machine (GPU cost can't be seen in a
     // CPU profile). Logged once, when the intro ends.
-    if (process.env.NODE_ENV !== "production" && introSlide && a.frames > WARMUP_FRAMES && !introHold) {
+    if (process.env.NODE_ENV !== "production" && introSlide && ready && !introHold) {
       const st = introStats.current;
       if (t < introEnd) {
         st.frames++;
@@ -1358,7 +1523,7 @@ function Logo({
         <MeshTransmissionMaterial
           ref={material}
           // Banding fix stays (blur + dither); CA / env / tint restored for color.
-          samples={quality.samples}
+          samples={params.samples}
           // No `resolution`: drei then sizes the transmission buffers to the canvas (with its
           // pixel ratio). A number makes them square, which squashes the wide viewport into it and
           // leaves horizontal detail well under one buffer pixel per screen pixel on desktop.
