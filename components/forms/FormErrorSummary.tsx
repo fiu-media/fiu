@@ -1,37 +1,52 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { fieldId } from "./Field";
+import { useEffect, useRef, useState } from "react";
+import { errorMessage, type ErrorMessages } from "./Field";
+import type { ConformForm } from "./useConformForm";
 
-export type SummaryItem = { name: string; label: string; message: string };
+/** Field names with their visible labels, in the order they appear on the page. */
+export type SummaryLabels = readonly (readonly [name: string, label: string])[];
 
 /**
  * Announced and focused when a submission fails, so keyboard and screen-reader users land on
  * what went wrong, with links down to each field.
  */
 export function FormErrorSummary({
+  form,
+  labels,
   title,
-  items,
-  message,
+  messages,
   attempt,
 }: {
+  form: ConformForm["form"];
+  labels: SummaryLabels;
   title: string;
-  items: SummaryItem[];
-  /** A form-level error that has no field. */
-  message?: string;
-  /** Changes on every failed submission so focus moves even when the errors are identical. */
+  messages: ErrorMessages;
+  /** Changes on every submit and server reply so focus moves even when the errors are identical. */
   attempt: unknown;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  // The alert is announced once, when the submit fails. Errors then clear as each field is fixed; those changes still
+  // show here, but a screen reader isn't made to read the whole list out again every time.
+  const [quietFor, setQuietFor] = useState<unknown>(null);
   useEffect(() => {
     ref.current?.focus();
+    const timer = setTimeout(() => setQuietFor(attempt), 1000);
+    return () => clearTimeout(timer);
   }, [attempt]);
 
-  if (items.length === 0 && !message) return null;
+  const items = labels.flatMap(([name, label]) => {
+    const message = errorMessage(messages, form.fieldErrors[name]);
+    return message ? [{ name, label, message }] : [];
+  });
+  const formMessage = errorMessage(messages, form.errors);
+
+  if (items.length === 0 && !formMessage) return null;
   return (
     <div
       ref={ref}
       role="alert"
+      aria-live={quietFor === attempt ? "off" : undefined}
       tabIndex={-1}
       className="rounded-2xl border border-accent bg-bg-raised p-4 text-sm focus:outline-offset-2"
     >
@@ -41,7 +56,7 @@ export function FormErrorSummary({
           <ul className="mt-2 list-disc space-y-1 pl-5">
             {items.map((item) => (
               <li key={item.name}>
-                <a href={`#${fieldId(item.name)}`} className="underline underline-offset-2">
+                <a href={`#${form.getField(item.name).id}`} className="underline underline-offset-2">
                   {item.label}
                 </a>
                 : {item.message}
@@ -50,7 +65,7 @@ export function FormErrorSummary({
           </ul>
         </>
       )}
-      {message && <p className={items.length > 0 ? "mt-2" : undefined}>{message}</p>}
+      {formMessage && <p className={items.length > 0 ? "mt-2" : undefined}>{formMessage}</p>}
     </div>
   );
 }

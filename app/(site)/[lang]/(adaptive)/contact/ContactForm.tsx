@@ -1,26 +1,48 @@
 "use client";
 
+import { useFormData } from "@conform-to/react/future";
 import { useSearchParams } from "next/navigation";
-import { useActionState, useRef } from "react";
-import { Field, Honeypot } from "@/components/forms/Field";
-import { FormErrorSummary, type SummaryItem } from "@/components/forms/FormErrorSummary";
-import { GlassPanel, GlassPillButton } from "@/components/ui/Glass";
-import { ENQUIRY_TYPES, isEnquiryType } from "@/lib/forms/schemas";
-import { initialFormState, type FormErrorCode } from "@/lib/forms/state";
+import { Field } from "@/components/forms/Field";
+import { Form, SubmitButton } from "@/components/forms/Form";
+import { useConformForm } from "@/components/forms/useConformForm";
+import { useFreshOnArrival } from "@/components/forms/useFreshOnArrival";
+import { TalentCombobox, type TalentOption } from "@/components/forms/TalentCombobox";
+import { GlassPanel } from "@/components/ui/Glass";
+import { CONTACT_PARAMS, contactPrefill, prefillKey } from "@/lib/forms/prefill";
+import { contactSchema, ENQUIRY_TYPES, limits } from "@/lib/forms/schemas";
 import type { Locale } from "@/lib/i18n/config";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { submitContact } from "./actions";
 
-export function ContactForm({ lang, dict }: { lang: Locale; dict: Pick<Dictionary, "contact" | "forms"> }) {
-  const { contact, forms } = dict;
-  const [state, formAction, pending] = useActionState(submitContact, initialFormState);
-  // A retry after a failure reuses this id, so the server can recognise a double submit.
-  const submissionId = useRef<string | null>(null);
-  // `/contact?type=Talent` (from the Talent and Rentals pages) preselects the enquiry type.
-  const requested = useSearchParams().get("type");
-  const initialType = isEnquiryType(requested) ? requested : ENQUIRY_TYPES[0];
+type Props = {
+  lang: Locale;
+  dict: Pick<Dictionary, "contact" | "forms">;
+  /** The roster, for a Talent enquiry to pick from. */
+  talent: TalentOption[];
+};
 
-  if (state.status === "success") {
+/** The form, which starts over whenever a link arrives with a type or talent to prefill (see `useFreshOnArrival`). */
+export function ContactForm(props: Props) {
+  const params = useSearchParams();
+  const fresh = useFreshOnArrival(prefillKey(params, CONTACT_PARAMS));
+  return <ContactFormFields key={fresh} {...props} />;
+}
+
+function ContactFormFields({ lang, dict, talent }: Props) {
+  const { contact, forms } = dict;
+  // `/contact?type=Talent&talent=aoife` (the "Work with" button on a talent page) preselects the enquiry type and
+  // ticks the people named; see lib/forms/prefill.ts.
+  const { enquiryType, talent: pickedIds } = contactPrefill(useSearchParams(), talent);
+  const conform = useConformForm({
+    action: submitContact,
+    schema: contactSchema,
+    defaultValue: { enquiryType, talent: pickedIds },
+  });
+  const { fields, pending } = conform;
+  // Whoever is picked is only asked about, and only stored, for a Talent enquiry.
+  const type = useFormData(conform.form.id, (data) => data.get("enquiryType"), { fallback: enquiryType });
+
+  if (conform.succeeded) {
     return (
       <GlassPanel className="max-w-xl p-8" role="status">
         <h2 className="font-display text-3xl">{contact.successTitle}</h2>
@@ -29,67 +51,61 @@ export function ContactForm({ lang, dict }: { lang: Locale; dict: Pick<Dictionar
     );
   }
 
-  const fieldErrors = state.fieldErrors ?? {};
-  const message = (code?: FormErrorCode) => (code ? forms.errors[code] : undefined);
-  const err = (name: string) => message(fieldErrors[name]);
-  const summary: SummaryItem[] = [
-    ["enquiryType", contact.enquiryType],
-    ["name", contact.name],
-    ["email", contact.email],
-    ["message", contact.message],
-  ].flatMap(([name, label]) => {
-    const text = err(name);
-    return text ? [{ name, label, message: text }] : [];
-  });
-  const values = state.values ?? {};
-
   return (
-    <form
-      action={(formData) => {
-        submissionId.current ??= crypto.randomUUID();
-        formData.set("submissionId", submissionId.current);
-        formAction(formData);
-      }}
-      className="relative flex max-w-xl flex-col gap-4"
+    <Form
+      conform={conform}
+      lang={lang}
+      forms={forms}
+      labels={[
+        ["enquiryType", contact.enquiryType],
+        ["name", contact.name],
+        ["email", contact.email],
+        ["message", contact.message],
+      ]}
+      className="max-w-xl gap-4"
     >
-      <input type="hidden" name="lang" value={lang} />
-      <Honeypot />
-
-      {state.status === "error" && (
-        <FormErrorSummary title={forms.errorSummary} items={summary} message={message(state.error)} attempt={state} />
-      )}
-
-      <Field
-        name="enquiryType"
-        as="select"
-        label={contact.enquiryType}
-        required
-        defaultValue={isEnquiryType(values.enquiryType ?? null) ? values.enquiryType : initialType}
-        error={err("enquiryType")}
-      >
+      <Field field={fields.enquiryType} as="select" label={contact.enquiryType} required>
         {ENQUIRY_TYPES.map((type) => (
           <option key={type} value={type}>
             {contact.enquiryTypes[type]}
           </option>
         ))}
       </Field>
-      <Field name="name" label={contact.name} required autoComplete="name" defaultValue={values.name} error={err("name")} />
+      {type === "Talent" && (
+        <TalentCombobox field={fields.talent} labels={{ ...contact.talent, optional: contact.optional }} options={talent} />
+      )}
       <Field
-        name="email"
+        field={fields.name}
+        label={contact.name}
+        required
+        autoComplete="name"
+        maxLength={limits.name}
+        placeholder={contact.placeholders.name}
+      />
+      <Field
+        field={fields.email}
         type="email"
         label={contact.email}
         required
         autoComplete="email"
-        defaultValue={values.email}
-        error={err("email")}
+        maxLength={limits.email}
+        placeholder={contact.placeholders.email}
       />
-      <Field name="message" as="textarea" label={contact.message} required defaultValue={values.message} error={err("message")} />
+      <Field
+        field={fields.message}
+        as="textarea"
+        // The main body of the enquiry: room to write, and a lot more before it scrolls.
+        minRows={6}
+        maxRows={16}
+        label={contact.message}
+        required
+        maxLength={limits.message}
+        placeholder={contact.placeholders.message}
+      />
 
       <div>
-        <GlassPillButton type="submit" size="lg" disabled={pending} aria-disabled={pending}>
-          {pending ? contact.sending : contact.submit}
-        </GlassPillButton>
+        <SubmitButton pending={pending}>{pending ? contact.sending : contact.submit}</SubmitButton>
       </div>
-    </form>
+    </Form>
   );
 }

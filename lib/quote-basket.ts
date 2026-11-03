@@ -4,9 +4,11 @@ import { useEffect, useSyncExternalStore } from "react";
 import { z } from "zod";
 import { create } from "zustand";
 import { createJSONStorage, persist, type StateStorage } from "zustand/middleware";
+import { clampQty, MAX_QTY } from "./basket-qty";
+
+export { clampQty };
 
 const STORAGE_KEY = "fiu:quote-basket";
-const MAX_QTY = 99;
 
 const lineSchema = z.object({ itemId: z.string(), qty: z.number().int().min(1).max(MAX_QTY) });
 
@@ -27,12 +29,12 @@ export const basketSchema = z
   })
   .catch(EMPTY);
 
-export const clampQty = (qty: number, max = MAX_QTY) => Math.min(max, MAX_QTY, Math.max(1, Math.floor(qty)));
-
 type BasketActions = {
   /** `max` is the item's per-quote cap from Sanity; quantities never go above it. */
   add: (itemId: string, qty?: number, max?: number) => void;
   setQty: (itemId: string, qty: number, max?: number) => void;
+  /** Make sure the item is in the quote at exactly `qty`: unlike `add`, doing it twice changes nothing. */
+  ensure: (itemId: string, qty: number, max?: number) => void;
   remove: (itemId: string) => void;
   setDates: (dates: Partial<Pick<Basket, "startDate" | "endDate">>) => void;
   clear: () => void;
@@ -76,6 +78,13 @@ export const useBasketStore = create<Basket & BasketActions>()(
         if (qty < 1) return get().remove(itemId);
         set({ lines: get().lines.map((l) => (l.itemId === itemId ? { ...l, qty: clampQty(qty, max) } : l)) });
       },
+      ensure: (itemId, qty, max = MAX_QTY) => {
+        const { lines } = get();
+        const line = { itemId, qty: clampQty(qty, max) };
+        set({
+          lines: lines.some((l) => l.itemId === itemId) ? lines.map((l) => (l.itemId === itemId ? line : l)) : [...lines, line],
+        });
+      },
       remove: (itemId) => set({ lines: get().lines.filter((l) => l.itemId !== itemId) }),
       setDates: (dates) => set(dates),
       clear: () => set(EMPTY),
@@ -95,6 +104,7 @@ export const useBasketStore = create<Basket & BasketActions>()(
 export const basketActions: BasketActions = {
   add: (...args) => useBasketStore.getState().add(...args),
   setQty: (...args) => useBasketStore.getState().setQty(...args),
+  ensure: (...args) => useBasketStore.getState().ensure(...args),
   remove: (...args) => useBasketStore.getState().remove(...args),
   setDates: (...args) => useBasketStore.getState().setDates(...args),
   clear: () => useBasketStore.getState().clear(),

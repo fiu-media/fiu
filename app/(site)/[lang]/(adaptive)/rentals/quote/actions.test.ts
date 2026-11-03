@@ -16,7 +16,7 @@ vi.mock("@/lib/email/settings", () => ({ getRecipient: mocks.getRecipient }));
 import { submitQuote } from "./actions";
 
 const SUBMISSION_ID = "3f1c2b4e-8a6d-4c1e-9b7a-0d5e6f7a8b9c";
-const idle = { status: "idle" } as const;
+const idle = null;
 
 const form = (overrides: Record<string, string> = {}) => {
   const formData = new FormData();
@@ -25,8 +25,8 @@ const form = (overrides: Record<string, string> = {}) => {
     submissionId: SUBMISSION_ID,
     name: "Aoife",
     email: "aoife@example.com",
-    startDate: "2999-01-01",
-    endDate: "2999-01-03",
+    startDate: "2026-07-01",
+    endDate: "2026-07-03",
     items: JSON.stringify([{ itemId: "cam", qty: 2 }]),
     ...overrides,
   };
@@ -38,6 +38,8 @@ const camera = { _id: "cam", name: "Camera", brand: "Arri", maxQuantity: 5 };
 
 beforeEach(() => {
   vi.resetAllMocks();
+  // Dates are checked against today, so pin it.
+  vi.useFakeTimers({ toFake: ["Date"], now: new Date("2026-06-01T12:00:00Z") });
   vi.spyOn(console, "error").mockImplementation(() => {});
   vi.spyOn(console, "warn").mockImplementation(() => {});
   mocks.checkBotId.mockResolvedValue({ isBot: false });
@@ -47,9 +49,11 @@ beforeEach(() => {
   mocks.getRecipient.mockResolvedValue("studio@example.com");
 });
 
+afterEach(() => vi.useRealTimers());
+
 describe("submitQuote", () => {
   it("stores the request and emails the studio and the visitor", async () => {
-    expect(await submitQuote(idle, form())).toEqual({ status: "success" });
+    expect(await submitQuote(idle, form())).toMatchObject({ success: true });
 
     expect(mocks.create).toHaveBeenCalledOnce();
     expect(mocks.create.mock.calls[0][0]).toMatchObject({
@@ -78,7 +82,7 @@ describe("submitQuote", () => {
 
   it("rejects bots without touching Sanity or email", async () => {
     mocks.checkBotId.mockResolvedValue({ isBot: true });
-    expect(await submitQuote(idle, form())).toMatchObject({ status: "error", error: "rejected" });
+    expect(await submitQuote(idle, form())).toMatchObject({ error: { formErrors: ["rejected"] } });
     expect(mocks.fetch).not.toHaveBeenCalled();
     expect(mocks.create).not.toHaveBeenCalled();
     expect(mocks.sendEmail).not.toHaveBeenCalled();
@@ -86,18 +90,27 @@ describe("submitQuote", () => {
 
   it("returns field errors for invalid input", async () => {
     const state = await submitQuote(idle, form({ email: "nope", name: "" }));
-    expect(state).toMatchObject({ status: "error", fieldErrors: { email: "invalid", name: "required" } });
+    expect(state).toMatchObject({
+      error: { fieldErrors: { email: ["emailInvalid"], name: ["required"] } },
+      submission: { payload: { email: "nope" } },
+    });
     expect(mocks.create).not.toHaveBeenCalled();
   });
 
-  it("treats an unparsable basket as empty", async () => {
+  it("treats an unparsable basket as invalid", async () => {
     const state = await submitQuote(idle, form({ items: "{not json" }));
-    expect(state).toMatchObject({ status: "error", fieldErrors: { items: expect.any(String) } });
+    expect(state).toMatchObject({ error: { fieldErrors: { items: ["invalid"] } } });
+  });
+
+  it("treats a missing basket as empty", async () => {
+    const formData = form();
+    formData.delete("items");
+    expect(await submitQuote(idle, formData)).toMatchObject({ error: { fieldErrors: { items: ["empty"] } } });
   });
 
   it("rejects a start date in the past", async () => {
     const state = await submitQuote(idle, form({ startDate: "2000-01-01", endDate: "2000-01-02" }));
-    expect(state).toMatchObject({ status: "error", fieldErrors: { startDate: "past" } });
+    expect(state).toMatchObject({ error: { fieldErrors: { startDate: ["past"] } }, submission: { payload: { name: "Aoife" } } });
     expect(mocks.create).not.toHaveBeenCalled();
   });
 
@@ -107,46 +120,58 @@ describe("submitQuote", () => {
     // 23:30 UTC on 30 Jun 2026 is 00:30 on 1 Jul in Dublin (IST, UTC+1).
     it("accepts a pick-up on Dublin's today and rejects Dublin's yesterday", async () => {
       vi.useFakeTimers({ toFake: ["Date"], now: new Date("2026-06-30T23:30:00Z") });
-      expect(await submitQuote(idle, form({ startDate: "2026-07-01", endDate: "2026-07-02" }))).toEqual({
-        status: "success",
+      expect(await submitQuote(idle, form({ startDate: "2026-07-01", endDate: "2026-07-02" }))).toMatchObject({
+        success: true,
       });
       const state = await submitQuote(idle, form({ startDate: "2026-06-30", endDate: "2026-07-02" }));
-      expect(state).toMatchObject({ status: "error", fieldErrors: { startDate: "past" } });
+      expect(state).toMatchObject({ error: { fieldErrors: { startDate: ["past"] } } });
     });
   });
 
   it("reports unavailable when an item is missing or no longer available", async () => {
     mocks.fetch.mockResolvedValue([]);
-    expect(await submitQuote(idle, form())).toMatchObject({ status: "error", error: "unavailable" });
+    expect(await submitQuote(idle, form())).toMatchObject({ error: { formErrors: ["unavailable"] } });
     expect(mocks.create).not.toHaveBeenCalled();
   });
 
   it("reports overLimit when a quantity exceeds the item's cap", async () => {
     mocks.fetch.mockResolvedValue([{ ...camera, maxQuantity: 1 }]);
-    expect(await submitQuote(idle, form())).toMatchObject({ status: "error", error: "overLimit" });
+    expect(await submitQuote(idle, form())).toMatchObject({ error: { formErrors: ["overLimit"] } });
     expect(mocks.create).not.toHaveBeenCalled();
   });
 
   it("falls back to a cap of 99 when the item has none", async () => {
     mocks.fetch.mockResolvedValue([{ ...camera, maxQuantity: null }]);
-    expect(await submitQuote(idle, form({ items: JSON.stringify([{ itemId: "cam", qty: 99 }]) }))).toEqual({ status: "success" });
+    expect(await submitQuote(idle, form({ items: JSON.stringify([{ itemId: "cam", qty: 99 }]) }))).toMatchObject({
+      success: true,
+    });
   });
 
   it("treats a 409 (double submit) as success without emailing again", async () => {
     mocks.create.mockRejectedValue({ statusCode: 409 });
-    expect(await submitQuote(idle, form())).toEqual({ status: "success" });
+    expect(await submitQuote(idle, form())).toMatchObject({ success: true });
     expect(mocks.sendEmail).not.toHaveBeenCalled();
   });
 
   it("reports failed when storing fails, keeping the entered values", async () => {
     mocks.create.mockRejectedValue(new Error("boom"));
-    expect(await submitQuote(idle, form())).toMatchObject({ status: "error", error: "failed", values: { name: "Aoife" } });
+    expect(await submitQuote(idle, form())).toMatchObject({
+      error: { formErrors: ["failed"] },
+      submission: { payload: { name: "Aoife" } },
+    });
     expect(mocks.sendEmail).not.toHaveBeenCalled();
   });
 
   it("still succeeds when email delivery fails", async () => {
     mocks.sendEmail.mockRejectedValue(new Error("resend down"));
-    expect(await submitQuote(idle, form())).toEqual({ status: "success" });
+    expect(await submitQuote(idle, form())).toMatchObject({ success: true });
+  });
+
+  it("stores an accented address but can only email the studio, and says so", async () => {
+    const state = await submitQuote(idle, form({ email: "séan@example.ie" }));
+    expect(state).toMatchObject({ success: true, confirmation: false });
+    expect(mocks.create.mock.calls[0][0]).toMatchObject({ email: "séan@example.ie" });
+    expect(mocks.sendEmail.mock.calls.map(([email]) => email.to)).toEqual(["studio@example.com", "séan@example.ie"]);
   });
 
   it("only emails the visitor when no studio recipient is configured", async () => {

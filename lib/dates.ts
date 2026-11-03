@@ -15,6 +15,9 @@ function parseIso(value: string): number | null {
   return new Date(time).toISOString().slice(0, 10) === value ? time : null;
 }
 
+/** True when `value` is a real `YYYY-MM-DD` calendar date (not `2026-02-30`). */
+export const isIsoDate = (value: unknown): value is string => typeof value === "string" && parseIso(value) !== null;
+
 /** Today's calendar date in Dublin (`YYYY-MM-DD`), whatever timezone the server runs in. */
 export const todayInDublin = (now: Date = new Date()): string =>
   new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Dublin" }).format(now);

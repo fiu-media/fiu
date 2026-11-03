@@ -44,6 +44,13 @@ The notification emails are React Email components in `emails/`, rendered by `li
 - Empty values count as unset. `SKIP_ENV_VALIDATION=1` skips the checks for a deliberately secret-less build.
 - Server-only variables throw if read from client code, but `env.ts` itself stays importable from the browser for the `NEXT_PUBLIC_*` values.
 
+## Deep links into the forms
+
+Links can open the contact and quote forms prefilled. The parameters, how each is validated, and why name, email, phone and message are never read from a URL (they would end up in logs, analytics and Referer headers) are documented in [`lib/forms/prefill.ts`](lib/forms/prefill.ts), which also has the link builders (`contactHref`, `quoteHref`). Use those rather than assembling a query string by hand. The quote form has a "Copy link to this quote" button that builds such a link from the visitor's kit, dates, company and production.
+
+- `/contact?type=Talent&talent=<slug>&talent=<slug>`
+- `/rentals/quote?pickup=YYYY-MM-DD&return=YYYY-MM-DD&company=…&production=…&item=<slug>[:qty]`
+
 ## Rate limiting
 
 `/contact` and `/rentals/quote` are protected by BotID and a honeypot, but neither caps volume, so a single client could still flood the Sanity inbox and the Resend emails (the quote form also emails the visitor). A Vercel Firewall rate-limit rule covers that. It blocks before any function runs, so there is no code for it in this repo. `vercel.json` can't hold it either (routes there only support `deny` and `challenge`), so the rule lives in the Vercel project's firewall and has to be created there once:

@@ -422,3 +422,21 @@ html:has(dialog[open]:not([data-nav-overlay])) {
     --sy: 50%;
   }
 }
+
+/*
+ * Fields made of several controls (the phone number, the talent combobox): one ring around the whole field. The global :focus-visible outline would otherwise also
+ * box the inner input (it is unlayered, so Tailwind's outline utilities can't override it).
+ */
+.composite-field:focus-within {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+.composite-field input:focus-visible,
+.composite-field select:focus-visible {
+  outline: none;
+}
+/* The country list is the browser's own; keep it in the site's colours. */
+.composite-field select {
+  color: var(--fg);
+  background: var(--bg-raised);
+}

@@ -23,6 +23,8 @@ test.describe("quote request", () => {
     await page.getByLabel(quote.endDate).fill(isoDateFromNow(16));
     await page.getByLabel(quote.name).fill("E2E Tester");
     await page.getByLabel(quote.email).fill(testEmail());
+    // Ireland (+353) is preselected, so a national number is enough.
+    await page.getByRole("textbox", { name: /^Phone/ }).pressSequentially("871234567");
     await page.getByRole("button", { name: quote.submit }).click();
 
     await expect(page.getByRole("heading", { name: quote.successTitle })).toBeVisible();
@@ -31,18 +33,112 @@ test.describe("quote request", () => {
     await expect(page.getByText(quote.emptyBasket)).toBeVisible();
   });
 
-  test("a server-side validation error is announced and focused", async ({ page }) => {
+  test("the phone field takes a number however it is written", async ({ page }) => {
+    const number = page.getByRole("textbox", { name: /^Phone/ });
+    const country = page.getByRole("combobox", { name: /country/i });
+    const prefix = page.locator(".composite-field").getByText(/^\+\d+$/);
+    await expect(country).toHaveValue("IE");
+    await expect(prefix).toHaveText("+353");
+    await expect(number).toHaveAttribute("placeholder", "(83) 123 4567");
+
+    // With +353 shown, the 0 of a national number isn't written; people do both, and both end up the same.
+    for (const written of [
+      "0831234567",
+      "831234567",
+      "+353831234567",
+      "+353 0 83 123 4567",
+      "00353831234567",
+      "(083) 123-4567",
+    ]) {
+      await number.fill("");
+      await number.pressSequentially(written);
+      await expect(number, written).toHaveValue("83 123 4567");
+      await expect(prefix).toHaveText("+353");
+    }
+
+    // A pasted number from another country brings its country with it.
+    await number.fill("+44 20 7183 8750");
+    await expect(prefix).toHaveText("+44");
+    await expect(country).toHaveValue("GB");
+    await expect(number).toHaveValue("20 7183 8750");
+  });
+
+  test("the phone field keeps the caret where you are editing, and checks the number on blur", async ({ page }) => {
+    const number = page.getByRole("textbox", { name: /^Phone/ });
+    const country = page.getByRole("combobox", { name: /country/i });
+
+    await number.pressSequentially("831234567");
+    await expect(number).toHaveValue("83 123 4567");
+    await number.blur();
+    await expect(number).not.toHaveAttribute("aria-invalid", "true");
+
+    // Typing in the middle re-formats the number without throwing the caret to the end.
+    await number.focus();
+    await number.evaluate((input: HTMLInputElement) => input.setSelectionRange(2, 2));
+    await page.keyboard.type("90");
+    await expect(number).toHaveValue("83901234567");
+    expect(await number.evaluate((input: HTMLInputElement) => input.selectionStart)).toBe(4);
+
+    await country.selectOption("GB");
+    await number.fill("1");
+    await number.blur();
+    await expect(number).toHaveAttribute("aria-invalid", "true");
+    await expect(page.getByText(forms.errors.phoneInvalid)).toBeVisible();
+
+    // The number is re-checked as it is fixed (the same rule as every field), without leaving it.
+    await country.selectOption("IE");
+    await number.fill("831234567");
+    await expect(page.getByText(forms.errors.phoneInvalid)).toHaveCount(0);
+    await expect(number).not.toHaveAttribute("aria-invalid", "true");
+  });
+
+  test("a validation error is announced and focused", async ({ page }) => {
     await page.getByLabel(quote.startDate).fill(isoDateFromNow(14));
     await page.getByLabel(quote.endDate).fill(isoDateFromNow(16));
     await page.getByLabel(quote.name).fill("E2E Tester");
-    // Passes the browser's own email check but not the server's, so the error comes back from the action.
     await page.getByLabel(quote.email).fill("tester@localhost");
     await page.getByRole("button", { name: quote.submit }).click();
 
     const summary = page.getByRole("alert").filter({ hasText: forms.errorSummary });
     await expect(summary).toBeFocused();
-    await expect(summary.getByRole("link", { name: quote.email })).toHaveAttribute("href", "#field-email");
+    const link = summary.getByRole("link", { name: quote.email });
+    await expect(link).toHaveAttribute("href", `#${await page.getByLabel(quote.email).getAttribute("id")}`);
     // The visitor's input survives the failed attempt.
+    await expect(page.getByLabel(quote.name)).toHaveValue("E2E Tester");
+  });
+
+  test("a pick-up in the past is caught before anything is sent", async ({ page }) => {
+    await page.getByLabel(quote.startDate).fill(isoDateFromNow(-3));
+    await page.getByLabel(quote.endDate).fill(isoDateFromNow(2));
+    await page.getByLabel(quote.name).fill("E2E Tester");
+    await page.getByLabel(quote.email).fill(testEmail());
+    await page.getByRole("button", { name: quote.submit }).click();
+
+    const summary = page.getByRole("alert").filter({ hasText: forms.errorSummary });
+    await expect(summary).toBeFocused();
+    await expect(summary.getByText(forms.errors.past)).toBeVisible();
+    await expect(page.getByLabel(quote.name)).toHaveValue("E2E Tester");
+  });
+
+  test("an error only the server knows about comes back in the summary", async ({ page }) => {
+    // An item that has since been unpublished: the browser can't tell, the server can.
+    await page.evaluate(() => {
+      const key = "fiu:quote-basket";
+      const stored = JSON.parse(localStorage.getItem(key) ?? "{}");
+      stored.state.lines.push({ itemId: "rental-no-longer-exists", qty: 1 });
+      localStorage.setItem(key, JSON.stringify(stored));
+    });
+    await page.reload();
+
+    await page.getByLabel(quote.startDate).fill(isoDateFromNow(14));
+    await page.getByLabel(quote.endDate).fill(isoDateFromNow(16));
+    await page.getByLabel(quote.name).fill("E2E Tester");
+    await page.getByLabel(quote.email).fill(testEmail());
+    await page.getByRole("button", { name: quote.submit }).click();
+
+    const summary = page.getByRole("alert").filter({ hasText: forms.errors.unavailable });
+    await expect(summary).toBeFocused();
+    await expect(page.getByText(en.basket.unknownItem)).toBeVisible();
     await expect(page.getByLabel(quote.name)).toHaveValue("E2E Tester");
   });
 });

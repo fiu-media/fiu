@@ -1,45 +1,22 @@
 "use server";
 
-import { todayInDublin } from "@/lib/dates";
+import { toDeliverable } from "@/lib/email/address";
 import { getRecipient } from "@/lib/email/settings";
 import { studioEditUrl } from "@/lib/email/studio-link";
 import { quoteConfirmation, quoteNotification, type KitLine } from "@/lib/email/templates";
 import { isConflict, sendAll } from "@/lib/forms/notify";
 import { quoteSchema } from "@/lib/forms/schemas";
 import type { FormState } from "@/lib/forms/state";
-import { formDataToRecord, guardSubmission } from "@/lib/forms/submit";
+import { guardSubmission } from "@/lib/forms/submit";
 import { defaultLocale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { AVAILABLE_ITEM_IDS_QUERY } from "@/sanity/lib/queries";
 import { writeClient } from "@/sanity/lib/writeClient";
 
-function parseItems(value: string | undefined): unknown {
-  try {
-    return JSON.parse(value || "[]");
-  } catch {
-    return null;
-  }
-}
-
 export async function submitQuote(_previous: FormState, formData: FormData): Promise<FormState> {
-  const raw = formDataToRecord(formData);
-  const guarded = await guardSubmission(quoteSchema, { ...raw, items: parseItems(raw.items) });
-  if (!guarded.ok) return guarded.state;
-  const data = guarded.data;
-  const values = {
-    name: data.name,
-    email: data.email,
-    phone: data.phone,
-    company: data.company,
-    production: data.production,
-    startDate: data.startDate,
-    endDate: data.endDate,
-    message: data.message,
-  };
-
-  if (data.startDate < todayInDublin()) {
-    return { status: "error", fieldErrors: { startDate: "past" }, values };
-  }
+  const guarded = await guardSubmission(quoteSchema, formData);
+  if (!guarded.ok) return guarded.result;
+  const { data, fail, succeed } = guarded;
 
   // The basket lives in the visitor's browser, so treat it as untrusted: merge duplicates and
   // only accept items that are currently published and available.
@@ -49,10 +26,10 @@ export async function submitQuote(_previous: FormState, formData: FormData): Pro
     ids: [...qtyById.keys()],
     fallbackLang: defaultLocale,
   });
-  if (found.length !== qtyById.size) return { status: "error", error: "unavailable", values };
+  if (found.length !== qtyById.size) return fail({ formErrors: ["unavailable"] });
 
   if (found.some((item) => qtyById.get(item._id)! > (item.maxQuantity ?? 99))) {
-    return { status: "error", error: "overLimit", values };
+    return fail({ formErrors: ["overLimit"] });
   }
 
   const kit: KitLine[] = found.map((item) => ({ name: item.name, brand: item.brand, qty: qtyById.get(item._id)! }));
@@ -82,9 +59,9 @@ export async function submitQuote(_previous: FormState, formData: FormData): Pro
       createdAt: new Date().toISOString(),
     });
   } catch (error) {
-    if (isConflict(error)) return { status: "success" };
+    if (isConflict(error)) return succeed();
     console.error("[quote] could not store quote request:", error);
-    return { status: "error", error: "failed", values };
+    return fail({ formErrors: ["failed"] });
   }
 
   const dict = await getDictionary(data.lang);
@@ -97,5 +74,5 @@ export async function submitQuote(_previous: FormState, formData: FormData): Pro
     { to: data.email, ...quoteConfirmation(dict, emailData) },
   ]);
 
-  return { status: "success" };
+  return succeed({ confirmation: toDeliverable(data.email) !== null });
 }

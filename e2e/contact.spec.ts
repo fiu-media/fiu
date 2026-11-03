@@ -5,6 +5,16 @@ import { testEmail } from "./helpers";
 const { contact, forms } = en;
 
 test.describe("contact form", () => {
+  test("an address with an accent, which Irish names often have, is accepted", async ({ page }) => {
+    await page.goto("/contact");
+    await page.getByLabel(contact.name).fill("Seán Ó Súilleabháin");
+    await page.getByLabel(contact.email).fill(testEmail().replace("e2e-", "seán-"));
+    await page.getByLabel(contact.message).fill("Hello from an address with a fada.");
+    await page.getByRole("button", { name: contact.submit }).click();
+
+    await expect(page.getByRole("heading", { name: contact.successTitle })).toBeVisible();
+  });
+
   test("?type= preselects the enquiry type", async ({ page }) => {
     await page.goto("/contact?type=Talent");
     await expect(page.getByLabel(contact.enquiryType)).toHaveValue("Talent");
@@ -15,17 +25,42 @@ test.describe("contact form", () => {
     await expect(page.getByLabel(contact.enquiryType)).toHaveValue("Project");
   });
 
+  test("a field is checked as soon as it loses focus", async ({ page }) => {
+    await page.goto("/contact");
+    const email = page.getByLabel(contact.email);
+    await email.fill("nope");
+    await page.getByLabel(contact.message).focus();
+
+    await expect(email).toHaveAttribute("aria-invalid", "true");
+    await expect(page.getByText(forms.errors.emailInvalid)).toBeVisible();
+    // Nothing has been submitted yet, so no summary.
+    await expect(page.getByRole("alert").filter({ hasText: forms.errorSummary })).toHaveCount(0);
+  });
+
+  test("a pasted email with stray spaces is accepted, and the fields stop at their limit", async ({ page }) => {
+    await page.goto("/contact");
+    await page.getByLabel(contact.name).fill("x".repeat(200));
+    await expect(page.getByLabel(contact.name)).toHaveValue("x".repeat(120));
+
+    const email = page.getByLabel(contact.email);
+    await email.fill("  a@example.com ");
+    await page.getByLabel(contact.message).focus();
+    await expect(email).not.toHaveAttribute("aria-invalid", "true");
+  });
+
   test("a failed submission moves focus to the error summary", async ({ page }) => {
     await page.goto("/contact");
     await page.getByLabel(contact.name).fill("E2E Tester");
-    // Valid for the browser, rejected by the server, so the error comes back from the action.
     await page.getByLabel(contact.email).fill("tester@localhost");
     await page.getByLabel(contact.message).fill("Hello");
     await page.getByRole("button", { name: contact.submit }).click();
 
     const summary = page.getByRole("alert").filter({ hasText: forms.errorSummary });
     await expect(summary).toBeFocused();
-    await expect(summary.getByRole("link", { name: contact.email })).toHaveAttribute("href", "#field-email");
+    const link = summary.getByRole("link", { name: contact.email });
+    await expect(link).toHaveAttribute("href", `#${await page.getByLabel(contact.email).getAttribute("id")}`);
+    // The visitor's input survives the failed attempt.
+    await expect(page.getByLabel(contact.name)).toHaveValue("E2E Tester");
   });
 
   test("a valid message is sent", async ({ page }) => {
