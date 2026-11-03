@@ -94,6 +94,9 @@ function ContactFormFields({ lang, dict, talent }: Props) {
       <Field
         field={fields.message}
         as="textarea"
+        // The main body of the enquiry: room to write, and a lot more before it scrolls.
+        minRows={6}
+        maxRows={16}
         label={contact.message}
         required
         maxLength={limits.message}

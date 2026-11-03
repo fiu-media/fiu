@@ -67,8 +67,9 @@ const useCanShare = () => useSyncExternalStore(subscribeToPointer, canShare, () 
  * goes into the link is the caller's decision (see `quoteHref`); this only delivers it, says so (to everyone,
  * including screen readers), and if the browser won't copy, shows the link to copy by hand.
  *
- * It renders into a wrapping flex row (next to the submit button): the button sits beside its neighbours, and the
- * hint and the by-hand fallback take the full width beneath them.
+ * It renders into a wrapping flex row of its own, apart from the submit button (the hint is about the link, and must not
+ * read as being about sending the form): the hint sits beside the button, or under it where there is no room, and the
+ * by-hand fallback takes the full width beneath.
  */
 export function CopyLinkButton({ label, copiedLabel, failedLabel, shareLabel, shareTitle, hint, getLink }: Props) {
   const hintId = useId();
@@ -120,7 +121,7 @@ export function CopyLinkButton({ label, copiedLabel, failedLabel, shareLabel, sh
       <p role="status" className="sr-only">
         {copied ? copiedLabel : ""}
       </p>
-      <p id={hintId} className="flex basis-full items-start gap-1.5 text-xs text-fg-muted">
+      <p id={hintId} className="flex min-w-0 flex-1 basis-56 items-start gap-1.5 text-xs text-fg-muted">
         <LockIcon className="mt-0.5 shrink-0" />
         {hint}
       </p>

@@ -115,7 +115,7 @@ export const en = {
     shareTitle: "Quote from Fiú Media",
     linkCopied: "Link copied",
     linkCopyFailed: "Couldn't copy automatically. Copy this link:",
-    copyLinkHint: "Shares the kit, dates, company and production. Not your contact details.",
+    copyLinkHint: "The link includes the kit, dates, company and production, but not your contact details.",
     placeholders: {
       name: "Aoife Murphy",
       email: "name@example.com",

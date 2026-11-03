@@ -1,8 +1,9 @@
 "use client";
 
-import { createContext, use, type ReactNode } from "react";
+import { createContext, use, useRef, type CSSProperties, type ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import { toErrorCode, type FormErrorCode } from "@/lib/forms/state";
+import { useAutoGrow } from "./useAutoGrow";
 
 export type ErrorMessages = Record<FormErrorCode, string>;
 
@@ -37,7 +38,9 @@ type Props = {
   onChange?: (value: string) => void;
   autoComplete?: string;
   required?: boolean;
-  rows?: number;
+  /** A textarea starts this many lines tall, grows with what is typed, and scrolls past `maxRows`. */
+  minRows?: number;
+  maxRows?: number;
   min?: string;
   /** Stops typing and pasting past the limit the schema enforces. */
   maxLength?: number;
@@ -91,7 +94,8 @@ export function Field({
   onChange,
   autoComplete,
   required,
-  rows = 5,
+  minRows = 3,
+  maxRows = 12,
   min,
   maxLength,
   placeholder,
@@ -116,9 +120,25 @@ export function Field({
     placeholder,
     className,
   };
+  const textarea = useRef<HTMLTextAreaElement>(null);
+  useAutoGrow(textarea);
+  // Heights are in lines (`lh`) plus the padding and border, and never more than 60% of the screen: on a phone, with the
+  // keyboard up, a tall box would leave no room to see what is being typed.
+  const sizes = {
+    "--min": `min(calc(${minRows}lh + 1.5rem + 2px), 60dvh)`,
+    "--max": `min(calc(${maxRows}lh + 1.5rem + 2px), 60dvh)`,
+  };
   const control =
     as === "textarea" ? (
-      <textarea {...shared} defaultValue={field.defaultValue} rows={rows} />
+      <textarea
+        ref={textarea}
+        {...shared}
+        // `resize-y`: the handle moves the bottom edge only, not the width, which the form's layout sets.
+        className={cn(className, "field-sizing-content max-h-(--max) min-h-(--min) resize-y")}
+        style={sizes as CSSProperties}
+        defaultValue={field.defaultValue}
+        rows={minRows}
+      />
     ) : as === "select" ? (
       <select {...shared} defaultValue={field.defaultValue}>
         {children}

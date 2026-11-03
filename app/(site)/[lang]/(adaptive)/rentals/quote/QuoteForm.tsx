@@ -205,6 +205,9 @@ function QuoteFormFields({ lang, dict }: Props) {
         <Field
           field={fields.message}
           as="textarea"
+          // An optional note after the form's real fields: starts small.
+          minRows={3}
+          maxRows={10}
           label={quote.message}
           optionalLabel={quote.optional}
           maxLength={limits.message}
@@ -212,17 +215,22 @@ function QuoteFormFields({ lang, dict }: Props) {
         />
       </section>
 
-      <div className="flex flex-wrap items-center gap-3">
-        <SubmitButton pending={pending}>{pending ? quote.sending : quote.submit}</SubmitButton>
-        <CopyLinkButton
-          label={quote.copyLink}
-          copiedLabel={quote.linkCopied}
-          failedLabel={quote.linkCopyFailed}
-          shareLabel={quote.shareLink}
-          shareTitle={quote.shareTitle}
-          hint={quote.copyLinkHint}
-          getLink={shareLink}
-        />
+      <div className="flex flex-col gap-6">
+        <div>
+          <SubmitButton pending={pending}>{pending ? quote.sending : quote.submit}</SubmitButton>
+        </div>
+        {/* Apart from sending, under its own rule: the copied link leaves out what Send includes (contact details). */}
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-3 border-t border-line pt-6">
+          <CopyLinkButton
+            label={quote.copyLink}
+            copiedLabel={quote.linkCopied}
+            failedLabel={quote.linkCopyFailed}
+            shareLabel={quote.shareLink}
+            shareTitle={quote.shareTitle}
+            hint={quote.copyLinkHint}
+            getLink={shareLink}
+          />
+        </div>
       </div>
     </Form>
   );
