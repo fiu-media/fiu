@@ -110,8 +110,10 @@ function Nav({ items, homeHref, labels, onImage, pathname }: NavProps & { pathna
       >
         {/* The frosted background reaches 12rem past the screen edges, so it also fills the notch and chin (and gives
             Safari a layer at the edges to tint its bars from) instead of stopping at the viewport. It appears at once:
-            Safari waits for a fading layer to settle before tinting its bars from it, so only the content fades in. */}
-        <div aria-hidden className="absolute inset-x-0 -inset-y-48 -z-10 bg-bg/80 backdrop-blur-2xl" />
+            Safari waits for a fading layer to settle before tinting its bars from it, so only the content fades in. The
+            tint is a gradient image, not a background colour: Safari takes a fixed layer's flat background colour for its
+            bars (solid black here) and ignores the blur, but otherwise shows what is rendered behind it. */}
+        <div aria-hidden className="absolute inset-x-0 -inset-y-48 -z-10 bg-linear-to-b from-bg/80 to-bg/80 backdrop-blur-2xl" />
         <div className="flex items-center justify-between px-[max(1.25rem,env(safe-area-inset-left))] pt-[max(1.25rem,env(safe-area-inset-top))] pr-[max(1.25rem,env(safe-area-inset-right))] transition-opacity duration-300 starting:opacity-0">
           <HomeLink href={homeHref} label={labels.home} className="h-9" />
           <button
