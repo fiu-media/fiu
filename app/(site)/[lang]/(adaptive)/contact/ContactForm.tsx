@@ -2,26 +2,53 @@
 
 import { useFormData } from "@conform-to/react/future";
 import { useSearchParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import { Field } from "@/components/forms/Field";
 import { Form, SubmitButton } from "@/components/forms/Form";
 import { useConformForm } from "@/components/forms/useConformForm";
-import { TalentPicker, type TalentOption } from "@/components/forms/TalentPicker";
+import { TalentCombobox, type TalentOption } from "@/components/forms/TalentCombobox";
 import { GlassPanel } from "@/components/ui/Glass";
 import { contactSchema, ENQUIRY_TYPES, isEnquiryType, limits } from "@/lib/forms/schemas";
 import type { Locale } from "@/lib/i18n/config";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { submitContact } from "./actions";
 
-export function ContactForm({
-  lang,
-  dict,
-  talent,
-}: {
+type Props = {
   lang: Locale;
   dict: Pick<Dictionary, "contact" | "forms">;
   /** The roster, for a Talent enquiry to pick from. */
   talent: TalentOption[];
-}) {
+};
+
+/**
+ * The form, which starts over every time a link arrives with something to prefill. Next keeps a page's state while
+ * you browse elsewhere (so a half-written message survives a trip to the Talent pages), which also means a
+ * link like "Work with Aoife" lands on the old form: old answers, old errors, a "Message sent" panel, and none of
+ * what the link asked for. A link that names a type or talent gets a fresh form, even if it is the very same link
+ * as last time; coming back with a plain link keeps the draft.
+ *
+ * "Arrives" is detected from the page being shown again: React runs a kept-alive page's effects afresh each time it
+ * is shown, and again when its prefill changes while it is showing.
+ */
+export function ContactForm(props: Props) {
+  const params = useSearchParams();
+  const prefill = new URLSearchParams([...params].filter(([key]) => key === "type" || key === "talent")).toString();
+  const [fresh, setFresh] = useState(0);
+  // False until the first run has settled, so mounting the page doesn't count as an arrival. (In development React
+  // runs a mounting effect twice in a row; the timer, which only fires after both, keeps that from counting either.)
+  const settled = useRef(false);
+  useEffect(() => {
+    const arrived = settled.current && prefill !== "";
+    const timer = setTimeout(() => {
+      settled.current = true;
+      if (arrived) setFresh((count) => count + 1);
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [prefill]);
+  return <ContactFormFields key={fresh} {...props} />;
+}
+
+function ContactFormFields({ lang, dict, talent }: Props) {
   const { contact, forms } = dict;
   // `/contact?type=Talent&talent=aoife` (the "Work with" button on a talent page, and the Talent and Rentals pages)
   // preselects the enquiry type and ticks the people named. Slugs that aren't on the roster are ignored.
@@ -72,7 +99,7 @@ export function ContactForm({
         ))}
       </Field>
       {type === "Talent" && (
-        <TalentPicker field={fields.talent} legend={contact.talent} optionalLabel={contact.optional} options={talent} />
+        <TalentCombobox field={fields.talent} labels={{ ...contact.talent, optional: contact.optional }} options={talent} />
       )}
       <Field
         field={fields.name}

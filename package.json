@@ -24,6 +24,7 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "@base-ui/react": "^1.9.0",
     "@conform-to/react": "^1.21.3",
     "@conform-to/zod": "^1.21.3",
     "@react-email/components": "^1.0.12",

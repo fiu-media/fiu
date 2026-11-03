@@ -2,7 +2,7 @@
 
 import { useForm } from "@conform-to/react/future";
 import { coerceFormValue } from "@conform-to/zod/v4/future";
-import { useActionState, useMemo, useRef, useState, useSyncExternalStore, type FormEvent } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState, useSyncExternalStore, type FormEvent } from "react";
 import type { z } from "zod";
 import type { FormState } from "@/lib/forms/state";
 
@@ -16,18 +16,41 @@ type Options = {
 };
 
 /**
- * Wires a server action and its zod schema to Conform: validate each field on blur, repopulate from
- * the server's reply, and give each submit a stable id so a retry after a failure is recognised as
- * the same request.
+ * Wires a server action and its zod schema to Conform, validating the way people expect ("reward early, punish late"):
+ *
+ * 1. While someone types in a field for the first time, nothing is shown. An email isn't "invalid" after one character.
+ * 2. When they leave the field, it is checked and any error shows inline.
+ * 3. Once a field has an error, it is checked as they type, so the error goes the moment the input is valid. A field that
+ *    is fine stays quiet while it is edited, and is checked again when they leave it.
+ * 4. On submit, everything is checked, including fields never touched; the error summary takes focus and is announced.
+ *
+ * It also repopulates from the server's reply, and gives each submit a stable id so a retry after a failure is
+ * recognised as the same request.
  */
 export function useConformForm({ action, schema, defaultValue }: Options) {
   const [state, formAction, pending] = useActionState(action, null);
-  const { form, fields } = useForm(coerceFormValue(schema), {
+  // What the input handler needs from the form, which it is created before (see the effect below).
+  const live = useRef<{ hasError: (name: string) => boolean; validate: (name: string) => void }>(null);
+  const { form, fields, intent } = useForm(coerceFormValue(schema), {
     lastResult: state,
     defaultValue,
+    // Rules 1 and 2: a field is first checked when it is left. Conform's own revalidation is left on blur too, since
+    // it would re-check every field that has been left, not only the ones showing an error.
     shouldValidate: "onBlur",
+    shouldRevalidate: "onBlur",
+    // Rule 3: only a field that is showing an error is re-checked while typing.
+    onInput: (event) => {
+      const name = event.target.name;
+      if (name && live.current?.hasError(name)) live.current.validate(name);
+    },
     // The error summary takes focus; Conform would otherwise jump to the first invalid field.
     onError: () => {},
+  });
+  useEffect(() => {
+    live.current = {
+      hasError: (name) => (form.fieldErrors[name]?.length ?? 0) > 0,
+      validate: (name) => intent.validate(name),
+    };
   });
 
   // Created after hydration so it never lands in the server-rendered (and cached) HTML.

@@ -36,7 +36,7 @@ test.describe("quote request", () => {
   test("the phone field takes a number however it is written", async ({ page }) => {
     const number = page.getByRole("textbox", { name: /^Phone/ });
     const country = page.getByRole("combobox", { name: /country/i });
-    const prefix = page.locator(".phone-field").getByText(/^\+\d+$/);
+    const prefix = page.locator(".composite-field").getByText(/^\+\d+$/);
     await expect(country).toHaveValue("IE");
     await expect(prefix).toHaveText("+353");
     await expect(number).toHaveAttribute("placeholder", "(83) 123 4567");
@@ -84,6 +84,12 @@ test.describe("quote request", () => {
     await number.blur();
     await expect(number).toHaveAttribute("aria-invalid", "true");
     await expect(page.getByText(forms.errors.phoneInvalid)).toBeVisible();
+
+    // The number is re-checked as it is fixed (the same rule as every field), without leaving it.
+    await country.selectOption("IE");
+    await number.fill("831234567");
+    await expect(page.getByText(forms.errors.phoneInvalid)).toHaveCount(0);
+    await expect(number).not.toHaveAttribute("aria-invalid", "true");
   });
 
   test("a validation error is announced and focused", async ({ page }) => {

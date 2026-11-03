@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { errorMessage, type ErrorMessages } from "./Field";
 import type { ConformForm } from "./useConformForm";
 
@@ -26,8 +26,13 @@ export function FormErrorSummary({
   attempt: unknown;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  // The alert is announced once, when the submit fails. Errors then clear as each field is fixed; those changes still
+  // show here, but a screen reader isn't made to read the whole list out again every time.
+  const [quietFor, setQuietFor] = useState<unknown>(null);
   useEffect(() => {
     ref.current?.focus();
+    const timer = setTimeout(() => setQuietFor(attempt), 1000);
+    return () => clearTimeout(timer);
   }, [attempt]);
 
   const items = labels.flatMap(([name, label]) => {
@@ -41,6 +46,7 @@ export function FormErrorSummary({
     <div
       ref={ref}
       role="alert"
+      aria-live={quietFor === attempt ? "off" : undefined}
       tabIndex={-1}
       className="rounded-2xl border border-accent bg-bg-raised p-4 text-sm focus:outline-offset-2"
     >

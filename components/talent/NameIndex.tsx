@@ -83,7 +83,11 @@ export function NameIndex({
                 className="hidden size-12 shrink-0 rounded-lg object-cover max-md:block pointer-coarse:block"
               />
             )}
-            <span className="min-w-0 flex-1 truncate font-display text-3xl italic md:text-6xl">{item.title}</span>
+            {/* `truncate` clips overflow, and the display italic's descenders (g, y) hang below a one-em line box.
+              The padding gives them room inside the clip; the negative margin keeps the row height as it was. */}
+            <span className="-my-[0.15em] min-w-0 flex-1 truncate py-[0.15em] font-display text-3xl italic md:text-6xl">
+              {item.title}
+            </span>
             <span className="shrink-0 text-right text-xs text-fg-muted md:text-sm">{item.meta}</span>
           </Link>
         </li>
