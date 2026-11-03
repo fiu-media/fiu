@@ -7,6 +7,7 @@ import { GlassPillButton } from "@/components/ui/Glass";
 import { cn } from "@/lib/cn";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import type { NavItem } from "@/lib/i18n/nav";
+import { nudgeHomeScroll } from "@/components/home/bleed";
 import { HomeLink } from "./HomeLink";
 
 type NavProps = {
@@ -33,7 +34,12 @@ const isCurrent = (pathname: string, href: string) => pathname === href || pathn
 function Nav({ items, homeHref, labels, onImage, pathname }: NavProps & { pathname: string }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const dialogId = useId();
-  const close = () => dialog.current?.close();
+  // On Home the photo is what Safari should tint its bars from again once the opaque menu is gone, but it only samples
+  // when the page scrolls, so nudge right away (the dialog's `close` event, for Esc, arrives a task later).
+  const close = () => {
+    dialog.current?.close();
+    nudgeHomeScroll();
+  };
   // showModal() focuses the first focusable child, the Home link, which then shows a focus ring. Focus the dialog itself.
   const open = () => {
     dialog.current?.showModal();
@@ -107,6 +113,7 @@ function Nav({ items, homeHref, labels, onImage, pathname }: NavProps & { pathna
         aria-label={labels.label}
         tabIndex={-1}
         data-nav-overlay
+        onClose={nudgeHomeScroll}
         className="fixed inset-0 isolate m-0 h-auto max-h-none w-auto max-w-none touch-none flex-col overflow-visible overscroll-none bg-bg text-fg outline-none! backdrop:bg-transparent open:flex md:hidden!"
       >
         {/* The background is an opaque colour on the dialog itself, not a translucent layer inside it: Safari takes the
