@@ -2,7 +2,8 @@ import type { Dictionary } from "../lib/i18n/dictionaries/en";
 import { en } from "../lib/i18n/dictionaries/en";
 import { describeRange } from "../lib/dates";
 import type { Locale } from "../lib/i18n/config";
-import { Layout, present, type KitLine } from "./_layout";
+import { formatPhone } from "../lib/forms/phone";
+import { Layout, mailto, present, tel, type KitLine } from "./_layout";
 
 export type QuoteEmailData = {
   lang: Locale;
@@ -29,8 +30,8 @@ export default function QuoteNotification({ emails, dates, data, studioUrl, site
   const l = emails.labels;
   const rows = present([
     [l.name, data.name],
-    [l.email, data.email],
-    [l.phone, data.phone],
+    [l.email, data.email, mailto(data.email)],
+    [l.phone, formatPhone(data.phone), tel(data.phone)],
     [l.company, data.company],
     [l.production, data.production],
     [l.dates, describeRange(dates, data.lang, data.startDate, data.endDate)],
