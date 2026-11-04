@@ -158,6 +158,7 @@ async function Profile({ lang, slug }: { lang: string; slug: string }) {
               meta={[project.type, project.year, project.client].filter(Boolean).join(" · ")}
               role={(project.roles ?? []).join(", ") || undefined}
               image={project.cover ? toSizedImage(project.cover, 2400) : null}
+              mobileImage={project.coverMobile ? toSizedImage(project.coverMobile, 1440) : null}
               vimeoUrl={project.vimeoUrl}
               previewLoopUrl={project.previewLoopUrl}
               dict={vimeo}

@@ -1,7 +1,7 @@
 import type Player from "@vimeo/player";
 import { type RefObject, useEffect, useRef } from "react";
 
-type VimeoEvent = "play" | "bufferend" | "ended";
+type VimeoEvent = "play" | "playing" | "bufferend" | "ended";
 
 /**
  * Attaches the Vimeo Player SDK to an embed iframe and subscribes to the events in `handlers`.
@@ -23,7 +23,7 @@ export function useVimeoPlayer(
     if (!iframe) return;
     let cancelled = false;
     let instance: Player | null = null;
-    const listeners: [VimeoEvent, () => void][] = (["play", "bufferend", "ended"] as const).map((event) => [
+    const listeners: [VimeoEvent, () => void][] = (["play", "playing", "bufferend", "ended"] as const).map((event) => [
       event,
       () => latest.current[event]?.(),
     ]);
