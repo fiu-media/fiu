@@ -11,6 +11,7 @@ import { format } from "@/lib/i18n/format";
 import { useReducedMotion } from "@/lib/reduced-motion";
 import { parseVimeo, vimeoEmbedUrl } from "@/lib/vimeo";
 import { useVimeoPlayer } from "./useVimeoPlayer";
+import { runVimeoShortcut } from "./vimeoShortcuts";
 
 export type SlideImage = {
   src: string;
@@ -141,10 +142,11 @@ export function ProjectSlide({
 
   const showLoop = loop !== null && onScreen && !playing && !reducedMotion;
 
-  // Focus goes to Stop, not into the player: key presses inside Vimeo's cross-origin frame never reach the page,
-  // so Escape couldn't stop the video. Tab moves on into the player's own controls.
+  // Focus goes to the slide, not into the player: key presses inside Vimeo's cross-origin frame never reach the
+  // page, so Escape couldn't stop the video. The page handles Vimeo's shortcuts itself instead (see `onKeyDown`).
+  // Not to Stop either: a focused button would swallow Space. Tab goes to Stop, then on into the player's controls.
   useEffect(() => {
-    if (playing) root.current?.querySelector<HTMLButtonElement>("[data-stop]")?.focus();
+    if (playing) root.current?.focus({ preventScroll: true });
   }, [playing]);
 
   useEffect(() => {
@@ -171,13 +173,26 @@ export function ProjectSlide({
       clearTimeout(settling);
       settling = setTimeout(stopRestoring, FULLSCREEN_SETTLE_MS);
       // Focus was inside the player; bring it back out so Escape works again.
-      root.current?.querySelector<HTMLButtonElement>("[data-stop]")?.focus({ preventScroll: true });
+      root.current?.focus({ preventScroll: true });
+    };
+
+    const toggleFullscreen = () => {
+      if (fullscreenElement()) void document.exitFullscreen?.().catch(() => {});
+      else void playerFrame.requestFullscreen?.().catch(() => {});
     };
 
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "Escape" || event.defaultPrevented || away.current) return;
-      if (fullscreenElement() || performance.now() - exitedAt < FULLSCREEN_EXIT_GRACE_MS) return;
-      stop();
+      if (event.defaultPrevented || away.current) return;
+      if (event.key === "Escape") {
+        if (fullscreenElement() || performance.now() - exitedAt < FULLSCREEN_EXIT_GRACE_MS) return;
+        stop();
+        return;
+      }
+      // Space and Enter belong to a focused button (Stop), and typing belongs to fields.
+      const target = event.target instanceof Element ? event.target : null;
+      if (event.altKey || event.ctrlKey || event.metaKey || target?.closest("button, a, input, textarea, select")) return;
+      const current = player.current;
+      if (current && runVimeoShortcut(event.key, current, toggleFullscreen)) event.preventDefault();
     };
 
     document.addEventListener("fullscreenchange", onFullscreenChange);
@@ -190,7 +205,7 @@ export function ProjectSlide({
       clearTimeout(settling);
       stopRestoring();
     };
-  }, [playing, playerFrame, stop]);
+  }, [playing, playerFrame, player, stop]);
 
   useEffect(() => {
     if (!playing) return;
@@ -200,7 +215,7 @@ export function ProjectSlide({
 
   return (
     <FullBleedSlide label={label} className={className}>
-      <div ref={root} className="absolute inset-0">
+      <div ref={root} tabIndex={-1} className="absolute inset-0 outline-none">
         {image ? (
           <Cover image={image} mobileImage={mobileImage} priority={priority} />
         ) : (
