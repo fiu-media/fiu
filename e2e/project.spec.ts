@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { en } from "../lib/i18n/dictionaries/en";
+import { format } from "../lib/i18n/format";
 
 const { work } = en;
 
@@ -18,6 +19,34 @@ test.describe("project page", () => {
 
     await page.getByRole("link", { name: work.back }).click();
     await expect(page).toHaveURL(/\/work$/);
+  });
+
+  test("a still opens in a lightbox that steps with the arrow keys and closes with Escape", async ({ page }) => {
+    await page.goto("/work");
+    const link = page.getByRole("link", { name: new RegExp(`^${work.view}: `) }).first();
+    await expect(link.or(page.getByText(work.emptyAll))).toBeVisible();
+    test.skip((await link.count()) === 0, "No projects in this dataset");
+    await link.click();
+    await expect(page).toHaveURL(/\/work\/[^/]+$/);
+
+    const stills = page.getByRole("button", { name: /^View still \d+ of \d+$/ });
+    await expect(stills.first()).toBeAttached();
+    test.skip((await stills.count()) < 2, "This project has fewer than two stills");
+    const total = await stills.count();
+
+    await stills.first().click();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog.getByText(format(work.stillCounter, { n: 1, total }))).toBeVisible();
+    await page.keyboard.press("ArrowRight");
+    await expect(dialog.getByText(format(work.stillCounter, { n: 2, total }))).toBeVisible();
+    await page.keyboard.press("ArrowLeft");
+    await page.keyboard.press("ArrowLeft");
+    // Wraps to the last still.
+    await expect(dialog.getByText(format(work.stillCounter, { n: total, total }))).toBeVisible();
+
+    await page.keyboard.press("Escape");
+    await expect(dialog).toHaveCount(0);
+    await expect(stills.first()).toBeFocused();
   });
 
   test("an unknown project shows the not-found page", async ({ page }) => {

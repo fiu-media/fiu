@@ -1,20 +1,20 @@
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import type { Metadata } from "next";
 import { PortableText } from "next-sanity";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { pageGutter } from "@/components/nav/rail";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ProjectSlide } from "@/components/work/ProjectSlide";
+import { ProjectStills, type Still } from "@/components/work/ProjectStills";
 import { cn } from "@/lib/cn";
 import { defaultLocale, isLocale, languageAlternates, localizedPath, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
 import { projectAttribute } from "@/sanity/lib/projects";
 import { PROJECT_ORDER_QUERY, PROJECT_QUERY } from "@/sanity/lib/queries";
-import { toSizedImage, type SizedImage } from "@/sanity/lib/rentals";
+import { toSizedImage } from "@/sanity/lib/rentals";
 
 async function getProject(lang: Locale, slug: string) {
   const { perspective, variant } = await getDynamicFetchOptions();
@@ -151,20 +151,7 @@ async function Project({ lang, slug }: { lang: string; slug: string }) {
             <h2 id="project-stills" className="mb-4 font-display text-2xl">
               {work.stills}
             </h2>
-            {/* Portrait screens get the portrait set when there is one. The other set is display:none, so its images never load. */}
-            {stills.length > 0 && (
-              <StillsGrid
-                stills={stills}
-                className={cn("grid-cols-1 sm:grid-cols-2", stillsMobile.length > 0 && "portrait:hidden")}
-              />
-            )}
-            {stillsMobile.length > 0 && (
-              <StillsGrid
-                stills={stillsMobile}
-                portrait
-                className={cn("hidden grid-cols-2 portrait:grid", stills.length === 0 && "max-md:grid")}
-              />
-            )}
+            <ProjectStills landscape={stills} portrait={stillsMobile} dict={work} />
           </section>
         )}
 
@@ -188,29 +175,10 @@ async function Project({ lang, slug }: { lang: string; slug: string }) {
   );
 }
 
-function toStills(stills: Parameters<typeof toSizedImage>[0][] | null | undefined): SizedImage[] {
-  return (stills ?? []).flatMap((still) => toSizedImage(still, 1400) ?? []);
-}
-
-function StillsGrid({ stills, portrait, className }: { stills: SizedImage[]; portrait?: boolean; className?: string }) {
-  return (
-    <ul className={cn("grid gap-3 md:gap-4", className)}>
-      {stills.map((still) => (
-        <li key={still.src}>
-          <Image
-            src={still.src}
-            width={still.width}
-            height={still.height}
-            alt={still.alt}
-            sizes={portrait ? "50vw" : "(min-width: 768px) 45vw, 100vw"}
-            loading="lazy"
-            placeholder={still.blurDataURL ? "blur" : "empty"}
-            blurDataURL={still.blurDataURL}
-            style={{ objectPosition: still.position }}
-            className="h-auto w-full rounded-2xl object-cover"
-          />
-        </li>
-      ))}
-    </ul>
-  );
+function toStills(stills: Parameters<typeof toSizedImage>[0][] | null | undefined): Still[] {
+  return (stills ?? []).flatMap((still) => {
+    const thumb = toSizedImage(still, 1000);
+    const full = toSizedImage(still, 2400);
+    return thumb && full ? { thumb, full } : [];
+  });
 }
