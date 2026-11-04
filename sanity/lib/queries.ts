@@ -253,6 +253,36 @@ export const WORK_QUERY = defineQuery(`{
   }
 }`);
 
+/**
+ * One project for its own page. Credits are read-only in translations and the description and stills may not be
+ * translated yet, so each falls back to the default-language document's.
+ */
+export const PROJECT_QUERY = defineQuery(`
+  coalesce(
+    *[_type == "project" && language == $lang && slug.current == $slug][0],
+    *[_type == "project" && language == $fallbackLang && slug.current == $slug][0]
+  ){
+    ${PROJECT_SLIDE_FIELDS},
+    "description": coalesce(description, ${DEFAULT_COUNTERPART}.description),
+    "credits": coalesce(credits, ${DEFAULT_COUNTERPART}.credits)[]{
+      _key,
+      "role": role->{ "title": ${translatedTitle("role")} }.title,
+      "name": coalesce(talent->name, name),
+      "talentSlug": talent->slug.current
+    },
+    "stills": coalesce(stills, ${DEFAULT_COUNTERPART}.stills)[defined(asset)]{ _key, ${IMAGE_FIELDS} },
+    "stillsMobile": coalesce(stillsMobile, ${DEFAULT_COUNTERPART}.stillsMobile)[defined(asset)]{ _key, ${IMAGE_FIELDS} }
+  }
+`);
+
+/** Every project's title and slug in the editors' order, for "next project". */
+export const PROJECT_ORDER_QUERY = defineQuery(`
+  ${withFallback("project", "")}${byRank("title")}{
+    title,
+    "slug": slug.current
+  }
+`);
+
 /** The About page: slogan, gloss, manifesto and still from Site settings, each falling back to the default language's. */
 export const ABOUT_QUERY = defineQuery(`{
   "cur": *[_type == "siteSettings" && language == $lang][0]{

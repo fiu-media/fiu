@@ -72,8 +72,11 @@
   }
 }
 
-/* Pages with a FullBleedScroll snap the document to its slides (one project per screen). */
-html:has([data-snap="mandatory"]) {
+/*
+ * Pages with a FullBleedScroll snap the document to its slides (one project per screen). Navigating away keeps the
+ * previous page mounted but hidden with an inline display:none, and its slides must not keep snapping the next page.
+ */
+html:has([data-snap="mandatory"]:not([style*="display: none"] *)) {
   scroll-snap-type: y mandatory;
 }
 
