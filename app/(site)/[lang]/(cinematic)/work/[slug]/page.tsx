@@ -92,6 +92,8 @@ async function Project({ lang, slug }: { lang: string; slug: string }) {
     <>
       <ProjectSlide
         as="h1"
+        // Short of a full screen, so the page content shows beneath it: this is a page to scroll, not another slide.
+        className="h-[78dvh]"
         label={project.title}
         title={project.title}
         titleAttribute={projectAttribute(project._id, "title")}
@@ -104,7 +106,7 @@ async function Project({ lang, slug }: { lang: string; slug: string }) {
         dict={vimeo}
       />
 
-      <div className={cn("mx-auto max-w-6xl space-y-16 py-16 md:py-24", pageGutter)}>
+      <div className={cn("mx-auto max-w-6xl space-y-16 pt-10 pb-16 md:pt-12 md:pb-24", pageGutter)}>
         <Link href={localizedPath(lang, "/work")} className="inline-flex items-center gap-1.5 text-sm link-quiet">
           <ArrowLeft aria-hidden className="size-4" />
           {work.back}

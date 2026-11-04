@@ -36,6 +36,8 @@ export type ProjectSlideProps = {
   href?: string;
   /** Heading level for the title: the project's own page makes it the page's `<h1>`. */
   as?: "h1" | "h2";
+  /** Overrides the slide's size (the project page's hero is shorter than a screen). */
+  className?: string;
   image: SlideImage | null;
   /** Portrait cover for portrait screens (phones). Without one, `image` is cropped to fit. */
   mobileImage?: SlideImage | null;
@@ -81,6 +83,7 @@ export function ProjectSlide({
   role,
   href,
   as: Heading = "h2",
+  className,
   image,
   mobileImage,
   vimeoUrl,
@@ -196,7 +199,7 @@ export function ProjectSlide({
   }, [playing, reveal]);
 
   return (
-    <FullBleedSlide label={label}>
+    <FullBleedSlide label={label} className={className}>
       <div ref={root} className="absolute inset-0">
         {image ? (
           <Cover image={image} mobileImage={mobileImage} priority={priority} />
