@@ -26,7 +26,7 @@ export function NotFoundBackLink({
   const section = segments[0] ? sections.find((s) => s.href === localizedPath(lang, `/${segments[0]}`)) : undefined;
 
   return (
-    <GlassPillLink href={section?.href ?? localizedPath(lang, "/")} size="lg" onImage>
+    <GlassPillLink href={section?.href ?? localizedPath(lang, "/")} size="lg">
       {section ? backTo.replace("{section}", section.label) : home}
     </GlassPillLink>
   );

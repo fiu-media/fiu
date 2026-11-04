@@ -17,7 +17,10 @@ type NavProps = {
   items: NavItem[];
   homeHref: string;
   labels: Dictionary["nav"];
+  /** Always over photography: the rail gets a scrim and the phone bar floats in the dark scheme (Home). */
   onImage?: boolean;
+  /** Paths whose first screen is a photo: the phone bar floats over it in the dark scheme. A trailing "/" matches everything beneath. */
+  photoTopPaths?: string[];
 };
 
 export function SiteNavClient(props: NavProps) {
@@ -34,9 +37,11 @@ function RouteNav(props: NavProps) {
 
 const isCurrent = (pathname: string, href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
-function Nav({ items, homeHref, labels, onImage, pathname }: NavProps & { pathname: string }) {
+function Nav({ items, homeHref, labels, onImage, photoTopPaths = [], pathname }: NavProps & { pathname: string }) {
   // The overlay is open for the page it was opened on, so navigating leaves it behind.
   const [openOn, setOpenOn] = useState<string | null>(null);
+  // Other pages open on plain paper or ink, so their bar takes its own row and follows the system scheme.
+  const overPhoto = onImage || photoTopPaths.some((path) => (path.endsWith("/") ? pathname.startsWith(path) : pathname === path));
   const popup = useRef<HTMLDivElement>(null);
   // On Home the photo is what Safari should tint its bars from again once the opaque menu is gone, but it only samples
   // when the page scrolls, so nudge right away.
@@ -83,11 +88,11 @@ function Nav({ items, homeHref, labels, onImage, pathname }: NavProps & { pathna
         </nav>
       </aside>
 
-      {/* On cinematic pages the bar floats over the content; on adaptive pages it takes its own row. */}
+      {/* Over a photo the bar floats above it, in the dark scheme; otherwise it takes its own row. */}
       <header
         className={cn(
           "z-30 flex items-center justify-between px-[max(1.25rem,env(safe-area-inset-left))] pt-[max(1.25rem,env(safe-area-inset-top))] pr-[max(1.25rem,env(safe-area-inset-right))] pb-4 md:hidden",
-          onImage ? "absolute inset-x-0 top-0" : "relative",
+          overPhoto ? "on-photo absolute inset-x-0 top-0" : "relative",
         )}
       >
         <HomeLink href={homeHref} label={labels.home} className="h-9" />
@@ -97,7 +102,7 @@ function Nav({ items, homeHref, labels, onImage, pathname }: NavProps & { pathna
         <Dialog.Root open={openOn === pathname} onOpenChange={onOpenChange} modal="trap-focus">
           <Dialog.Trigger
             aria-label={labels.menu}
-            render={<GlassPillButton size="sm" onImage={onImage} className="size-10 px-0" />}
+            render={<GlassPillButton size="sm" onImage={overPhoto} className="size-10 px-0" />}
           >
             <Menu aria-hidden className="size-6" />
           </Dialog.Trigger>

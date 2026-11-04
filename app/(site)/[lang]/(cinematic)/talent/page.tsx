@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { floatingBarInset, pageGutter, pageTop } from "@/components/nav/rail";
+import { pageGutter, pageTop } from "@/components/nav/rail";
 import { PageTitle } from "@/components/ui/PageTitle";
 import { Skeleton, SkeletonGroup } from "@/components/ui/Skeleton";
 import { NameIndex, type IndexItem } from "@/components/talent/NameIndex";
@@ -25,7 +25,7 @@ export default async function TalentPage({ params }: PageProps<"/[lang]/talent">
   if (!isLocale(lang)) notFound();
   const [{ talent, common }, text] = await Promise.all([getDictionary(lang), getPageText(lang)]);
   return (
-    <main className={cn("mx-auto max-w-6xl pb-32", pageGutter, floatingBarInset, pageTop)}>
+    <main className={cn("mx-auto max-w-6xl pb-32", pageGutter, pageTop)}>
       <header className="mb-10">
         <PageTitle title={talent.title} tagline={text.talentTagline} />
         {text.talentIntro && <p className="mt-4 max-w-2xl text-lg text-fg-muted">{text.talentIntro}</p>}

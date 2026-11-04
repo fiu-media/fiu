@@ -35,55 +35,62 @@ async function audit(page: Page, path: string, open?: (page: Page) => Promise<vo
   ).toEqual([]);
 }
 
-for (const path of PAGES) {
-  test(`axe: ${path}`, async ({ page }) => {
-    await audit(page, path);
+// Every page follows the system scheme, so each is audited in both: contrast problems show up in one and not the other.
+for (const colorScheme of ["light", "dark"] as const) {
+  test.describe(`${colorScheme} scheme`, () => {
+    test.use({ colorScheme });
+
+    for (const path of PAGES) {
+      test(`axe: ${path}`, async ({ page }) => {
+        await audit(page, path);
+      });
+    }
+
+    test.describe("home", () => {
+      // The live hero is a WebGL scene. On CI's software renderer it saturates the main thread and axe never
+      // finishes, so audit the static hero reduced-motion visitors get (HomeHero's "static" mode).
+      test.use({ reducedMotion: "reduce" });
+
+      test("axe: /", async ({ page }) => {
+        await audit(page, "/");
+      });
+    });
+
+    test("axe: a rental item page", async ({ page }) => {
+      const href = await firstLink(page, "/rentals", "/rentals/", ["/rentals/quote"]);
+      test.skip(!href, "No rental items in this dataset");
+      await audit(page, href!);
+    });
+
+    test("axe: a talent profile page", async ({ page }) => {
+      const href = await firstLink(page, "/talent", "/talent/");
+      test.skip(!href, "No talent in this dataset");
+      await audit(page, href!);
+    });
+
+    test.describe("with a dialog open", () => {
+      test.use({ viewport: { width: 390, height: 844 } });
+
+      test("axe: the mobile menu", async ({ page }) => {
+        await audit(page, "/about", async (page) => {
+          const dialog = page.getByRole("dialog", { name: en.nav.label });
+          await clickUntil(page.getByRole("button", { name: en.nav.menu }), () => expect(dialog).toBeVisible({ timeout: 1000 }));
+          // Let the content's fade-in finish, so contrast is measured on the final colours.
+          await page.waitForTimeout(400);
+        });
+      });
+
+      test("axe: the quote drawer", async ({ page }) => {
+        await audit(page, "/rentals", async (page) => {
+          const added = page.getByRole("button", { name: format(en.rentals.inQuote, { qty: 1 }) }).first();
+          await clickUntil(page.getByRole("button", { name: en.rentals.addToQuote }).first(), () =>
+            expect(added).toBeVisible({ timeout: 1000 }),
+          );
+          await page.getByRole("button", { name: /^Open quote basket/ }).click();
+          await expect(page.getByRole("dialog", { name: en.basket.title })).toBeVisible();
+          await page.waitForTimeout(600);
+        });
+      });
+    });
   });
 }
-
-test.describe("home", () => {
-  // The live hero is a WebGL scene. On CI's software renderer it saturates the main thread and axe never
-  // finishes, so audit the static hero reduced-motion visitors get (HomeHero's "static" mode).
-  test.use({ reducedMotion: "reduce" });
-
-  test("axe: /", async ({ page }) => {
-    await audit(page, "/");
-  });
-});
-
-test("axe: a rental item page", async ({ page }) => {
-  const href = await firstLink(page, "/rentals", "/rentals/", ["/rentals/quote"]);
-  test.skip(!href, "No rental items in this dataset");
-  await audit(page, href!);
-});
-
-test("axe: a talent profile page", async ({ page }) => {
-  const href = await firstLink(page, "/talent", "/talent/");
-  test.skip(!href, "No talent in this dataset");
-  await audit(page, href!);
-});
-
-test.describe("with a dialog open", () => {
-  test.use({ viewport: { width: 390, height: 844 } });
-
-  test("axe: the mobile menu", async ({ page }) => {
-    await audit(page, "/about", async (page) => {
-      const dialog = page.getByRole("dialog", { name: en.nav.label });
-      await clickUntil(page.getByRole("button", { name: en.nav.menu }), () => expect(dialog).toBeVisible({ timeout: 1000 }));
-      // Let the content's fade-in finish, so contrast is measured on the final colours.
-      await page.waitForTimeout(400);
-    });
-  });
-
-  test("axe: the quote drawer", async ({ page }) => {
-    await audit(page, "/rentals", async (page) => {
-      const added = page.getByRole("button", { name: format(en.rentals.inQuote, { qty: 1 }) }).first();
-      await clickUntil(page.getByRole("button", { name: en.rentals.addToQuote }).first(), () =>
-        expect(added).toBeVisible({ timeout: 1000 }),
-      );
-      await page.getByRole("button", { name: /^Open quote basket/ }).click();
-      await expect(page.getByRole("dialog", { name: en.basket.title })).toBeVisible();
-      await page.waitForTimeout(600);
-    });
-  });
-});

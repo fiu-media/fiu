@@ -4,8 +4,9 @@
  * Surfaces
  * --------
  * Pages opt into a surface on their wrapper:
- *   data-surface="cinematic"  always dark (Home, About, Work, Talent)
- *   data-surface="adaptive"   follows the OS light/dark setting (Rentals, Contact, forms)
+ *   data-surface="adaptive"   follows the OS light/dark setting (every page but Home)
+ *   data-surface="cinematic"  always dark (Home, which is photography throughout)
+ * Photography under text on an adaptive page (a project slide, the About hero) is a dark island: `.on-photo`.
  * Tokens use light-dark(), so components adapt without any JS or flash.
  *
  * Two Lightning CSS constraints (Tailwind compiles light-dark() down to
@@ -38,9 +39,14 @@
     color-scheme: dark;
   }
 
+  .on-photo {
+    color-scheme: dark;
+  }
+
   :root,
   [data-surface],
-  .glass-on-image {
+  .glass-on-image,
+  .on-photo {
     --paper: #f4f1ec;
     --ink: #0c0b0d;
 
@@ -54,6 +60,9 @@
     /* Text on an accent fill. The dark accent is too light for white text to pass AA, so it takes ink. */
     --on-accent: light-dark(#ffffff, #0c0b0d);
     --focus: light-dark(#1d4ed8, #8ab4ff);
+    /* The 404's two wandering lights: warm glows on ink, softer washes on paper. */
+    --glow-a: light-dark(rgb(214 140 90 / 0.4), rgb(214 160 110 / 0.5));
+    --glow-b: light-dark(rgb(196 110 100 / 0.26), rgb(196 120 110 / 0.32));
 
     /*
      * Liquid glass: clear acrylic, matching the live logo (LIGHT_PARAMS in
@@ -97,7 +106,7 @@ html:has([data-snap="mandatory"]:not([style*="display: none"] *)) {
 }
 
 /* The canvas behind the notch, the home indicator and overscroll is the root background, so it
-   must match the surface: cinematic pages are always dark, whatever the OS scheme. */
+   must match the surface: Home is always dark, whatever the OS scheme. */
 html {
   background: var(--bg);
 }

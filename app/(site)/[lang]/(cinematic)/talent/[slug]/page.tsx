@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { floatingBarInset, pageGutter, pageTop } from "@/components/nav/rail";
+import { pageGutter, pageTop } from "@/components/nav/rail";
 import { FullBleedScroll } from "@/components/ui/FullBleedScroll";
 import { GlassPillLink } from "@/components/ui/Glass";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -84,7 +84,7 @@ async function Profile({ lang, slug }: { lang: string; slug: string }) {
   return (
     <>
       {/* snap-start: the page snaps to its slides, and without this it would skip the bio. */}
-      <section className={cn("snap-start pb-16 md:pb-12", pageGutter, floatingBarInset, pageTop)}>
+      <section className={cn("snap-start pb-16 md:pb-12", pageGutter, pageTop)}>
         <div className="mx-auto mb-6 max-w-6xl">
           <Link href={localizedPath(lang, "/talent")} className="inline-flex items-center gap-1.5 text-sm link-quiet">
             <ArrowLeft aria-hidden className="size-4" />
@@ -173,7 +173,7 @@ async function Profile({ lang, slug }: { lang: string; slug: string }) {
 /** Same footprint as the profile's first screen: back link, portrait beside the name, bio and button. */
 function ProfileSkeleton() {
   return (
-    <section aria-hidden className={cn("pb-16 md:pb-12", pageGutter, floatingBarInset, pageTop)}>
+    <section aria-hidden className={cn("pb-16 md:pb-12", pageGutter, pageTop)}>
       <div className="mx-auto mb-6 max-w-6xl">
         <Skeleton className="h-5 w-28" />
       </div>

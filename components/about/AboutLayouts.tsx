@@ -36,16 +36,16 @@ function Still({ still, attribute, className }: { still: SizedImage; attribute?:
 
 /**
  * Option A, "Slogan first": the still holds the first screen with the slogan large over it. The
- * manifesto, contact links and footer follow on plain dark, so no running text sits over the photo.
+ * manifesto, contact links and footer follow on the page colour, so no running text sits over the photo.
  */
 export function AboutLayoutA({ still, slogan, gloss, manifesto, contacts, footer, attributes }: AboutLayoutProps) {
   return (
-    <main className="relative text-white">
+    <main className="relative">
       <div className="sticky top-0 -z-10 h-dvh">
         <Still still={still} attribute={attributes?.still} />
       </div>
 
-      <section className="relative -mt-[100dvh] flex h-dvh flex-col justify-end bg-gradient-to-t from-black/75 via-black/20 to-black/35 px-5 pb-[max(2.5rem,env(safe-area-inset-bottom))] md:px-10 md:pb-14">
+      <section className="on-photo relative -mt-[100dvh] flex h-dvh flex-col justify-end bg-gradient-to-t from-black/75 via-black/20 to-black/35 px-5 pb-[max(2.5rem,env(safe-area-inset-bottom))] text-white md:px-10 md:pb-14">
         <h1
           data-sanity={attributes?.slogan}
           className="max-w-5xl font-display text-5xl leading-[1.02] text-balance italic md:text-8xl"
@@ -56,8 +56,8 @@ export function AboutLayoutA({ still, slogan, gloss, manifesto, contacts, footer
         <ArrowDown aria-hidden className="mt-8 size-5 text-white/60" />
       </section>
 
-      {/* Plain dark from here, so the surface's colours rather than the white kept for text over the photo. */}
-      <section className="relative bg-ink px-5 py-24 text-fg md:px-10 md:py-36">
+      {/* Plain from here, so the surface's colours rather than the white kept for text over the photo. */}
+      <section className="relative bg-bg px-5 py-24 text-fg md:px-10 md:py-36">
         <div className="mx-auto flex max-w-3xl flex-col gap-14">
           {manifesto && (
             <div data-sanity={attributes?.manifesto} className="space-y-6 text-xl leading-relaxed text-fg/90 md:text-2xl">

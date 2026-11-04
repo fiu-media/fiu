@@ -60,7 +60,7 @@ const LEFT_RATIO = 0.25;
 const REVEAL_FALLBACK_MS = 3000;
 
 /**
- * The page is dark, so an iframe would inherit a dark color-scheme. Vimeo's player page is light, and when the
+ * The slide is dark (`on-photo`), so an iframe would inherit a dark color-scheme. Vimeo's player page is light, and when the
  * two differ Chrome and Safari paint an opaque white backdrop behind it: a white flash while it loads, and white
  * bars wherever the video doesn't fill the frame. Matching Vimeo's scheme keeps the frame transparent over black.
  */
