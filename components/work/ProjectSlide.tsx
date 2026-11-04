@@ -89,6 +89,36 @@ async function turnForVideo(player: Player) {
 }
 
 /**
+ * iOS (and every browser on it, which is all WebKit) only plays a video with sound after a tap inside the player's
+ * own frame, so a tap on our Play button doesn't count and autoplay would start it muted.
+ */
+function needsTapInPlayer() {
+  return /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+}
+
+/** How long a browser gets to pause a video it won't let play with sound, before we conclude it hasn't. */
+const UNMUTE_SETTLE_MS = 400;
+
+/**
+ * Vimeo starts an autoplaying video muted on many phones, and the viewer tapped Play, so they want sound. But a
+ * browser that only allows sound after a tap inside the player answers an unmute by pausing the video, and a paused
+ * video is worse than a muted one: in that case keep it muted and playing, and the player's own controls unmute it.
+ */
+async function unmute(player: Player) {
+  try {
+    if (!(await player.getMuted())) return;
+    await player.setMuted(false);
+    await new Promise((resolve) => setTimeout(resolve, UNMUTE_SETTLE_MS));
+    if (await player.getPaused()) {
+      await player.setMuted(true);
+      await player.play();
+    }
+  } catch {
+    // The player went away, or refused: leave it as it is.
+  }
+}
+
+/**
  * One full-bleed project: the cover still, a preview loop behind it when the project has one, and
  * a play button that swaps the Vimeo player into the slide. Without a Vimeo URL it is just the cover.
  */
@@ -116,9 +146,13 @@ export function ProjectSlide({
   // The player stays invisible over the cover until it is actually playing, so its loading screen never shows.
   const [revealed, setRevealed] = useState(false);
   // Whether the slide itself (not just the Vimeo frame) is full screen. Its Stop button then needs no room for the menu.
+  // Unmuting is tried once per play: pausing and resuming the video after a refusal would otherwise start it over.
+  const triedUnmute = useRef(false);
   const [fullscreen, setFullscreen] = useState(false);
   // iPhones can't take an element full screen; their player goes full screen itself when asked not to play inline.
   const [playFullscreenNatively, setPlayFullscreenNatively] = useState(false);
+  // Where sound needs a tap in the player, it doesn't autoplay: its own play button is shown, and that tap plays with sound.
+  const [tapInPlayer, setTapInPlayer] = useState(false);
   const reducedMotion = useReducedMotion();
 
   const video = parseVimeo(vimeoUrl);
@@ -126,6 +160,8 @@ export function ProjectSlide({
 
   const play = useCallback(() => {
     setPlaying(true);
+    setTapInPlayer(needsTapInPlayer());
+    triedUnmute.current = false;
     if (!window.matchMedia(UPRIGHT_TOUCH).matches) return;
     // Held upright, a wide video fills a third of the screen. Full screen, turned sideways, it fills all of it.
     // This has to happen in the tap's own handler, before the player exists, so it is the slide that goes full screen.
@@ -138,6 +174,7 @@ export function ProjectSlide({
     setPlaying(false);
     setRevealed(false);
     setPlayFullscreenNatively(false);
+    setTapInPlayer(false);
     if (fullscreenElement() === root.current) void document.exitFullscreen?.().catch(() => {});
     (screen.orientation as LockableOrientation).unlock?.();
     // The player is gone; put keyboard focus back where it came from.
@@ -147,11 +184,20 @@ export function ProjectSlide({
   // A playing video pauses when its slide scrolls away, keeping its place, and stays mounted.
   const player = useVimeoPlayer(playerFrame, {
     // Not `play`: Vimeo fires that before the first frame, while its own spinner is still up.
-    playing: reveal,
+    playing: () => {
+      reveal();
+      // After playback has started: unmuting a video that hasn't begun would stop its autoplay.
+      if (player.current && !triedUnmute.current) {
+        triedUnmute.current = true;
+        void unmute(player.current);
+      }
+    },
     ended: stop,
     // The SDK can load after the viewer has already left the slide.
     ready: (ready) => {
       if (away.current) ready.pause().catch(() => {});
+      // Nothing is about to autoplay, so there is no loading screen to hide: show the player's play button.
+      if (tapInPlayer) void ready.ready().then(reveal, () => {});
       if (fullscreenElement() === root.current) void turnForVideo(ready);
     },
   });
@@ -269,15 +315,11 @@ export function ProjectSlide({
           />
         )}
 
-        {playing && (
+        {playing && !fullscreen && (
           // Before the player in the DOM, so Tab goes from Stop into the player; z-10 keeps it above it.
-          // On phones the floating menu button sits in the top corner, so Stop goes beneath it (full screen covers the menu).
-          <div
-            className={cn(
-              "absolute right-4 z-10 md:top-6 md:right-6",
-              fullscreen ? "top-4" : "top-[calc(max(1.25rem,env(safe-area-inset-top))+4rem)]",
-            )}
-          >
+          // Not while the slide is full screen: the video has the whole screen, and leaving full screen brings Stop back.
+          // On phones the floating menu button sits in the top corner, so Stop goes beneath it.
+          <div className="absolute top-[calc(max(1.25rem,env(safe-area-inset-top))+4rem)] right-4 z-10 md:top-6 md:right-6">
             <GlassPillButton data-stop size="md" onImage onClick={stop}>
               {dict.stop}
             </GlassPillButton>
@@ -287,7 +329,7 @@ export function ProjectSlide({
         {playing && video ? (
           <iframe
             ref={setPlayerFrame}
-            src={vimeoEmbedUrl(video, { autoplay: true, playsinline: playFullscreenNatively ? false : undefined })}
+            src={vimeoEmbedUrl(video, { autoplay: !tapInPlayer, playsinline: playFullscreenNatively ? false : undefined })}
             title={title}
             allow="autoplay; fullscreen; picture-in-picture"
             allowFullScreen
