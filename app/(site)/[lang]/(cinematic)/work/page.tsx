@@ -124,6 +124,7 @@ async function Projects({ lang, searchParams }: { lang: Locale; searchParams: Pa
             titleAttribute={projectAttribute(project._id, "title")}
             meta={[project.type, project.year, project.client].filter(Boolean).join(" · ")}
             image={project.cover ? toSizedImage(project.cover, 2400) : null}
+            mobileImage={project.coverMobile ? toSizedImage(project.coverMobile, 1440) : null}
             vimeoUrl={project.vimeoUrl}
             previewLoopUrl={project.previewLoopUrl}
             priority={i === 0}

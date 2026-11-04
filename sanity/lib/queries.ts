@@ -230,7 +230,8 @@ const PROJECT_SLIDE_FIELDS = `
     "client": coalesce(client, ${DEFAULT_COUNTERPART}.client),
     "vimeoUrl": coalesce(vimeoUrl, ${DEFAULT_COUNTERPART}.vimeoUrl),
     "previewLoopUrl": coalesce(previewLoopUrl, ${DEFAULT_COUNTERPART}.previewLoopUrl),
-    "cover": select(defined(coverStill.asset) => coverStill, ${DEFAULT_COUNTERPART}.coverStill){ ${IMAGE_FIELDS} }
+    "cover": select(defined(coverStill.asset) => coverStill, ${DEFAULT_COUNTERPART}.coverStill){ ${IMAGE_FIELDS} },
+    "coverMobile": select(defined(coverStillMobile.asset) => coverStillMobile, ${DEFAULT_COUNTERPART}.coverStillMobile){ ${IMAGE_FIELDS} }
 ` as const;
 
 /** The projects a person is credited on, in the editors' drag-and-drop order, with what they did on each. */
