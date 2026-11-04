@@ -1,0 +1,419 @@
+/* Under the home splash (z-20) and the nav (z-30), inside the same stacking context. */
+.brierto-mark {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+}
+
+.brierto-wash {
+  position: absolute;
+  inset: -12%;
+  background: repeating-linear-gradient(
+    115deg,
+    #ff00ea 0 24px,
+    #ffe600 24px 48px,
+    #00fff2 48px 72px,
+    #ff3b00 72px 96px,
+    #39ff14 96px 120px
+  );
+  opacity: 0.42;
+  animation: brierto-wash-move 0.7s linear infinite;
+}
+
+.brierto-tiles {
+  position: absolute;
+  top: -18%;
+  left: -22%;
+  display: grid;
+  width: 144%;
+  height: 136%;
+  grid-template-columns: repeat(3, max-content);
+  gap: 1.4rem 2rem;
+  align-content: center;
+  justify-content: center;
+  transform: rotate(-18deg);
+  animation: brierto-hue 1.4s linear infinite;
+}
+
+.brierto-tiles span {
+  font-family: "Comic Sans MS", "Chalkboard SE", "Marker Felt", cursive;
+  font-size: clamp(1.7rem, 3.6vw, 3.4rem);
+  font-weight: 700;
+  line-height: 0.95;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  color: #ff2bd6;
+  -webkit-text-stroke: 2px #120018;
+  text-shadow:
+    4px 4px 0 #ffe600,
+    -3px -3px 0 #00fff2,
+    0 0 14px #ff00ea;
+}
+
+.brierto-tiles span:nth-child(odd) {
+  color: #ffe600;
+  animation: brierto-blink 0.38s steps(1) infinite;
+}
+
+.brierto-tiles span:nth-child(3n) {
+  color: #39ff14;
+  transform: rotate(7deg) scale(1.08);
+}
+
+.brierto-tiles span:nth-child(4n) {
+  color: #00fff2;
+  transform: rotate(-6deg);
+}
+
+.brierto-frame {
+  position: absolute;
+  inset: 0;
+  border: 16px solid #ff00ea;
+  box-shadow:
+    inset 0 0 0 8px #ffe600,
+    inset 0 0 0 16px #00fff2,
+    inset 0 0 0 24px #39ff14;
+  animation: brierto-border 0.45s steps(2) infinite;
+}
+
+.brierto-hero {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+
+.brierto-hero > * {
+  grid-area: 1 / 1;
+}
+
+.brierto-ring {
+  width: min(94vw, 36rem);
+  height: min(94vw, 36rem);
+  overflow: visible;
+  animation: brierto-spin 5s linear infinite;
+}
+
+.brierto-ring text {
+  font-family: Impact, "Arial Black", "Comic Sans MS", sans-serif;
+  font-size: 15px;
+  letter-spacing: 3.5px;
+  fill: #ffe600;
+  stroke: #120018;
+  stroke-width: 0.7px;
+}
+
+.brierto-stamp {
+  position: relative;
+  padding: 0.85rem 1.4rem 0.7rem;
+  text-align: center;
+  background: #ffe600;
+  border: 8px dashed #ff00ea;
+  outline: 7px solid #00fff2;
+  outline-offset: 6px;
+  box-shadow:
+    10px 10px 0 #120018,
+    20px 20px 0 #ff00ea,
+    30px 30px 0 #39ff14;
+  transform: rotate(-8deg);
+  animation:
+    brierto-wobble 0.48s ease-in-out infinite,
+    brierto-flash 0.9s steps(1) infinite;
+}
+
+.brierto-kicker {
+  margin: 0;
+  font-family: "Comic Sans MS", "Chalkboard SE", cursive;
+  font-size: clamp(1.3rem, 3vw, 2.4rem);
+  font-weight: 700;
+  line-height: 1;
+  color: #120018;
+  text-shadow: 2px 2px 0 #fff;
+}
+
+.brierto-name {
+  margin: 0.1rem 0 0;
+  font-family: Impact, "Arial Black", sans-serif;
+  font-size: clamp(4.2rem, 12vw, 8.5rem);
+  font-weight: 900;
+  line-height: 0.8;
+  letter-spacing: 0.02em;
+  color: #ff00ea;
+  -webkit-text-stroke: 3px #120018;
+  text-shadow:
+    5px 5px 0 #00fff2,
+    -4px -3px 0 #39ff14;
+  animation: brierto-blink 0.55s steps(1) infinite;
+}
+
+.brierto-marquee {
+  position: absolute;
+  right: 0;
+  left: 0;
+  z-index: 4;
+  height: 3.4rem;
+  overflow: hidden;
+  background: #ff00ea;
+  border-top: 5px dotted #ffe600;
+  border-bottom: 5px dotted #00fff2;
+}
+
+.brierto-top {
+  top: 0;
+}
+
+.brierto-bottom {
+  bottom: 0;
+  background: #39ff14;
+  border-top-color: #ff00ea;
+  border-bottom-color: #120018;
+}
+
+.brierto-track {
+  display: flex;
+  width: max-content;
+  animation: brierto-ticker 7s linear infinite;
+}
+
+.brierto-bottom .brierto-track {
+  animation-direction: reverse;
+}
+
+.brierto-track span {
+  font-family: Impact, "Arial Black", sans-serif;
+  font-size: 2.15rem;
+  line-height: 3.4rem;
+  letter-spacing: 0.12em;
+  white-space: nowrap;
+  color: #ffe600;
+  text-shadow: 3px 3px 0 #120018;
+}
+
+.brierto-bottom .brierto-track span {
+  color: #ff00ea;
+}
+
+@keyframes brierto-wash-move {
+  to {
+    transform: translateX(-120px);
+  }
+}
+
+@keyframes brierto-hue {
+  to {
+    filter: hue-rotate(360deg);
+  }
+}
+
+@keyframes brierto-blink {
+  50% {
+    opacity: 0.15;
+  }
+}
+
+@keyframes brierto-border {
+  50% {
+    border-color: #ffe600;
+    box-shadow:
+      inset 0 0 0 8px #ff00ea,
+      inset 0 0 0 16px #39ff14,
+      inset 0 0 0 24px #00fff2;
+  }
+}
+
+@keyframes brierto-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes brierto-wobble {
+  0%,
+  100% {
+    transform: rotate(-11deg) scale(1);
+  }
+
+  50% {
+    transform: rotate(8deg) scale(1.08);
+  }
+}
+
+@keyframes brierto-flash {
+  0%,
+  45% {
+    background: #ffe600;
+  }
+
+  50%,
+  100% {
+    background: #00fff2;
+  }
+}
+
+@keyframes brierto-ticker {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.brierto-shaking {
+  animation: brierto-shake 0.4s linear 4;
+}
+
+.brierto-booms {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+}
+
+.brierto-boom-flash {
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  animation: brierto-boom-flash 0.55s linear forwards;
+}
+
+.brierto-boom-flash-late {
+  background: #ffe600;
+  animation-delay: 0.28s;
+}
+
+.brierto-boom {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  display: grid;
+  place-items: center;
+  width: var(--size);
+  height: var(--size);
+  animation: brierto-boom 1.05s cubic-bezier(0.15, 1.5, 0.35, 1) var(--delay) forwards;
+  transform: translate(-50%, -50%) rotate(var(--rot)) scale(0);
+  container-type: size;
+}
+
+.brierto-boom::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: #ffe600;
+  clip-path: polygon(
+    50% 0%,
+    61% 18%,
+    82% 8%,
+    74% 32%,
+    100% 38%,
+    78% 52%,
+    92% 74%,
+    68% 68%,
+    62% 96%,
+    50% 74%,
+    38% 96%,
+    32% 68%,
+    8% 74%,
+    22% 52%,
+    0% 38%,
+    26% 32%,
+    18% 8%,
+    39% 18%
+  );
+  filter: drop-shadow(6px 6px 0 #120018);
+}
+
+.brierto-boom span {
+  position: relative;
+  z-index: 1;
+  font-family: Impact, "Arial Black", sans-serif;
+  font-size: 22cqmin;
+  line-height: 0.85;
+  color: #ff00ea;
+  text-align: center;
+  letter-spacing: 0.02em;
+  -webkit-text-stroke: 2px #120018;
+  text-shadow:
+    3px 3px 0 #00fff2,
+    -2px -2px 0 #39ff14;
+  transform: rotate(calc(var(--rot) * -0.3));
+}
+
+.brierto-spark {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: 16px;
+  height: 16px;
+  background: var(--color);
+  border: 2px solid #120018;
+  border-radius: 50%;
+  box-shadow: 0 0 16px 6px var(--color);
+  opacity: 0;
+  animation: brierto-spark 0.85s ease-out var(--delay) forwards;
+}
+
+@keyframes brierto-shake {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+
+  20% {
+    transform: translate(-14px, 8px) rotate(-1deg);
+  }
+
+  40% {
+    transform: translate(16px, -10px) rotate(1deg);
+  }
+
+  60% {
+    transform: translate(-10px, -8px);
+  }
+
+  80% {
+    transform: translate(12px, 7px) rotate(-0.6deg);
+  }
+}
+
+@keyframes brierto-boom-flash {
+  0% {
+    opacity: 0.92;
+  }
+
+  35% {
+    opacity: 0.45;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes brierto-boom {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) rotate(var(--rot)) scale(0);
+  }
+
+  35% {
+    opacity: 1;
+    transform: translate(-50%, -50%) rotate(var(--rot)) scale(1.12);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(var(--rot)) scale(1.7);
+  }
+}
+
+@keyframes brierto-spark {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: translate(var(--dx), var(--dy)) scale(0.15);
+  }
+}

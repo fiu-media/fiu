@@ -5,6 +5,7 @@ import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
+import { BriertoWatermark } from "@/components/brierto/BriertoWatermark";
 import { GlassPillButton } from "@/components/ui/Glass";
 import { cn } from "@/lib/cn";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
@@ -55,6 +56,7 @@ function Nav({ items, homeHref, labels, onImage, pathname }: NavProps & { pathna
 
   return (
     <>
+      <BriertoWatermark />
       <aside
         className={cn(
           "fixed inset-y-0 left-0 z-30 hidden w-[calc(4rem+env(safe-area-inset-left))] flex-col items-center gap-12 border-r border-line pt-[max(1.75rem,env(safe-area-inset-top))] pb-7 pl-[env(safe-area-inset-left)] md:flex",
