@@ -40,6 +40,7 @@ export const en = {
     stills: "Stills",
     next: "Next project",
     back: "All work",
+    view: "View project",
     slideLabel: "{title}, {index} of {total}",
     progressLabel: "Projects",
     goTo: "Go to {title}",

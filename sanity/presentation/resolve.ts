@@ -5,10 +5,16 @@ import { localizedPath, type Locale } from "../../lib/i18n/config";
 export const resolve: PresentationPluginOptions["resolve"] = {
   locations: {
     project: defineLocations({
-      select: { title: "title", language: "language" },
-      resolve: (doc) => ({
-        locations: [{ title: doc?.title ?? "Project", href: localizedPath((doc?.language ?? "en") as Locale, "/work") }],
-      }),
+      select: { title: "title", slug: "slug.current", language: "language" },
+      resolve: (doc) => {
+        const lang = (doc?.language ?? "en") as Locale;
+        return {
+          locations: [
+            ...(doc?.slug ? [{ title: doc.title ?? "Project", href: localizedPath(lang, `/work/${doc.slug}`) }] : []),
+            { title: "Our Work", href: localizedPath(lang, "/work") },
+          ],
+        };
+      },
     }),
     talent: defineLocations({
       select: { name: "name", slug: "slug.current", language: "language" },

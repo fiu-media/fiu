@@ -121,6 +121,7 @@ async function Projects({ lang, searchParams }: { lang: Locale; searchParams: Pa
             key={project._id}
             label={format(work.slideLabel, { title: project.title, index: i + 1, total: visible.length })}
             title={project.title}
+            href={project.slug ? localizedPath(lang, `/work/${project.slug}`) : undefined}
             titleAttribute={projectAttribute(project._id, "title")}
             meta={[project.type, project.year, project.client].filter(Boolean).join(" · ")}
             image={project.cover ? toSizedImage(project.cover, 2400) : null}
@@ -128,7 +129,7 @@ async function Projects({ lang, searchParams }: { lang: Locale; searchParams: Pa
             vimeoUrl={project.vimeoUrl}
             previewLoopUrl={project.previewLoopUrl}
             priority={i === 0}
-            dict={vimeo}
+            dict={{ ...vimeo, view: work.view }}
           />
         ))}
       </FullBleedScroll>

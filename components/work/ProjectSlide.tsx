@@ -2,9 +2,10 @@
 
 import { Play } from "lucide-react";
 import Image, { getImageProps } from "next/image";
+import Link from "next/link";
 import { type CSSProperties, useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { FullBleedSlide } from "@/components/ui/FullBleedScroll";
-import { GlassPillButton } from "@/components/ui/Glass";
+import { GlassPillButton, GlassPillLink } from "@/components/ui/Glass";
 import { cn } from "@/lib/cn";
 import { format } from "@/lib/i18n/format";
 import { useReducedMotion } from "@/lib/reduced-motion";
@@ -31,6 +32,10 @@ export type ProjectSlideProps = {
   titleAttribute?: string;
   /** What this person did on the project (talent pages only). */
   role?: string;
+  /** The project's own page. With it, the title links there and a "view" pill sits beside Play. */
+  href?: string;
+  /** Heading level for the title: the project's own page makes it the page's `<h1>`. */
+  as?: "h1" | "h2";
   image: SlideImage | null;
   /** Portrait cover for portrait screens (phones). Without one, `image` is cropped to fit. */
   mobileImage?: SlideImage | null;
@@ -39,7 +44,7 @@ export type ProjectSlideProps = {
   previewLoopUrl?: string | null;
   /** The first slide loads eagerly; the rest are lazy. */
   priority?: boolean;
-  dict: { play: string; stop: string };
+  dict: { play: string; stop: string; view?: string };
 };
 
 /** Mostly on screen: the preview loop runs. Mostly off: a playing video pauses. */
@@ -74,6 +79,8 @@ export function ProjectSlide({
   meta,
   titleAttribute,
   role,
+  href,
+  as: Heading = "h2",
   image,
   mobileImage,
   vimeoUrl,
@@ -230,27 +237,45 @@ export function ProjectSlide({
             )}
           />
         ) : (
-          <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 bg-gradient-to-t from-black/75 via-black/30 to-transparent px-5 pt-32 pb-[max(1.5rem,env(safe-area-inset-bottom))] md:px-10 md:pb-10">
+          <div
+            className={cn(
+              "absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 bg-gradient-to-t from-black/75 via-black/30 to-transparent px-5 pt-32 pb-[max(1.5rem,env(safe-area-inset-bottom))] md:px-10 md:pb-10",
+              href && "max-sm:flex-col max-sm:items-start",
+            )}
+          >
             <div className="min-w-0">
-              <h2 data-sanity={titleAttribute} className="font-display text-4xl text-balance italic md:text-7xl">
-                {title}
-              </h2>
+              <Heading data-sanity={titleAttribute} className="font-display text-4xl text-balance italic md:text-7xl">
+                {href ? (
+                  <Link href={href} className="hover:underline focus-visible:underline">
+                    {title}
+                  </Link>
+                ) : (
+                  title
+                )}
+              </Heading>
               <p className="mt-1 text-sm text-white/80 md:text-base">{meta}</p>
               {role && <p className="mt-1 text-sm text-white/65">{role}</p>}
             </div>
-            {video && (
-              <GlassPillButton
-                data-play
-                size="lg"
-                onImage
-                onClick={play}
-                aria-label={format(dict.play, { title })}
-                className="shrink-0"
-              >
-                <Play aria-hidden fill="currentColor" className="size-4" />
-                <span className="max-sm:sr-only">{dict.play.replace(/\s*\{title\}/, "")}</span>
-              </GlassPillButton>
-            )}
+            <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 md:gap-3">
+              {href && dict.view && (
+                <GlassPillLink href={href} size="lg" onImage aria-label={`${dict.view}: ${title}`}>
+                  {dict.view}
+                </GlassPillLink>
+              )}
+              {video && (
+                <GlassPillButton
+                  data-play
+                  size="lg"
+                  onImage
+                  onClick={play}
+                  aria-label={format(dict.play, { title })}
+                  className="shrink-0"
+                >
+                  <Play aria-hidden fill="currentColor" className="size-4" />
+                  <span className="max-sm:sr-only">{dict.play.replace(/\s*\{title\}/, "")}</span>
+                </GlassPillButton>
+              )}
+            </div>
           </div>
         )}
 
