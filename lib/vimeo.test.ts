@@ -44,4 +44,11 @@ describe("vimeoEmbedUrl", () => {
     );
     expect(vimeoEmbedUrl({ id: "1" }, { autoplay: true })).toBe("https://player.vimeo.com/video/1?dnt=1&autoplay=1");
   });
+
+  it("can ask for playback outside the page (full screen on iPhones)", () => {
+    expect(vimeoEmbedUrl({ id: "1" }, { autoplay: true, playsinline: false })).toBe(
+      "https://player.vimeo.com/video/1?dnt=1&autoplay=1&playsinline=0",
+    );
+    expect(vimeoEmbedUrl({ id: "1" }, { playsinline: true })).toBe("https://player.vimeo.com/video/1?dnt=1");
+  });
 });

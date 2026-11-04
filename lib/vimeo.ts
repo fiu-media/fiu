@@ -20,13 +20,19 @@ export function parseVimeo(url: string | null | undefined): VimeoRef | null {
   return { id: segments[at], hash: hash || undefined };
 }
 
-type EmbedOptions = { autoplay?: boolean; background?: boolean };
+type EmbedOptions = {
+  autoplay?: boolean;
+  background?: boolean;
+  /** `false` plays full screen on iPhones, which can't put an embed full screen themselves (it is ignored elsewhere). */
+  playsinline?: boolean;
+};
 
 /** `player.vimeo.com` embed URL. `background` is the controls-free, muted, looping preview (needs Vimeo Plus or higher). */
-export function vimeoEmbedUrl({ id, hash }: VimeoRef, { autoplay, background }: EmbedOptions = {}): string {
+export function vimeoEmbedUrl({ id, hash }: VimeoRef, { autoplay, background, playsinline }: EmbedOptions = {}): string {
   const params = new URLSearchParams({ dnt: "1" });
   if (hash) params.set("h", hash);
   if (background) params.set("background", "1");
   else if (autoplay) params.set("autoplay", "1");
+  if (playsinline === false) params.set("playsinline", "0");
   return `https://player.vimeo.com/video/${id}?${params}`;
 }
