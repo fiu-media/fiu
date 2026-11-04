@@ -3,11 +3,13 @@
 import { Play } from "lucide-react";
 import Image, { getImageProps } from "next/image";
 import Link from "next/link";
-import { type CSSProperties, useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { type CSSProperties, useCallback, useEffect, useRef, useState } from "react";
 import { FullBleedSlide } from "@/components/ui/FullBleedScroll";
 import { GlassPillButton, GlassPillLink } from "@/components/ui/Glass";
 import { cn } from "@/lib/cn";
 import { format } from "@/lib/i18n/format";
+import { PORTRAIT } from "@/lib/orientation";
+import { usePortrait } from "@/lib/use-portrait";
 import { useReducedMotion } from "@/lib/reduced-motion";
 import { parseVimeo, vimeoEmbedUrl } from "@/lib/vimeo";
 import { useVimeoPlayer } from "./useVimeoPlayer";
@@ -307,25 +309,13 @@ export function ProjectSlide({
   );
 }
 
-const PORTRAIT = "(orientation: portrait)";
-
-function subscribeToPortrait(onChange: () => void) {
-  const query = window.matchMedia(PORTRAIT);
-  query.addEventListener("change", onChange);
-  return () => query.removeEventListener("change", onChange);
-}
-
 /**
  * The cover still, full-bleed. With a mobile cover, a `<picture>` lets the browser fetch only the one
  * that fits the screen's orientation; the hotspot and blur placeholder follow it through CSS variables,
  * and the alt text follows it once the client knows the orientation (the server assumes landscape).
  */
 function Cover({ image, mobileImage, priority }: { image: SlideImage; mobileImage?: SlideImage | null; priority?: boolean }) {
-  const portrait = useSyncExternalStore(
-    subscribeToPortrait,
-    () => window.matchMedia(PORTRAIT).matches,
-    () => false,
-  );
+  const portrait = usePortrait();
 
   if (!mobileImage) {
     return (

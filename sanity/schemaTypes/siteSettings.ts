@@ -1,5 +1,5 @@
 import { defineArrayMember, defineField, defineType } from "sanity";
-import { imageArrayMember, imageWithAlt, languageField } from "./fields";
+import { defaultLanguageReference, imageWithAlt, languageField } from "./fields";
 
 export const siteSettings = defineType({
   name: "siteSettings",
@@ -29,30 +29,14 @@ export const siteSettings = defineType({
       description: "Optional, in this document's language. Leave empty for Irish.",
     }),
     defineField({
-      name: "homeStills",
-      title: "Home stills",
+      name: "homeProjects",
+      title: "Home projects",
       type: "array",
       group: "home",
-      description: "3–10 images that rotate behind the logo on the home page.",
-      validation: (rule) => rule.min(3).max(10),
-      of: [
-        imageArrayMember([
-          defineField({
-            name: "lightTint",
-            title: "Glass tint",
-            type: "string",
-            description:
-              "Optional hex colour (e.g. #a0957b) the glass logo takes from this still. Leave empty to sample the image.",
-            validation: (rule) => rule.regex(/^#[0-9a-fA-F]{6}$/, { name: "hex colour" }).warning(),
-          }),
-          defineField({
-            name: "project",
-            title: "Linked project",
-            type: "reference",
-            to: [{ type: "project" }],
-          }),
-        ]),
-      ],
+      description:
+        "The projects whose stills rotate behind the logo on the home page, using their landscape and mobile stills. Up to 10 stills are shown, taken from each project in turn.",
+      validation: (rule) => rule.required().min(1).max(10),
+      of: [defineArrayMember(defaultLanguageReference("project"))],
     }),
     defineField({ name: "manifesto", type: "array", group: "about", of: [defineArrayMember({ type: "block" })] }),
     imageWithAlt("aboutStill", "About still"),
