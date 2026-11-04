@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { Suspense, useEffect } from "react";
+import { Suspense, useEffect, useState, type CSSProperties } from "react";
 import "./brierto-watermark.module.css";
 
 const PHRASE = "★ DESIGNED BY BRIERTO ★";
@@ -25,6 +25,37 @@ const MELODY: Array<[number, OscillatorType]> = [
 ];
 
 const LOOP_MS = 3600;
+const BOOM_EVENT = "brierto-boom";
+
+const BLASTS = [
+  { word: "KABOOM", x: "50%", y: "46%", rot: "-6deg", delay: "0s", size: "min(78vw, 28rem)" },
+  { word: "BOOM", x: "20%", y: "30%", rot: "-14deg", delay: "0.12s", size: "min(42vw, 16rem)" },
+  { word: "POW", x: "78%", y: "24%", rot: "10deg", delay: "0.22s", size: "min(36vw, 14rem)" },
+  { word: "BANG", x: "26%", y: "72%", rot: "12deg", delay: "0.34s", size: "min(40vw, 15rem)" },
+  { word: "WHAM", x: "76%", y: "70%", rot: "-8deg", delay: "0.46s", size: "min(38vw, 14rem)" },
+];
+
+const SPARKS = Array.from({ length: 24 }, (_, index) => {
+  const angle = (index / 24) * Math.PI * 2 + (index % 3) * 0.4;
+  const distance = 90 + (index % 5) * 48;
+  return {
+    index,
+    x: `${12 + ((index * 37) % 76)}%`,
+    y: `${10 + ((index * 53) % 80)}%`,
+    dx: `${Math.cos(angle) * distance}px`,
+    dy: `${Math.sin(angle) * distance}px`,
+    delay: `${(index % 6) * 0.07}s`,
+    color: ["#ffe600", "#ff00ea", "#00fff2", "#39ff14", "#ff3b00"][index % 5],
+  };
+});
+
+function splashCovering() {
+  const splash = document.querySelector("div.absolute.inset-0.z-20.grid");
+  if (!splash) return false;
+  const backdrop = splash.querySelector("div.bg-ink");
+  if (!backdrop) return true;
+  return Number.parseFloat(getComputedStyle(backdrop).opacity) > 0.15;
+}
 
 function audioContext(): AudioContext | null {
   const Ctor = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
@@ -133,6 +164,39 @@ function playFanfare(ctx: AudioContext, dest: AudioNode, crack: AudioBuffer) {
   boing(ctx, dest, after + 1.2);
 }
 
+function explosion(ctx: AudioContext, dest: AudioNode, when: number) {
+  const duration = 0.8;
+  const length = Math.floor(ctx.sampleRate * duration);
+  const buffer = ctx.createBuffer(1, length, ctx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < length; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / length) ** 1.4;
+  const source = ctx.createBufferSource();
+  const filter = ctx.createBiquadFilter();
+  const gain = ctx.createGain();
+  source.buffer = buffer;
+  filter.type = "lowpass";
+  filter.frequency.setValueAtTime(5400, when);
+  filter.frequency.exponentialRampToValueAtTime(120, when + duration);
+  gain.gain.setValueAtTime(0.95, when);
+  gain.gain.exponentialRampToValueAtTime(0.0001, when + duration);
+  source.connect(filter);
+  filter.connect(gain);
+  gain.connect(dest);
+  source.start(when);
+
+  const thump = ctx.createOscillator();
+  const thumpGain = ctx.createGain();
+  thump.type = "sine";
+  thump.frequency.setValueAtTime(150, when);
+  thump.frequency.exponentialRampToValueAtTime(28, when + 0.45);
+  thumpGain.gain.setValueAtTime(0.85, when);
+  thumpGain.gain.exponentialRampToValueAtTime(0.0001, when + 0.5);
+  thump.connect(thumpGain);
+  thumpGain.connect(dest);
+  thump.start(when);
+  thump.stop(when + 0.52);
+}
+
 function crackle(ctx: AudioContext) {
   const length = Math.floor(ctx.sampleRate * 0.15);
   const buffer = ctx.createBuffer(1, length, ctx.sampleRate);
@@ -155,6 +219,21 @@ function WatermarkGate() {
     let crack: AudioBuffer | null = null;
 
     let skipNextShout = false;
+    let boomPlayed = false;
+    let boomQueued = false;
+
+    const playBoom = () => {
+      if (boomPlayed) return;
+      if (!ctx || !master || ctx.state !== "running") {
+        boomQueued = true;
+        return;
+      }
+      boomPlayed = true;
+      const now = ctx.currentTime + 0.02;
+      explosion(ctx, master, now);
+      explosion(ctx, master, now + 0.22);
+      explosion(ctx, master, now + 0.5);
+    };
 
     const shout = (duringGesture: boolean) => {
       const synth = window.speechSynthesis;
@@ -200,6 +279,7 @@ function WatermarkGate() {
         .then(() => {
           if (stopped || started || ctx?.state !== "running") return;
           started = true;
+          if (boomQueued) playBoom();
           tick();
         })
         .catch(() => {});
@@ -224,6 +304,7 @@ function WatermarkGate() {
     };
 
     window.speechSynthesis?.getVoices();
+    const onBoom = () => playBoom();
     const onGesture = () => {
       if (!started) {
         shout(true);
@@ -233,6 +314,7 @@ function WatermarkGate() {
     };
 
     arm();
+    window.addEventListener(BOOM_EVENT, onBoom);
     window.addEventListener("pointerdown", onGesture, true);
     window.addEventListener("keydown", onGesture, true);
     document.addEventListener("visibilitychange", onHide);
@@ -241,6 +323,7 @@ function WatermarkGate() {
       stopped = true;
       window.clearTimeout(timer);
       window.clearTimeout(voiceTimer);
+      window.removeEventListener(BOOM_EVENT, onBoom);
       window.removeEventListener("pointerdown", onGesture, true);
       window.removeEventListener("keydown", onGesture, true);
       document.removeEventListener("visibilitychange", onHide);
@@ -249,10 +332,37 @@ function WatermarkGate() {
     };
   }, [enabled]);
 
+  const [blasting, setBlasting] = useState(false);
+
+  useEffect(() => {
+    if (!enabled) return;
+    let cancelled = false;
+    let timer = 0;
+    const startedAt = performance.now();
+    const watch = () => {
+      if (cancelled) return;
+      const waitedOut = performance.now() - startedAt > 8000;
+      if (splashCovering() && !waitedOut) {
+        timer = window.setTimeout(watch, 80);
+        return;
+      }
+      setBlasting(true);
+      window.dispatchEvent(new Event(BOOM_EVENT));
+      timer = window.setTimeout(() => {
+        if (!cancelled) setBlasting(false);
+      }, 2200);
+    };
+    watch();
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [enabled]);
+
   if (!enabled) return null;
 
   return (
-    <div className="brierto-mark" aria-hidden="true">
+    <div className={blasting ? "brierto-mark brierto-shaking" : "brierto-mark"} aria-hidden="true">
       <div className="brierto-wash" />
       <div className="brierto-tiles">
         {TILES.map((tile) => (
@@ -260,6 +370,45 @@ function WatermarkGate() {
         ))}
       </div>
       <div className="brierto-frame" />
+      {blasting && (
+        <div className="brierto-booms">
+          <div className="brierto-boom-flash" />
+          <div className="brierto-boom-flash brierto-boom-flash-late" />
+          {SPARKS.map((spark) => (
+            <span
+              key={spark.index}
+              className="brierto-spark"
+              style={
+                {
+                  "--x": spark.x,
+                  "--y": spark.y,
+                  "--dx": spark.dx,
+                  "--dy": spark.dy,
+                  "--delay": spark.delay,
+                  "--color": spark.color,
+                } as CSSProperties
+              }
+            />
+          ))}
+          {BLASTS.map((blast) => (
+            <div
+              key={blast.word}
+              className="brierto-boom"
+              style={
+                {
+                  "--x": blast.x,
+                  "--y": blast.y,
+                  "--rot": blast.rot,
+                  "--delay": blast.delay,
+                  "--size": blast.size,
+                } as CSSProperties
+              }
+            >
+              <span>{blast.word}</span>
+            </div>
+          ))}
+        </div>
+      )}
       <div className="brierto-hero">
         <svg className="brierto-ring" viewBox="0 0 200 200" aria-hidden="true">
           <defs>
