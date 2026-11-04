@@ -10,9 +10,10 @@ import { SiteNav } from "@/components/nav/SiteNav";
 import { fallbackStills } from "@/lib/fallback-stills";
 import { defaultLocale, isLocale, languageAlternates, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
+import { LANDSCAPE, PORTRAIT } from "@/lib/orientation";
 import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
 import { HOME_STILLS_QUERY } from "@/sanity/lib/queries";
-import { toHeroStill, type HeroStill } from "@/sanity/lib/stills";
+import { toHeroStills, type HeroStills } from "@/sanity/lib/stills";
 
 export const viewport: Viewport = { themeColor: "#0c0b0d" };
 
@@ -35,7 +36,7 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
         {/* The hero is imagery only: select-none stops a select-all or long-press copying the stills' alt texts as one string. */}
         <h1 className="sr-only">{dict.site.name}</h1>
         {/* Reads draft mode, so it streams; the fallback stills keep the first paint identical. */}
-        <Suspense fallback={<HomeHero stills={fallbackStills} />}>
+        <Suspense fallback={<HomeHero {...fallbackHeroStills} />}>
           <CmsHero lang={lang} />
         </Suspense>
         <SiteNav lang={lang} onImage />
@@ -45,21 +46,29 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
   );
 }
 
+const fallbackHeroStills: HeroStills = { landscape: fallbackStills, portrait: fallbackStills };
+
 async function CmsHero({ lang }: { lang: Locale }) {
   const { perspective, variant } = await getDynamicFetchOptions();
   const stills = await homeStills(lang, perspective, variant);
   // The glass logo's WebGL scene can't draw until its first still has loaded. Start that download
   // with the HTML, not after the scene's code has mounted. `crossOrigin` must match the texture
-  // loader's request (anonymous CORS) or the browser won't reuse the preloaded response.
-  if (stills[0]) preload(stills[0].src, { as: "image", crossOrigin: "anonymous" });
-  return <HomeHero stills={stills} />;
+  // loader's request (anonymous CORS) or the browser won't reuse the preloaded response. The scene draws the
+  // set that fits the screen, so each set's first still is only fetched on a screen that will use it.
+  for (const [still, media] of [
+    [stills.landscape[0], LANDSCAPE],
+    [stills.portrait[0], PORTRAIT],
+  ] as const) {
+    if (still) preload(still.src, { as: "image", crossOrigin: "anonymous", media });
+  }
+  return <HomeHero {...stills} />;
 }
 
 async function homeStills(
   lang: Locale,
   perspective: Awaited<ReturnType<typeof getDynamicFetchOptions>>["perspective"],
   variant: string | undefined,
-): Promise<HeroStill[]> {
+): Promise<HeroStills> {
   const { data } = await cachedSanity({
     query: HOME_STILLS_QUERY,
     params: { lang, fallbackLang: defaultLocale },
@@ -67,6 +76,6 @@ async function homeStills(
     variant,
     stega: false,
   });
-  const stills = (data?.stills ?? []).map((s) => toHeroStill(data!._id, s)).filter((s): s is HeroStill => s !== null);
-  return stills.length > 0 ? stills : fallbackStills;
+  const stills = toHeroStills(data?.projects ?? []);
+  return stills.landscape.length + stills.portrait.length > 0 ? stills : fallbackHeroStills;
 }

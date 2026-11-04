@@ -41,25 +41,6 @@ const RENTAL_ITEMS = `(
     + *[_type == "rentalItem" && language == $fallbackLang${RENTAL_AVAILABLE} && !(slug.current in *[_type == "rentalItem" && language == $lang${RENTAL_AVAILABLE}].slug.current)]
   )`;
 
-export const HOME_STILLS_QUERY = defineQuery(`
-  coalesce(
-    *[_type == "siteSettings" && language == $lang && count(homeStills[defined(asset)]) > 0][0],
-    *[_type == "siteSettings" && language == $fallbackLang][0]
-  ){
-    _id,
-    "stills": homeStills[defined(asset)]{
-      _key,
-      alt,
-      lightTint,
-      asset,
-      crop,
-      hotspot,
-      "lqip": asset->metadata.lqip,
-      "dimensions": asset->metadata.dimensions
-    }
-  }
-`);
-
 const RENTAL_ITEM_FIELDS = `
   _id,
   name,
@@ -173,6 +154,29 @@ const translatedTitle = <const T extends string>(type: T) =>
   `coalesce(*[_type == "${type}" && language == $lang && slug.current == ^.slug.current][0].title, title)` as const;
 
 const IMAGE_FIELDS = `alt, asset, crop, hotspot, "lqip": asset->metadata.lqip, "dimensions": asset->metadata.dimensions`;
+
+/**
+ * The stills of the projects the home page rotates, in the editors' order. A project's stills may not be translated
+ * yet, so each set falls back to the default-language document's, like on its own page.
+ */
+export const HOME_STILLS_QUERY = defineQuery(`
+  coalesce(
+    *[_type == "siteSettings" && language == $lang && count(homeProjects) > 0][0],
+    *[_type == "siteSettings" && language == $fallbackLang][0]
+  ){
+    "projects": homeProjects[]->{
+      _id,
+      "stills": coalesce(
+        *[_type == "project" && language == $lang && slug.current == ^.slug.current][0].stills,
+        stills
+      )[defined(asset)]{ _key, ${IMAGE_FIELDS} },
+      "stillsMobile": coalesce(
+        *[_type == "project" && language == $lang && slug.current == ^.slug.current][0].stillsMobile,
+        stillsMobile
+      )[defined(asset)]{ _key, ${IMAGE_FIELDS} }
+    }
+  }
+`);
 
 const TALENT_CARD_FIELDS = `
   _id,

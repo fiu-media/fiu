@@ -1,13 +1,24 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import Image from "next/image";
-import { Component, useCallback, useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
+import Image, { getImageProps } from "next/image";
+import {
+  Component,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import { cn } from "@/lib/cn";
+import { PORTRAIT } from "@/lib/orientation";
+import { usePortrait } from "@/lib/use-portrait";
 import { prefersReducedMotion, subscribeToReducedMotion } from "@/lib/reduced-motion";
 import { decideLogoTier, rememberTooSlow, type LogoDecision, type LogoTier } from "@/components/three/logoTier";
 import logo from "@/public/brand/fiu-logo.svg";
-import type { HeroStill } from "@/sanity/lib/stills";
+import type { HeroStill, HeroStills } from "@/sanity/lib/stills";
 import { isSplashDismissed, Splash } from "./Splash";
 import { SPLASH_FADE_MS, splashFadeVars } from "./splash-config";
 
@@ -70,8 +81,11 @@ function useLiveSupport(): "pending" | LogoDecision {
  *
  * Mesh / rim playground controls live at `/dev/logo-playground`.
  */
-export function HomeHero({ stills }: { stills: HeroStill[] }) {
+export function HomeHero({ landscape, portrait }: HeroStills) {
   const [index, setIndex] = useState(0);
+  const portraitScreen = usePortrait();
+  const slides = useMemo(() => toSlides(landscape, portrait), [landscape, portrait]);
+  const current = index % slides.length;
   const [failed, setFailed] = useState(false);
   /**
    * The scene ran but was too slow: it fades out over the SVG (`fading`), then unmounts. Keeps the
@@ -119,9 +133,9 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
   // mid-spin.
   useEffect(() => {
     if (!introDone) return;
-    const id = window.setInterval(() => setIndex((i) => (i + 1) % stills.length), ROTATE_SECONDS * 1000);
+    const id = window.setInterval(() => setIndex((i) => (i + 1) % slides.length), ROTATE_SECONDS * 1000);
     return () => window.clearInterval(id);
-  }, [introDone, stills.length]);
+  }, [introDone, slides.length]);
 
   const onReady = useCallback(() => setSceneReady(true), []);
   const onIntroEnd = useCallback(() => setStage("settled"), []);
@@ -137,15 +151,14 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
     const id = window.setTimeout(() => setSlow((s) => s && { ...s, fading: false }), SLOW_FADE_MS);
     return () => window.clearTimeout(id);
   }, [slow?.fading]);
+  // The scene is client-only, so it can read the orientation up front and draw the set the screen shows.
   const sceneStills = useMemo(
     () =>
-      stills.map(({ src, width, height, lightTint }) => ({
-        src,
-        width,
-        height,
-        lightTint,
-      })),
-    [stills],
+      slides.map(({ landscape, portrait }) => {
+        const { src, width, height, lightTint } = portraitScreen ? portrait : landscape;
+        return { src, width, height, lightTint };
+      }),
+    [slides, portraitScreen],
   );
 
   return (
@@ -155,21 +168,8 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
       {/* On mobile the photo is 12rem taller than the page above and below (BLEED_CLASS): real pixels for Safari to show behind
           its status bar and toolbar. Not fixed, or Safari would tint its bars from this layer instead. */}
       <div className={cn("absolute inset-0 -z-10", BLEED_CLASS)}>
-        {stills.map((still, i) => (
-          <Image
-            key={still.src}
-            src={still.src}
-            alt={still.alt}
-            fill
-            priority={i === 0}
-            placeholder={still.blurDataURL ? "blur" : "empty"}
-            blurDataURL={still.blurDataURL}
-            quality={90}
-            sizes="100vw"
-            className="object-cover transition-opacity duration-[1600ms] ease-in-out"
-            style={{ opacity: i === index ? 1 : 0, objectPosition: still.position }}
-            data-sanity={still.dataSanity}
-          />
+        {slides.map((slide, i) => (
+          <Slide key={i} {...slide} portraitScreen={portraitScreen} shown={i === current} priority={i === 0} />
         ))}
 
         {/* SVG logo: shown on the server render, while the live scene loads, and as the
@@ -215,8 +215,10 @@ export function HomeHero({ stills }: { stills: HeroStill[] }) {
             style={{ ...splashFadeVars, opacity: sceneReady && splashDone && !slow ? 1 : HIDDEN_SCENE_OPACITY }}
           >
             <LogoScene
+              // Another orientation is another set of textures; the scene only reads its first one once.
+              key={portraitScreen ? "portrait" : "landscape"}
               stills={sceneStills}
-              index={index}
+              index={current}
               onReady={onReady}
               meshMode="extrude"
               rimLook="light"
@@ -250,4 +252,60 @@ class SceneBoundary extends Component<{ onError: () => void; children: ReactNode
   render() {
     return this.state.failed ? null : this.props.children;
   }
+}
+
+type SlidePair = { landscape: HeroStill; portrait: HeroStill };
+
+/**
+ * One slide per position, each pairing a landscape still with a portrait one. The two sets can differ in length
+ * (a project's mobile gallery is picked separately), so the shorter one repeats; either one alone fills the other.
+ */
+function toSlides(landscape: HeroStill[], portrait: HeroStill[]): SlidePair[] {
+  const wide = landscape.length > 0 ? landscape : portrait;
+  const tall = portrait.length > 0 ? portrait : landscape;
+  return Array.from({ length: Math.max(wide.length, tall.length) }, (_, i) => ({
+    landscape: wide[i % wide.length]!,
+    portrait: tall[i % tall.length]!,
+  }));
+}
+
+/**
+ * One slide of the hero. A `<picture>` lets the browser fetch only the still that fits the screen's orientation
+ * (same as a project's cover); the hotspot and blur placeholder follow it through CSS variables, and the alt text
+ * and Presentation link follow it once the client knows the orientation (the server assumes landscape).
+ */
+function Slide({
+  landscape,
+  portrait,
+  portraitScreen,
+  shown,
+  priority,
+}: SlidePair & { portraitScreen: boolean; shown: boolean; priority: boolean }) {
+  // Not `preload`: a preload link can't say which of the two sources the screen will pick.
+  const eager = priority ? ({ loading: "eager", fetchPriority: "high" } as const) : {};
+  const props = (still: HeroStill) =>
+    getImageProps({ src: still.src, alt: still.alt, fill: true, quality: 90, sizes: "100vw", ...eager }).props;
+  const wide = props(landscape);
+  const tall = props(portrait);
+  const blur = (still: HeroStill) => (still.blurDataURL ? `url("${still.blurDataURL}")` : "none");
+  const vars = {
+    "--still-position": landscape.position ?? "50% 50%",
+    "--still-position-portrait": portrait.position ?? "50% 50%",
+    "--still-blur": blur(landscape),
+    "--still-blur-portrait": blur(portrait),
+  } as CSSProperties;
+  const showing = portraitScreen ? portrait : landscape;
+
+  return (
+    <picture>
+      <source media={PORTRAIT} srcSet={tall.srcSet} sizes={tall.sizes} />
+      <img
+        {...wide}
+        alt={showing.alt}
+        style={{ ...wide.style, ...vars, opacity: shown ? 1 : 0 }}
+        data-sanity={showing.dataSanity}
+        className="[background-image:var(--still-blur)] bg-cover bg-center object-cover [object-position:var(--still-position)] transition-opacity duration-[1600ms] ease-in-out portrait:[background-image:var(--still-blur-portrait)] portrait:[object-position:var(--still-position-portrait)]"
+      />
+    </picture>
+  );
 }
