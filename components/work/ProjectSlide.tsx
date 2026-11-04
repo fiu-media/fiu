@@ -1,6 +1,7 @@
 "use client";
 
 import { Play } from "lucide-react";
+import type Player from "@vimeo/player";
 import Image, { getImageProps } from "next/image";
 import Link from "next/link";
 import { type CSSProperties, useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
@@ -72,6 +73,21 @@ function fullscreenElement(): Element | null {
   return document.fullscreenElement ?? (document as { webkitFullscreenElement?: Element | null }).webkitFullscreenElement ?? null;
 }
 
+/** Phones and tablets held upright: where a landscape video would sit in a strip with bars above and below it. */
+const UPRIGHT_TOUCH = "(pointer: coarse) and (orientation: portrait)";
+
+type LockableOrientation = ScreenOrientation & { lock?: (orientation: "landscape") => Promise<void> };
+
+/** A wide video in a full-screen upright phone turns the screen sideways, so it fills it. Only works full screen, and not on iOS. */
+async function turnForVideo(player: Player) {
+  try {
+    const [width, height] = await Promise.all([player.getVideoWidth(), player.getVideoHeight()]);
+    if (width > height) await (screen.orientation as LockableOrientation).lock?.("landscape");
+  } catch {
+    // Refused or unsupported: the viewer can still turn the phone themselves.
+  }
+}
+
 /**
  * One full-bleed project: the cover still, a preview loop behind it when the project has one, and
  * a play button that swaps the Vimeo player into the slide. Without a Vimeo URL it is just the cover.
@@ -99,16 +115,31 @@ export function ProjectSlide({
   const [playing, setPlaying] = useState(false);
   // The player stays invisible over the cover until it is actually playing, so its loading screen never shows.
   const [revealed, setRevealed] = useState(false);
+  // Whether the slide itself (not just the Vimeo frame) is full screen. Its Stop button then needs no room for the menu.
+  const [fullscreen, setFullscreen] = useState(false);
+  // iPhones can't take an element full screen; their player goes full screen itself when asked not to play inline.
+  const [playFullscreenNatively, setPlayFullscreenNatively] = useState(false);
   const reducedMotion = useReducedMotion();
 
   const video = parseVimeo(vimeoUrl);
   const loop = parseVimeo(previewLoopUrl);
 
-  const play = useCallback(() => setPlaying(true), []);
+  const play = useCallback(() => {
+    setPlaying(true);
+    if (!window.matchMedia(UPRIGHT_TOUCH).matches) return;
+    // Held upright, a wide video fills a third of the screen. Full screen, turned sideways, it fills all of it.
+    // This has to happen in the tap's own handler, before the player exists, so it is the slide that goes full screen.
+    const slide = root.current;
+    if (slide?.requestFullscreen) void slide.requestFullscreen().catch(() => {});
+    else setPlayFullscreenNatively(true);
+  }, []);
   const reveal = useCallback(() => setRevealed(true), []);
   const stop = useCallback(() => {
     setPlaying(false);
     setRevealed(false);
+    setPlayFullscreenNatively(false);
+    if (fullscreenElement() === root.current) void document.exitFullscreen?.().catch(() => {});
+    (screen.orientation as LockableOrientation).unlock?.();
     // The player is gone; put keyboard focus back where it came from.
     requestAnimationFrame(() => root.current?.querySelector<HTMLButtonElement>("[data-play]")?.focus());
   }, []);
@@ -121,6 +152,7 @@ export function ProjectSlide({
     // The SDK can load after the viewer has already left the slide.
     ready: (ready) => {
       if (away.current) ready.pause().catch(() => {});
+      if (fullscreenElement() === root.current) void turnForVideo(ready);
     },
   });
 
@@ -161,12 +193,17 @@ export function ProjectSlide({
     const stopRestoring = () => window.removeEventListener("resize", restore);
 
     const onFullscreenChange = () => {
-      if (fullscreenElement() === playerFrame) {
+      const element = fullscreenElement();
+      setFullscreen(element === root.current);
+      if (element === playerFrame || element === root.current) {
         fullscreen = true;
+        // The player may have loaded before the slide finished going full screen.
+        if (element === root.current && player.current) void turnForVideo(player.current);
         return;
       }
       if (!fullscreen) return;
       fullscreen = false;
+      (screen.orientation as LockableOrientation).unlock?.();
       exitedAt = performance.now();
       restore();
       window.addEventListener("resize", restore);
@@ -234,7 +271,13 @@ export function ProjectSlide({
 
         {playing && (
           // Before the player in the DOM, so Tab goes from Stop into the player; z-10 keeps it above it.
-          <div className="absolute top-4 right-4 z-10 md:top-6 md:right-6">
+          // On phones the floating menu button sits in the top corner, so Stop goes beneath it (full screen covers the menu).
+          <div
+            className={cn(
+              "absolute right-4 z-10 md:top-6 md:right-6",
+              fullscreen ? "top-4" : "top-[calc(max(1.25rem,env(safe-area-inset-top))+4rem)]",
+            )}
+          >
             <GlassPillButton data-stop size="md" onImage onClick={stop}>
               {dict.stop}
             </GlassPillButton>
@@ -244,7 +287,7 @@ export function ProjectSlide({
         {playing && video ? (
           <iframe
             ref={setPlayerFrame}
-            src={vimeoEmbedUrl(video, { autoplay: true })}
+            src={vimeoEmbedUrl(video, { autoplay: true, playsinline: playFullscreenNatively ? false : undefined })}
             title={title}
             allow="autoplay; fullscreen; picture-in-picture"
             allowFullScreen
