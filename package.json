@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "setup": "npm install && vercel link --yes && vercel env pull --yes && npm run typegen",
+    "setup": "npm install && vercel link --yes --scope fiu-media --project fiu && vercel env pull --yes && npm run typegen",
     "predev": "npm run typegen",
     "dev": "NODE_OPTIONS=--no-experimental-webstorage next dev",
     "prebuild": "npm run typegen",
