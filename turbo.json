@@ -20,6 +20,7 @@
         "SANITY_API_WRITE_TOKEN",
         "RESEND_API_KEY",
         "RESEND_EMAIL_DOMAIN",
+        "RESEND_SEGMENT_ID",
         "SKIP_ENV_VALIDATION"
       ],
       "outputs": [".next/**", "!.next/cache/**"]

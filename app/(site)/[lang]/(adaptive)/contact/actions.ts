@@ -3,7 +3,7 @@
 import { getRecipient } from "@/lib/email/settings";
 import { studioEditUrl } from "@/lib/email/studio-link";
 import { contactNotification } from "@/lib/email/templates";
-import { isConflict, sendAll } from "@/lib/forms/notify";
+import { isConflict, saveContact, sendAll } from "@/lib/forms/notify";
 import { contactSchema } from "@/lib/forms/schemas";
 import type { FormState } from "@/lib/forms/state";
 import { guardSubmission } from "@/lib/forms/submit";
@@ -23,6 +23,7 @@ export async function submitContact(_previous: FormState, formData: FormData): P
       status: "new",
       name: data.name,
       email: data.email,
+      phone: data.phone || undefined,
       enquiryType: data.enquiryType,
       message: data.message,
       createdAt: new Date().toISOString(),
@@ -36,14 +37,17 @@ export async function submitContact(_previous: FormState, formData: FormData): P
   const to = await getRecipient("contact", data.lang);
   if (!to) console.warn("[contact] no recipient set in Site settings; skipping notification");
   const dict = await getDictionary(data.lang);
-  await sendAll([
-    to
-      ? {
-          to,
-          replyTo: data.email,
-          ...contactNotification(dict, data, studioEditUrl(id, "contactMessage")),
-        }
-      : null,
+  await Promise.all([
+    sendAll([
+      to
+        ? {
+            to,
+            replyTo: data.email,
+            ...contactNotification(dict, data, studioEditUrl(id, "contactMessage")),
+          }
+        : null,
+    ]),
+    saveContact({ name: data.name, email: data.email, phone: data.phone }),
   ]);
 
   return succeed();

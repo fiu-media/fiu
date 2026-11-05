@@ -49,7 +49,7 @@ The notification emails are React Email components in `emails/`, rendered by `li
 
 - Always required: `NEXT_PUBLIC_SANITY_PROJECT_ID`, `NEXT_PUBLIC_SANITY_DATASET`.
 - Required when `VERCEL_ENV=production`: `SANITY_API_WRITE_TOKEN`, `RESEND_API_KEY`, `RESEND_EMAIL_DOMAIN` (the last two come from the Resend integration on Vercel; mail is sent from `hello@` that domain). Previews and local runs may omit them (email is then logged and skipped).
-- Optional: `SANITY_API_READ_TOKEN`, `NEXT_PUBLIC_SITE_URL`.
+- Optional: `SANITY_API_READ_TOKEN`, `NEXT_PUBLIC_SITE_URL`, `RESEND_SEGMENT_ID` (the Resend segment contact-form submitters are added to as unsubscribed contacts; without it they join no segment. Resend needs a custom `phone` contact property for their phone number).
 - Notification recipients are not environment variables: editors set the Contact email and Quote request recipient in Site settings. With neither set, the notification is skipped (the visitor's confirmation is still sent).
 - Empty values count as unset. `SKIP_ENV_VALIDATION=1` skips the checks for a deliberately secret-less build.
 - Server-only variables throw if read from client code, but `env.ts` itself stays importable from the browser for the `NEXT_PUBLIC_*` values.

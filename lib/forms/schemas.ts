@@ -110,6 +110,7 @@ export const contactSchema = z.object({
   ...common,
   name: required(limits.name),
   email,
+  phone,
   enquiryType: z.enum(ENQUIRY_TYPES),
   message: required(limits.message),
 });
