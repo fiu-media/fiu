@@ -1,5 +1,6 @@
 import "server-only";
 import { env } from "@/env";
+import { studioUrl } from "@/sanity/studio-env";
 
 /** The site's public origin, for links and images in emails, which can't be relative. */
 export function siteOrigin() {
@@ -9,10 +10,7 @@ export function siteOrigin() {
   return origin.replace(/\/$/, "");
 }
 
-/**
- * Deep link to a document in the Studio. Intent URLs resolve whatever the structure looks like.
- * Needs NEXT_PUBLIC_SITE_URL (or Vercel's production URL) so emailed links aren't relative.
- */
+/** Deep link to a document in the hosted Studio. Intent URLs resolve whatever the structure looks like. */
 export function studioEditUrl(id: string, type: string) {
-  return `${siteOrigin()}/studio/intent/edit/id=${encodeURIComponent(id)};type=${type}/`;
+  return `${studioUrl}/intent/edit/id=${encodeURIComponent(id)};type=${type}/`;
 }

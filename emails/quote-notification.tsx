@@ -53,7 +53,7 @@ QuoteNotification.PreviewProps = {
   emails: en.emails,
   siteUrl: "http://localhost:3000",
   dates: en.dates,
-  studioUrl: "http://localhost:3000/studio/intent/edit/id=abc;type=quoteRequest/",
+  studioUrl: "https://fiu.sanity.studio/intent/edit/id=abc;type=quoteRequest/",
   data: {
     lang: "en",
     name: "Aoife Ní Bhriain",

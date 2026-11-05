@@ -2,35 +2,30 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import { en } from "../lib/i18n/dictionaries/en";
 import { format } from "../lib/i18n/format";
+import { featuredTalent } from "./fixtures/data";
 import { testEmail } from "./helpers";
 
 const { contact, talent } = en;
 const combobox = (page: Page) => page.getByRole("combobox", { name: new RegExp(contact.talent.legend.replace("?", "\\?")) });
 const chips = (page: Page) => page.getByRole("button", { name: /^Remove / });
 
-/** The first profile on the roster: its path, slug and name. */
-async function firstProfile(page: Page) {
-  await page.goto("/talent");
-  const href = await page
-    .locator('a[href^="/talent/"]')
-    .evaluateAll((links) => links.map((a) => a.getAttribute("href")!).find((h) => h.length > "/talent/".length));
-  if (!href) return null;
-  await page.goto(href);
-  const name = (await page.getByRole("heading", { level: 1 }).first().innerText()).trim();
-  return { href, slug: href.split("/").pop()!, name };
+/** Opens the fixture profile the talent tests use, and returns its path, slug and name. */
+async function openProfile(page: Page) {
+  await page.goto(featuredTalent.path);
+  await expect(page.getByRole("heading", { level: 1, name: featuredTalent.name })).toBeVisible();
+  return { href: featuredTalent.path, slug: featuredTalent.slug, name: featuredTalent.name };
 }
 
 test.describe("contact form: talent", () => {
   test('"Work with" opens the form for a Talent enquiry with that person already picked', async ({ page }) => {
-    const person = await firstProfile(page);
-    test.skip(!person, "No talent in this dataset");
+    const person = await openProfile(page);
 
-    await page.getByRole("link", { name: format(talent.workWith, { name: person!.name }) }).click();
-    await expect(page).toHaveURL(new RegExp(`type=Talent&talent=${person!.slug}`));
+    await page.getByRole("link", { name: format(talent.workWith, { name: person.name }) }).click();
+    await expect(page).toHaveURL(new RegExp(`type=Talent&talent=${person.slug}`));
     await expect(page.getByLabel(contact.enquiryType)).toHaveValue("Talent");
     await expect(combobox(page)).toBeVisible();
     await expect(chips(page)).toHaveCount(1);
-    await expect(page.getByRole("button", { name: format(contact.talent.remove, { name: person!.name }) })).toBeVisible();
+    await expect(page.getByRole("button", { name: format(contact.talent.remove, { name: person.name }) })).toBeVisible();
   });
 
   test('"Work with" after browsing away from a half-filled form starts it over with that person picked', async ({ page }) => {
@@ -43,7 +38,7 @@ test.describe("contact form: talent", () => {
     // Browse within the app, not by reloading, so the contact page's state is kept alive.
     await page.getByRole("link", { name: "Talent", exact: true }).first().click();
     await page.waitForURL(/\/talent$/);
-    await page.locator('a[href^="/talent/"]').first().click();
+    await page.locator(`a[href="${featuredTalent.path}"]`).click();
     await page.getByRole("link", { name: /^Work with / }).click();
     await page.waitForURL(/\/contact\?/);
 
@@ -55,9 +50,8 @@ test.describe("contact form: talent", () => {
   });
 
   test('the same "Work with" link again starts the form over, even after a message was sent', async ({ page }) => {
-    const person = await firstProfile(page);
-    test.skip(!person, "No talent in this dataset");
-    const workWith = () => page.getByRole("link", { name: format(talent.workWith, { name: person!.name }) });
+    const person = await openProfile(page);
+    const workWith = () => page.getByRole("link", { name: format(talent.workWith, { name: person.name }) });
 
     await workWith().click();
     await page.getByLabel(contact.name).fill("E2E Tester");
@@ -70,7 +64,7 @@ test.describe("contact form: talent", () => {
     // link: a new enquiry, not the "Message sent" panel.
     await page.getByRole("link", { name: "Talent", exact: true }).first().click();
     await page.waitForURL(/\/talent$/);
-    await page.locator(`a[href="${person!.href}"]`).click();
+    await page.locator(`a[href="${person.href}"]`).click();
     await workWith().click();
     await page.waitForURL(/\/contact\?/);
     await expect(page.getByRole("heading", { name: contact.successTitle })).toHaveCount(0);
@@ -79,9 +73,8 @@ test.describe("contact form: talent", () => {
   });
 
   test("an unsent form is also started over by the very same link", async ({ page }) => {
-    const person = await firstProfile(page);
-    test.skip(!person, "No talent in this dataset");
-    const workWith = () => page.getByRole("link", { name: format(talent.workWith, { name: person!.name }) });
+    const person = await openProfile(page);
+    const workWith = () => page.getByRole("link", { name: format(talent.workWith, { name: person.name }) });
 
     await workWith().click();
     await expect(chips(page)).toHaveCount(1);
@@ -92,7 +85,7 @@ test.describe("contact form: talent", () => {
     // Browse within the app (no reload), then follow the same link.
     await page.getByRole("link", { name: "Talent", exact: true }).first().click();
     await page.waitForURL(/\/talent$/);
-    await page.locator(`a[href="${person!.href}"]`).click();
+    await page.locator(`a[href="${person.href}"]`).click();
     await workWith().click();
     await page.waitForURL(/\/contact\?/);
     await expect(page.getByLabel(contact.name)).toHaveValue("");
@@ -118,7 +111,7 @@ test.describe("contact form: talent", () => {
     await input.click();
     const options = page.getByRole("option");
     const everyone = await options.count();
-    test.skip(everyone < 2, "Needs at least two people on the roster");
+    expect(everyone).toBeGreaterThanOrEqual(2);
 
     // Typing narrows the list; a name with no match says so.
     const first = (await options.first().innerText()).replace("✓", "").trim();
@@ -149,7 +142,7 @@ test.describe("contact form: talent", () => {
     await input.click();
     const options = page.getByRole("option");
     const everyone = await options.count();
-    test.skip(everyone < 21, "Needs more than 20 people on the roster");
+    expect(everyone).toBeGreaterThan(20);
 
     for (let i = 0; i < 20; i++) {
       await page.keyboard.press("ArrowDown");
@@ -182,7 +175,7 @@ test.describe("contact form: talent", () => {
     const input = combobox(page);
     await input.click();
     const options = page.getByRole("option");
-    test.skip((await options.count()) < 2, "Needs at least two people on the roster");
+    expect(await options.count()).toBeGreaterThanOrEqual(2);
     await options.nth(0).click();
     await options.nth(1).click();
     await page.keyboard.press("Escape");

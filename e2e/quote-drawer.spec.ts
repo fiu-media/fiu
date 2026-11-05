@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { en } from "../lib/i18n/dictionaries/en";
 import { format } from "../lib/i18n/format";
+import { rentalItems } from "./fixtures/data";
 import { clickUntil } from "./helpers";
 
 const { basket, rentals } = en;
@@ -33,25 +34,12 @@ test("the quote drawer closes on Escape and on the backdrop, returning focus to 
 });
 
 test("a basket quantity can be typed and stepped, and stays within the item's cap", async ({ page }) => {
-  // The quote page shows the same lines as the drawer. Find an item that can be quoted more than once.
-  await page.goto("/rentals");
-  await page.locator('a[href^="/rentals/"]:not([href="/rentals/quote"])').first().waitFor();
-  const slugs = await page
-    .locator('a[href^="/rentals/"]:not([href="/rentals/quote"])')
-    .evaluateAll((links) => [...new Set(links.map((a) => a.getAttribute("href")!.split("/").pop()!))]);
+  // The quote page shows the same lines as the drawer. The item has five in stock, so it can be quoted more than once.
+  await page.goto(`/rentals/quote?item=${rentalItems.multi.slug}`);
   const qty = page.getByRole("textbox", { name: /^Quantity of / });
   const more = page.getByRole("button", { name: /^Add one more / });
-  let found = false;
-  for (const slug of slugs) {
-    await page.goto(`/rentals/quote?item=${slug}`);
-    await expect(qty).toHaveValue("1");
-    if (await more.isEnabled()) {
-      found = true;
-      break;
-    }
-    await page.evaluate(() => localStorage.clear());
-  }
-  test.skip(!found, "No item in this dataset can be quoted more than once");
+  await expect(qty).toHaveValue("1");
+  await expect(more).toBeEnabled();
 
   await qty.fill("2");
   await qty.blur();
@@ -64,8 +52,6 @@ test("a basket quantity can be typed and stepped, and stays within the item's ca
   // Past the item's cap (and never past 99) it settles on the cap.
   await qty.fill("500");
   await qty.blur();
-  const cap = Number(await qty.inputValue());
-  expect(cap).toBeGreaterThanOrEqual(2);
-  expect(cap).toBeLessThanOrEqual(99);
+  await expect(qty).toHaveValue(String(rentalItems.multi.maxQuantity));
   await expect(more).toBeDisabled();
 });

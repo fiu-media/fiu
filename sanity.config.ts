@@ -1,11 +1,9 @@
-"use client";
-
 import { documentInternationalization } from "@sanity/document-internationalization";
 import { visionTool } from "@sanity/vision";
 import { defineConfig } from "sanity";
 import { presentationTool } from "sanity/presentation";
 import { structureTool } from "sanity/structure";
-import { apiVersion, dataset, projectId } from "./sanity/env";
+import { apiVersion, dataset, previewOrigin, projectId } from "./sanity/studio-env";
 import { languages, translatedTypes } from "./sanity/languages";
 import { resolve } from "./sanity/presentation/resolve";
 import { FiuIcon } from "./sanity/FiuIcon";
@@ -16,9 +14,12 @@ export default defineConfig({
   name: "default",
   title: "Fiú Media",
   icon: FiuIcon,
-  basePath: "/studio",
   projectId,
   dataset,
+  auth: {
+    // Signing in with Vercel goes through the integration's SSO, which ends on sanity.io instead of returning to the Studio.
+    providers: (prev) => prev.filter((p) => p.name !== "vercel" && !p.url.includes("/login/vercel")),
+  },
   schema: {
     types: schemaTypes,
     templates: (templates) => templates.filter(({ id }) => !hiddenTemplates.includes(id)),
@@ -30,7 +31,7 @@ export default defineConfig({
     structureTool({ structure }),
     presentationTool({
       resolve,
-      previewUrl: { draftMode: { enable: "/api/draft-mode/enable" } },
+      previewUrl: { origin: previewOrigin, draftMode: { enable: "/api/draft-mode/enable" } },
     }),
     documentInternationalization({
       supportedLanguages: languages,

@@ -1,34 +1,23 @@
 import AxeBuilder from "@axe-core/playwright";
 import { devices, expect, test, type Page } from "@playwright/test";
 import { en } from "../lib/i18n/dictionaries/en";
+import { rentalItems } from "./fixtures/data";
 import { isoDateFromNow } from "./helpers";
 
 const { quote } = en;
 
-/** A rental the dev dataset has: its slug. Waits for the catalogue to render, so "none" means none, not "not yet". */
-async function firstRental(page: Page) {
-  await page.goto("/rentals");
-  const item = page.locator('a[href^="/rentals/"]:not([href="/rentals/quote"])').first();
-  try {
-    await item.waitFor({ timeout: 15_000 });
-  } catch {
-    return null;
-  }
-  const href = (await item.getAttribute("href"))!;
-  return { slug: href.split("/").pop()!.split("?")[0]! };
-}
+/** The rental the deep-link tests quote: one in stock, so "Add one more" is never on offer. */
+const slug = rentalItems.single.slug;
 
 const quantities = (page: Page) => page.getByRole("textbox", { name: /^Quantity of / });
 
 test.describe("quote deep links", () => {
   test("a link prefills the dates, company, production and kit", async ({ page }) => {
-    const rental = await firstRental(page);
-    test.skip(!rental, "No rental items in this dataset");
     const pickup = isoDateFromNow(14);
     const ret = isoDateFromNow(16);
 
     await page.goto(
-      `/rentals/quote?pickup=${pickup}&return=${ret}&company=Murphy+Pictures&production=Spring+shoot&item=${rental!.slug}:99`,
+      `/rentals/quote?pickup=${pickup}&return=${ret}&company=Murphy+Pictures&production=Spring+shoot&item=${slug}:99`,
     );
     await expect(page.getByLabel(quote.startDate)).toHaveValue(pickup);
     await expect(page.getByLabel(quote.endDate)).toHaveValue(ret);
@@ -43,9 +32,7 @@ test.describe("quote deep links", () => {
   });
 
   test("nothing personal is read from a link", async ({ page }) => {
-    const rental = await firstRental(page);
-    test.skip(!rental, "No rental items in this dataset");
-    await page.goto(`/rentals/quote?item=${rental!.slug}&name=Aoife&email=a%40example.com&phone=%2B353871234567&message=Hello`);
+    await page.goto(`/rentals/quote?item=${slug}&name=Aoife&email=a%40example.com&phone=%2B353871234567&message=Hello`);
     await expect(page.getByLabel(quote.company)).toBeVisible();
     await expect(page.getByLabel(quote.name)).toHaveValue("");
     await expect(page.getByLabel(quote.email)).toHaveValue("");
@@ -54,18 +41,14 @@ test.describe("quote deep links", () => {
   });
 
   test("dates it couldn't submit and items it doesn't know are left out", async ({ page }) => {
-    const rental = await firstRental(page);
-    test.skip(!rental, "No rental items in this dataset");
-    await page.goto(`/rentals/quote?item=${rental!.slug}&item=not-a-real-item&pickup=2020-01-01&return=nonsense`);
+    await page.goto(`/rentals/quote?item=${slug}&item=not-a-real-item&pickup=2020-01-01&return=nonsense`);
     await expect(page.getByLabel(quote.startDate)).toHaveValue("");
     await expect(page.getByLabel(quote.endDate)).toHaveValue("");
     await expect(quantities(page)).toHaveCount(1);
   });
 
   test("following the same link again doesn't add the item twice", async ({ page }) => {
-    const rental = await firstRental(page);
-    test.skip(!rental, "No rental items in this dataset");
-    const link = `/rentals/quote?item=${rental!.slug}`;
+    const link = `/rentals/quote?item=${slug}`;
     await page.goto(link);
     await expect(quantities(page)).toHaveCount(1);
     const first = await quantities(page).first().inputValue();
@@ -84,9 +67,7 @@ test.describe("copy link", () => {
   test.use({ permissions: ["clipboard-read", "clipboard-write"] });
 
   test("the quote form with its copy button has no accessibility violations", async ({ page }) => {
-    const rental = await firstRental(page);
-    test.skip(!rental, "No rental items in this dataset");
-    await page.goto(`/rentals/quote?pickup=${isoDateFromNow(14)}&return=${isoDateFromNow(16)}&item=${rental!.slug}`);
+    await page.goto(`/rentals/quote?pickup=${isoDateFromNow(14)}&return=${isoDateFromNow(16)}&item=${slug}`);
     await expect(page.getByRole("button", { name: quote.copyLink })).toBeVisible();
     await page.waitForLoadState("networkidle");
     const { violations } = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
@@ -94,11 +75,9 @@ test.describe("copy link", () => {
   });
 
   test("copies a link that reopens the quote, with nothing personal in it", async ({ page, context }) => {
-    const rental = await firstRental(page);
-    test.skip(!rental, "No rental items in this dataset");
     const pickup = isoDateFromNow(14);
     const ret = isoDateFromNow(16);
-    await page.goto(`/rentals/quote?pickup=${pickup}&return=${ret}&item=${rental!.slug}`);
+    await page.goto(`/rentals/quote?pickup=${pickup}&return=${ret}&item=${slug}`);
     await expect(page.getByLabel(quote.company)).toBeVisible();
 
     await page.getByLabel(quote.company).fill("Murphy & Co");
@@ -122,7 +101,7 @@ test.describe("copy link", () => {
     expect(url.searchParams.get("company")).toBe("Murphy & Co");
     expect(url.searchParams.get("production")).toBe("Spring shoot");
     expect(url.searchParams.getAll("item")).toHaveLength(1);
-    expect(url.searchParams.getAll("item")[0]).toMatch(new RegExp(`^${rental!.slug}(:\\d+)?$`));
+    expect(url.searchParams.getAll("item")[0]).toMatch(new RegExp(`^${slug}(:\\d+)?$`));
     // Whatever was typed into the personal fields stays out of the link, in any form.
     for (const secret of ["Aoife", "example.com", "871234567", "Private"]) expect(copied).not.toContain(secret);
 
@@ -153,10 +132,8 @@ test.describe("share link on a phone", () => {
     })();`;
 
   async function openQuote(page: Page, share = "") {
-    const rental = await firstRental(page);
-    test.skip(!rental, "No rental items in this dataset");
     await page.addInitScript(stub(share));
-    await page.goto(`/rentals/quote?pickup=${isoDateFromNow(14)}&return=${isoDateFromNow(16)}&item=${rental!.slug}`);
+    await page.goto(`/rentals/quote?pickup=${isoDateFromNow(14)}&return=${isoDateFromNow(16)}&item=${slug}`);
     await expect(page.getByLabel(quote.company)).toBeVisible();
     await page.getByLabel(quote.name).fill("Aoife Murphy");
     await page.getByLabel(quote.email).fill("aoife@example.com");

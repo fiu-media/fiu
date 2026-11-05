@@ -21,6 +21,6 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Skip the API, the Studio, Next internals and anything that looks like a file (public assets, favicon).
-  matcher: ["/((?!api|studio|_next|_vercel|.*\\..*).*)"],
+  // Skip the API, Next internals and anything that looks like a file (public assets, favicon).
+  matcher: ["/((?!api|_next|_vercel|.*\\..*).*)"],
 };

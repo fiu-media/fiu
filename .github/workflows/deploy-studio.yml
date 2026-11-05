@@ -1,0 +1,43 @@
+name: Deploy Studio
+
+# The Studio is hosted by Sanity at fiu.sanity.studio and keeps its Sanity packages up to date by itself
+# (autoUpdates in sanity.cli.ts). Our own code, meaning schemas, structure and plugins, only changes when this runs.
+# SANITY_AUTH_TOKEN is a project token with the deploy-studio role.
+on:
+  push:
+    branches: [main]
+    paths:
+      - sanity/**
+      - sanity.config.ts
+      - sanity.cli.ts
+      - lib/i18n/**
+      - package-lock.json
+      - .github/workflows/deploy-studio.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-studio
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      # Repository variables. sanity.cli.ts reads the NEXT_PUBLIC_ pair and the Studio bundle the SANITY_STUDIO_ pair.
+      # (The repo's NEXT_PUBLIC_SANITY_PROJECT_ID variable belongs to the e2e tests' project, so it isn't reused here.)
+      NEXT_PUBLIC_SANITY_PROJECT_ID: ${{ vars.SANITY_STUDIO_PROJECT_ID }}
+      NEXT_PUBLIC_SANITY_DATASET: ${{ vars.SANITY_STUDIO_DATASET }}
+      SANITY_STUDIO_PROJECT_ID: ${{ vars.SANITY_STUDIO_PROJECT_ID }}
+      SANITY_STUDIO_DATASET: ${{ vars.SANITY_STUDIO_DATASET }}
+      SANITY_AUTH_TOKEN: ${{ secrets.SANITY_AUTH_TOKEN }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 26
+          cache: npm
+      - run: npm ci
+      - run: npx sanity deploy --yes
