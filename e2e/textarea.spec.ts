@@ -71,7 +71,8 @@ test.describe("textarea sizing", () => {
     expect(await box.evaluate((el) => getComputedStyle(el).resize)).toBe("vertical");
   });
 
-  test("the optional quote note starts smaller, and stops sooner", async ({ page }) => {
+  // Rentals is hidden; see playwright.config.ts.
+  test.skip("the optional quote note starts smaller, and stops sooner", async ({ page }) => {
     await page.goto(`/rentals/quote?pickup=${isoDateFromNow(14)}&return=${isoDateFromNow(16)}&item=${rentalItems.single.slug}`);
     const box = page.getByLabel(quote.message);
     await expect(box).toBeVisible();
