@@ -1,5 +1,6 @@
 import { siInstagram } from "simple-icons";
 import { BrandIcon } from "@/components/ui/BrandIcon";
+import { emailForDisplay } from "@/lib/email/display";
 import { instagramHandle } from "@/lib/instagram";
 
 /** Email and Instagram as two plain links; renders nothing when the editors haven't set either. */
@@ -13,13 +14,14 @@ export function AboutContacts({
   labels: { email: string; instagram: string };
 }) {
   if (!email && !instagram) return null;
+  const shown = email && emailForDisplay(email);
   return (
     <ul className="flex flex-wrap gap-x-8 gap-y-3">
       {email && (
         <li>
           <span className="sr-only">{labels.email}: </span>
-          <a href={`mailto:${email}`} className="text-lg link-inline">
-            {email}
+          <a href={`mailto:${shown}`} className="text-lg link-inline">
+            {shown}
           </a>
         </li>
       )}

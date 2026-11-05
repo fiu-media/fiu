@@ -8,6 +8,7 @@ import { BrandIcon } from "@/components/ui/BrandIcon";
 import { PageTitle } from "@/components/ui/PageTitle";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { cn } from "@/lib/cn";
+import { emailForDisplay } from "@/lib/email/display";
 import { defaultLocale, isLocale, languageAlternates, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { instagramHandle } from "@/lib/instagram";
@@ -58,6 +59,7 @@ async function DirectContact({ lang }: { lang: Locale }) {
   });
   const settings = data;
   if (!settings?.contactEmail && !settings?.instagram) return null;
+  const email = settings.contactEmail ? emailForDisplay(settings.contactEmail) : null;
 
   return (
     <aside aria-labelledby="direct-contact" className="lg:pt-28">
@@ -65,12 +67,12 @@ async function DirectContact({ lang }: { lang: Locale }) {
         {contact.directHeading}
       </h2>
       <dl className="mt-4 space-y-4">
-        {settings.contactEmail && (
+        {email && (
           <div>
             <dt className="text-sm text-fg-muted">{contact.emailLabel}</dt>
             <dd>
-              <a href={`mailto:${settings.contactEmail}`} className="link-inline">
-                {settings.contactEmail}
+              <a href={`mailto:${email}`} className="link-inline">
+                {email}
               </a>
             </dd>
           </div>

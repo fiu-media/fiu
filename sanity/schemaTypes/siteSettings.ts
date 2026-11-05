@@ -106,6 +106,8 @@ export const siteSettings = defineType({
       title: "Contact email",
       type: "string",
       group: "contact",
+      description:
+        "Shown on the site and linked with mailto:. Either form of an internationalised domain (fiú.ie or xn--fi-ska.ie) is fine; the site shows it in Unicode.",
       validation: (rule) => rule.email(),
     }),
     defineField({
