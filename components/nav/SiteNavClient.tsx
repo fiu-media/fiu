@@ -62,7 +62,7 @@ function Nav({ lang, items, homeHref, labels, onImage, pathname }: NavProps & { 
       <BriertoWatermark />
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-30 hidden w-[calc(4rem+env(safe-area-inset-left))] flex-col items-center gap-12 border-r border-line pt-[max(1.75rem,env(safe-area-inset-top))] pb-7 pl-[env(safe-area-inset-left)] md:flex",
+          "fixed inset-y-0 left-0 z-30 hidden w-[calc(4rem+env(safe-area-inset-left))] flex-col items-center gap-8 border-r border-line pt-[max(1.75rem,env(safe-area-inset-top))] pb-7 pl-[env(safe-area-inset-left)] md:flex",
           onImage && "bg-gradient-to-r from-black/35 to-transparent [text-shadow:0_1px_6px_rgb(0_0_0/0.35)]",
         )}
       >
@@ -72,7 +72,7 @@ function Nav({ lang, items, homeHref, labels, onImage, pathname }: NavProps & { 
           className="pointer-events-none absolute inset-y-0 right-1 w-0.5 bg-[repeating-linear-gradient(to_bottom,currentColor_0_6px,transparent_6px_18px)] text-fg opacity-10"
         />
         <HomeLink href={homeHref} label={labels.home} className="h-7" />
-        <nav aria-label={labels.label} className="flex flex-col items-center gap-7">
+        <nav aria-label={labels.label} className="flex flex-1 flex-col items-center justify-center gap-7">
           {items.map((item) => (
             <Link
               key={item.href}
