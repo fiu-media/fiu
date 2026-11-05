@@ -27,20 +27,19 @@ const client = createClient({
   useCdn: false,
 });
 
-// Hero stills from public/stills. The mockup's gear photos are retailer/stock images, so rental
-// items deliberately get no images until Fiú shoots its own.
-// Keep the tints in sync with lib/fallback-stills.ts.
+// Stills from public/stills, shared out among the sample projects. The mockup's gear photos are
+// retailer/stock images, so rental items deliberately get no images until Fiú shoots its own.
 const STILLS = [
-  { file: "conservatory.jpg", alt: "Conservatory", lightTint: "#a0957b" },
-  { file: "banquet.jpg", alt: "Banquet table", lightTint: "#866249" },
-  { file: "supper.jpg", alt: "Supper", lightTint: "#916d54" },
-  { file: "glow.jpg", alt: "Warm glow", lightTint: "#956444" },
-  { file: "citrus.jpg", alt: "Citrus", lightTint: "#968a77" },
-  { file: "bouquet.jpg", alt: "Bouquet", lightTint: "#977980" },
-  { file: "grapes.jpg", alt: "Grapes", lightTint: "#a39f82" },
-  { file: "pond.jpg", alt: "Pond", lightTint: "#746e67" },
-  { file: "fur.jpg", alt: "Fur", lightTint: "#8c5648" },
-  { file: "parlor.jpg", alt: "Parlor", lightTint: "#716755" },
+  { file: "conservatory.jpg", alt: "Conservatory" },
+  { file: "banquet.jpg", alt: "Banquet table" },
+  { file: "supper.jpg", alt: "Supper" },
+  { file: "glow.jpg", alt: "Warm glow" },
+  { file: "citrus.jpg", alt: "Citrus" },
+  { file: "bouquet.jpg", alt: "Bouquet" },
+  { file: "grapes.jpg", alt: "Grapes" },
+  { file: "pond.jpg", alt: "Pond" },
+  { file: "fur.jpg", alt: "Fur" },
+  { file: "parlor.jpg", alt: "Parlor" },
 ];
 
 async function uploadStill(file: string, alt: string, extra: Record<string, unknown> = {}) {
@@ -61,25 +60,34 @@ const text = (key: string, value: string) => ({
 const slug = (current: string) => ({ _type: "slug", current });
 const ref = (id: string) => ({ _type: "reference", _ref: id });
 
+// The project the home page rotates: the real one's id and slug on the dev and production datasets, which createIfNotExists leaves untouched.
+const HOME_PROJECT_ID = "project-and-again-the-vintage-movement";
+
 async function main() {
   const stills = await Promise.all(STILLS.map((s) => uploadStill(s.file, s.alt)));
-  const tinted = stills.map((s, i) => ({ ...s, lightTint: STILLS[i].lightTint }));
 
   const docs: Record<string, unknown>[] = [];
 
   docs.push({
     _id: "siteSettings",
     _type: "siteSettings",
-      language: "en",
+    language: "en",
     slogan: "Más fiú é a dhéanamh, is fiú é a dhéanamh i gceart.",
     sloganGloss: "If it's worth doing, it's worth doing right.",
     manifesto: [text("m1", "Placeholder manifesto. Replace this with Fiú's own words in the Studio.")],
-    homeStills: tinted.map((s, i) => ({ ...s, _key: `home-${i}` })),
+    homeProjects: [{ ...ref(HOME_PROJECT_ID), _key: "home-1" }],
     aboutStill: { ...stills[0] },
+    aboutTagline: "Fiú Words",
+    workTagline: "Fiú Reels",
+    talentTagline: "Fiú Faces",
+    rentalsTagline: "Fiú Bits",
+    contactTagline: "Fiú Questions?",
     rentalsIntro:
       "Cameras, lenses, lighting and grip from our own kit room. Build a quote and we'll come back to you with availability and rates.",
     quoteIntro: "Tell us what you need and when, and we'll reply with availability and a quote for your dates.",
     contactIntro: "Tell us about your project, ask about our talent, or say hello.",
+    workIntro: "Original productions and commercial work, from first frame to final grade.",
+    talentIntro: "The directors, cinematographers and creatives we work with.",
     seoTitle: "Fiú Media",
     seoDescription: "Irish media company: original productions, commercial work, talent and gear rental.",
   });
@@ -123,18 +131,20 @@ async function main() {
     });
   });
 
+  // The first project is the one the home page shows (HOME_PROJECT_ID). The others are placeholders for the Our Work page.
   types.slice(0, 3).forEach((type, i) => {
+    const home = i === 0;
     docs.push({
-      _id: `project-sample-${i + 1}`,
+      _id: home ? HOME_PROJECT_ID : `project-sample-${i + 1}`,
       _type: "project",
       language: "en",
-      title: `Sample project ${i + 1}`,
-      slug: slug(`sample-project-${i + 1}`),
-      type: ref(`type-${kebab(type.title)}`),
-      client: type.title === "Original" ? undefined : "Sample client",
+      title: home ? "And Again – The Vintage Movement" : `Sample project ${i + 1}`,
+      slug: slug(home ? "and-again-the-vintage-movement" : `sample-project-${i + 1}`),
+      type: ref(`type-${home ? "commercial" : kebab(type.title)}`),
+      client: home ? "And Again" : type.title === "Original" ? undefined : "Sample client",
       year: 2026,
       coverStill: { ...stills[i] },
-      stills: stills.map((s, j) => ({ ...s, _key: `still-${j}` })),
+      stills: stills.flatMap((s, j) => (j % 3 === i ? [{ ...s, _key: `still-${j}` }] : [])),
       description: [text("d1", "Placeholder description.")],
       credits: [
         { _type: "credit", _key: "c1", role: ref("role-director"), talent: ref(talentIds[0]) },

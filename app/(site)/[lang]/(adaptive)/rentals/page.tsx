@@ -1,14 +1,17 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { pageGutter } from "@/components/nav/rail";
 import { CatalogueSkeleton } from "@/components/rentals/RentalSkeletons";
 import { RentalCatalogue, type CatalogueCard } from "@/components/rentals/RentalCatalogue";
+import { PageTitle } from "@/components/ui/PageTitle";
+import { cn } from "@/lib/cn";
 import { defaultLocale, isLocale, languageAlternates, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
 import { getPageText } from "@/sanity/lib/pageText";
 import { RENTALS_QUERY } from "@/sanity/lib/queries";
-import { publishedId, toRentalImage, type RentalsResult } from "@/sanity/lib/rentals";
+import { publishedId, toRentalImage } from "@/sanity/lib/rentals";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/rentals">): Promise<Metadata> {
   const { lang } = await params;
@@ -22,9 +25,9 @@ export default async function RentalsPage({ params }: PageProps<"/[lang]/rentals
   if (!isLocale(lang)) notFound();
   const [{ rentals, common }, text] = await Promise.all([getDictionary(lang), getPageText(lang)]);
   return (
-    <main className="mx-auto max-w-6xl px-4 pb-32 md:px-6">
+    <main className={cn("mx-auto max-w-6xl pb-32", pageGutter)}>
       <header className="mb-10">
-        <h1 className="font-display text-5xl md:text-6xl">{rentals.title}</h1>
+        <PageTitle title={rentals.title} tagline={text.rentalsTagline} />
         {text.rentalsIntro && <p className="mt-4 max-w-2xl text-lg text-fg-muted">{text.rentalsIntro}</p>}
       </header>
       {/* Reads draft mode, so it streams in behind the static heading. */}
@@ -38,8 +41,14 @@ export default async function RentalsPage({ params }: PageProps<"/[lang]/rentals
 async function Catalogue({ lang }: { lang: Locale }) {
   const { rentals } = await getDictionary(lang);
   const { perspective, variant } = await getDynamicFetchOptions();
-  const { data } = await cachedSanity({ query: RENTALS_QUERY, params: { lang, fallbackLang: defaultLocale }, perspective, variant, stega: false });
-  const { categories, items } = (data ?? { categories: [], items: [] }) as RentalsResult;
+  const { data } = await cachedSanity({
+    query: RENTALS_QUERY,
+    params: { lang, fallbackLang: defaultLocale },
+    perspective,
+    variant,
+    stega: false,
+  });
+  const { categories, items } = data;
 
   const cards: CatalogueCard[] = items.map((item) => ({
     id: publishedId(item.baseId),
@@ -47,7 +56,6 @@ async function Catalogue({ lang }: { lang: Locale }) {
     slug: item.slug,
     brand: item.brand,
     summary: item.summary,
-    keyFeatures: item.keyFeatures ?? [],
     categoryId: item.category?.slug ?? null,
     image: item.images?.[0] ? toRentalImage(item.images[0], 800) : null,
   }));

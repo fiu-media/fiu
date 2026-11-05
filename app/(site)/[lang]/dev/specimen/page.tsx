@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
 import Image, { type StaticImageData } from "next/image";
 import { notFound } from "next/navigation";
-import { GlassNav, type NavItem } from "@/components/nav/GlassNav";
 import { GlassPanel, GlassPillButton } from "@/components/ui/Glass";
 import { isLocale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
-import { getNavItems } from "@/lib/i18n/nav";
+import { getNavItems, type NavItem } from "@/lib/i18n/nav";
 import logo from "@/public/brand/fiu-logo.svg";
 import banquet from "@/public/stills/banquet.jpg";
 import bouquet from "@/public/stills/bouquet.jpg";
@@ -26,18 +25,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-const stills: StaticImageData[] = [
-  conservatory,
-  banquet,
-  supper,
-  glow,
-  citrus,
-  bouquet,
-  grapes,
-  pond,
-  fur,
-  parlor,
-];
+const stills: StaticImageData[] = [conservatory, banquet, supper, glow, citrus, bouquet, grapes, pond, fur, parlor];
 
 // Sample copy only: placeholder project titles and gear from the Canva pack.
 const projects = [
@@ -74,32 +62,39 @@ function Specimen({ still, nav, navLabel }: { still: StaticImageData; nav: NavIt
     <section>
       <div className="mb-8 flex flex-wrap items-end justify-between gap-4 border-b border-line pb-6">
         <div>
-          <p className="text-xs font-medium tracking-[0.14em] text-fg-muted uppercase">
-            Fraunces + Manrope
-          </p>
+          <p className="text-xs font-medium tracking-[0.14em] text-fg-muted uppercase">Fraunces + Manrope</p>
           <h2 className={`${display} mt-2 text-5xl md:text-6xl`}>Expressive</h2>
         </div>
         <p className="max-w-md text-fg-muted">
-          Warm and a little playful, with soft serifs that echo the logo&rsquo;s curves. Manrope is friendly but
-          still precise.
+          Warm and a little playful, with soft serifs that echo the logo&rsquo;s curves. Manrope is friendly but still precise.
         </p>
       </div>
 
       {/* Home, Mockup 1 layout */}
-      <div
-        data-surface="cinematic"
-        className="relative isolate aspect-[16/9] overflow-hidden rounded-3xl bg-ink text-white"
-      >
-        <Image src={still} alt="" fill placeholder="blur" sizes="(min-width: 1280px) 1232px, 100vw" className="-z-10 object-cover" />
-        <div className="absolute top-5 right-5 hidden sm:block">
-          <GlassNav items={nav} label={navLabel} onImage current="/work" />
-        </div>
+      <div data-surface="cinematic" className="relative isolate aspect-[16/9] overflow-hidden rounded-3xl bg-ink text-white">
         <Image
-          src={logo}
-          alt="Fiú"
-          sizes="40vw"
-          className="absolute top-1/2 left-[4%] h-auto w-[42%] -translate-y-1/2"
+          src={still}
+          alt=""
+          fill
+          placeholder="blur"
+          sizes="(min-width: 1280px) 1232px, 100vw"
+          className="-z-10 object-cover"
         />
+        <nav
+          aria-label={navLabel}
+          className="absolute inset-y-0 left-0 hidden w-12 flex-col items-center gap-5 border-r border-white/15 bg-gradient-to-r from-black/35 to-transparent pt-6 sm:flex"
+        >
+          {nav.map((item) => (
+            <span
+              key={item.href}
+              aria-current={item.href === "/work" ? "page" : undefined}
+              className="rotate-180 text-xs font-medium tracking-wide text-white/60 [writing-mode:vertical-rl] aria-[current=page]:text-white"
+            >
+              {item.label}
+            </span>
+          ))}
+        </nav>
+        <Image src={logo} alt="Fiú" sizes="40vw" className="absolute top-1/2 left-[10%] h-auto w-[40%] -translate-y-1/2" />
         <div className="absolute bottom-6 left-6">
           <p className={`${display} ${accent} text-2xl md:text-4xl`}>Solas</p>
           <p className="mt-1 text-sm text-white/75">Short film · 2026</p>
@@ -119,11 +114,9 @@ function Specimen({ still, nav, navLabel }: { still: StaticImageData; nav: NavIt
           <p className="mt-3 text-sm text-white/70">If it&rsquo;s worth doing, it&rsquo;s worth doing right.</p>
           <div className="mt-10 max-w-prose space-y-4 text-[1.0625rem] leading-relaxed text-white/90">
             <p>
-              <strong className="font-semibold text-white">
-                At Fiú we believe in telling a new generation of stories.
-              </strong>{" "}
-              We&rsquo;re a production company, a home for Irish directors, cinematographers and editors, and a
-              rental house for the kit we trust on our own sets.
+              <strong className="font-semibold text-white">At Fiú we believe in telling a new generation of stories.</strong>{" "}
+              We&rsquo;re a production company, a home for Irish directors, cinematographers and editors, and a rental house for
+              the kit we trust on our own sets.
             </p>
             <p className="text-white/70">
               Táimid lonnaithe in Éirinn ach ag obair ar fud an domhain: fadas á, é, í, ó, ú render correctly.
@@ -210,8 +203,8 @@ function Specimen({ still, nav, navLabel }: { still: StaticImageData; nav: NavIt
           <p className={`${display} ${accent} text-5xl leading-tight`}>Our Work · Ár gCuid Oibre</p>
           <p className={`${display} text-3xl`}>Talent, Rentals &amp; Contact</p>
           <p className="max-w-prose text-lg leading-relaxed">
-            Body: a production company, talent roster and rental house based in Ireland. We make films, music
-            videos and commercials, and we lend out the kit we trust.
+            Body: a production company, talent roster and rental house based in Ireland. We make films, music videos and
+            commercials, and we lend out the kit we trust.
           </p>
           <p className="text-sm text-fg-muted">Caption · Fiú Media © 2026, All Rights Reserved</p>
         </div>

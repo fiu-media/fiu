@@ -10,7 +10,7 @@ import pond from "@/public/stills/pond.jpg";
 import supper from "@/public/stills/supper.jpg";
 import type { HeroStill } from "@/sanity/lib/stills";
 
-// lightTint: precomputed studio temperature for the glass. Keep in sync with scripts/seed.ts.
+// lightTint: precomputed studio temperature for the glass, so the fallback needn't sample its textures.
 const bundled = [
   { still: conservatory, lightTint: "#a0957b" },
   { still: banquet, lightTint: "#866249" },

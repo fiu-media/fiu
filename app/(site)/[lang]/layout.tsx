@@ -1,7 +1,9 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { notFound } from "next/navigation";
 import { Fraunces, Manrope } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { Suspense } from "react";
 import { InlineScript } from "@/components/InlineScript";
 import { SanityChrome } from "@/components/sanity/SanityChrome";
@@ -35,6 +37,10 @@ export async function generateMetadata({ params }: LayoutProps<"/[lang]">): Prom
   };
 }
 
+// Paint under the notch and home indicator (components pad themselves with env(safe-area-inset-*)),
+// and colour the browser chrome to match the always-dark site.
+export const viewport: Viewport = { viewportFit: "cover", themeColor: "#0c0b0d" };
+
 // Only Chromium renders SVG filters inside backdrop-filter, and only Chromium exposes
 // navigator.userAgentData, so it doubles as the feature flag for liquid-glass lensing.
 const glassRefractScript = `if("userAgentData"in navigator)document.documentElement.setAttribute("data-glass-refract","")`;
@@ -48,11 +54,12 @@ export default async function RootLayout({ children, params }: LayoutProps<"/[la
         <InlineScript html={glassRefractScript} />
       </head>
       <body className="min-h-dvh font-sans antialiased">
-        {children}
+        <NuqsAdapter>{children}</NuqsAdapter>
         <Suspense>
           <SanityChrome />
         </Suspense>
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );

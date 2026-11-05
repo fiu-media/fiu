@@ -1,23 +1,29 @@
 import Image from "next/image";
+import { cn } from "@/lib/cn";
 import type { RentalImage } from "@/sanity/lib/rentals";
 
-/** A rental photo (or a quiet placeholder until Fiú shoots its own). */
+/**
+ * A rental photo (or a quiet placeholder until Fiú shoots its own). Product shots are padded and
+ * shot on white, so they sit whole (`object-contain`) on a white tile instead of being cropped.
+ */
 export function RentalImageView({
   image,
   placeholder,
   sizes,
   priority,
-  className = "",
+  loading,
+  className,
 }: {
   image: RentalImage | null;
   placeholder: string;
   sizes: string;
   priority?: boolean;
+  loading?: "eager" | "lazy";
   className?: string;
 }) {
   if (!image) {
     return (
-      <div className={`flex items-center justify-center bg-bg-raised text-sm text-fg-muted ${className}`}>{placeholder}</div>
+      <div className={cn("flex items-center justify-center bg-bg-raised text-sm text-fg-muted", className)}>{placeholder}</div>
     );
   }
   return (
@@ -28,10 +34,10 @@ export function RentalImageView({
       alt={image.alt}
       sizes={sizes}
       priority={priority}
+      loading={loading}
       placeholder={image.blurDataURL ? "blur" : "empty"}
       blurDataURL={image.blurDataURL}
-      style={{ objectPosition: image.position }}
-      className={`object-cover ${className}`}
+      className={cn("bg-white object-contain", className)}
     />
   );
 }

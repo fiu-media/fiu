@@ -130,7 +130,7 @@ async function Navbar({
         <h1 className="sr-only">Navbar options</h1>
         <div className="mb-4 border-b border-line pb-3">
           <p className="text-xs font-medium tracking-[0.14em] text-fg-muted uppercase">Option {option.toUpperCase()}</p>
-          <h2 className="font-display mt-1 text-3xl md:text-4xl">{concept.title}</h2>
+          <h2 className="mt-1 font-display text-3xl md:text-4xl">{concept.title}</h2>
           <p className="mt-2 max-w-2xl text-sm text-fg-muted">{concept.note}</p>
         </div>
         <NavPreview

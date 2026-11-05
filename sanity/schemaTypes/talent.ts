@@ -17,8 +17,22 @@ export const talent = defineType({
       readOnly: readOnlyInTranslation,
     }),
     imageWithAlt("portrait", "Portrait", true),
-    defineField({ name: "bio", type: "array", of: [defineArrayMember({ type: "block" })] }),
+    defineField({
+      name: "bio",
+      type: "array",
+      of: [defineArrayMember({ type: "block" })],
+      description: "Short: a paragraph or two, shown beside the portrait on their page.",
+    }),
     vimeoUrlField("showreelUrl", "Showreel Vimeo URL"),
+    defineField({
+      name: "available",
+      type: "boolean",
+      initialValue: true,
+      readOnly: readOnlyInTranslation,
+      validation: (rule) => rule.required(),
+      description:
+        "Untick if they can't take on work right now. They stay on the Talent pages, but aren't offered on the contact form and their “Work with” button is hidden.",
+    }),
     orderRankField({ type: "talent" }),
   ],
   orderings: [orderRankOrdering],

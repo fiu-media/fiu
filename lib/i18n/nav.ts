@@ -1,6 +1,7 @@
-import type { NavItem } from "@/components/nav/GlassNav";
 import { localizedPath, type Locale } from "./config";
 import type { Dictionary } from "./dictionaries/en";
+
+export type NavItem = { href: string; label: string };
 
 export function getNavItems(lang: Locale, { nav }: Dictionary): NavItem[] {
   return [

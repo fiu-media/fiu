@@ -1,0 +1,473 @@
+"use client";
+
+import { Play } from "lucide-react";
+import type Player from "@vimeo/player";
+import Image, { getImageProps } from "next/image";
+import Link from "next/link";
+import { type CSSProperties, useCallback, useEffect, useRef, useState } from "react";
+import { FullBleedSlide } from "@/components/ui/FullBleedScroll";
+import { GlassPillButton, GlassPillLink } from "@/components/ui/Glass";
+import { cn } from "@/lib/cn";
+import { format } from "@/lib/i18n/format";
+import { PORTRAIT } from "@/lib/orientation";
+import { usePortrait } from "@/lib/use-portrait";
+import { useReducedMotion } from "@/lib/reduced-motion";
+import { parseVimeo, vimeoEmbedUrl } from "@/lib/vimeo";
+import { useVimeoPlayer } from "./useVimeoPlayer";
+import { runVimeoShortcut } from "./vimeoShortcuts";
+
+export type SlideImage = {
+  src: string;
+  width: number;
+  height: number;
+  alt: string;
+  blurDataURL?: string;
+  /** CSS object-position from the editor's hotspot. */
+  position?: string;
+};
+
+export type ProjectSlideProps = {
+  /** Accessible name for the slide, e.g. "Solas, 2 of 5". */
+  label: string;
+  title: string;
+  /** One line under the title: type, year, client. */
+  meta: string;
+  /** `data-sanity` value that makes the title clickable in the Presentation tool. */
+  titleAttribute?: string;
+  /** What this person did on the project (talent pages only). */
+  role?: string;
+  /** The project's own page. With it, the title links there and a "view" pill sits beside Play. */
+  href?: string;
+  /** Heading level for the title: the project's own page makes it the page's `<h1>`. */
+  as?: "h1" | "h2";
+  /** Overrides the slide's size (the project page's hero is shorter than a screen). */
+  className?: string;
+  image: SlideImage | null;
+  /** Portrait cover for portrait screens (phones). Without one, `image` is cropped to fit. */
+  mobileImage?: SlideImage | null;
+  vimeoUrl?: string | null;
+  /** Short silent loop shown while the slide is on screen (a Vimeo background embed, which needs Vimeo Plus). */
+  previewLoopUrl?: string | null;
+  /** The first slide loads eagerly; the rest are lazy. */
+  priority?: boolean;
+  dict: { play: string; stop: string; view?: string };
+};
+
+/** Mostly on screen: the preview loop runs. Mostly off: a playing video pauses. */
+const ACTIVE_RATIO = 0.6;
+const LEFT_RATIO = 0.25;
+/** If the player never reports playback (autoplay blocked), show it anyway so its own play button is reachable. */
+const REVEAL_FALLBACK_MS = 3000;
+
+/**
+ * The page is dark, so an iframe would inherit a dark color-scheme. Vimeo's player page is light, and when the
+ * two differ Chrome and Safari paint an opaque white backdrop behind it: a white flash while it loads, and white
+ * bars wherever the video doesn't fill the frame. Matching Vimeo's scheme keeps the frame transparent over black.
+ */
+const VIMEO_FRAME_STYLE = { colorScheme: "light" } as const;
+/** Escape that ends fullscreen can reach the page as well; it shouldn't also stop the video. */
+const FULLSCREEN_EXIT_GRACE_MS = 500;
+/** How long after leaving fullscreen the window may still be animating back to size. */
+const FULLSCREEN_SETTLE_MS = 1000;
+
+/** The fullscreen element, including Safari's prefixed API. */
+function fullscreenElement(): Element | null {
+  return document.fullscreenElement ?? (document as { webkitFullscreenElement?: Element | null }).webkitFullscreenElement ?? null;
+}
+
+/** Phones and tablets held upright: where a landscape video would sit in a strip with bars above and below it. */
+const UPRIGHT_TOUCH = "(pointer: coarse) and (orientation: portrait)";
+
+type LockableOrientation = ScreenOrientation & { lock?: (orientation: "landscape") => Promise<void> };
+
+/** A wide video in a full-screen upright phone turns the screen sideways, so it fills it. Only works full screen, and not on iOS. */
+async function turnForVideo(player: Player) {
+  try {
+    const [width, height] = await Promise.all([player.getVideoWidth(), player.getVideoHeight()]);
+    if (width > height) await (screen.orientation as LockableOrientation).lock?.("landscape");
+  } catch {
+    // Refused or unsupported: the viewer can still turn the phone themselves.
+  }
+}
+
+/**
+ * iOS (and every browser on it, which is all WebKit) only plays a video with sound after a tap inside the player's
+ * own frame, so a tap on our Play button doesn't count and autoplay would start it muted.
+ */
+function needsTapInPlayer() {
+  return /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+}
+
+/** How long a browser gets to pause a video it won't let play with sound, before we conclude it hasn't. */
+const UNMUTE_SETTLE_MS = 400;
+
+/**
+ * Vimeo starts an autoplaying video muted on many phones, and the viewer tapped Play, so they want sound. But a
+ * browser that only allows sound after a tap inside the player answers an unmute by pausing the video, and a paused
+ * video is worse than a muted one: in that case keep it muted and playing, and the player's own controls unmute it.
+ */
+async function unmute(player: Player) {
+  try {
+    if (!(await player.getMuted())) return;
+    await player.setMuted(false);
+    await new Promise((resolve) => setTimeout(resolve, UNMUTE_SETTLE_MS));
+    if (await player.getPaused()) {
+      await player.setMuted(true);
+      await player.play();
+    }
+  } catch {
+    // The player went away, or refused: leave it as it is.
+  }
+}
+
+/**
+ * One full-bleed project: the cover still, a preview loop behind it when the project has one, and
+ * a play button that swaps the Vimeo player into the slide. Without a Vimeo URL it is just the cover.
+ */
+export function ProjectSlide({
+  label,
+  title,
+  meta,
+  titleAttribute,
+  role,
+  href,
+  as: Heading = "h2",
+  className,
+  image,
+  mobileImage,
+  vimeoUrl,
+  previewLoopUrl,
+  priority,
+  dict,
+}: ProjectSlideProps) {
+  const root = useRef<HTMLDivElement>(null);
+  const [playerFrame, setPlayerFrame] = useState<HTMLIFrameElement | null>(null);
+  const away = useRef(false);
+  const [onScreen, setOnScreen] = useState(false);
+  const [playing, setPlaying] = useState(false);
+  // The player stays invisible over the cover until it is actually playing, so its loading screen never shows.
+  const [revealed, setRevealed] = useState(false);
+  // Whether the slide itself (not just the Vimeo frame) is full screen. Its Stop button then needs no room for the menu.
+  // Unmuting is tried once per play: pausing and resuming the video after a refusal would otherwise start it over.
+  const triedUnmute = useRef(false);
+  const [fullscreen, setFullscreen] = useState(false);
+  // iPhones can't take an element full screen; their player goes full screen itself when asked not to play inline.
+  const [playFullscreenNatively, setPlayFullscreenNatively] = useState(false);
+  // Where sound needs a tap in the player, it doesn't autoplay: its own play button is shown, and that tap plays with sound.
+  const [tapInPlayer, setTapInPlayer] = useState(false);
+  const reducedMotion = useReducedMotion();
+
+  const video = parseVimeo(vimeoUrl);
+  const loop = parseVimeo(previewLoopUrl);
+
+  const play = useCallback(() => {
+    setPlaying(true);
+    setTapInPlayer(needsTapInPlayer());
+    triedUnmute.current = false;
+    if (!window.matchMedia(UPRIGHT_TOUCH).matches) return;
+    // Held upright, a wide video fills a third of the screen. Full screen, turned sideways, it fills all of it.
+    // This has to happen in the tap's own handler, before the player exists, so it is the slide that goes full screen.
+    const slide = root.current;
+    if (slide?.requestFullscreen) void slide.requestFullscreen().catch(() => {});
+    else setPlayFullscreenNatively(true);
+  }, []);
+  const reveal = useCallback(() => setRevealed(true), []);
+  const stop = useCallback(() => {
+    setPlaying(false);
+    setRevealed(false);
+    setPlayFullscreenNatively(false);
+    setTapInPlayer(false);
+    if (fullscreenElement() === root.current) void document.exitFullscreen?.().catch(() => {});
+    (screen.orientation as LockableOrientation).unlock?.();
+    // The player is gone; put keyboard focus back where it came from.
+    requestAnimationFrame(() => root.current?.querySelector<HTMLButtonElement>("[data-play]")?.focus());
+  }, []);
+
+  // A playing video pauses when its slide scrolls away, keeping its place, and stays mounted.
+  const player = useVimeoPlayer(playerFrame, {
+    // Not `play`: Vimeo fires that before the first frame, while its own spinner is still up.
+    playing: () => {
+      reveal();
+      // After playback has started: unmuting a video that hasn't begun would stop its autoplay.
+      if (player.current && !triedUnmute.current) {
+        triedUnmute.current = true;
+        void unmute(player.current);
+      }
+    },
+    ended: stop,
+    // The SDK can load after the viewer has already left the slide.
+    ready: (ready) => {
+      if (away.current) ready.pause().catch(() => {});
+      // Nothing is about to autoplay, so there is no loading screen to hide: show the player's play button.
+      if (tapInPlayer) void ready.ready().then(reveal, () => {});
+      if (fullscreenElement() === root.current) void turnForVideo(ready);
+    },
+  });
+
+  useEffect(() => {
+    const el = root.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setOnScreen(entry.intersectionRatio >= ACTIVE_RATIO);
+        away.current = entry.intersectionRatio < LEFT_RATIO;
+        // The page can shift under a fullscreen video (see below); that isn't the viewer scrolling away.
+        if (away.current && !fullscreenElement()) player.current?.pause().catch(() => {});
+      },
+      { threshold: [0, LEFT_RATIO, ACTIVE_RATIO] },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [player]);
+
+  const showLoop = loop !== null && onScreen && !playing && !reducedMotion;
+
+  // Focus goes to the slide, not into the player: key presses inside Vimeo's cross-origin frame never reach the
+  // page, so Escape couldn't stop the video. The page handles Vimeo's shortcuts itself instead (see `onKeyDown`).
+  // Not to Stop either: a focused button would swallow Space. Tab goes to Stop, then on into the player's controls.
+  useEffect(() => {
+    if (playing) root.current?.focus({ preventScroll: true });
+  }, [playing]);
+
+  useEffect(() => {
+    if (!playing || !playerFrame) return;
+    const slide = root.current?.closest("section");
+    let fullscreen = false;
+    let exitedAt = -Infinity;
+    let settling: ReturnType<typeof setTimeout> | undefined;
+    // Going fullscreen resizes the window, and the document's mandatory snapping can land on another slide (or the
+    // top of the page) as it resizes back. Put this slide back, and keep doing so until the window has settled.
+    const restore = () => slide?.scrollIntoView({ block: "start", behavior: "instant" });
+    const stopRestoring = () => window.removeEventListener("resize", restore);
+
+    const onFullscreenChange = () => {
+      const element = fullscreenElement();
+      setFullscreen(element === root.current);
+      if (element === playerFrame || element === root.current) {
+        fullscreen = true;
+        // The player may have loaded before the slide finished going full screen.
+        if (element === root.current && player.current) void turnForVideo(player.current);
+        return;
+      }
+      if (!fullscreen) return;
+      fullscreen = false;
+      (screen.orientation as LockableOrientation).unlock?.();
+      exitedAt = performance.now();
+      restore();
+      window.addEventListener("resize", restore);
+      clearTimeout(settling);
+      settling = setTimeout(stopRestoring, FULLSCREEN_SETTLE_MS);
+      // Focus was inside the player; bring it back out so Escape works again.
+      root.current?.focus({ preventScroll: true });
+    };
+
+    const toggleFullscreen = () => {
+      if (fullscreenElement()) void document.exitFullscreen?.().catch(() => {});
+      else void playerFrame.requestFullscreen?.().catch(() => {});
+    };
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.defaultPrevented || away.current) return;
+      if (event.key === "Escape") {
+        if (fullscreenElement() || performance.now() - exitedAt < FULLSCREEN_EXIT_GRACE_MS) return;
+        stop();
+        return;
+      }
+      // Space and Enter belong to a focused button (Stop), and typing belongs to fields.
+      const target = event.target instanceof Element ? event.target : null;
+      if (event.altKey || event.ctrlKey || event.metaKey || target?.closest("button, a, input, textarea, select")) return;
+      const current = player.current;
+      if (current && runVimeoShortcut(event.key, current, toggleFullscreen)) event.preventDefault();
+    };
+
+    document.addEventListener("fullscreenchange", onFullscreenChange);
+    document.addEventListener("webkitfullscreenchange", onFullscreenChange);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("fullscreenchange", onFullscreenChange);
+      document.removeEventListener("webkitfullscreenchange", onFullscreenChange);
+      document.removeEventListener("keydown", onKeyDown);
+      clearTimeout(settling);
+      stopRestoring();
+    };
+  }, [playing, playerFrame, player, stop]);
+
+  useEffect(() => {
+    if (!playing) return;
+    const timer = setTimeout(reveal, REVEAL_FALLBACK_MS);
+    return () => clearTimeout(timer);
+  }, [playing, reveal]);
+
+  return (
+    <FullBleedSlide label={label} className={className}>
+      <div ref={root} tabIndex={-1} className="absolute inset-0 outline-none">
+        {image ? (
+          <Cover image={image} mobileImage={mobileImage} priority={priority} />
+        ) : (
+          <div aria-hidden className="absolute inset-0 bg-bg-raised" />
+        )}
+
+        {showLoop && loop && <PreviewLoop src={vimeoEmbedUrl(loop, { background: true })} />}
+
+        {!playing && (
+          // Keeps the white logo, filter pills and counter legible over bright covers.
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 top-0 h-44 bg-gradient-to-b from-black/45 to-transparent"
+          />
+        )}
+
+        {playing && !fullscreen && (
+          // Before the player in the DOM, so Tab goes from Stop into the player; z-10 keeps it above it.
+          // Not while the slide is full screen: the video has the whole screen, and leaving full screen brings Stop back.
+          // On phones the floating menu button sits in the top corner, so Stop goes beneath it.
+          <div className="absolute top-[calc(max(1.25rem,env(safe-area-inset-top))+4rem)] right-4 z-10 md:top-6 md:right-6">
+            <GlassPillButton data-stop size="md" onImage onClick={stop}>
+              {dict.stop}
+            </GlassPillButton>
+          </div>
+        )}
+
+        {playing && video ? (
+          <iframe
+            ref={setPlayerFrame}
+            src={vimeoEmbedUrl(video, { autoplay: !tapInPlayer, playsinline: playFullscreenNatively ? false : undefined })}
+            title={title}
+            allow="autoplay; fullscreen; picture-in-picture"
+            allowFullScreen
+            style={VIMEO_FRAME_STYLE}
+            className={cn(
+              "absolute inset-0 size-full border-0 bg-black transition-opacity duration-500 motion-reduce:transition-none",
+              revealed ? "opacity-100" : "opacity-0",
+            )}
+          />
+        ) : (
+          <div
+            className={cn(
+              "absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 bg-gradient-to-t from-black/75 via-black/30 to-transparent px-5 pt-32 pb-[max(1.5rem,env(safe-area-inset-bottom))] md:px-10 md:pb-10",
+              href && "max-sm:flex-col max-sm:items-start",
+            )}
+          >
+            <div className="min-w-0">
+              <Heading data-sanity={titleAttribute} className="font-display text-4xl text-balance italic md:text-7xl">
+                {href ? (
+                  <Link href={href} className="hover:underline focus-visible:underline">
+                    {title}
+                  </Link>
+                ) : (
+                  title
+                )}
+              </Heading>
+              <p className="mt-1 text-sm text-white/80 md:text-base">{meta}</p>
+              {role && <p className="mt-1 text-sm text-white/65">{role}</p>}
+            </div>
+            <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 md:gap-3">
+              {href && dict.view && (
+                <GlassPillLink href={href} size="lg" onImage aria-label={`${dict.view}: ${title}`}>
+                  {dict.view}
+                </GlassPillLink>
+              )}
+              {video && (
+                <GlassPillButton
+                  data-play
+                  size="lg"
+                  onImage
+                  onClick={play}
+                  aria-label={format(dict.play, { title })}
+                  className="shrink-0"
+                >
+                  <Play aria-hidden fill="currentColor" className="size-4" />
+                  <span className="max-sm:sr-only">{dict.play.replace(/\s*\{title\}/, "")}</span>
+                </GlassPillButton>
+              )}
+            </div>
+          </div>
+        )}
+
+        {playing && !revealed && (
+          <div aria-hidden className="pointer-events-none absolute inset-0 grid place-items-center bg-black/30">
+            <div className="size-10 animate-spin rounded-full border-2 border-white/25 border-t-white motion-reduce:animate-none" />
+          </div>
+        )}
+      </div>
+    </FullBleedSlide>
+  );
+}
+
+/**
+ * The cover still, full-bleed. With a mobile cover, a `<picture>` lets the browser fetch only the one
+ * that fits the screen's orientation; the hotspot and blur placeholder follow it through CSS variables,
+ * and the alt text follows it once the client knows the orientation (the server assumes landscape).
+ */
+function Cover({ image, mobileImage, priority }: { image: SlideImage; mobileImage?: SlideImage | null; priority?: boolean }) {
+  const portrait = usePortrait();
+
+  if (!mobileImage) {
+    return (
+      <Image
+        src={image.src}
+        width={image.width}
+        height={image.height}
+        alt={image.alt}
+        sizes="100vw"
+        priority={priority}
+        placeholder={image.blurDataURL ? "blur" : "empty"}
+        blurDataURL={image.blurDataURL}
+        style={{ objectPosition: image.position }}
+        className="absolute inset-0 size-full object-cover"
+      />
+    );
+  }
+
+  // Not `preload`: a preload link can't say which of the two sources the screen will pick.
+  const eager = priority ? ({ loading: "eager", fetchPriority: "high" } as const) : {};
+  const props = (still: SlideImage) =>
+    getImageProps({ src: still.src, width: still.width, height: still.height, alt: still.alt, sizes: "100vw", ...eager }).props;
+  const desktop = props(image);
+  const mobile = props(mobileImage);
+  const blur = (still: SlideImage) => (still.blurDataURL ? `url("${still.blurDataURL}")` : "none");
+  const vars = {
+    "--cover-position": image.position ?? "50% 50%",
+    "--cover-position-mobile": mobileImage.position ?? "50% 50%",
+    "--cover-blur": blur(image),
+    "--cover-blur-mobile": blur(mobileImage),
+  } as CSSProperties;
+
+  return (
+    <picture>
+      <source media={PORTRAIT} srcSet={mobile.srcSet} sizes={mobile.sizes} width={mobile.width} height={mobile.height} />
+      <img
+        {...desktop}
+        alt={portrait ? mobileImage.alt : image.alt}
+        style={{ ...desktop.style, ...vars }}
+        className="absolute inset-0 size-full [background-image:var(--cover-blur)] bg-cover bg-center object-cover [object-position:var(--cover-position)] portrait:[background-image:var(--cover-blur-mobile)] portrait:[object-position:var(--cover-position-mobile)]"
+      />
+    </picture>
+  );
+}
+
+/**
+ * The muted loop behind the title. Mounted only while its slide is on screen, so it fades in again each time.
+ * It fades in once the player reports playback rather than on the iframe's load, which fires before the
+ * first frame and would show black.
+ */
+function PreviewLoop({ src }: { src: string }) {
+  const [frame, setFrame] = useState<HTMLIFrameElement | null>(null);
+  const [ready, setReady] = useState(false);
+  useVimeoPlayer(frame, { play: () => setReady(true), bufferend: () => setReady(true) });
+  return (
+    <iframe
+      ref={setFrame}
+      src={src}
+      title=""
+      aria-hidden
+      tabIndex={-1}
+      loading="lazy"
+      style={VIMEO_FRAME_STYLE}
+      className={cn(
+        "pointer-events-none absolute inset-0 size-full border-0 transition-opacity duration-700 motion-reduce:transition-none",
+        ready ? "opacity-100" : "opacity-0",
+      )}
+    />
+  );
+}

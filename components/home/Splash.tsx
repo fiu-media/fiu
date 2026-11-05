@@ -2,13 +2,17 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { cn } from "@/lib/cn";
+import { prefersReducedMotion } from "@/lib/reduced-motion";
 import logo from "@/public/brand/fiu-logo.svg";
+import { nudgeHomeScroll } from "./bleed";
 import { SPLASH_FADE_MS, splashFadeVars } from "./splash-config";
 
 // The whole splash (backdrop and logo) fades as one, over SPLASH_FADE_MS (shared with the glass
 // logo's fade-in in HomeHero and the shader reveal in LogoScene).
 // will-change promotes the layer before the fade starts, so the first frame of it isn't a hitch.
-const FADE_CLASSES = "will-change-[opacity] motion-safe:transition-opacity motion-safe:duration-(--splash-fade) motion-safe:ease-out";
+const FADE_CLASSES =
+  "will-change-[opacity] motion-safe:transition-opacity motion-safe:duration-(--splash-fade) motion-safe:ease-out";
 
 // Once per page load: if the hero remounts (Suspense swap, client navigation back to `/`),
 // the splash must not replay.
@@ -22,6 +26,10 @@ export function isSplashDismissed() {
  * Cover shown while the home hero loads. It is server-rendered, so it is on screen before any
  * JS runs, and holds the SVG logo at the exact size and centre the live logo starts its spin
  * from — fading out is the handoff.
+ *
+ * Not `fixed`: Safari tints its status bar and toolbar from a fixed layer, which would keep them dark until the
+ * splash is removed. It bleeds past the page like the photo does (mobile), so the bars see page pixels that fade
+ * from ink to the photo with the splash.
  */
 export function Splash({ done }: { done: boolean }) {
   const [gone, setGone] = useState(dismissed);
@@ -29,7 +37,7 @@ export function Splash({ done }: { done: boolean }) {
   useEffect(() => {
     if (!done) return;
     // Under reduced motion the fade is instant, so there is nothing to wait for.
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reduced = prefersReducedMotion();
     const id = window.setTimeout(
       () => {
         dismissed = true;
@@ -40,23 +48,29 @@ export function Splash({ done }: { done: boolean }) {
     return () => window.clearTimeout(id);
   }, [done]);
 
+  // Safari only re-samples its bars when the page scrolls, not when pixels change under them, so nudge as the fade starts
+  // and again once the splash is gone.
+  useEffect(() => {
+    if (done || gone) nudgeHomeScroll();
+  }, [done, gone]);
+
   if (gone) return null;
 
   return (
     <div
       aria-hidden
       style={splashFadeVars}
-      className={`fixed inset-0 z-20 grid place-items-center ${done ? "pointer-events-none" : ""}`}
+      className={cn("absolute inset-0 z-20 grid place-items-center max-md:-inset-y-48", done && "pointer-events-none")}
     >
       {/* Backdrop and logo fade together. In live mode the glass logo fades in on top over the
           same SPLASH_FADE_MS (HomeHero), so the handoff happens inside this one fade. */}
-      <div className={`absolute inset-0 bg-ink ${FADE_CLASSES}`} style={{ opacity: done ? 0 : 1 }} />
+      <div className={cn("absolute inset-0 bg-ink", FADE_CLASSES)} style={{ opacity: done ? 0 : 1 }} />
       <Image
         src={logo}
         alt=""
         priority
         sizes="(min-width: 768px) 42vw, 80vw"
-        className={`relative h-auto w-[80vw] max-w-[640px] md:w-[42vw] md:max-w-none ${FADE_CLASSES}`}
+        className={cn("relative h-auto w-[80vw] max-w-[640px] md:w-[42vw] md:max-w-none", FADE_CLASSES)}
         style={{ opacity: done ? 0 : 1 }}
       />
     </div>

@@ -1,20 +1,29 @@
+import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { pageGutter } from "@/components/nav/rail";
 import { DetailAddToQuote } from "@/components/rentals/DetailAddToQuote";
 import { ItemSkeleton } from "@/components/rentals/RentalSkeletons";
-import { RentalImageView } from "@/components/rentals/RentalImageView";
+import { RentalGallery } from "@/components/rentals/RentalGallery";
+import { cn } from "@/lib/cn";
 import { defaultLocale, isLocale, languageAlternates, localizedPath, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
 import { RENTAL_ITEM_QUERY } from "@/sanity/lib/queries";
-import { publishedId, toRentalImage, type RentalItem } from "@/sanity/lib/rentals";
+import { publishedId, toRentalImage } from "@/sanity/lib/rentals";
 
 async function getItem(lang: Locale, slug: string) {
   const { perspective, variant } = await getDynamicFetchOptions();
-  const { data } = await cachedSanity({ query: RENTAL_ITEM_QUERY, params: { lang, fallbackLang: defaultLocale, slug }, perspective, variant, stega: false });
-  return (data as RentalItem | null) ?? null;
+  const { data } = await cachedSanity({
+    query: RENTAL_ITEM_QUERY,
+    params: { lang, fallbackLang: defaultLocale, slug },
+    perspective,
+    variant,
+    stega: false,
+  });
+  return data;
 }
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/rentals/[slug]">): Promise<Metadata> {
@@ -32,8 +41,12 @@ export async function generateMetadata({ params }: PageProps<"/[lang]/rentals/[s
 export default function RentalItemPage({ params }: PageProps<"/[lang]/rentals/[slug]">) {
   // Slugs are only known at runtime, so the item streams in behind a Suspense boundary.
   return (
-    <main className="mx-auto max-w-6xl px-4 pb-32 md:px-6">
-      <Suspense fallback={<ItemSkeleton />}>{params.then((p) => <Item lang={p.lang} slug={p.slug} />)}</Suspense>
+    <main className={cn("mx-auto max-w-6xl pb-32", pageGutter)}>
+      <Suspense fallback={<ItemSkeleton />}>
+        {params.then((p) => (
+          <Item lang={p.lang} slug={p.slug} />
+        ))}
+      </Suspense>
     </main>
   );
 }
@@ -50,39 +63,28 @@ async function Item({ lang, slug }: { lang: string; slug: string }) {
 
   return (
     <article>
-      <Link href={localizedPath(lang, "/rentals")} className="text-sm text-fg-muted underline-offset-4 hover:text-fg hover:underline">
-        ← {rentals.backToRentals}
+      <Link href={localizedPath(lang, "/rentals")} className="inline-flex items-center gap-1.5 text-sm link-quiet">
+        <ArrowLeft aria-hidden className="size-4" />
+        {rentals.backToRentals}
       </Link>
 
       <div className="mt-6 grid gap-10 lg:grid-cols-2">
-        <div className="flex flex-col gap-4">
-          <RentalImageView
-            image={images[0] ?? null}
-            placeholder={rentals.noImage}
-            sizes="(min-width: 1024px) 50vw, 100vw"
-            priority
-            className="aspect-[4/3] w-full rounded-3xl"
-          />
-          {images.length > 1 && (
-            <ul className="grid grid-cols-3 gap-4">
-              {images.slice(1).map((image) => (
-                <li key={image.src}>
-                  <RentalImageView image={image} placeholder="" sizes="(min-width: 1024px) 17vw, 33vw" className="aspect-[4/3] w-full rounded-2xl" />
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+        <RentalGallery images={images} name={item.name} dict={rentals} />
 
         <div className="flex flex-col gap-8">
           <header>
-            {item.brand && <p className="text-xs font-medium tracking-wide text-fg-muted uppercase">{item.brand}</p>}
+            {item.brand && <p className="eyebrow">{item.brand}</p>}
             <h1 className="font-display text-4xl md:text-5xl">{item.name}</h1>
             {item.category && <p className="mt-2 text-fg-muted">{item.category.title}</p>}
             {item.summary && <p className="mt-4 text-lg">{item.summary}</p>}
           </header>
 
-          <DetailAddToQuote itemId={publishedId(item.baseId)} itemName={item.name} dict={rentals} maxQuantity={item.maxQuantity} />
+          <DetailAddToQuote
+            itemId={publishedId(item.baseId)}
+            itemName={item.name}
+            dict={rentals}
+            maxQuantity={item.maxQuantity}
+          />
 
           {features.length > 0 && (
             <section aria-labelledby="item-features">

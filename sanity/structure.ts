@@ -37,10 +37,7 @@ export const structure: StructureResolver = (S, context) =>
   S.list()
     .title("Fiú Media")
     .items([
-      S.listItem()
-        .title("Settings")
-        .icon(CogIcon)
-        .child(S.document().schemaType("siteSettings").documentId("siteSettings")),
+      S.listItem().title("Settings").icon(CogIcon).child(S.document().schemaType("siteSettings").documentId("siteSettings")),
       S.divider(),
       S.listItem()
         .title("Projects")
@@ -48,10 +45,7 @@ export const structure: StructureResolver = (S, context) =>
         .child(
           S.list()
             .title("Projects")
-            .items([
-              orderableList(S, context, "project", "Projects"),
-              orderableList(S, context, "projectType", "Types"),
-            ]),
+            .items([orderableList(S, context, "project", "Projects"), orderableList(S, context, "projectType", "Types")]),
         ),
       S.listItem()
         .title("Talent")
@@ -59,10 +53,7 @@ export const structure: StructureResolver = (S, context) =>
         .child(
           S.list()
             .title("Talent")
-            .items([
-              orderableList(S, context, "talent", "Talent"),
-              orderableList(S, context, "role", "Roles"),
-            ]),
+            .items([orderableList(S, context, "talent", "Talent"), orderableList(S, context, "role", "Roles")]),
         ),
       S.listItem()
         .title("Rentals")
@@ -70,10 +61,7 @@ export const structure: StructureResolver = (S, context) =>
         .child(
           S.list()
             .title("Rentals")
-            .items([
-              orderableList(S, context, "rentalItem", "Items"),
-              orderableList(S, context, "rentalCategory", "Categories"),
-            ]),
+            .items([orderableList(S, context, "rentalItem", "Items"), orderableList(S, context, "rentalCategory", "Categories")]),
         ),
       S.divider(),
       S.listItem()

@@ -1,14 +1,18 @@
+import type { PAGE_TEXT_QUERY_RESULT } from "@/sanity.types";
 import { defaultLocale, type Locale } from "@/lib/i18n/config";
 import { cachedSanity } from "./live";
 import { PAGE_TEXT_QUERY } from "./queries";
 
-type PageText = { rentalsIntro: string | null; quoteIntro: string | null; contactIntro: string | null };
-
 /**
- * The intro lines under the Rentals, Request a quote and Contact titles, written in Site
- * settings. Published content only, so the pages stay static.
+ * The intro lines under the Rentals, Request a quote, Contact, Our Work and Talent titles, and the Fiú line
+ * under each page title, written in Site settings. Published content only, so the pages stay static.
  */
-export async function getPageText(lang: Locale): Promise<PageText> {
-  const { data } = await cachedSanity({ query: PAGE_TEXT_QUERY, params: { lang, fallbackLang: defaultLocale }, perspective: "published", stega: false });
-  return (data as PageText | null) ?? { rentalsIntro: null, quoteIntro: null, contactIntro: null };
+export async function getPageText(lang: Locale): Promise<PAGE_TEXT_QUERY_RESULT> {
+  const { data } = await cachedSanity({
+    query: PAGE_TEXT_QUERY,
+    params: { lang, fallbackLang: defaultLocale },
+    perspective: "published",
+    stega: false,
+  });
+  return data;
 }

@@ -1,64 +1,57 @@
-import { createDataAttribute } from "next-sanity";
-import { urlFor } from "./image";
+import type { HOME_STILLS_QUERY_RESULT } from "@/sanity.types";
+import { projectAttribute } from "./projects";
+import { toSizedImage, type SizedImage } from "./rentals";
 
-export type HeroStill = {
-  src: string;
-  width: number;
-  height: number;
-  alt: string;
-  blurDataURL?: string;
-  /** Precomputed studio tint (hex) for the glass logo; avoids sampling the texture. */
+export type HeroStill = SizedImage & {
+  /** Precomputed studio tint (hex) for the glass logo; avoids sampling the texture. Only the bundled fallbacks have one. */
   lightTint?: string;
-  /** CSS object-position derived from the editor's hotspot. */
-  position?: string;
   /** `data-sanity` value that makes the still clickable in the Presentation tool. */
   dataSanity?: string;
 };
 
-type Source = Parameters<typeof urlFor>[0];
+/** The two sets the hero rotates: landscape for most screens, portrait for phones held upright. */
+export type HeroStills = { landscape: HeroStill[]; portrait: HeroStill[] };
 
-export type SanityStill = {
-  _key: string;
-  alt: string | null;
-  lightTint?: string | null;
-  asset: unknown;
-  crop?: { top: number; bottom: number; left: number; right: number } | null;
-  hotspot?: { x: number; y: number } | null;
-  lqip: string | null;
-  dimensions: { width: number; height: number } | null;
-};
-
-/** Result shape of HOME_STILLS_QUERY (hand-written until we adopt typegen). */
-export type HomeStillsResult = { _id: string; stills: SanityStill[] | null } | null;
+type HomeProject = NonNullable<NonNullable<NonNullable<HOME_STILLS_QUERY_RESULT>["projects"]>[number]>;
 
 const HERO_WIDTH = 2400;
+/** The most stills one set rotates, which keeps the page's images and the logo scene's textures bounded. */
+export const MAX_HERO_STILLS = 10;
 
-/** Turn a queried Sanity image into the shape the hero and the WebGL scene both consume. */
-export function toHeroStill(documentId: string, still: SanityStill): HeroStill | null {
-  if (!still.dimensions) return null;
-  const { crop } = still;
-  // Sanity applies the crop on its CDN, so the output aspect ratio is the cropped one.
-  const cropW = crop ? 1 - crop.left - crop.right : 1;
-  const cropH = crop ? 1 - crop.top - crop.bottom : 1;
-  const aspect = (still.dimensions.width * cropW) / (still.dimensions.height * cropH);
-  const width = Math.min(HERO_WIDTH, Math.round(still.dimensions.width * cropW));
-
+/**
+ * The stills of the projects the home page rotates. Each project contributes its landscape gallery and its mobile
+ * one, or, without a mobile gallery, the landscape stills again (cropped to fit, like a missing mobile cover). The
+ * projects take turns, so every one appears even when the cap cuts a set short.
+ */
+export function toHeroStills(projects: (HomeProject | null)[]): HeroStills {
+  const sets = projects.filter((p): p is HomeProject => p !== null).map(toProjectSets);
   return {
-    src: urlFor(still as unknown as Source)
-      .width(width)
-      .auto("format")
-      .url(),
-    width,
-    height: Math.round(width / aspect),
-    alt: still.alt ?? "",
-    blurDataURL: still.lqip ?? undefined,
-    lightTint: still.lightTint ?? undefined,
-    dataSanity: createDataAttribute({
-      id: documentId,
-      type: "siteSettings",
-      path: `homeStills[_key=="${still._key}"]`,
-      baseUrl: "/studio",
-    }).toString(),
-    position: still.hotspot ? `${still.hotspot.x * 100}% ${still.hotspot.y * 100}%` : undefined,
+    landscape: takeTurns(sets.map((s) => s.landscape)),
+    portrait: takeTurns(sets.map((s) => s.portrait)),
   };
+}
+
+function toProjectSets(project: HomeProject) {
+  const landscape = toStills(project._id, "stills", project.stills);
+  const portrait = toStills(project._id, "stillsMobile", project.stillsMobile);
+  return { landscape, portrait: portrait.length > 0 ? portrait : landscape };
+}
+
+function toStills(projectId: string, field: "stills" | "stillsMobile", stills: HomeProject["stills"]): HeroStill[] {
+  return (stills ?? []).flatMap((still) => {
+    const image = toSizedImage(still, HERO_WIDTH);
+    if (!image) return [];
+    return [{ ...image, dataSanity: projectAttribute(projectId, `${field}[_key=="${still._key}"]`) }];
+  });
+}
+
+/** One from each list in turn, then the next of each, up to `MAX_HERO_STILLS`. */
+function takeTurns(lists: HeroStill[][]): HeroStill[] {
+  const out: HeroStill[] = [];
+  for (let i = 0; out.length < MAX_HERO_STILLS && lists.some((l) => i < l.length); i++) {
+    for (const list of lists) {
+      if (i < list.length && out.length < MAX_HERO_STILLS) out.push(list[i]!);
+    }
+  }
+  return out;
 }

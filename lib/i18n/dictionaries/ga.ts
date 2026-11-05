@@ -2,8 +2,8 @@ import type { Dictionary } from "./en";
 import type { DeepPartial } from "./merge";
 
 // Irish UI copy. Anything missing here is shown in English (see getDictionary). Left out on purpose:
-// the brand name and slogan (same in every language), and the emails sent to the team
-// (`quoteNotify`, `contactNotify`), which stay in English.
+// the brand name and slogan (same in every language), example placeholders (names, addresses), and the
+// emails sent to the team (`quoteNotify`, `contactNotify`), which stay in English.
 export const ga: DeepPartial<Dictionary> = {
   common: {
     loading: "Á luchtú…",
@@ -11,6 +11,8 @@ export const ga: DeepPartial<Dictionary> = {
   nav: {
     label: "Príomhroghchlár",
     home: "Fiú Media, leathanach baile",
+    menu: "Roghchlár",
+    closeMenu: "Dún an roghchlár",
     about: "Fúinn",
     work: "Ár gCuid Oibre",
     talent: "Tallann",
@@ -19,6 +21,7 @@ export const ga: DeepPartial<Dictionary> = {
   },
   vimeo: {
     play: "Seinn {title}",
+    stop: "Stad an físeán",
   },
   about: {
     title: "Fúinn",
@@ -29,16 +32,30 @@ export const ga: DeepPartial<Dictionary> = {
     filterLabel: "Scag de réir cineál tionscadail",
     all: "Uile",
     empty: "Níl aon tionscadal den chineál seo ann go fóill.",
+    emptyAll: "Táimid ag cur lenár gcuid oibre. Féach arís go luath.",
     credits: "Creidiúintí",
     stills: "Grianghraif",
+    openStill: "Féach ar ghrianghraf {n} as {total}",
+    closeStill: "Dún",
+    previousStill: "An grianghraf roimhe",
+    nextStill: "An chéad ghrianghraf eile",
+    stillCounter: "{n} as {total}",
     next: "An chéad tionscadal eile",
     back: "An obair ar fad",
+    view: "Féach ar an tionscadal",
+    slideLabel: "{title}, {index} as {total}",
+    progressLabel: "Tionscadail",
+    goTo: "Téigh go {title}",
   },
   talent: {
     title: "Tallann",
     empty: "Táimid ag nuashonrú ár liosta tallainne.",
+    indexLabel: "Ár dtallann",
     showreel: "Ríl taispeána",
     projects: "Tionscadail",
+    projectsOf: "Obair {name}",
+    slideLabel: "{title}, {index} as {total}",
+    noPortrait: "Portráid le teacht go luath",
     workWith: "Oibrigh le {name}",
     back: "An tallann ar fad",
   },
@@ -47,23 +64,32 @@ export const ga: DeepPartial<Dictionary> = {
     filterLabel: "Scag de réir catagóire",
     allCategories: "Uile",
     empty: "Níl aon rud sa chatagóir seo go fóill.",
-    emptyCatalogue: "Táimid ag nuashonrú ár liosta trealaimh. Déan teagmháil linn agus cabhróimid leat leis an trealamh atá uait.",
+    emptyCatalogue:
+      "Táimid ag nuashonrú ár liosta trealaimh. Déan teagmháil linn agus cabhróimid leat leis an trealamh atá uait.",
     addToQuote: "Cuir leis an luacháil",
     inQuote: "Sa luacháil ({qty})",
     maxReached: "An uasmhéid sa luacháil",
-    maxPerQuote: "Suas le {max} in aghaidh na luachála",
+    available: "{max} ar fáil",
     viewDetails: "Sonraí",
     backToRentals: "An cíos ar fad",
     noImage: "Grianghraf le teacht go luath",
+    galleryLabel: "Grianghraif de {name}",
+    showImage: "Taispeáin grianghraf {n} as {total}",
+    photoOf: "Grianghraf {n} as {total}",
+    previousImage: "An grianghraf roimhe",
+    nextImage: "An chéad ghrianghraf eile",
     keyFeatures: "Príomhghnéithe",
     specs: "Sonraíochtaí",
     includedInKit: "San áireamh sa phacáiste",
     quantity: "Cainníocht",
+    fewer: "Ceann amháin níos lú",
+    more: "Ceann amháin eile",
     notFoundTitle: "Earra cíosa",
   },
   basket: {
     open: "Oscail an bascaed luachála",
-    openWithCount: "Oscail an bascaed luachála, {count} sa luacháil",
+    openWithCount:
+      "Oscail an bascaed luachála, {count, plural, one {# earra} two {# earra} few {# earra} many {# n-earra} other {# earra}} sa luacháil",
     title: "Do luacháil",
     empty: "Tá do luacháil folamh. Cuir trealamh leis ón gcatalóg.",
     close: "Dún an bascaed luachála",
@@ -86,14 +112,28 @@ export const ga: DeepPartial<Dictionary> = {
     name: "Ainm",
     email: "Ríomhphost",
     phone: "Guthán",
+    phoneCountry: "Tír an uimhir ghutháin",
     company: "Cuideachta",
     production: "Léiriúchán",
     message: "An bhfuil aon rud eile ar cheart dúinn a bheith ar an eolas faoi?",
     optional: "roghnach",
+    copyLink: "Cóipeáil an nasc",
+    shareLink: "Roinn an nasc",
+    shareTitle: "Luacháil ó Fiú Media",
+    linkCopied: "Nasc cóipeáilte",
+    linkCopyFailed: "Níorbh fhéidir cóipeáil go huathoibríoch. Cóipeáil an nasc seo:",
+    copyLinkHint: "Tá an trealamh, na dátaí, an chuideachta agus an léiriúchán sa nasc, ach níl do shonraí teagmhála ann.",
+    placeholders: {
+      production: "Teideal oibre na scannánaíochta",
+      message: "Suíomh, méid na foirne, aon rud a théann i bhfeidhm ar an trealamh",
+    },
     submit: "Seol an t-iarratas ar luacháil",
     sending: "Á sheoladh…",
     successTitle: "Iarratas seolta",
-    successBody: "Go raibh maith agat, fuaireamar d'iarratas ar luacháil agus sheolamar deimhniú chuig do ríomhphost. Beimid i dteagmháil go luath.",
+    successBody:
+      "Go raibh maith agat, fuaireamar d'iarratas ar luacháil agus sheolamar deimhniú chuig do ríomhphost. Beimid i dteagmháil go luath.",
+    successBodyNoEmail:
+      "Go raibh maith agat, fuaireamar d'iarratas ar luacháil. Ní féidir linn deimhniú a sheoladh chuig an seoladh sin, ach beimid i dteagmháil go luath.",
     successAction: "Ar ais go dtí an cíos",
   },
   contact: {
@@ -102,7 +142,22 @@ export const ga: DeepPartial<Dictionary> = {
     enquiryTypes: { Project: "Tionscadal", Talent: "Ár dtallann", Rentals: "Cíos trealaimh", Other: "Rud éigin eile" },
     name: "Ainm",
     email: "Ríomhphost",
+    optional: "roghnach",
+    talent: {
+      legend: "Cé leis ar mhaith leat oibriú?",
+      placeholder: "Cuardaigh de réir ainm",
+      selected: "Na daoine roghnaithe",
+      remove: "Bain {name}",
+      chipHint: "Brúigh Backspace nó Delete chun é a bhaint",
+      inputHint: "{count} roghnaithe. Ó thús an ionchuir, brúigh an tSaighead Chlé chun bogadh chucu",
+      open: "Taispeáin gach duine",
+      empty: "Níl éinne leis an ainm sin",
+      limit: "Is féidir suas le {max} duine a roghnú",
+    },
     message: "Teachtaireacht",
+    placeholders: {
+      message: "Inis dúinn faoi do thionscadal, nó faoin rud atá uait",
+    },
     submit: "Seol an teachtaireacht",
     sending: "Á sheoladh…",
     successTitle: "Teachtaireacht seolta",
@@ -115,14 +170,27 @@ export const ga: DeepPartial<Dictionary> = {
     errors: {
       required: "Tá an réimse seo riachtanach.",
       invalid: "Seiceáil an luach seo, le do thoil.",
+      emailInvalid: "Cuir isteach seoladh ríomhphoist mar name@example.com.",
+      phoneInvalid: "Cuir isteach uimhir ghutháin bhailí don tír roghnaithe.",
+      dateInvalid: "Roghnaigh dáta.",
+      tooLong: "Tá sé sin rófhada. Giorraigh é, le do thoil.",
       empty: "Cuir earra amháin ar a laghad le do luacháil.",
       beforeStart: "Caithfidh an dáta tabhairt ar ais a bheith ar an dáta bailithe nó ina dhiaidh.",
       past: "Ní féidir leis an dáta bailithe a bheith san am atá caite.",
-      overLimit: "Tá roinnt earraí os cionn an uasmhéid is féidir linn a thairiscint in aon luacháil amháin. Athbhreithnigh do luacháil, le do thoil.",
-      unavailable: "Níl roinnt earraí i do luacháil ar fáil a thuilleadh. Athbhreithnigh do luacháil, le do thoil.",
+      tooFar: "Ní féidir leis an dáta bailithe a bheith níos mó ná dhá bhliain amach.",
+      hireTooLong:
+        "Ní féidir cíos a bheith níos faide ná bliain amháin. Le haghaidh cíosanna níos faide, seol ríomhphost chugainn.",
+      overLimit:
+        "Tá roinnt cainníochtaí os cionn an uasmhéid is féidir linn a thairiscint. Athbhreithnigh na cainníochtaí i do luacháil, le do thoil.",
+      unavailable:
+        "Níl roinnt earraí i do luacháil ar fáil a thuilleadh. Bain na cinn atá marcáilte thíos agus bain triail eile as.",
       rejected: "Níorbh fhéidir linn an t-iarratas seo a fhíorú. Bain triail eile as, le do thoil.",
       failed: "Tharla earráid ar ár dtaobh-ne. Bain triail eile as, nó seol ríomhphost chugainn go díreach.",
     },
+  },
+  dates: {
+    dayOne: "{count} lá",
+    dayMany: "{count} lá",
   },
   emails: {
     quoteConfirm: {
@@ -140,6 +208,7 @@ export const ga: DeepPartial<Dictionary> = {
       kit: "Trealamh",
       message: "Teachtaireacht",
       enquiryType: "Cineál fiosrúcháin",
+      talent: "Tallann",
     },
   },
 };

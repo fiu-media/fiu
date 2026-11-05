@@ -1,11 +1,27 @@
+import os from "node:os";
 import type { NextConfig } from "next";
 import { withBotId } from "botid/next/config";
 import { sanity } from "next-sanity/live/cache-life";
+import "./env";
+
+/**
+ * Dev only: lets a phone on the same network load the dev server (and its HMR socket) by this
+ * machine's Bonjour name (`<hostname>.local`), which stays the same when the IP changes. Only that
+ * name is allowed, not the IPs, so the allowlist stays as narrow as it can be.
+ */
+function devLanOrigins(): string[] {
+  if (process.env.NODE_ENV !== "development") return [];
+  const hostname = os.hostname();
+  return [hostname.endsWith(".local") ? hostname : `${hostname}.local`];
+}
 
 const nextConfig: NextConfig = {
   /* config options here */
+  allowedDevOrigins: devLanOrigins(),
   experimental: {
     agentFeedback: false,
+    // simple-icons ships all ~3,400 icons from one barrel, so only the ones imported get bundled. lucide-react is covered by Next's defaults.
+    optimizePackageImports: ["simple-icons"],
   },
   cacheComponents: true,
   partialPrefetching: true,
@@ -19,9 +35,6 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "cdn.sanity.io" },
       { protocol: "https", hostname: "i.vimeocdn.com" },
     ],
-    // Mobile hotspots (NAT64) resolve public hosts to 64:ff9b::/96, which Next treats as private.
-    // Dev only, so production keeps the SSRF guard.
-    dangerouslyAllowLocalIP: process.env.NODE_ENV === "development",
   },
   turbopack: {
     rules: {

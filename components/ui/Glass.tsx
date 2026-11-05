@@ -1,7 +1,10 @@
 "use client";
 
+import { mergeProps } from "@base-ui/react/merge-props";
+import { useRender } from "@base-ui/react/use-render";
 import Link from "next/link";
 import { useRef, type ComponentProps, type ReactNode } from "react";
+import { cn } from "@/lib/cn";
 import { useLiquidGlass } from "./useLiquidGlass";
 
 type Size = "sm" | "md" | "lg";
@@ -23,19 +26,17 @@ type PillStyle = {
   /** Sitting over photography: forces light-on-dark glass regardless of surface. */
   onImage?: boolean;
   className?: string;
-  children: ReactNode;
+  children?: ReactNode;
 };
 
 function pillClass({ size = "md", onImage, className }: Omit<PillStyle, "children">) {
-  return [
+  return cn(
     "glass glass-piece glass-interactive inline-flex cursor-pointer items-center justify-center gap-2 rounded-full",
     "font-semibold tracking-[-0.01em] whitespace-nowrap select-none disabled:cursor-not-allowed",
     sizes[size],
     onImage && "glass-on-image",
     className,
-  ]
-    .filter(Boolean)
-    .join(" ");
+  );
 }
 
 export function GlassPillLink({
@@ -64,6 +65,10 @@ export function GlassPillLink({
   );
 }
 
+/**
+ * Also the element behind Base UI triggers and toggles (`render={<GlassPillButton />}`): their ref and handlers are
+ * merged with the glass ones rather than replaced, so roving focus and dismissal keep working.
+ */
 export function GlassPillButton({
   size = "md",
   onImage,
@@ -74,20 +79,28 @@ export function GlassPillButton({
 }: PillStyle & Omit<ComponentProps<"button">, "className">) {
   const ref = useRef<HTMLButtonElement>(null);
   const glass = useLiquidGlass(ref, lens[size]);
-  return (
-    <button
-      {...props}
-      ref={ref}
-      style={glass.style}
-      onPointerMove={glass.onPointerMove}
-      onPointerLeave={glass.onPointerLeave}
-      type={type}
-      className={pillClass({ size, onImage, className })}
-    >
-      {glass.filter}
-      {children}
-    </button>
-  );
+  return useRender({
+    defaultTagName: "button",
+    ref,
+    props: mergeProps<"button">(
+      {
+        type,
+        style: glass.style,
+        onPointerMove: glass.onPointerMove,
+        onPointerLeave: glass.onPointerLeave,
+        className: pillClass({ size, onImage, className }),
+      },
+      props,
+      {
+        children: (
+          <>
+            {glass.filter}
+            {children}
+          </>
+        ),
+      },
+    ),
+  });
 }
 
 export function GlassPanel({
@@ -105,7 +118,7 @@ export function GlassPanel({
       ref={ref}
       style={{ ...glass.style, borderRadius: radius }}
       onPointerMove={glass.onPointerMove}
-      className={["glass glass-panel", onImage && "glass-on-image", className].filter(Boolean).join(" ")}
+      className={cn("glass glass-panel", onImage && "glass-on-image", className)}
     >
       {glass.filter}
       {children}

@@ -33,9 +33,21 @@ export const project = defineType({
     }),
     imageWithAlt("coverStill", "Cover still", true),
     defineField({
+      ...imageWithAlt("coverStillMobile", "Cover still (mobile)"),
+      description: "Portrait (9:16) version shown on phones. Leave empty to crop the cover still instead.",
+    }),
+    defineField({
       name: "stills",
       title: "Stills gallery",
       type: "array",
+      description: "Landscape stills.",
+      of: [imageArrayMember()],
+    }),
+    defineField({
+      name: "stillsMobile",
+      title: "Stills gallery (mobile)",
+      type: "array",
+      description: "Portrait (9:16) stills for phones. Pick different moments from the landscape gallery.",
       of: [imageArrayMember()],
     }),
     vimeoUrlField("vimeoUrl", "Vimeo URL"),
@@ -71,10 +83,7 @@ export const project = defineType({
     defineField({ name: "featured", type: "boolean", initialValue: false, readOnly: readOnlyInTranslation }),
     orderRankField({ type: "project" }),
   ],
-  orderings: [
-    orderRankOrdering,
-    { title: "Year, newest first", name: "yearDesc", by: [{ field: "year", direction: "desc" }] },
-  ],
+  orderings: [orderRankOrdering, { title: "Year, newest first", name: "yearDesc", by: [{ field: "year", direction: "desc" }] }],
   preview: {
     select: { title: "title", type: "type.title", year: "year", media: "coverStill" },
     prepare: ({ title, type, year, media }) => ({

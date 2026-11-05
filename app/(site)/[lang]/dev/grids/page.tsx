@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import Image, { type StaticImageData } from "next/image";
 import { notFound } from "next/navigation";
 import { Suspense, type ReactNode } from "react";
+import { NameIndex } from "@/components/talent/NameIndex";
 import { GlassPillButton, GlassPillLink } from "@/components/ui/Glass";
 import { isLocale, localizedPath } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
-import { IndexList } from "./IndexList";
+
 import banquet from "@/public/stills/banquet.jpg";
 import bouquet from "@/public/stills/bouquet.jpg";
 import citrus from "@/public/stills/citrus.jpg";
@@ -144,8 +145,9 @@ async function Grids({
         content: (
           <>
             {chips}
-            <IndexList
-              items={projects.map((p) => ({ title: p.title, meta: p.meta, still: p.still }))}
+            <NameIndex
+              label="Index"
+              items={projects.map((p) => ({ title: p.title, meta: p.meta, href: "#", image: p.still }))}
               ratio="16/9"
               previewWidth={320}
             />
@@ -240,8 +242,9 @@ async function Grids({
         note: "Names in large type; the portrait follows the cursor (thumbnails on touch). Suits a small, established roster.",
         content: (
           <>
-            <IndexList
-              items={people.map((p) => ({ title: p.title, meta: p.meta, still: p.still }))}
+            <NameIndex
+              label="Index"
+              items={people.map((p) => ({ title: p.title, meta: p.meta, href: "#", image: p.still }))}
               ratio="4/5"
               previewWidth={220}
             />
@@ -329,7 +332,7 @@ function Option({ label, title, note, children }: { label: string; title: string
     <section>
       <div className="mb-6 border-b border-line pb-4">
         <p className="text-xs font-medium tracking-[0.14em] text-fg-muted uppercase">{label}</p>
-        <h2 className="font-display mt-1 text-3xl md:text-4xl">{title}</h2>
+        <h2 className="mt-1 font-display text-3xl md:text-4xl">{title}</h2>
         <p className="mt-2 max-w-xl text-sm text-fg-muted">{note}</p>
       </div>
       {children}
@@ -339,11 +342,7 @@ function Option({ label, title, note, children }: { label: string; title: string
 
 function Tile({ sample, ratio, sizes, large }: { sample: Sample; ratio: string; sizes: string; large?: boolean }) {
   return (
-    <a
-      href="#"
-      className="group relative isolate block overflow-hidden rounded-2xl bg-bg-raised"
-      style={{ aspectRatio: ratio }}
-    >
+    <a href="#" className="group relative isolate block overflow-hidden rounded-2xl bg-bg-raised" style={{ aspectRatio: ratio }}>
       <Image
         src={sample.still}
         alt=""
@@ -353,9 +352,7 @@ function Tile({ sample, ratio, sizes, large }: { sample: Sample; ratio: string; 
         className="-z-10 object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04] motion-reduce:transition-none"
       />
       <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-4 pt-12 text-white">
-        <p className={`font-display italic ${large ? "text-3xl md:text-5xl" : "text-xl md:text-2xl"}`}>
-          {sample.title}
-        </p>
+        <p className={`font-display italic ${large ? "text-3xl md:text-5xl" : "text-xl md:text-2xl"}`}>{sample.title}</p>
         <p className={`mt-0.5 text-white/75 ${large ? "text-base" : "text-sm"}`}>{sample.meta}</p>
       </div>
     </a>

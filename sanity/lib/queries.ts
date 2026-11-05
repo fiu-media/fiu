@@ -4,11 +4,16 @@ import { defineQuery } from "next-sanity";
 // hasn't been translated yet falls back to its default-language counterpart instead of vanishing.
 // New queries (projects, talent, ...) should follow the same pattern.
 
-/** Documents of `type` in `$lang`, plus default-language ones with no translation (matched by slug). */
-const withFallback = (type: string, extra = "") => `(
+/**
+ * Documents of `type` in `$lang`, plus default-language ones with no translation (matched by slug).
+ * `extra` adds filter terms (pass `""` for none). The helpers in this file are generic and use literal
+ * arguments so TypeGen can evaluate each query and TypeScript keeps its exact string type.
+ */
+const withFallback = <const T extends string, const E extends string>(type: T, extra: E) =>
+  `(
     *[_type == "${type}" && language == $lang${extra}]
     + *[_type == "${type}" && language == $fallbackLang${extra} && !(slug.current in *[_type == "${type}" && language == $lang${extra}].slug.current)]
-  )`;
+  )` as const;
 
 /** The default-language document a translation was made from (they share a slug). Use inside a projection. */
 const DEFAULT_COUNTERPART = `*[_type == ^._type && language == $fallbackLang && slug.current == ^.slug.current][0]`;
@@ -24,37 +29,27 @@ const RENTAL_AVAILABLE = ` && !(slug.current in *[_type == "rentalItem" && langu
  * language's order (matched by slug); a document with no default-language counterpart uses its own
  * rank. Unranked documents tie, so `tiebreak` (a field name) keeps their order stable.
  */
-const byRank = (tiebreak: string) => `[]{
+const byRank = <const T extends string>(tiebreak: T) =>
+  `[]{
     ...,
     "rank": coalesce(${DEFAULT_COUNTERPART}.orderRank, orderRank)
-  } | order(rank asc, ${tiebreak} asc)`;
+  } | order(rank asc, ${tiebreak} asc)` as const;
 
-export const HOME_STILLS_QUERY = defineQuery(`
-  coalesce(
-    *[_type == "siteSettings" && language == $lang && count(homeStills[defined(asset)]) > 0][0],
-    *[_type == "siteSettings" && language == $fallbackLang][0]
-  ){
-    _id,
-    "stills": homeStills[defined(asset)]{
-      _key,
-      alt,
-      lightTint,
-      asset,
-      crop,
-      hotspot,
-      "lqip": asset->metadata.lqip,
-      "dimensions": asset->metadata.dimensions
-    }
-  }
-`);
+/** Available rental items in `$lang`, plus default-language ones with no translation. Written out (not `withFallback`) so TypeGen can resolve it. */
+const RENTAL_ITEMS = `(
+    *[_type == "rentalItem" && language == $lang${RENTAL_AVAILABLE}]
+    + *[_type == "rentalItem" && language == $fallbackLang${RENTAL_AVAILABLE} && !(slug.current in *[_type == "rentalItem" && language == $lang${RENTAL_AVAILABLE}].slug.current)]
+  )`;
 
 /** An array field, or the default-language document's when the translation left it empty. */
-const arrayOrDefault = (field: string) => `select(count(${field}) > 0 => ${field}, ${DEFAULT_COUNTERPART}.${field})`;
+const arrayOrDefault = <const F extends string>(field: F) =>
+  `select(count(${field}) > 0 => ${field}, ${DEFAULT_COUNTERPART}.${field})` as const;
 
 /**
  * Names and brands are never translated (read-only in translations), so every language shows the
  * default-language value. The rest falls back field by field, so a half-translated item still renders in full.
  * `baseId` is the default-language document's id, which basket lines use so they survive a language switch.
+ * `as const` keeps the literal type, which TypeGen needs to resolve the queries that embed this.
  */
 const RENTAL_ITEM_FIELDS = `
   _id,
@@ -79,15 +74,15 @@ const RENTAL_ITEM_FIELDS = `
     "lqip": asset->metadata.lqip,
     "dimensions": asset->metadata.dimensions
   }
-`;
+` as const;
 
 export const RENTALS_QUERY = defineQuery(`{
-  "categories": ${withFallback("rentalCategory")}${byRank("title")}{
+  "categories": ${withFallback("rentalCategory", "")}${byRank("title")}{
     _id,
     title,
     "slug": slug.current
   },
-  "items": ${withFallback("rentalItem", RENTAL_AVAILABLE)}${byRank("name")}{
+  "items": ${RENTAL_ITEMS}${byRank("name")}{
     ${RENTAL_ITEM_FIELDS}
   }
 }`);
@@ -105,7 +100,7 @@ export const RENTAL_ITEM_QUERY = defineQuery(`
 
 /** Just enough per item to label basket lines, which only store ids and quantities. */
 export const QUOTE_CATALOGUE_QUERY = defineQuery(`
-  ${withFallback("rentalItem", RENTAL_AVAILABLE)}${byRank("name")}{
+  ${RENTAL_ITEMS}${byRank("name")}{
     _id,
     "baseId": coalesce(${DEFAULT_COUNTERPART}._id, _id),
     "name": coalesce(${DEFAULT_COUNTERPART}.name, name),
@@ -133,6 +128,19 @@ export const SUBMISSION_SETTINGS_QUERY = defineQuery(`
 `);
 
 /**
+ * Talent the default-language document has marked unavailable (see RENTAL_AVAILABLE): still on the roster and their
+ * own page, but not someone to ask for. The field is required, but a document without a value (a new draft) counts
+ * as available rather than vanishing from the form.
+ */
+const TALENT_AVAILABLE = ` && !(slug.current in *[_type == "talent" && language == $fallbackLang && available == false].slug.current)`;
+
+/** Available talent in `$lang`, plus default-language ones with no translation. Written out (not `withFallback`) so TypeGen can resolve it. */
+const AVAILABLE_TALENT = `(
+    *[_type == "talent" && language == $lang${TALENT_AVAILABLE}]
+    + *[_type == "talent" && language == $fallbackLang${TALENT_AVAILABLE} && !(slug.current in *[_type == "talent" && language == $lang${TALENT_AVAILABLE}].slug.current)]
+  )`;
+
+/**
  * Rental items that can currently be requested (published and available). Basket lines hold the
  * default-language id, so only those documents match and names come out in the default language.
  */
@@ -143,12 +151,177 @@ export const AVAILABLE_ITEM_IDS_QUERY = defineQuery(`
   }
 `);
 
-/** Editor-written intro lines for the Rentals, Request a quote and Contact pages. */
+/** Editor-written intro lines for the Rentals, Request a quote, Contact, Our Work and Talent pages, plus each page's Fiú line. */
 export const PAGE_TEXT_QUERY = defineQuery(`{
-  "cur": *[_type == "siteSettings" && language == $lang][0]{ rentalsIntro, quoteIntro, contactIntro },
-  "fb": *[_type == "siteSettings" && language == $fallbackLang][0]{ rentalsIntro, quoteIntro, contactIntro }
+  "cur": *[_type == "siteSettings" && language == $lang][0]{ rentalsIntro, quoteIntro, contactIntro, workIntro, talentIntro, aboutTagline, workTagline, talentTagline, rentalsTagline, contactTagline },
+  "fb": *[_type == "siteSettings" && language == $fallbackLang][0]{ rentalsIntro, quoteIntro, contactIntro, workIntro, talentIntro, aboutTagline, workTagline, talentTagline, rentalsTagline, contactTagline }
 }{
   "rentalsIntro": coalesce(cur.rentalsIntro, fb.rentalsIntro),
   "quoteIntro": coalesce(cur.quoteIntro, fb.quoteIntro),
-  "contactIntro": coalesce(cur.contactIntro, fb.contactIntro)
+  "contactIntro": coalesce(cur.contactIntro, fb.contactIntro),
+  "workIntro": coalesce(cur.workIntro, fb.workIntro),
+  "talentIntro": coalesce(cur.talentIntro, fb.talentIntro),
+  "aboutTagline": coalesce(cur.aboutTagline, fb.aboutTagline),
+  "workTagline": coalesce(cur.workTagline, fb.workTagline),
+  "talentTagline": coalesce(cur.talentTagline, fb.talentTagline),
+  "rentalsTagline": coalesce(cur.rentalsTagline, fb.rentalsTagline),
+  "contactTagline": coalesce(cur.contactTagline, fb.contactTagline)
+}`);
+
+/** The title of a role or project type in `$lang`; those references always point at the default-language document. */
+const translatedTitle = <const T extends string>(type: T) =>
+  `coalesce(*[_type == "${type}" && language == $lang && slug.current == ^.slug.current][0].title, title)` as const;
+
+const IMAGE_FIELDS = `alt, asset, crop, hotspot, "lqip": asset->metadata.lqip, "dimensions": asset->metadata.dimensions`;
+
+/**
+ * The stills of the projects the home page rotates, in the editors' order. A project's stills may not be translated
+ * yet, so each set falls back to the default-language document's, like on its own page.
+ */
+export const HOME_STILLS_QUERY = defineQuery(`
+  coalesce(
+    *[_type == "siteSettings" && language == $lang && count(homeProjects) > 0][0],
+    *[_type == "siteSettings" && language == $fallbackLang][0]
+  ){
+    "projects": homeProjects[]->{
+      _id,
+      "stills": coalesce(
+        *[_type == "project" && language == $lang && slug.current == ^.slug.current][0].stills,
+        stills
+      )[defined(asset)]{ _key, ${IMAGE_FIELDS} },
+      "stillsMobile": coalesce(
+        *[_type == "project" && language == $lang && slug.current == ^.slug.current][0].stillsMobile,
+        stillsMobile
+      )[defined(asset)]{ _key, ${IMAGE_FIELDS} }
+    }
+  }
+`);
+
+const TALENT_CARD_FIELDS = `
+  _id,
+  name,
+  "slug": slug.current,
+  "roles": roles[]->{ "title": ${translatedTitle("role")} }.title,
+  "portrait": select(defined(portrait.asset) => portrait, ${DEFAULT_COUNTERPART}.portrait){ ${IMAGE_FIELDS} }
+` as const;
+
+/** The Talent index: the roster in the editors' drag-and-drop order. */
+export const TALENT_QUERY = defineQuery(`
+  ${withFallback("talent", "")}${byRank("name")}{
+    ${TALENT_CARD_FIELDS}
+  }
+`);
+
+/**
+ * The people a visitor can ask about on the contact form: those who are available. `_id` is the default-language document, which is what a
+ * contact message references (and what projects credit); the name is the same in every language.
+ */
+export const TALENT_OPTIONS_QUERY = defineQuery(`
+  ${AVAILABLE_TALENT}${byRank("name")}{
+    "id": coalesce(${DEFAULT_COUNTERPART}._id, _id),
+    name,
+    "slug": slug.current
+  }
+`);
+
+/** The talent a contact message names, checked against who is on offer before it is stored. */
+export const TALENTS_BY_ID_QUERY = defineQuery(`
+  *[_type == "talent" && language == $fallbackLang && _id in $ids && available != false]{ _id, name }
+`);
+
+/** One person for their bio page. `talentId` is the default-language document that projects credit. */
+export const TALENT_PROFILE_QUERY = defineQuery(`
+  coalesce(
+    *[_type == "talent" && language == $lang && slug.current == $slug][0],
+    *[_type == "talent" && language == $fallbackLang && slug.current == $slug][0]
+  ){
+    ${TALENT_CARD_FIELDS},
+    "bio": coalesce(bio, ${DEFAULT_COUNTERPART}.bio),
+    "available": coalesce(${DEFAULT_COUNTERPART}.available, available) != false,
+    "talentId": coalesce(${DEFAULT_COUNTERPART}._id, _id)
+  }
+`);
+
+/** What a project slide needs: shared by the Our Work scroll and a talent's own scroll. */
+const PROJECT_SLIDE_FIELDS = `
+    _id,
+    title,
+    "slug": slug.current,
+    "typeSlug": type->slug.current,
+    "type": type->{ "title": ${translatedTitle("projectType")} }.title,
+    "year": coalesce(year, ${DEFAULT_COUNTERPART}.year),
+    "client": coalesce(client, ${DEFAULT_COUNTERPART}.client),
+    "vimeoUrl": coalesce(vimeoUrl, ${DEFAULT_COUNTERPART}.vimeoUrl),
+    "previewLoopUrl": coalesce(previewLoopUrl, ${DEFAULT_COUNTERPART}.previewLoopUrl),
+    "cover": select(defined(coverStill.asset) => coverStill, ${DEFAULT_COUNTERPART}.coverStill){ ${IMAGE_FIELDS} },
+    "coverMobile": select(defined(coverStillMobile.asset) => coverStillMobile, ${DEFAULT_COUNTERPART}.coverStillMobile){ ${IMAGE_FIELDS} }
+` as const;
+
+/** The projects a person is credited on, in the editors' drag-and-drop order, with what they did on each. */
+export const TALENT_PROJECTS_QUERY = defineQuery(`
+  ${withFallback("project", " && references($talentId)")}${byRank("title")}{
+    ${PROJECT_SLIDE_FIELDS},
+    "roles": credits[talent._ref == $talentId].role->{ "title": ${translatedTitle("role")} }.title
+  }
+`);
+
+/** Our Work: every project in the editors' drag-and-drop order, and the types that filter them. */
+export const WORK_QUERY = defineQuery(`{
+  "types": ${withFallback("projectType", "")}${byRank("title")}{
+    "slug": slug.current,
+    "title": coalesce(pluralTitle, title)
+  },
+  "projects": ${withFallback("project", "")}${byRank("title")}{
+    ${PROJECT_SLIDE_FIELDS}
+  }
+}`);
+
+/**
+ * One project for its own page. Credits are read-only in translations and the description and stills may not be
+ * translated yet, so each falls back to the default-language document's.
+ */
+export const PROJECT_QUERY = defineQuery(`
+  coalesce(
+    *[_type == "project" && language == $lang && slug.current == $slug][0],
+    *[_type == "project" && language == $fallbackLang && slug.current == $slug][0]
+  ){
+    ${PROJECT_SLIDE_FIELDS},
+    "description": coalesce(description, ${DEFAULT_COUNTERPART}.description),
+    "credits": coalesce(credits, ${DEFAULT_COUNTERPART}.credits)[]{
+      _key,
+      "role": role->{ "title": ${translatedTitle("role")} }.title,
+      "name": coalesce(talent->name, name),
+      "talentSlug": talent->slug.current
+    },
+    "stills": coalesce(stills, ${DEFAULT_COUNTERPART}.stills)[defined(asset)]{ _key, ${IMAGE_FIELDS} },
+    "stillsMobile": coalesce(stillsMobile, ${DEFAULT_COUNTERPART}.stillsMobile)[defined(asset)]{ _key, ${IMAGE_FIELDS} }
+  }
+`);
+
+/** Every project's title and slug in the editors' order, for "next project". */
+export const PROJECT_ORDER_QUERY = defineQuery(`
+  ${withFallback("project", "")}${byRank("title")}{
+    title,
+    "slug": slug.current
+  }
+`);
+
+/** The About page: slogan, gloss, manifesto and still from Site settings, each falling back to the default language's. */
+export const ABOUT_QUERY = defineQuery(`{
+  "cur": *[_type == "siteSettings" && language == $lang][0]{
+    _id, slogan, sloganGloss, manifesto, contactEmail, instagram,
+    "still": aboutStill{ ${IMAGE_FIELDS} }
+  },
+  "fb": *[_type == "siteSettings" && language == $fallbackLang][0]{
+    _id, slogan, sloganGloss, manifesto, contactEmail, instagram,
+    "still": aboutStill{ ${IMAGE_FIELDS} }
+  }
+}{
+  "_id": coalesce(cur._id, fb._id),
+  "slogan": coalesce(cur.slogan, fb.slogan),
+  "sloganGloss": coalesce(cur.sloganGloss, fb.sloganGloss),
+  "manifesto": coalesce(cur.manifesto, fb.manifesto),
+  "contactEmail": coalesce(cur.contactEmail, fb.contactEmail),
+  "instagram": coalesce(cur.instagram, fb.instagram),
+  "still": select(defined(cur.still.asset) => cur.still, fb.still)
 }`);

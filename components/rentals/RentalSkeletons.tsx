@@ -1,4 +1,5 @@
 import { Skeleton, SkeletonGroup } from "@/components/ui/Skeleton";
+import { cn } from "@/lib/cn";
 
 /** Same footprint as the catalogue: filter chips, then a grid of cards. */
 export function CatalogueSkeleton({ label }: { label: string }) {
@@ -6,7 +7,7 @@ export function CatalogueSkeleton({ label }: { label: string }) {
     <SkeletonGroup label={label}>
       <div className="mb-8 flex flex-wrap gap-2">
         {["w-12", "w-24", "w-20", "w-20", "w-32"].map((width, i) => (
-          <Skeleton key={i} className={`h-8 rounded-full ${width}`} />
+          <Skeleton key={i} className={cn("h-8 rounded-full", width)} />
         ))}
       </div>
       <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" aria-hidden>

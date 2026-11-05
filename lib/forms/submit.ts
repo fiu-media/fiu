@@ -1,51 +1,74 @@
 import "server-only";
+import { parseSubmission, report, type FormError, type SubmissionResult } from "@conform-to/react/future";
+import { coerceFormValue, formatResult } from "@conform-to/zod/v4/future";
 import { checkBotId } from "botid/server";
 import type { z } from "zod";
+import { env } from "@/env";
+import { HIDDEN_FIELDS } from "./schemas";
 import { toErrorCode, type FormState } from "./state";
 
-type Guarded<T> = { ok: true; data: T } | { ok: false; state: FormState };
+/** Errors a caller can add on top of the schema's: for the whole form, or for named fields. */
+type Errors = { formErrors?: string[]; fieldErrors?: Record<string, string[]> };
 
-/** Plain-text fields of a submission, returned to the form so it can repopulate. */
-function textValues(raw: Record<string, unknown>) {
-  const values: Record<string, string> = {};
-  for (const [key, value] of Object.entries(raw)) {
-    if (typeof value === "string" && key !== "website" && key !== "submissionId" && key !== "lang") values[key] = value;
-  }
-  return values;
-}
+type Guarded<T> =
+  | { ok: true; data: T; fail: (errors: Errors) => FormState; succeed: (extra?: { confirmation?: boolean }) => FormState }
+  | { ok: false; result: FormState };
 
-/** Read every text field of a FormData as a string (missing fields become ""), skipping React's `$ACTION_*` plumbing. */
-export function formDataToRecord(formData: FormData) {
-  const raw: Record<string, string> = {};
-  for (const [key, value] of formData.entries()) {
-    if (typeof value === "string" && !key.startsWith("$ACTION")) raw[key] = value;
+/**
+ * Zod's own wording (e.g. "Invalid input: expected string") has no place on the wire: only our error
+ * codes. A problem with a field the visitor can't see becomes a problem with the whole submission.
+ */
+function withCodes(error: FormError<string[]>): FormError<string[]> {
+  const formErrors = new Set(error.formErrors?.map(toErrorCode));
+  const fieldErrors: FormError<string[]>["fieldErrors"] = {};
+  for (const [name, codes] of Object.entries(error.fieldErrors)) {
+    if (!HIDDEN_FIELDS.includes(name)) fieldErrors[name] = codes?.map(toErrorCode) ?? null;
+    else if (codes?.length) formErrors.add("rejected");
   }
-  return raw;
+  return { formErrors: formErrors.size > 0 ? [...formErrors] : null, fieldErrors };
 }
 
 /**
  * The shared front door for public forms: bots and filled honeypots are rejected without
- * touching Sanity or Resend; everything else is validated and returned as typed data.
+ * touching Sanity or Resend; everything else is validated and returned as typed data. `fail`
+ * answers with the submitted values, so a form-level or server-only failure repopulates the form.
  */
-export async function guardSubmission<S extends z.ZodType>(
-  schema: S,
-  raw: Record<string, unknown>,
-): Promise<Guarded<z.output<S>>> {
-  const reject: Guarded<never> = { ok: false, state: { status: "error", error: "rejected", values: textValues(raw) } };
+export async function guardSubmission<S extends z.ZodType>(schema: S, formData: FormData): Promise<Guarded<z.output<S>>> {
+  const submission = parseSubmission(formData, { skipEntry: (name) => name.startsWith("$ACTION") });
+  // Read before any reply: hiding a field clears it from the submission itself.
+  const honeypot = submission.payload.website;
+  // Replies echo every submitted field, honeypot included: Conform keeps a server error only while the
+  // form still holds what the server saw, so leaving a field out would let the first blur wipe the error.
+  const reply = (
+    error: FormError<string[]> | null,
+    options: { reset?: boolean; hideFields?: string[] } = {},
+  ): SubmissionResult<string[]> => report(submission, { error, ...options });
+  const fail = (errors: Errors): FormState =>
+    reply({ formErrors: errors.formErrors ?? null, fieldErrors: errors.fieldErrors ?? {} });
+  // A filled honeypot is the one thing never echoed back.
+  const rejected = () =>
+    ({
+      ok: false,
+      result: reply({ formErrors: ["rejected"], fieldErrors: {} }, { hideFields: ["website"] }),
+    }) as const;
 
-  const verification = await checkBotId();
-  if (verification.isBot) return reject;
-  if (typeof raw.website === "string" && raw.website.trim() !== "") return reject;
+  // E2E_BYPASS_BOTID is set only by the Playwright web server: a production build can't reach BotID
+  // without Vercel's OIDC token, so the e2e run treats every visitor as human.
+  const verification = await checkBotId(
+    env.E2E_BYPASS_BOTID === "1" ? { developmentOptions: { isDevelopment: true } } : undefined,
+  );
+  if (verification.isBot) return rejected();
+  if (typeof honeypot === "string" && honeypot.trim() !== "") return rejected();
 
-  const parsed = schema.safeParse(raw);
-  if (parsed.success) return { ok: true, data: parsed.data };
-
-  const fieldErrors: NonNullable<FormState["fieldErrors"]> = {};
-  for (const issue of parsed.error.issues) {
-    const key = String(issue.path[0] ?? "");
-    if (key && !(key in fieldErrors)) fieldErrors[key] = toErrorCode(issue.message);
+  const parsed = coerceFormValue(schema).safeParse(submission.payload);
+  if (!parsed.success) {
+    const error = formatResult(parsed);
+    return { ok: false, result: reply(error && withCodes(error)) };
   }
-  // Anything without a field to hang it on (e.g. a malformed hidden input) is a generic failure.
-  const error = Object.keys(fieldErrors).length === 0 ? "invalid" : undefined;
-  return { ok: false, state: { status: "error", fieldErrors, error, values: textValues(raw) } };
+  return {
+    ok: true,
+    data: parsed.data,
+    fail,
+    succeed: (extra) => ({ ...reply(null, { reset: true }), ...extra, success: true }),
+  };
 }

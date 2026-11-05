@@ -20,12 +20,7 @@ export function SchemeSwitcher() {
   return (
     <div role="group" aria-label="Colour scheme" className="flex gap-1.5">
       {options.map((option) => (
-        <GlassPillButton
-          key={option}
-          size="sm"
-          aria-pressed={scheme === option}
-          onClick={() => setScheme(option)}
-        >
+        <GlassPillButton key={option} size="sm" aria-pressed={scheme === option} onClick={() => setScheme(option)}>
           {option[0].toUpperCase() + option.slice(1)}
         </GlassPillButton>
       ))}

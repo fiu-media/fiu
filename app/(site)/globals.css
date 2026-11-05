@@ -4,8 +4,10 @@
  * Surfaces
  * --------
  * Pages opt into a surface on their wrapper:
- *   data-surface="cinematic"  always dark (Home, About, Work, Talent)
- *   data-surface="adaptive"   follows the OS light/dark setting (Rentals, Contact, forms)
+ *   data-surface="cinematic"  Home, About, Work, Talent
+ *   data-surface="adaptive"   Rentals, Contact, forms
+ * The whole site is dark whatever the OS setting; the light-dark() tokens remain so a surface can be pinned to light
+ * (see data-force-scheme below).
  * Tokens use light-dark(), so components adapt without any JS or flash.
  *
  * Two Lightning CSS constraints (Tailwind compiles light-dark() down to
@@ -17,7 +19,7 @@
  */
 @layer base {
   :root {
-    color-scheme: light dark;
+    color-scheme: dark;
   }
 
   [data-surface="cinematic"] {
@@ -25,10 +27,10 @@
   }
 
   [data-surface="adaptive"] {
-    color-scheme: light dark;
+    color-scheme: dark;
   }
 
-  /* Pin the adaptive surfaces to one scheme (future site toggle). */
+  /* Pin the adaptive surfaces to one scheme (the /dev scheme switcher; a future site toggle). */
   :root[data-force-scheme="light"],
   :root[data-force-scheme="light"] [data-surface="adaptive"] {
     color-scheme: light;
@@ -49,7 +51,10 @@
     --fg: light-dark(#151316, #f2eee8);
     --fg-muted: light-dark(#5f5a63, #a39da8);
     --line: light-dark(rgb(21 19 22 / 0.12), rgb(255 255 255 / 0.12));
+    --skeleton: light-dark(rgb(21 19 22 / 0.1), #24222a);
     --accent: light-dark(#a3122a, #ff5a6e);
+    /* Text on an accent fill. The dark accent is too light for white text to pass AA, so it takes ink. */
+    --on-accent: light-dark(#ffffff, #0c0b0d);
     --focus: light-dark(#1d4ed8, #8ab4ff);
 
     /*
@@ -69,18 +74,47 @@
   }
 }
 
+/*
+ * Pages with a FullBleedScroll snap the document to its slides (one project per screen). Navigating away keeps the
+ * previous page mounted but hidden with an inline display:none, and its slides must not keep snapping the next page.
+ */
+html:has([data-snap="mandatory"]:not([style*="display: none"] *)) {
+  scroll-snap-type: y mandatory;
+}
+
 @theme inline {
   --color-bg: var(--bg);
   --color-bg-raised: var(--bg-raised);
   --color-fg: var(--fg);
   --color-fg-muted: var(--fg-muted);
   --color-line: var(--line);
+  --color-skeleton: var(--skeleton);
   --color-accent: var(--accent);
+  --color-on-accent: var(--on-accent);
   --color-paper: var(--paper);
   --color-ink: var(--ink);
 
   --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-fraunces), ui-serif, Georgia, serif;
+}
+
+/* The canvas behind the notch, the home indicator and overscroll is the root background, so it
+   must match the surface: cinematic pages are always dark, whatever the OS scheme. */
+html {
+  background: var(--bg);
+}
+
+/* Home on mobile is a taller-than-screen document pinned in the middle (HomeScrollLock); swipes must not move it. */
+@media (max-width: 767px) {
+  html[data-home-lock],
+  html[data-home-lock] body {
+    touch-action: none;
+    overscroll-behavior: none;
+  }
+}
+
+html:has([data-surface="cinematic"]) {
+  background: var(--ink);
 }
 
 body {
@@ -96,6 +130,36 @@ body {
   font-variation-settings:
     "SOFT" 100,
     "opsz" 144;
+}
+
+/* Small spaced capitals above a heading: a brand, a person's roles, "404". */
+@utility eyebrow {
+  @apply text-xs font-medium tracking-[0.14em] text-fg-muted uppercase;
+}
+
+/* A link that stays out of the way until it is hovered: back links, "View details". */
+@utility link-quiet {
+  color: var(--fg-muted);
+  text-underline-offset: 4px;
+  @media (hover: hover) {
+    &:hover {
+      color: var(--fg);
+      text-decoration-line: underline;
+    }
+  }
+}
+
+/* A link inside content (an email address, an error summary): always underlined, the line firming up on hover. */
+@utility link-inline {
+  text-decoration-line: underline;
+  text-decoration-color: color-mix(in oklab, currentColor 40%, transparent);
+  text-underline-offset: 4px;
+  transition: text-decoration-color 150ms ease;
+  @media (hover: hover) {
+    &:hover {
+      text-decoration-color: currentColor;
+    }
+  }
 }
 
 :focus-visible {
@@ -140,10 +204,8 @@ body {
 
   :root[data-glass-refract] .glass {
     --glass-blur: 0.5px;
-    -webkit-backdrop-filter: var(--lens,) blur(var(--glass-blur)) saturate(var(--glass-sat))
-      brightness(var(--glass-dim));
-    backdrop-filter: var(--lens,) blur(var(--glass-blur)) saturate(var(--glass-sat))
-      brightness(var(--glass-dim));
+    -webkit-backdrop-filter: var(--lens,) blur(var(--glass-blur)) saturate(var(--glass-sat)) brightness(var(--glass-dim));
+    backdrop-filter: var(--lens,) blur(var(--glass-blur)) saturate(var(--glass-sat)) brightness(var(--glass-dim));
   }
 
   /* Specular glint that follows the pointer (position set by useLiquidGlass). */
@@ -153,11 +215,7 @@ body {
     inset: 0;
     border-radius: inherit;
     pointer-events: none;
-    background: radial-gradient(
-      90px circle at var(--mx, 50%) var(--my, -20%),
-      rgb(255 255 255 / 0.14),
-      transparent 70%
-    );
+    background: radial-gradient(90px circle at var(--mx, 50%) var(--my, -20%), rgb(255 255 255 / 0.14), transparent 70%);
     mix-blend-mode: plus-lighter;
     opacity: 0;
     transition: opacity 300ms ease;
@@ -192,8 +250,7 @@ body {
    */
   .glass-piece {
     --press: 1;
-    transform: perspective(600px) rotateX(calc(var(--ty, 0) * -4deg)) rotateY(calc(var(--tx, 0) * 6deg))
-      scale(var(--press));
+    transform: perspective(600px) rotateX(calc(var(--ty, 0) * -4deg)) rotateY(calc(var(--tx, 0) * 6deg)) scale(var(--press));
     transition:
       transform 220ms var(--settle),
       background-color 250ms ease,
@@ -204,8 +261,10 @@ body {
     --press: 0.97;
   }
 
-  /* Current page: a small dot under the label. The material does the rest. */
-  .glass-piece[aria-current="page"]::before {
+  /* Current page, or the chosen filter: a small dot under the label. The material does the rest. Filters that are
+     toggles (`data-filter`) get it too, so they match the ones that are links; other pressed pills (Add to quote) don't. */
+  .glass-piece[aria-current="page"]::before,
+  .glass-piece[data-filter][aria-pressed="true"]::before {
     content: "";
     position: absolute;
     left: 50%;
@@ -254,4 +313,164 @@ body {
     backdrop-filter: none;
     background: light-dark(rgb(255 255 255 / 0.92), rgb(24 22 27 / 0.92));
   }
+}
+
+/* The 404's two lights. Each wanders a closed loop, not a line, and they run on different cycle lengths
+   (see NotFoundPage), so they never line up the same way twice. The first and last stops match so the loop is seamless. */
+@keyframes light-drift {
+  0%,
+  100% {
+    transform: translate3d(-40%, -10%, 0) scale(0.9);
+  }
+  25% {
+    transform: translate3d(5%, 22%, 0) scale(1.1);
+  }
+  50% {
+    transform: translate3d(45%, -4%, 0) scale(0.95);
+  }
+  75% {
+    transform: translate3d(8%, -24%, 0) scale(1.15);
+  }
+}
+
+@keyframes light-drift-b {
+  0%,
+  100% {
+    transform: translate3d(35%, 15%, 0) scale(1);
+  }
+  30% {
+    transform: translate3d(-25%, -18%, 0) scale(1.2);
+  }
+  60% {
+    transform: translate3d(-45%, 20%, 0) scale(0.85);
+  }
+  80% {
+    transform: translate3d(10%, 28%, 0) scale(1.05);
+  }
+}
+
+/*
+ * Moving-light experiment (#51, the logo playground's Moving light section). A slow band of light
+ * crosses the glass pieces: a faint sheen over the face and a brighter catch along the rim. One
+ * animation on the stage drives --sweep-x / --sweep-y (0..1, 0.5 = centre) and every .glass below
+ * it inherits them. The playground sets the period and amplitude, and aligns the animation's clock
+ * with the WebGL light (see useSweepState).
+ */
+@property --sweep-x {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0.5;
+}
+
+@property --sweep-y {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0.5;
+}
+
+@keyframes sweep-x {
+  to {
+    --sweep-x: 1;
+  }
+}
+
+@keyframes sweep-y {
+  to {
+    --sweep-y: 1;
+  }
+}
+
+@layer components {
+  /* Alternating 0 → 1 over half a period with a sine ease, so it reads as one smooth oscillation. */
+  .sweep-stage[data-sweep-axis="x"] {
+    animation: sweep-x calc(var(--sweep-period) / 2) cubic-bezier(0.37, 0, 0.63, 1) infinite alternate;
+  }
+  .sweep-stage[data-sweep-axis="y"] {
+    animation: sweep-y calc(var(--sweep-period) / 2) cubic-bezier(0.37, 0, 0.63, 1) infinite alternate;
+  }
+  .sweep-stage[data-sweep-axis="orbit"] {
+    animation:
+      sweep-x calc(var(--sweep-period) / 2) cubic-bezier(0.37, 0, 0.63, 1) infinite alternate,
+      sweep-y calc(var(--sweep-period) / 2) cubic-bezier(0.37, 0, 0.63, 1) infinite alternate;
+  }
+  .sweep-stage[data-sweep-paused] {
+    animation-play-state: paused;
+  }
+
+  [data-sweep-axis] .glass {
+    /* Band centre as a share of the piece, pulled toward the middle by the amplitude. */
+    --sx: calc((0.5 + (var(--sweep-x) - 0.5) * var(--sweep-amp)) * 160% - 30%);
+    --sy: calc((0.5 + (var(--sweep-y) - 0.5) * var(--sweep-amp)) * 160% - 30%);
+    --sheen: rgb(255 255 255 / 0.12);
+    --catch: rgb(255 255 255 / 0.85);
+  }
+
+  [data-sweep-axis] .glass,
+  [data-sweep-axis] .glass::before {
+    background-image: linear-gradient(
+      100deg,
+      transparent calc(var(--sx) - 22%),
+      var(--band-color, var(--sheen)) var(--sx),
+      transparent calc(var(--sx) + 22%)
+    );
+  }
+  [data-sweep-axis="y"] .glass,
+  [data-sweep-axis="y"] .glass::before {
+    background-image: linear-gradient(
+      172deg,
+      transparent calc(var(--sy) - 22%),
+      var(--band-color, var(--sheen)) var(--sy),
+      transparent calc(var(--sy) + 22%)
+    );
+  }
+  [data-sweep-axis="orbit"] .glass,
+  [data-sweep-axis="orbit"] .glass::before {
+    background-image: radial-gradient(70% 150% at var(--sx) var(--sy), var(--band-color, var(--sheen)), transparent 70%);
+  }
+
+  /* The rim catch: the same band, masked down to a 2px ring so only the edge lights up. */
+  [data-sweep-axis] .glass::before {
+    --band-color: var(--catch);
+    content: "";
+    position: absolute;
+    inset: 0;
+    padding: 2px;
+    border-radius: inherit;
+    pointer-events: none;
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box exclude,
+      linear-gradient(#000 0 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sweep-stage {
+    animation: none !important;
+  }
+  [data-sweep-axis] .glass {
+    --sx: 50%;
+    --sy: 50%;
+  }
+}
+
+/*
+ * Fields made of several controls (the phone number, the talent combobox): one ring around the whole field. The global :focus-visible outline would otherwise also
+ * box the inner input (it is unlayered, so Tailwind's outline utilities can't override it).
+ */
+.composite-field:focus-within {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+.composite-field input:focus-visible,
+.composite-field select:focus-visible {
+  outline: none;
+}
+/* The country list is the browser's own; keep it in the site's colours. */
+.composite-field select {
+  color: var(--fg);
+  background: var(--bg-raised);
 }

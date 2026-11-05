@@ -1,14 +1,16 @@
 "use client";
 
+import { X } from "lucide-react";
 import Link from "next/link";
 import { useEffect } from "react";
 import { format } from "@/lib/i18n/format";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { useQuoteBasket } from "@/lib/quote-basket";
 import { useCatalogue } from "./CatalogueContext";
+import { QuantityField } from "./QuantityField";
 import { RentalImageView } from "./RentalImageView";
 
-/** Basket lines with quantity steppers; shared by the drawer and the quote form. */
+/** Basket lines with quantity fields; shared by the drawer and the quote form. */
 export function QuoteLines({ dict, onNavigate }: { dict: Dictionary["basket"]; onNavigate?: () => void }) {
   const { lines, setQty, remove } = useQuoteBasket();
   const catalogue = useCatalogue();
@@ -29,12 +31,7 @@ export function QuoteLines({ dict, onNavigate }: { dict: Dictionary["basket"]; o
         const max = item?.max ?? 99;
         return (
           <li key={itemId} className="flex items-center gap-3 py-3">
-            <RentalImageView
-              image={item?.image ?? null}
-              placeholder=""
-              sizes="56px"
-              className="size-14 shrink-0 rounded-xl"
-            />
+            <RentalImageView image={item?.image ?? null} placeholder="" sizes="56px" className="size-14 shrink-0 rounded-xl" />
             <div className="min-w-0 flex-1">
               {item ? (
                 <Link
@@ -49,52 +46,25 @@ export function QuoteLines({ dict, onNavigate }: { dict: Dictionary["basket"]; o
               )}
               {item?.brand && <p className="truncate text-xs text-fg-muted">{item.brand}</p>}
             </div>
-            <div role="group" aria-label={format(dict.quantityOf, { name })} className="flex items-center gap-1">
-              <StepButton label={format(dict.decrease, { name })} onClick={() => setQty(itemId, qty - 1, max)}>
-                −
-              </StepButton>
-              <output aria-live="polite" className="w-7 text-center text-sm tabular-nums">
-                {qty}
-              </output>
-              <StepButton label={format(dict.increase, { name })} disabled={qty >= max} onClick={() => setQty(itemId, qty + 1, max)}>
-                +
-              </StepButton>
-            </div>
+            <QuantityField
+              value={qty}
+              max={max}
+              onChange={(next) => setQty(itemId, next, max)}
+              label={format(dict.quantityOf, { name })}
+              decreaseLabel={format(dict.decrease, { name })}
+              increaseLabel={format(dict.increase, { name })}
+            />
             <button
               type="button"
               onClick={() => remove(itemId)}
               aria-label={format(dict.remove, { name })}
               className="grid size-8 cursor-pointer place-items-center rounded-full text-fg-muted hover:bg-line hover:text-fg"
             >
-              <span aria-hidden>×</span>
+              <X aria-hidden className="size-4" />
             </button>
           </li>
         );
       })}
     </ul>
-  );
-}
-
-function StepButton({
-  label,
-  onClick,
-  disabled,
-  children,
-}: {
-  label: string;
-  onClick: () => void;
-  disabled?: boolean;
-  children: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      aria-label={label}
-      className="grid size-8 cursor-pointer place-items-center rounded-full border border-line text-base hover:bg-line disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
-    >
-      <span aria-hidden>{children}</span>
-    </button>
   );
 }

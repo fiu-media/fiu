@@ -1,7 +1,9 @@
 "use client";
 
+import { Toggle } from "@base-ui/react/toggle";
+import { ToggleGroup } from "@base-ui/react/toggle-group";
 import Link from "next/link";
-import { useState } from "react";
+import { parseAsString, useQueryState } from "nuqs";
 import { GlassPillButton } from "@/components/ui/Glass";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { localizedPath, type Locale } from "@/lib/i18n/config";
@@ -15,10 +17,12 @@ export type CatalogueCard = {
   slug: string;
   brand: string | null;
   summary: string | null;
-  keyFeatures: string[];
   categoryId: string | null;
   image: RentalImage | null;
 };
+
+/** The "All" pill's value: Sanity ids can't contain `*`, so no category can claim it. */
+const ALL = "*";
 
 export function RentalCatalogue({
   lang,
@@ -31,24 +35,35 @@ export function RentalCatalogue({
   items: CatalogueCard[];
   dict: Dictionary["rentals"];
 }) {
-  const [category, setCategory] = useState<string | null>(null);
-  const visible = category ? items.filter((i) => i.categoryId === category) : items;
   // Only offer categories that actually have kit in them.
   const usable = categories.filter((c) => items.some((i) => i.categoryId === c.id));
+  // `push` so Back/Forward step through filters; an unknown ?category= falls back to everything.
+  const [requested, setRequested] = useQueryState(
+    "category",
+    parseAsString.withOptions({ history: "push", clearOnDefault: true }),
+  );
+  const category = usable.find((c) => c.id === requested)?.id ?? null;
+  const visible = category ? items.filter((i) => i.categoryId === category) : items;
 
   return (
     <div>
       {usable.length > 0 && (
-        <div role="group" aria-label={dict.filterLabel} className="mb-8 flex flex-wrap gap-2">
-          <GlassPillButton size="sm" aria-pressed={category === null} onClick={() => setCategory(null)}>
+        // One pill is always pressed: pressing the current one again would leave nothing chosen, so it is ignored.
+        <ToggleGroup
+          aria-label={dict.filterLabel}
+          value={[category ?? ALL]}
+          onValueChange={([next]) => next !== undefined && setRequested(next === ALL ? null : next)}
+          className="mb-8 flex flex-wrap gap-2"
+        >
+          <Toggle value={ALL} data-filter="" render={<GlassPillButton size="sm" />}>
             {dict.allCategories}
-          </GlassPillButton>
+          </Toggle>
           {usable.map((c) => (
-            <GlassPillButton key={c.id} size="sm" aria-pressed={category === c.id} onClick={() => setCategory(c.id)}>
+            <Toggle key={c.id} value={c.id} data-filter="" render={<GlassPillButton size="sm" />}>
               {c.title}
-            </GlassPillButton>
+            </Toggle>
           ))}
-        </div>
+        </ToggleGroup>
       )}
 
       {items.length === 0 ? (
@@ -82,24 +97,17 @@ function ItemCard({ lang, item, dict }: { lang: Locale; item: CatalogueCard; dic
       </Link>
       <div className="flex flex-1 flex-col gap-3 p-5">
         <div>
-          {item.brand && <p className="text-xs font-medium tracking-wide text-fg-muted uppercase">{item.brand}</p>}
+          {item.brand && <p className="eyebrow">{item.brand}</p>}
           <h3 className="font-display text-2xl leading-tight">
-            <Link href={href} className="hover:underline">
+            <Link href={href} className="underline-offset-4 hover:underline">
               {item.name}
             </Link>
           </h3>
         </div>
         {item.summary && <p className="text-sm text-fg-muted">{item.summary}</p>}
-        {item.keyFeatures.length > 0 && (
-          <ul className="list-disc space-y-1 pl-5 text-sm marker:text-fg-muted">
-            {item.keyFeatures.slice(0, 3).map((feature) => (
-              <li key={feature}>{feature}</li>
-            ))}
-          </ul>
-        )}
         <div className="mt-auto flex flex-wrap items-center gap-2 pt-2">
           <AddToQuote itemId={item.id} itemName={item.name} dict={dict} size="sm" />
-          <Link href={href} className="px-2 text-sm text-fg-muted underline-offset-4 hover:text-fg hover:underline">
+          <Link href={href} className="px-2 text-sm link-quiet">
             {dict.viewDetails}
           </Link>
         </div>
