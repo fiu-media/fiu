@@ -1,6 +1,6 @@
 import { orderRankField, orderRankOrdering } from "@sanity/orderable-document-list";
 import { defineArrayMember, defineField, defineType } from "sanity";
-import { imageArrayMember, languageField, readOnlyInTranslation, slugField } from "./fields";
+import { defaultLanguageReference, imageArrayMember, languageField, readOnlyInTranslation, slugField } from "./fields";
 
 // Rentals are quote-only, so there are deliberately no price fields.
 export const rentalCategory = defineType({
@@ -23,15 +23,15 @@ export const rentalItem = defineType({
   type: "document",
   fields: [
     languageField,
-    defineField({ name: "name", type: "string", validation: (rule) => rule.required() }),
+    defineField({ name: "name", type: "string", readOnly: readOnlyInTranslation, validation: (rule) => rule.required() }),
     slugField("name"),
     defineField({
       name: "category",
-      type: "reference",
-      to: [{ type: "rentalCategory" }],
+      ...defaultLanguageReference("rentalCategory"),
+      readOnly: readOnlyInTranslation,
       validation: (rule) => rule.required(),
     }),
-    defineField({ name: "brand", type: "string" }),
+    defineField({ name: "brand", type: "string", readOnly: readOnlyInTranslation }),
     defineField({ name: "images", type: "array", of: [imageArrayMember()] }),
     defineField({ name: "summary", type: "text", rows: 3 }),
     defineField({

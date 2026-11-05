@@ -22,6 +22,12 @@ const concepts: Concept[] = [
     note: "Five navbar concepts (capsule, type only, logo as the menu, floating dock, side rail) on dark and light surfaces, at desktop and phone widths.",
   },
   {
+    href: "/dev/language-switcher",
+    title: "Language switcher options",
+    kind: "Sign-off",
+    note: "Five looks for the English / Gaeilge switcher (both names, set like the links, the other language only, capsule, hairline codes) in the side rail and the phone menu. Hairline codes (E) is the one in use.",
+  },
+  {
     href: "/dev/grids",
     title: "Grid options",
     kind: "Sign-off",

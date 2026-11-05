@@ -12,6 +12,7 @@ export const en = {
     home: "Fiú Media, home",
     menu: "Menu",
     closeMenu: "Close menu",
+    language: "Language",
     about: "About Us",
     work: "Our Work",
     talent: "Talent",

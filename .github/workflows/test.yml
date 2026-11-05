@@ -26,10 +26,12 @@ jobs:
     runs-on: ubuntu-latest
     # Fork and Dependabot PRs don't get repository secrets, so there is no Sanity token to test with.
     if: github.actor != 'dependabot[bot]' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
-    # The suite creates its own content in (and removes it from) the shared `dev` dataset, so only one run at a time.
-    concurrency:
-      group: e2e-dev-dataset
-      cancel-in-progress: false
+    timeout-minutes: 60
+    # The mutex step keeps its lock on a branch, so it needs to push.
+    permissions:
+      contents: write
+      actions: read
+      packages: read
     env:
       NEXT_PUBLIC_SANITY_PROJECT_ID: ${{ vars.NEXT_PUBLIC_SANITY_PROJECT_ID }}
       # Never anything but `dev`: the tests submit forms, and the teardown deletes what they created.
@@ -55,6 +57,13 @@ jobs:
       - name: Install system libraries
         run: npx playwright install-deps chromium
         if: steps.playwright-cache.outputs.cache-hit == 'true'
+      # The suite creates its own content in (and removes it from) the shared `dev` dataset, so only one run at a time.
+      # A `concurrency` group can't do this: it keeps one waiting run and cancels the rest, which failed the checks of
+      # PRs that landed together. This lock makes every run wait its turn, and releases it when the job ends.
+      - name: Wait for the dev dataset
+        uses: ben-z/gh-action-mutex@1ebad517141198e08d47cf72f3c0975316620a65 # v1.0.0-alpha.10
+        with:
+          branch: gh-mutex-e2e-dev-dataset
       # Playwright's web server command seeds the test content, builds the site (prebuild runs typegen) and starts it.
       - run: npm run test:e2e
       - uses: actions/upload-artifact@v7
