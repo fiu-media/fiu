@@ -13,14 +13,14 @@ import { getPageText } from "@/sanity/lib/pageText";
 import { RENTALS_QUERY } from "@/sanity/lib/queries";
 import { publishedId, toRentalImage } from "@/sanity/lib/rentals";
 
-export async function generateMetadata({ params }: PageProps<"/[lang]/rentals">): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ lang: string }> }): Promise<Metadata> {
   const { lang } = await params;
   if (!isLocale(lang)) return {};
   const [{ rentals }, text] = await Promise.all([getDictionary(lang), getPageText(lang)]);
   return { title: rentals.title, description: text.rentalsIntro ?? undefined, alternates: languageAlternates(lang, "/rentals") };
 }
 
-export default async function RentalsPage({ params }: PageProps<"/[lang]/rentals">) {
+export default async function RentalsPage({ params }: { params: Promise<{ lang: string }> }) {
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
   const [{ rentals, common }, text] = await Promise.all([getDictionary(lang), getPageText(lang)]);

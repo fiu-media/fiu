@@ -9,7 +9,7 @@ import { clickUntil } from "./helpers";
  * Axe's automated rules catch roughly a third of WCAG problems, so a pass is a floor, not a
  * verdict (manual review lives in #11). Any violation fails the test.
  */
-const PAGES = ["/about", "/work", "/talent", "/rentals", "/rentals/quote", "/contact", "/contact?type=Talent"];
+const PAGES = ["/about", "/work", "/talent", "/contact", "/contact?type=Talent"];
 
 async function audit(page: Page, path: string, open?: (page: Page) => Promise<void>) {
   await page.goto(path);
@@ -39,7 +39,8 @@ test.describe("home", () => {
   });
 });
 
-test("axe: a rental item page", async ({ page }) => {
+// Rentals is hidden; see playwright.config.ts.
+test.skip("axe: a rental item page", async ({ page }) => {
   await audit(page, `/rentals/${rentalItems.multi.slug}`);
 });
 
@@ -59,7 +60,7 @@ test.describe("with a dialog open", () => {
     });
   });
 
-  test("axe: the quote drawer", async ({ page }) => {
+  test.skip("axe: the quote drawer", async ({ page }) => {
     await audit(page, "/rentals", async (page) => {
       const added = page.getByRole("button", { name: format(en.rentals.inQuote, { qty: 1 }) }).first();
       await clickUntil(page.getByRole("button", { name: en.rentals.addToQuote }).first(), () =>

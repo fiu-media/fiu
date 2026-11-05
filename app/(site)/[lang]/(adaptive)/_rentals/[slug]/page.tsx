@@ -26,7 +26,7 @@ async function getItem(lang: Locale, slug: string) {
   return data;
 }
 
-export async function generateMetadata({ params }: PageProps<"/[lang]/rentals/[slug]">): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ lang: string; slug: string }> }): Promise<Metadata> {
   const { lang, slug } = await params;
   if (!isLocale(lang)) return {};
   const item = await getItem(lang, slug);
@@ -38,7 +38,7 @@ export async function generateMetadata({ params }: PageProps<"/[lang]/rentals/[s
   };
 }
 
-export default function RentalItemPage({ params }: PageProps<"/[lang]/rentals/[slug]">) {
+export default function RentalItemPage({ params }: { params: Promise<{ lang: string; slug: string }> }) {
   // Slugs are only known at runtime, so the item streams in behind a Suspense boundary.
   return (
     <main className={cn("mx-auto max-w-6xl pb-32", pageGutter)}>
