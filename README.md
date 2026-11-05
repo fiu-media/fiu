@@ -24,6 +24,15 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Studio
+
+The Studio is hosted by Sanity at https://fiu.sanity.studio (it opens inside the Sanity dashboard), not in this app. It auto-updates its Sanity packages (`deployment.autoUpdates` in `sanity.cli.ts`), but our schemas, structure and plugins only change when it is deployed: `.github/workflows/deploy-studio.yml` does that on every merge to `main` that touches `sanity/`, using the `SANITY_AUTH_TOKEN` secret (a project token with the `deploy-studio` role). To deploy by hand: `npx sanity deploy`.
+
+- It is built by Sanity's tooling, so it reads `sanity/studio-env.ts` (`SANITY_STUDIO_*` variables) rather than `@/env`. Keep `next/*`, `server-only` and `@/` imports out of everything `sanity.config.ts` pulls in.
+- Presentation previews the live site (`previewOrigin` in `sanity/studio-env.ts`). The site's draft-mode route sets partitioned cookies, so the preview works inside the Studio's frame.
+- Sign in with Google, GitHub or email. The Vercel sign-in is hidden: it goes through the integration's SSO and ends on sanity.io instead of the Studio.
+- `sanity dev` runs it locally; add `http://localhost:3333` to the project's CORS origins if it isn't there.
+
 ## Sanity types
 
 The types of Sanity query results are generated from the schema and the `defineQuery` queries in `sanity/lib/queries.ts`. `sanity.types.ts` and `sanity/extract.json` are not committed: `npm run typegen` creates them, and `npm run setup`, `predev`, `prebuild` and `pretypecheck` run it automatically (so Vercel builds and CI generate them too). It needs `NEXT_PUBLIC_SANITY_PROJECT_ID` and `NEXT_PUBLIC_SANITY_DATASET` (any values will do), which the CLI reads from `.env.local`.
