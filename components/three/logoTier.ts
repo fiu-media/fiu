@@ -1,3 +1,7 @@
+import { z } from "zod";
+import { createJSONStorage, persist } from "zustand/middleware";
+import { createStore } from "zustand/vanilla";
+import { safeStorage } from "@/lib/safe-storage";
 import type { LogoGlassParams } from "./logoConfig";
 
 /**
@@ -122,7 +126,7 @@ export function probeVerdict(frameMs: readonly number[], tier: LogoTier): { next
 // and it is clear-cut. Which live tier a device gets is close-run on capable hardware (one cold load
 // can read a little slow), so the probe decides that afresh on every visit, behind the splash.
 // Bump the version whenever the tiers change, so an old verdict doesn't stick.
-const STORAGE_KEY = "fiu:logo-tier:v1";
+const STORAGE_KEY = "fiu:logo-tier:v2";
 export const STORED_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const DECISIONS: readonly LogoDecision[] = [...TIERS, "static"];
 
@@ -130,39 +134,33 @@ function isDecision(value: unknown): value is LogoDecision {
   return DECISIONS.includes(value as LogoDecision);
 }
 
-/** Whether a stored entry says this device was too slow, within the TTL. */
-export function parseRememberedTooSlow(raw: string | null, now: number): boolean {
-  if (!raw) return false;
-  try {
-    const { decision, at } = JSON.parse(raw) as { decision?: unknown; at?: unknown };
-    return decision === "static" && typeof at === "number" && at <= now && now - at <= STORED_TTL_MS;
-  } catch {
-    return false;
-  }
+/** When this device was found too slow, as stored: anything malformed reads as no verdict. */
+export const tooSlowSchema = z.number().nullable().catch(null);
+
+/** Whether a verdict from `at` still stands at `now`. */
+export function isTooSlowFresh(at: number | null, now: number): boolean {
+  return at !== null && at <= now && now - at <= STORED_TTL_MS;
 }
 
-export function formatRememberedTooSlow(now: number) {
-  return JSON.stringify({ decision: "static", at: now });
-}
+// Read from storage when the module loads, which is synchronous; the server has no storage, so there it stays null.
+const tooSlowStore = createStore<{ at: number | null }>()(
+  persist(() => ({ at: null as number | null }), {
+    name: STORAGE_KEY,
+    version: 1,
+    storage: createJSONStorage(() => safeStorage),
+    merge: (persisted, current) => ({
+      ...current,
+      at: tooSlowSchema.parse((persisted as { at?: unknown } | undefined)?.at),
+    }),
+  }),
+);
 
 let cached: LogoDecision | undefined;
 
 /** The glass was too slow here: show the SVG for the rest of this page load (a remounted hero too) and for a week after. */
 export function rememberTooSlow() {
   cached = "static";
-  try {
-    localStorage.setItem(STORAGE_KEY, formatRememberedTooSlow(Date.now()));
-  } catch {
-    // Private mode or storage disabled: the probe just runs again next time.
-  }
-}
-
-function readRememberedTooSlow(): boolean {
-  try {
-    return parseRememberedTooSlow(localStorage.getItem(STORAGE_KEY), Date.now());
-  } catch {
-    return false;
-  }
+  tooSlowStore.setState({ at: Date.now() });
 }
 
 function readDeviceInfo(): DeviceInfo {
@@ -199,7 +197,11 @@ function readDeviceInfo(): DeviceInfo {
 export function decideLogoTier(): LogoDecision {
   if (cached === undefined) {
     const forced = new URLSearchParams(window.location.search).get("logo");
-    cached = isDecision(forced) ? forced : readRememberedTooSlow() ? "static" : tierFromDevice(readDeviceInfo());
+    cached = isDecision(forced)
+      ? forced
+      : isTooSlowFresh(tooSlowStore.getState().at, Date.now())
+        ? "static"
+        : tierFromDevice(readDeviceInfo());
   }
   return cached;
 }

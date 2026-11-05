@@ -3,8 +3,9 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { z } from "zod";
 import { create } from "zustand";
-import { createJSONStorage, persist, type StateStorage } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
 import { clampQty, MAX_QTY } from "./basket-qty";
+import { safeStorage } from "./safe-storage";
 
 export { clampQty };
 
@@ -38,27 +39,6 @@ type BasketActions = {
   remove: (itemId: string) => void;
   setDates: (dates: Partial<Pick<Basket, "startDate" | "endDate">>) => void;
   clear: () => void;
-};
-
-// Storage can be blocked (private mode, policies) or full; the basket then lives for the session only.
-const safeStorage: StateStorage = {
-  getItem: (name) => {
-    try {
-      return window.localStorage.getItem(name);
-    } catch {
-      return null;
-    }
-  },
-  setItem: (name, value) => {
-    try {
-      window.localStorage.setItem(name, value);
-    } catch {}
-  },
-  removeItem: (name) => {
-    try {
-      window.localStorage.removeItem(name);
-    } catch {}
-  },
 };
 
 export const useBasketStore = create<Basket & BasketActions>()(
