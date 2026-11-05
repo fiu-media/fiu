@@ -2,16 +2,16 @@ import { describe, expect, it } from "vitest";
 import { LOGO_PARAM_PRESETS } from "./logoConfig";
 import {
   applyLogoTier,
-  formatRememberedTooSlow,
   higherTier,
+  isTooSlowFresh,
   lowerTier,
   medianFps,
-  parseRememberedTooSlow,
   PROBE_FRAMES,
   probeComplete,
   probeVerdict,
   STORED_TTL_MS,
   tierFromDevice,
+  tooSlowSchema,
   type DeviceInfo,
 } from "./logoTier";
 
@@ -142,18 +142,32 @@ describe("applyLogoTier", () => {
   });
 });
 
-describe("parseRememberedTooSlow", () => {
+describe("isTooSlowFresh", () => {
   const now = 1_800_000_000_000;
 
-  it("round-trips a fresh verdict", () => {
-    expect(parseRememberedTooSlow(formatRememberedTooSlow(now - 1000), now)).toBe(true);
+  it("keeps a fresh verdict", () => {
+    expect(isTooSlowFresh(now - 1000, now)).toBe(true);
   });
 
   it("forgets a verdict older than the TTL", () => {
-    expect(parseRememberedTooSlow(formatRememberedTooSlow(now - STORED_TTL_MS - 1), now)).toBe(false);
+    expect(isTooSlowFresh(now - STORED_TTL_MS - 1, now)).toBe(false);
   });
 
-  it.each([null, "", "not json", '{"decision":"low","at":0}', '{"decision":"static"}'])("ignores %j", (raw) => {
-    expect(parseRememberedTooSlow(raw, now)).toBe(false);
+  it("forgets a verdict from the future", () => {
+    expect(isTooSlowFresh(now + 1, now)).toBe(false);
+  });
+
+  it("has no verdict when nothing is stored", () => {
+    expect(isTooSlowFresh(null, now)).toBe(false);
+  });
+});
+
+describe("tooSlowSchema", () => {
+  it("reads a stored timestamp", () => {
+    expect(tooSlowSchema.parse(123)).toBe(123);
+  });
+
+  it.each([undefined, null, "123", {}, "static"])("reads %j as no verdict", (value) => {
+    expect(tooSlowSchema.parse(value)).toBeNull();
   });
 });

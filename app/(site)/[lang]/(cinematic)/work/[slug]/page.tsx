@@ -112,8 +112,9 @@ async function Project({ lang, slug }: { lang: string; slug: string }) {
           {work.back}
         </Link>
 
-        {(hasDescription || credits.length > 0) && (
-          <div className="grid gap-12 md:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] md:gap-16">
+        {(hasDescription || credits.length > 0 || stills.length > 0 || stillsMobile.length > 0) && (
+          // One grid so credits can sit beside the description on wide screens and after the stills on narrow ones.
+          <div className="grid gap-16 md:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
             {hasDescription && (
               <div
                 data-sanity={projectAttribute(project._id, "description")}
@@ -123,7 +124,7 @@ async function Project({ lang, slug }: { lang: string; slug: string }) {
               </div>
             )}
             {credits.length > 0 && (
-              <section aria-labelledby="project-credits" className="md:col-start-2">
+              <section aria-labelledby="project-credits" className="max-md:order-last md:col-start-2">
                 <h2 id="project-credits" className="mb-3 font-display text-2xl">
                   {work.credits}
                 </h2>
@@ -145,16 +146,15 @@ async function Project({ lang, slug }: { lang: string; slug: string }) {
                 </dl>
               </section>
             )}
+            {(stills.length > 0 || stillsMobile.length > 0) && (
+              <section aria-labelledby="project-stills" className="md:col-span-full">
+                <h2 id="project-stills" className="mb-4 font-display text-2xl">
+                  {work.stills}
+                </h2>
+                <ProjectStills landscape={stills} portrait={stillsMobile} dict={work} />
+              </section>
+            )}
           </div>
-        )}
-
-        {(stills.length > 0 || stillsMobile.length > 0) && (
-          <section aria-labelledby="project-stills">
-            <h2 id="project-stills" className="mb-4 font-display text-2xl">
-              {work.stills}
-            </h2>
-            <ProjectStills landscape={stills} portrait={stillsMobile} dict={work} />
-          </section>
         )}
 
         {next && (
