@@ -1,5 +1,6 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { en } from "../lib/i18n/dictionaries/en";
+import { rentalItems } from "./fixtures/data";
 import { isoDateFromNow } from "./helpers";
 
 const { contact, quote } = en;
@@ -71,11 +72,7 @@ test.describe("textarea sizing", () => {
   });
 
   test("the optional quote note starts smaller, and stops sooner", async ({ page }) => {
-    await page.goto("/rentals");
-    const item = page.locator('a[href^="/rentals/"]:not([href="/rentals/quote"])').first();
-    await item.waitFor({ timeout: 15_000 });
-    const slug = (await item.getAttribute("href"))!.split("/").pop()!;
-    await page.goto(`/rentals/quote?pickup=${isoDateFromNow(14)}&return=${isoDateFromNow(16)}&item=${slug}`);
+    await page.goto(`/rentals/quote?pickup=${isoDateFromNow(14)}&return=${isoDateFromNow(16)}&item=${rentalItems.single.slug}`);
     const box = page.getByLabel(quote.message);
     await expect(box).toBeVisible();
     expect((await lines(box)).lines).toBeCloseTo(3, 0);

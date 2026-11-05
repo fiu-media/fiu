@@ -2,6 +2,11 @@ import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 
+// Every `@next/next/*` rule the Next presets turn on.
+const nextRules = [...new Set([...nextVitals, ...nextTs].flatMap((c) => Object.keys(c.rules ?? {})))].filter((r) =>
+  r.startsWith("@next/next/"),
+);
+
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
@@ -17,6 +22,11 @@ const eslintConfig = defineConfig([
     // Vendored Draco decoder (copied from three/examples for self-hosting).
     "public/draco/**",
   ]),
+  {
+    // The Studio is built by Sanity's tooling, not Next, so Next's rules (no next/image, next/link, ...) don't apply.
+    files: ["sanity/FiuIcon.tsx"],
+    rules: Object.fromEntries(nextRules.map((r) => [r, "off"])),
+  },
 ]);
 
 export default eslintConfig;

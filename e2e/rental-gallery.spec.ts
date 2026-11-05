@@ -1,26 +1,19 @@
 import { expect, test, type Page } from "@playwright/test";
+import { rentalItems } from "./fixtures/data";
 import { clickUntil } from "./helpers";
 
-/** Opens the first rental item that has more than one photo, or skips when the dataset has none. */
+/** Opens the rental item that has several photos, and returns its gallery. */
 async function openGallery(page: Page) {
-  await page.goto("/rentals");
-  // The catalogue renders after the page loads; wait for it so "none" means none, not "not yet".
-  await page.locator('a[href^="/rentals/"]:not([href="/rentals/quote"])').first().waitFor({ timeout: 15_000 });
-  const hrefs = await page
-    .locator('a[href^="/rentals/"]')
-    .evaluateAll((links) => links.map((a) => a.getAttribute("href")!).filter((href) => href !== "/rentals/quote"));
-  for (const href of [...new Set(hrefs)]) {
-    await page.goto(href);
-    // The gallery streams in after the page loads.
-    await page.waitForLoadState("networkidle");
-    const gallery = page.getByRole("group", { name: /^Photos of / });
-    if ((await gallery.count()) && (await gallery.getByRole("tab", { name: /^Show photo/ }).count()) > 1) return gallery;
-  }
-  test.skip(true, "No rental item with several photos in this dataset");
+  await page.goto(`/rentals/${rentalItems.multi.slug}`);
+  // The gallery streams in after the page loads.
+  await page.waitForLoadState("networkidle");
+  const gallery = page.getByRole("group", { name: /^Photos of / });
+  await expect(gallery.getByRole("tab", { name: /^Show photo/ })).toHaveCount(rentalItems.multi.photos.length);
+  return gallery;
 }
 
 test("rental gallery: buttons, keyboard, thumbnails and swipe stay in sync", async ({ page }) => {
-  const gallery = (await openGallery(page))!;
+  const gallery = await openGallery(page);
   const thumbs = gallery.getByRole("tab", { name: /^Show photo/ });
   const current = gallery.getByRole("tab", { selected: true });
 

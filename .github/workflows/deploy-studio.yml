@@ -15,6 +15,9 @@ on:
       - .github/workflows/deploy-studio.yml
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 concurrency:
   group: deploy-studio
   cancel-in-progress: false
@@ -23,11 +26,12 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     env:
-      # Public identifiers; sanity.cli.ts reads the NEXT_PUBLIC_ pair and the Studio bundle the SANITY_STUDIO_ pair.
-      NEXT_PUBLIC_SANITY_PROJECT_ID: e1vjk669
-      NEXT_PUBLIC_SANITY_DATASET: production
-      SANITY_STUDIO_PROJECT_ID: e1vjk669
-      SANITY_STUDIO_DATASET: production
+      # Repository variables. sanity.cli.ts reads the NEXT_PUBLIC_ pair and the Studio bundle the SANITY_STUDIO_ pair.
+      # (The repo's NEXT_PUBLIC_SANITY_PROJECT_ID variable belongs to the e2e tests' project, so it isn't reused here.)
+      NEXT_PUBLIC_SANITY_PROJECT_ID: ${{ vars.SANITY_STUDIO_PROJECT_ID }}
+      NEXT_PUBLIC_SANITY_DATASET: ${{ vars.SANITY_STUDIO_DATASET }}
+      SANITY_STUDIO_PROJECT_ID: ${{ vars.SANITY_STUDIO_PROJECT_ID }}
+      SANITY_STUDIO_DATASET: ${{ vars.SANITY_STUDIO_DATASET }}
       SANITY_AUTH_TOKEN: ${{ secrets.SANITY_AUTH_TOKEN }}
     steps:
       - uses: actions/checkout@v7

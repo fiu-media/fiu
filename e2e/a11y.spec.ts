@@ -2,6 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import { en } from "../lib/i18n/dictionaries/en";
 import { format } from "../lib/i18n/format";
+import { featuredTalent, rentalItems } from "./fixtures/data";
 import { clickUntil } from "./helpers";
 
 /**
@@ -9,19 +10,6 @@ import { clickUntil } from "./helpers";
  * verdict (manual review lives in #11). Any violation fails the test.
  */
 const PAGES = ["/about", "/work", "/talent", "/rentals", "/rentals/quote", "/contact", "/contact?type=Talent"];
-
-async function firstLink(page: Page, listing: string, prefix: string, exclude: string[] = []) {
-  await page.goto(listing);
-  // The listing renders its links after the page loads; wait for one so "none" means none, not "not yet".
-  await page
-    .locator(`a[href^="${prefix}"]`)
-    .filter({ hasNot: page.locator(`[href="${exclude[0] ?? ""}"]`) })
-    .first()
-    .waitFor({ timeout: 15_000 })
-    .catch(() => {});
-  const hrefs = await page.locator(`a[href^="${prefix}"]`).evaluateAll((links) => links.map((a) => a.getAttribute("href")!));
-  return hrefs.find((href) => href.length > prefix.length && !exclude.includes(href));
-}
 
 async function audit(page: Page, path: string, open?: (page: Page) => Promise<void>) {
   await page.goto(path);
@@ -52,15 +40,11 @@ test.describe("home", () => {
 });
 
 test("axe: a rental item page", async ({ page }) => {
-  const href = await firstLink(page, "/rentals", "/rentals/", ["/rentals/quote"]);
-  test.skip(!href, "No rental items in this dataset");
-  await audit(page, href!);
+  await audit(page, `/rentals/${rentalItems.multi.slug}`);
 });
 
 test("axe: a talent profile page", async ({ page }) => {
-  const href = await firstLink(page, "/talent", "/talent/");
-  test.skip(!href, "No talent in this dataset");
-  await audit(page, href!);
+  await audit(page, featuredTalent.path);
 });
 
 test.describe("with a dialog open", () => {

@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     # Fork and Dependabot PRs don't get repository secrets, so there is no Sanity token to test with.
     if: github.actor != 'dependabot[bot]' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
-    # The suite writes to (and cleans up in) the shared `dev` dataset, so only one run at a time.
+    # The suite creates its own content in (and removes it from) the shared `dev` dataset, so only one run at a time.
     concurrency:
       group: e2e-dev-dataset
       cancel-in-progress: false
@@ -55,8 +55,7 @@ jobs:
       - name: Install system libraries
         run: npx playwright install-deps chromium
         if: steps.playwright-cache.outputs.cache-hit == 'true'
-      # Builds first (prebuild runs typegen); Playwright then starts `npm run start`.
-      - run: npm run build
+      # Playwright's web server command seeds the test content, builds the site (prebuild runs typegen) and starts it.
       - run: npm run test:e2e
       - uses: actions/upload-artifact@v7
         if: failure()

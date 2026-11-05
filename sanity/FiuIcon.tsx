@@ -7,7 +7,6 @@ import { previewOrigin } from "./studio-env";
  */
 export function FiuIcon() {
   return (
-    // eslint-disable-next-line @next/next/no-img-element -- the Studio is built outside Next, so next/image isn't available
     <img
       src={`${previewOrigin}/brand/fiu-avatar.png`}
       alt=""

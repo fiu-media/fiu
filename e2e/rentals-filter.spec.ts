@@ -1,13 +1,15 @@
 import { expect, test, type Page } from "@playwright/test";
 import { en } from "../lib/i18n/dictionaries/en";
+import { rentalCategories } from "./fixtures/data";
 import { clickUntil } from "./helpers";
 
 const { rentals } = en;
 
-/** The category pills after "All"; empty when the dataset has no categories with kit in them. */
+/** The category pills after "All". The fixtures guarantee there are some (they hold kit), alongside whatever else the dataset has. */
 async function categoryPills(page: Page) {
   const pills = page.getByRole("group", { name: rentals.filterLabel }).getByRole("button");
   await expect(pills.first()).toBeVisible();
+  await expect(pills.filter({ hasText: rentalCategories.cameras.title })).toBeVisible();
   return pills.filter({ hasNotText: new RegExp(`^${rentals.allCategories}$`) });
 }
 
@@ -16,7 +18,6 @@ const all = (page: Page) => page.getByRole("button", { name: rentals.allCategori
 test("the rentals category filter lives in the URL", async ({ page }) => {
   await page.goto("/rentals");
   const pills = await categoryPills(page);
-  test.skip((await pills.count()) === 0, "No rental categories in this dataset");
 
   const first = pills.first();
   await clickUntil(first, () => expect(page).toHaveURL(/\?category=[^&]+$/));
@@ -35,7 +36,6 @@ test("the rentals category filter lives in the URL", async ({ page }) => {
 test("/rentals?category= opens filtered, and an unknown category shows everything", async ({ page }) => {
   await page.goto("/rentals");
   const pills = await categoryPills(page);
-  test.skip((await pills.count()) === 0, "No rental categories in this dataset");
   const first = pills.first();
   await clickUntil(first, () => expect(page).toHaveURL(/\?category=[^&]+$/));
   const filtered = page.url();
@@ -51,7 +51,6 @@ test("/rentals?category= opens filtered, and an unknown category shows everythin
 test("the category pills are one Tab stop with arrow keys between them, and one is always pressed", async ({ page }) => {
   await page.goto("/rentals");
   const pills = await categoryPills(page);
-  test.skip((await pills.count()) === 0, "No rental categories in this dataset");
 
   const first = pills.first();
   await clickUntil(first, () => expect(first).toHaveAttribute("aria-pressed", "true"));

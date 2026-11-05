@@ -94,17 +94,21 @@ npm run test:e2e  # Playwright + axe against a production build
 
 Unit tests sit next to the code they cover (`*.test.ts`) and need no setup.
 
-The e2e tests drive a real browser through the quote request, the contact form and the mobile menu, and run axe on the public pages. They read the `dev` Sanity dataset (see `npm run sync:dev`) and submit real forms to it, so they need `.env.local` with `NEXT_PUBLIC_SANITY_DATASET=dev` and an Editor token in `SANITY_API_WRITE_TOKEN`. First time only: `npx playwright install chromium`.
+The e2e tests drive a real browser through the quote request, the contact form and the mobile menu, and run axe on the public pages. They run against the `dev` Sanity dataset and don't depend on what is in it: the suite creates the content it needs (rental items, talent, a project and their photos, all with ids starting `e2e-`, listed in `e2e/fixtures/data.ts`), acts on that, and removes it again. They submit real forms, so they need `.env.local` with `NEXT_PUBLIC_SANITY_DATASET=dev` and an Editor token in `SANITY_API_WRITE_TOKEN`. First time only: `npx playwright install chromium`.
 
 ```bash
-npm run build && npm run test:e2e   # Playwright starts `npm run start` itself
+npm run test:e2e   # seeds the content, builds the site, starts it, runs the tests, then cleans up
 ```
 
-- Every submission uses an `@example.test` address. When the run ends, `e2e/global-teardown.ts` deletes the quote requests and contact messages with such an address, and does nothing unless the dataset is `dev`.
+- The content is written before `next build`, because the pages read it at build time and keep it until Sanity reports a change. That is why Playwright's web server command (`npm run e2e:serve`) seeds, builds and starts in that order, and why a server that is already running is never reused: it wouldn't have this run's content.
+- Tests use the fixtures by slug (`rentalItems.multi.slug`, `featuredTalent.path`, ...) and never "the first item on the page". Add what a new test needs to `e2e/fixtures/data.ts` and `documents.ts`.
+- `e2e/fixtures/cleanup.ts` removes the fixtures, the images they uploaded (labelled `e2e-fixture`) and the submissions the tests made, and nothing else. It also runs before seeding, so a crashed run's leftovers don't pile up. It, and the seeding, refuse any dataset except `dev` (or `dev-…`).
+
+- Every submission uses an `@example.test` address, which is how cleanup finds the quote requests and contact messages the tests sent.
 - No email is sent: the server runs without `RESEND_API_KEY`.
 - BotID can't verify a production build outside Vercel, so Playwright starts the server with `E2E_BYPASS_BOTID=1` (see `lib/forms/submit.ts`). Never set that in a deployed environment.
 - Axe runs on the public pages and any violation fails the test; there is no allowlist.
-- CI runs the e2e job against `dev` when the repository secrets exist (`SANITY_API_READ_TOKEN`, `SANITY_API_WRITE_TOKEN`) and the `NEXT_PUBLIC_SANITY_PROJECT_ID` variable; it is skipped on fork and Dependabot PRs.
+- CI runs the e2e job against `dev` when the repository secrets exist (`SANITY_API_READ_TOKEN`, `SANITY_API_WRITE_TOKEN`) and the `NEXT_PUBLIC_SANITY_PROJECT_ID` variable; it is skipped on fork and Dependabot PRs. The `dev` dataset must be public, like production, because the site reads published content without a token.
 
 ## Formatting and class names
 

@@ -1,7 +1,5 @@
 import { expect, type Locator } from "@playwright/test";
-
-/** Every address the e2e run submits ends in this reserved TLD, which is how the teardown finds its leftovers. */
-export const TEST_EMAIL_DOMAIN = "example.test";
+import { TEST_EMAIL_DOMAIN } from "./fixtures/data";
 
 export const testEmail = () => `e2e-${crypto.randomUUID().slice(0, 8)}@${TEST_EMAIL_DOMAIN}`;
 
