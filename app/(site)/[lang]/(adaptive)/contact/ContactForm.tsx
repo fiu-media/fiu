@@ -3,6 +3,7 @@
 import { useSearchParams } from "next/navigation";
 import { Field } from "@/components/forms/Field";
 import { Form, SubmitButton } from "@/components/forms/Form";
+import { PhoneField } from "@/components/forms/PhoneField";
 import { useConformForm } from "@/components/forms/useConformForm";
 import { useFreshOnArrival } from "@/components/forms/useFreshOnArrival";
 import { GlassPanel } from "@/components/ui/Glass";
@@ -53,6 +54,7 @@ function ContactFormFields({ lang, dict }: Props) {
         ["enquiryType", contact.enquiryType],
         ["name", contact.name],
         ["email", contact.email],
+        ["phone", contact.phone],
         ["message", contact.message],
       ]}
       className="max-w-xl gap-4"
@@ -80,6 +82,12 @@ function ContactFormFields({ lang, dict }: Props) {
         autoComplete="email"
         maxLength={limits.email}
         placeholder={contact.placeholders.email}
+      />
+      <PhoneField
+        field={fields.phone}
+        label={contact.phone}
+        optionalLabel={contact.optional}
+        countryLabel={contact.phoneCountry}
       />
       <Field
         field={fields.message}

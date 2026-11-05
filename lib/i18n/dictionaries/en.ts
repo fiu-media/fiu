@@ -145,6 +145,9 @@ export const en = {
     enquiryTypes: { Project: "A project", Talent: "Our talent", Rentals: "Rentals", Other: "Something else" },
     name: "Name",
     email: "Email",
+    phone: "Phone",
+    phoneCountry: "Phone number country",
+    optional: "optional",
     message: "Message",
     placeholders: {
       name: "Aoife Murphy",

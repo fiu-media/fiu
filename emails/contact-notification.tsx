@@ -1,8 +1,9 @@
 import type { Dictionary } from "../lib/i18n/dictionaries/en";
 import { en } from "../lib/i18n/dictionaries/en";
-import { Layout, mailto, present } from "./_layout";
+import { formatPhone } from "../lib/forms/phone";
+import { Layout, mailto, present, tel } from "./_layout";
 
-export type ContactEmailData = { name: string; email: string; enquiryType: string; message: string };
+export type ContactEmailData = { name: string; email: string; phone: string; enquiryType: string; message: string };
 
 type Props = { emails: Dictionary["emails"]; data: ContactEmailData; studioUrl: string; siteUrl: string };
 
@@ -15,6 +16,7 @@ export default function ContactNotification({ emails, data, studioUrl, siteUrl }
       rows={present([
         [l.name, data.name],
         [l.email, data.email, mailto(data.email)],
+        [l.phone, formatPhone(data.phone), tel(data.phone)],
         [l.enquiryType, data.enquiryType],
         [l.message, data.message],
       ])}
@@ -30,6 +32,7 @@ ContactNotification.PreviewProps = {
   data: {
     name: "Aoife Ní Bhriain",
     email: "aoife@example.com",
+    phone: "+353 87 123 4567",
     enquiryType: "Talent",
     message: "Hi, I'd love to talk about a project we're planning for spring.",
   },

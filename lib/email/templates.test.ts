@@ -60,11 +60,12 @@ describe("email templates", () => {
     const contactOut = await html(
       contactNotification(
         en,
-        { name: "Aoife", email: "a@example.com", enquiryType: "Rentals", message: "Hi" },
+        { name: "Aoife", email: "a@example.com", phone: "+353871234567", enquiryType: "Rentals", message: "Hi" },
         "https://studio.test/",
       ),
     );
     expect(contactOut).toContain('href="mailto:a@example.com"');
+    expect(contactOut).toContain('href="tel:+353871234567"');
   });
 
   it("does not link a phone number that has no digits", async () => {
@@ -81,7 +82,7 @@ describe("email templates", () => {
   it("escapes the contact notification", async () => {
     const email = contactNotification(
       en,
-      { name: hostile, email: "a@example.com", enquiryType: "Talent", message: hostile },
+      { name: hostile, email: "a@example.com", phone: "", enquiryType: "Talent", message: hostile },
       "https://studio.test/",
     );
     const out = await html(email);

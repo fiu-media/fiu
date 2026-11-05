@@ -5,11 +5,13 @@ const mocks = vi.hoisted(() => ({
   create: vi.fn(),
   sendEmail: vi.fn(),
   getRecipient: vi.fn(),
+  createContact: vi.fn(),
 }));
 
 vi.mock("botid/server", () => ({ checkBotId: mocks.checkBotId }));
 vi.mock("@/sanity/lib/writeClient", () => ({ writeClient: { create: mocks.create } }));
 vi.mock("@/lib/email/send", () => ({ sendEmail: mocks.sendEmail }));
+vi.mock("@/lib/email/contacts", () => ({ createContact: mocks.createContact }));
 vi.mock("@/lib/email/settings", () => ({ getRecipient: mocks.getRecipient }));
 
 import { submitContact } from "./actions";
@@ -24,6 +26,7 @@ const form = (overrides: Record<string, string> = {}) => {
     submissionId: SUBMISSION_ID,
     name: "Aoife",
     email: "aoife@example.com",
+    phone: "+353871234567",
     enquiryType: "Talent",
     message: "Hello there",
     ...overrides,
@@ -40,6 +43,7 @@ beforeEach(() => {
   mocks.create.mockResolvedValue({});
   mocks.sendEmail.mockResolvedValue(undefined);
   mocks.getRecipient.mockResolvedValue("studio@example.com");
+  mocks.createContact.mockResolvedValue(undefined);
 });
 
 describe("submitContact", () => {
@@ -49,9 +53,30 @@ describe("submitContact", () => {
       _id: `contactMessage-${SUBMISSION_ID}`,
       _type: "contactMessage",
       enquiryType: "Talent",
+      phone: "+353871234567",
     });
     expect(mocks.sendEmail).toHaveBeenCalledOnce();
     expect(mocks.sendEmail.mock.calls[0][0]).toMatchObject({ to: "studio@example.com", replyTo: "aoife@example.com" });
+  });
+
+  it("adds the visitor to Resend contacts", async () => {
+    await submitContact(idle, form());
+    expect(mocks.createContact).toHaveBeenCalledWith({
+      name: "Aoife",
+      email: "aoife@example.com",
+      phone: "+353871234567",
+    });
+  });
+
+  it("stores no phone when none is given", async () => {
+    await submitContact(idle, form({ phone: "" }));
+    expect(mocks.create.mock.calls[0][0].phone).toBeUndefined();
+  });
+
+  it("still succeeds, and still emails, when the Resend contact can't be created", async () => {
+    mocks.createContact.mockRejectedValue(new Error("nope"));
+    expect(await submitContact(idle, form())).toMatchObject({ success: true });
+    expect(mocks.sendEmail).toHaveBeenCalledOnce();
   });
 
   it("rejects bots and a filled honeypot", async () => {
@@ -62,6 +87,7 @@ describe("submitContact", () => {
       error: { formErrors: ["rejected"] },
     });
     expect(mocks.create).not.toHaveBeenCalled();
+    expect(mocks.createContact).not.toHaveBeenCalled();
   });
 
   it("returns field errors and keeps the entered values", async () => {
@@ -77,6 +103,7 @@ describe("submitContact", () => {
     mocks.create.mockRejectedValue({ statusCode: 409 });
     expect(await submitContact(idle, form())).toMatchObject({ success: true });
     expect(mocks.sendEmail).not.toHaveBeenCalled();
+    expect(mocks.createContact).not.toHaveBeenCalled();
   });
 
   it("reports failed when storing fails", async () => {
@@ -86,11 +113,13 @@ describe("submitContact", () => {
       submission: { payload: { message: "Hello there" } },
     });
     expect(mocks.sendEmail).not.toHaveBeenCalled();
+    expect(mocks.createContact).not.toHaveBeenCalled();
   });
 
   it("skips the notification when no recipient is configured", async () => {
     mocks.getRecipient.mockResolvedValue(null);
     expect(await submitContact(idle, form())).toMatchObject({ success: true });
     expect(mocks.sendEmail).not.toHaveBeenCalled();
+    expect(mocks.createContact).toHaveBeenCalledOnce();
   });
 });

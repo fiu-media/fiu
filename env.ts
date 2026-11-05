@@ -22,6 +22,8 @@ export const env = createEnv({
     // The Resend integration on Vercel sets them; the domain is the one verified in Resend.
     RESEND_API_KEY: requiredInProduction,
     RESEND_EMAIL_DOMAIN: requiredInProduction,
+    // The Resend segment contact-form submitters are added to ("General"). Without it they're added to no segment.
+    RESEND_SEGMENT_ID: z.string().min(1).optional(),
     // Set by Vercel.
     VERCEL_ENV: z.enum(["production", "preview", "development"]).optional(),
     VERCEL_PROJECT_PRODUCTION_URL: z.string().min(1).optional(),
@@ -38,6 +40,7 @@ export const env = createEnv({
     SANITY_API_WRITE_TOKEN: process.env.SANITY_API_WRITE_TOKEN,
     RESEND_API_KEY: process.env.RESEND_API_KEY,
     RESEND_EMAIL_DOMAIN: process.env.RESEND_EMAIL_DOMAIN,
+    RESEND_SEGMENT_ID: process.env.RESEND_SEGMENT_ID,
     VERCEL_ENV: process.env.VERCEL_ENV,
     VERCEL_PROJECT_PRODUCTION_URL: process.env.VERCEL_PROJECT_PRODUCTION_URL,
     E2E_BYPASS_BOTID: process.env.E2E_BYPASS_BOTID,

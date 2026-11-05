@@ -153,6 +153,18 @@ describe("contactSchema", () => {
   });
 });
 
+describe("contactSchema phone", () => {
+  it("is optional, and stored as E.164 when given", () => {
+    expect(contactSchema.safeParse(contact).success).toBe(true);
+    expect(contactSchema.parse({ ...contact, phone: "" }).phone).toBe("");
+    expect(contactSchema.parse({ ...contact, phone: "+353 0871234567" }).phone).toBe("+353871234567");
+  });
+
+  it("rejects a number that can't be dialled", () => {
+    expect(issueCodes(contactSchema.safeParse({ ...contact, phone: "+353 12" }))).toEqual(["phone:phoneInvalid"]);
+  });
+});
+
 describe("error codes", () => {
   it("every visitor-facing issue the schemas can raise is a code we have copy for", () => {
     const inputs = [

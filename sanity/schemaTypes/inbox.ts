@@ -106,6 +106,7 @@ export const contactMessage = defineType({
     }),
     defineField({ name: "name", type: "string", readOnly }),
     defineField({ name: "email", type: "string", readOnly }),
+    defineField({ name: "phone", type: "string", readOnly }),
     defineField({
       name: "enquiryType",
       type: "string",
