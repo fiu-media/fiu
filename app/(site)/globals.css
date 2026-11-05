@@ -4,8 +4,10 @@
  * Surfaces
  * --------
  * Pages opt into a surface on their wrapper:
- *   data-surface="cinematic"  always dark (Home, About, Work, Talent)
- *   data-surface="adaptive"   follows the OS light/dark setting (Rentals, Contact, forms)
+ *   data-surface="cinematic"  Home, About, Work, Talent
+ *   data-surface="adaptive"   Rentals, Contact, forms
+ * The whole site is dark whatever the OS setting; the light-dark() tokens remain so a surface can be pinned to light
+ * (see data-force-scheme below).
  * Tokens use light-dark(), so components adapt without any JS or flash.
  *
  * Two Lightning CSS constraints (Tailwind compiles light-dark() down to
@@ -17,7 +19,7 @@
  */
 @layer base {
   :root {
-    color-scheme: light dark;
+    color-scheme: dark;
   }
 
   [data-surface="cinematic"] {
@@ -25,10 +27,10 @@
   }
 
   [data-surface="adaptive"] {
-    color-scheme: light dark;
+    color-scheme: dark;
   }
 
-  /* Pin the adaptive surfaces to one scheme (future site toggle). */
+  /* Pin the adaptive surfaces to one scheme (the /dev scheme switcher; a future site toggle). */
   :root[data-force-scheme="light"],
   :root[data-force-scheme="light"] [data-surface="adaptive"] {
     color-scheme: light;

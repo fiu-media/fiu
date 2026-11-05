@@ -4,7 +4,7 @@ import { SiteNav } from "@/components/nav/SiteNav";
 import { cn } from "@/lib/cn";
 import { isLocale } from "@/lib/i18n/config";
 
-/** Pages that follow the system light/dark setting (Rentals, Contact). */
+/** Pages with the plain page background rather than full-bleed imagery (Rentals, Contact). */
 export default async function AdaptiveLayout({ children, params }: LayoutProps<"/[lang]">) {
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
