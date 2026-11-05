@@ -45,6 +45,13 @@ describe("sendEmail", () => {
     expect(mocks.send.mock.calls[0][0].text).toContain("Body copy");
   });
 
+  it("sends from an internationalised sending domain as punycode", async () => {
+    mocks.env.RESEND_API_KEY = "re_1";
+    mocks.env.RESEND_EMAIL_DOMAIN = "fiú.ie";
+    await sendEmail(email);
+    expect(mocks.send.mock.calls[0][0]).toMatchObject({ from: "Fiú Media <hello@xn--fi-ska.ie>" });
+  });
+
   it("sends an internationalised domain as punycode", async () => {
     mocks.env.RESEND_API_KEY = "re_test";
     await sendEmail({ ...email, to: "anna@exämple.de", replyTo: "anna@exämple.de" });
