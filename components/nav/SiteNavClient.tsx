@@ -8,12 +8,15 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import { BriertoWatermark } from "@/components/brierto/BriertoWatermark";
 import { GlassPillButton } from "@/components/ui/Glass";
 import { cn } from "@/lib/cn";
+import type { Locale } from "@/lib/i18n/config";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import type { NavItem } from "@/lib/i18n/nav";
 import { nudgeHomeScrollRepeatedly } from "@/components/home/bleed";
 import { HomeLink } from "./HomeLink";
+import { LanguageSwitcher } from "./LanguageSwitcher";
 
 type NavProps = {
+  lang: Locale;
   items: NavItem[];
   homeHref: string;
   labels: Dictionary["nav"];
@@ -34,7 +37,7 @@ function RouteNav(props: NavProps) {
 
 const isCurrent = (pathname: string, href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
-function Nav({ items, homeHref, labels, onImage, pathname }: NavProps & { pathname: string }) {
+function Nav({ lang, items, homeHref, labels, onImage, pathname }: NavProps & { pathname: string }) {
   // The overlay is open for the page it was opened on, so navigating leaves it behind.
   const [openOn, setOpenOn] = useState<string | null>(null);
   const popup = useRef<HTMLDivElement>(null);
@@ -81,6 +84,7 @@ function Nav({ items, homeHref, labels, onImage, pathname }: NavProps & { pathna
             </Link>
           ))}
         </nav>
+        <LanguageSwitcher variant="rail" lang={lang} pathname={pathname} label={labels.language} />
       </aside>
 
       {/* On cinematic pages the bar floats over the content; on adaptive pages it takes its own row. */}
@@ -138,6 +142,7 @@ function Nav({ items, homeHref, labels, onImage, pathname }: NavProps & { pathna
                     {item.label}
                   </Link>
                 ))}
+                <LanguageSwitcher variant="menu" lang={lang} pathname={pathname} label={labels.language} className="mt-10" />
               </nav>
             </Dialog.Popup>
           </Dialog.Portal>

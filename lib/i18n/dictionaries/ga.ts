@@ -13,6 +13,7 @@ export const ga: DeepPartial<Dictionary> = {
     home: "Fiú Media, leathanach baile",
     menu: "Roghchlár",
     closeMenu: "Dún an roghchlár",
+    language: "Teanga",
     about: "Fúinn",
     work: "Ár gCuid Oibre",
     talent: "Tallann",

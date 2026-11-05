@@ -11,6 +11,12 @@ import { SiteNavClient } from "./SiteNavClient";
 export async function SiteNav({ lang, onImage }: { lang: Locale; onImage?: boolean }) {
   const dict = await getDictionary(lang);
   return (
-    <SiteNavClient items={getNavItems(lang, dict)} homeHref={localizedPath(lang, "/")} labels={dict.nav} onImage={onImage} />
+    <SiteNavClient
+      lang={lang}
+      items={getNavItems(lang, dict)}
+      homeHref={localizedPath(lang, "/")}
+      labels={dict.nav}
+      onImage={onImage}
+    />
   );
 }

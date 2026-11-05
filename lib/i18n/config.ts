@@ -1,6 +1,9 @@
 export const locales = ["en", "ga"] as const;
 export type Locale = (typeof locales)[number];
 
+/** Each language's own name, as the switcher and the Studio show it. */
+export const localeNames: Record<Locale, string> = { en: "English", ga: "Gaeilge" };
+
 /** BCP-47 tag used to format dates and numbers for each locale. */
 export const dateLocale: Record<Locale, string> = { en: "en-IE", ga: "ga-IE" };
 
@@ -24,4 +27,14 @@ export function languageAlternates(lang: Locale, path: string) {
       "x-default": localizedPath(defaultLocale, path),
     },
   };
+}
+
+/** Remembers a visitor's explicit choice of language (set by the switcher); it beats the browser's preference. */
+export const languageCookie = "fiu-lang";
+
+/** The same page in `to`, from a public pathname in any locale (`/ga/work` → `/work`). */
+export function switchLocalePath(pathname: string, to: Locale): string {
+  const current = locales.find((l) => pathname === `/${l}` || pathname.startsWith(`/${l}/`));
+  const path = current ? pathname.slice(current.length + 1) || "/" : pathname || "/";
+  return localizedPath(to, path);
 }
