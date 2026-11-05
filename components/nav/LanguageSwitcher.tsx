@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Fragment } from "react";
 import { cn } from "@/lib/cn";
 import { languageCookie, localeNames, locales, switchLocalePath, type Locale } from "@/lib/i18n/config";
 
@@ -13,8 +14,9 @@ function rememberLanguage(lang: Locale) {
 }
 
 /**
- * Switches the current page between the site's languages. Each link shows the language's own name, in that
- * language, so it reads correctly and its accessible name matches what is on screen. Choosing one remembers it.
+ * Switches the current page between the site's languages: bare codes with a hairline between them. The code is
+ * what is on screen, and the language's own name follows it for screen readers, so the accessible name still
+ * contains the visible text. Choosing one remembers it.
  */
 export function LanguageSwitcher({
   lang,
@@ -29,26 +31,30 @@ export function LanguageSwitcher({
   variant: "rail" | "menu";
   className?: string;
 }) {
+  const rail = variant === "rail";
   return (
     <div
       role="group"
       aria-label={label}
-      className={cn("flex items-center", variant === "rail" ? "flex-col gap-3 text-xs" : "gap-6 text-lg", className)}
+      className={cn("flex items-center", rail ? "flex-col gap-2 text-xs" : "gap-4 text-base", className)}
     >
-      {locales.map((locale) => (
-        <Link
-          key={locale}
-          href={switchLocalePath(pathname, locale)}
-          // A prefetch would be sent before the choice is remembered, so it would come back redirected to the old language.
-          prefetch={false}
-          lang={locale}
-          hrefLang={locale}
-          aria-current={locale === lang ? "true" : undefined}
-          onClick={() => rememberLanguage(locale)}
-          className="rounded-sm font-medium tracking-wide text-fg/60 underline-offset-4 hover:text-fg aria-[current=true]:text-fg aria-[current=true]:underline"
-        >
-          {localeNames[locale]}
-        </Link>
+      {locales.map((locale, index) => (
+        <Fragment key={locale}>
+          {index > 0 && <span aria-hidden className={cn("bg-fg/25", rail ? "h-px w-3" : "h-3 w-px")} />}
+          <Link
+            href={switchLocalePath(pathname, locale)}
+            // A prefetch would be sent before the choice is remembered, so it would come back redirected to the old language.
+            prefetch={false}
+            lang={locale}
+            hrefLang={locale}
+            aria-current={locale === lang ? "true" : undefined}
+            onClick={() => rememberLanguage(locale)}
+            className="rounded-sm font-medium tracking-[0.14em] text-fg/50 hover:text-fg aria-[current=true]:text-fg"
+          >
+            {locale.toUpperCase()}
+            <span className="sr-only">, {localeNames[locale]}</span>
+          </Link>
+        </Fragment>
       ))}
     </div>
   );
