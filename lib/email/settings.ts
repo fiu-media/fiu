@@ -1,11 +1,10 @@
 import "server-only";
-import { env } from "@/env";
 import { defaultLocale, type Locale } from "@/lib/i18n/config";
 import { writeClient } from "@/sanity/lib/writeClient";
 import { SUBMISSION_SETTINGS_QUERY } from "@/sanity/lib/queries";
 
 /**
- * Where notification emails go. Editors set it in Site settings; QUOTE_TO_EMAIL is the fallback.
+ * Where notification emails go: the addresses editors set in Site settings.
  * Read uncached so a changed address applies to the next submission.
  */
 export async function getRecipient(kind: "quote" | "contact", lang: Locale): Promise<string | null> {
@@ -14,5 +13,5 @@ export async function getRecipient(kind: "quote" | "contact", lang: Locale): Pro
     kind === "quote"
       ? (settings?.quoteRecipient ?? settings?.contactEmail)
       : (settings?.contactEmail ?? settings?.quoteRecipient);
-  return fromSettings || env.QUOTE_TO_EMAIL || null;
+  return fromSettings || null;
 }

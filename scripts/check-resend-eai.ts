@@ -6,16 +6,19 @@
  *   npm run check:email-eai -- you@exämple.de     # also your own IDN address, as Unicode and as punycode
  *
  * Each case is a real API call that sends one small test email. The `delivered@resend.dev` cases
- * go to Resend's simulator and never reach anyone's inbox. Needs RESEND_API_KEY (and optionally
- * EMAIL_FROM) in .env.local.
+ * go to Resend's simulator and never reach anyone's inbox. Needs RESEND_API_KEY and
+ * RESEND_EMAIL_DOMAIN in .env.local.
  */
 import { Resend } from "resend";
 import { domainToAscii } from "../lib/email/address";
+import { senderFor } from "../lib/email/sender";
 
 const key = process.env.RESEND_API_KEY;
 if (!key) throw new Error("RESEND_API_KEY is not set (add it to .env.local)");
 const resend = new Resend(key);
-const from = process.env.EMAIL_FROM || "Fiú Media <onboarding@resend.dev>";
+const domain = process.env.RESEND_EMAIL_DOMAIN;
+if (!domain) throw new Error("RESEND_EMAIL_DOMAIN is not set (add it to .env.local)");
+const from = senderFor(domain);
 
 const cases: [string, string][] = [
   ["ASCII (control)", "delivered@resend.dev"],

@@ -48,7 +48,7 @@ export async function submitContact(_previous: FormState, formData: FormData): P
   }
 
   const to = await getRecipient("contact", data.lang);
-  if (!to) console.warn("[contact] no recipient configured (Site settings or QUOTE_TO_EMAIL); skipping notification");
+  if (!to) console.warn("[contact] no recipient set in Site settings; skipping notification");
   const dict = await getDictionary(data.lang);
   await sendAll([
     to
