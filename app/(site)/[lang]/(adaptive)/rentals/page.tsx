@@ -42,7 +42,7 @@ async function Catalogue({ lang }: { lang: Locale }) {
   const { categories, items } = (data ?? { categories: [], items: [] }) as RentalsResult;
 
   const cards: CatalogueCard[] = items.map((item) => ({
-    id: publishedId(item._id),
+    id: publishedId(item.baseId),
     name: item.name,
     slug: item.slug,
     brand: item.brand,

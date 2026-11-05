@@ -25,6 +25,8 @@ export type RentalImage = {
 /** Result shapes of the rentals queries (hand-written until we adopt typegen). */
 export type RentalItem = {
   _id: string;
+  /** The default-language document's id; basket lines use it so they work in every language. */
+  baseId: string;
   name: string;
   slug: string;
   brand: string | null;
@@ -39,7 +41,7 @@ export type RentalItem = {
 export type RentalCategory = { _id: string; title: string; slug: string };
 export type RentalsResult = { categories: RentalCategory[]; items: RentalItem[] };
 export type CatalogueEntry = {
-  _id: string;
+  baseId: string;
   name: string;
   brand: string | null;
   maxQuantity: number | null;

@@ -13,8 +13,8 @@ async function catalogueLookup(lang: Locale) {
   const { data } = await cachedSanity({ query: QUOTE_CATALOGUE_QUERY, params: { lang, fallbackLang: defaultLocale }, perspective: "published", stega: false });
   const items: Record<string, CatalogueItem> = {};
   for (const entry of (data ?? []) as CatalogueEntry[]) {
-    items[entry._id] = {
-      id: entry._id,
+    items[entry.baseId] = {
+      id: entry.baseId,
       name: entry.name,
       brand: entry.brand,
       href: localizedPath(lang, `/rentals/${entry.slug}`),

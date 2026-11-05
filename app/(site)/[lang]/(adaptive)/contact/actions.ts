@@ -7,6 +7,7 @@ import { isConflict, sendAll } from "@/lib/forms/notify";
 import { contactSchema } from "@/lib/forms/schemas";
 import type { FormState } from "@/lib/forms/state";
 import { formDataToRecord, guardSubmission } from "@/lib/forms/submit";
+import { defaultLocale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { writeClient } from "@/sanity/lib/writeClient";
 
@@ -39,7 +40,8 @@ export async function submitContact(_previous: FormState, formData: FormData): P
 
   const to = await getRecipient("contact", data.lang);
   if (!to) console.warn("[contact] no recipient configured (Site settings or QUOTE_TO_EMAIL); skipping notification");
-  const dict = await getDictionary(data.lang);
+  // The notification goes to the team, so it is always in the default language.
+  const dict = await getDictionary(defaultLocale);
   await sendAll([
     to ? { to, replyTo: data.email, ...contactNotification(dict, data, studioEditUrl(id, "contactMessage")) } : null,
   ]);

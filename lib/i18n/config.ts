@@ -1,4 +1,4 @@
-export const locales = ["en"] as const;
+export const locales = ["en", "ga"] as const;
 export type Locale = (typeof locales)[number];
 
 /** Served without a URL prefix; proxy.ts rewrites it to `/en/...` internally. */

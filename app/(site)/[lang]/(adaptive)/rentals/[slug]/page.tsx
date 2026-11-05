@@ -82,7 +82,7 @@ async function Item({ lang, slug }: { lang: string; slug: string }) {
             {item.summary && <p className="mt-4 text-lg">{item.summary}</p>}
           </header>
 
-          <DetailAddToQuote itemId={publishedId(item._id)} itemName={item.name} dict={rentals} maxQuantity={item.maxQuantity} />
+          <DetailAddToQuote itemId={publishedId(item.baseId)} itemName={item.name} dict={rentals} maxQuantity={item.maxQuantity} />
 
           {features.length > 0 && (
             <section aria-labelledby="item-features">
