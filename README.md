@@ -111,7 +111,7 @@ npm run test:e2e   # seeds the content, builds the site, starts it, runs the tes
 - No email is sent: the server runs without `RESEND_API_KEY`.
 - BotID can't verify a production build outside Vercel, so Playwright starts the server with `E2E_BYPASS_BOTID=1` (see `lib/forms/submit.ts`). Never set that in a deployed environment.
 - Axe runs on the public pages and any violation fails the test; there is no allowlist.
-- CI runs the e2e job against `dev` when the repository secrets exist (`SANITY_API_READ_TOKEN`, `SANITY_API_WRITE_TOKEN`) and the `NEXT_PUBLIC_SANITY_PROJECT_ID` variable; it is skipped on fork and Dependabot PRs. The `dev` dataset must be public, like production, because the site reads published content without a token.
+- CI runs the e2e job against `dev` when the repository secrets exist (`SANITY_API_READ_TOKEN`, `SANITY_API_WRITE_TOKEN`) and the `NEXT_PUBLIC_SANITY_PROJECT_ID` variable; it is skipped on fork and Dependabot PRs. Runs take turns on the dataset through a lock on the `gh-mutex-e2e-dev-dataset` branch (a `concurrency` group would cancel all but one waiting run); if a runner dies without releasing it, delete that branch. The `dev` dataset must be public, like production, because the site reads published content without a token.
 
 ## Formatting and class names
 
