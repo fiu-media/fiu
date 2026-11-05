@@ -1,12 +1,10 @@
 "use client";
 
-import { useFormData } from "@conform-to/react/future";
 import { useSearchParams } from "next/navigation";
 import { Field } from "@/components/forms/Field";
 import { Form, SubmitButton } from "@/components/forms/Form";
 import { useConformForm } from "@/components/forms/useConformForm";
 import { useFreshOnArrival } from "@/components/forms/useFreshOnArrival";
-import { TalentCombobox, type TalentOption } from "@/components/forms/TalentCombobox";
 import { GlassPanel } from "@/components/ui/Glass";
 import { CONTACT_PARAMS, contactPrefill, prefillKey } from "@/lib/forms/prefill";
 import { contactSchema, ENQUIRY_TYPES, limits } from "@/lib/forms/schemas";
@@ -17,30 +15,25 @@ import { submitContact } from "./actions";
 type Props = {
   lang: Locale;
   dict: Pick<Dictionary, "contact" | "forms">;
-  /** The roster, for a Talent enquiry to pick from. */
-  talent: TalentOption[];
 };
 
-/** The form, which starts over whenever a link arrives with a type or talent to prefill (see `useFreshOnArrival`). */
+/** The form, which starts over whenever a link arrives with a type to prefill (see `useFreshOnArrival`). */
 export function ContactForm(props: Props) {
   const params = useSearchParams();
   const fresh = useFreshOnArrival(prefillKey(params, CONTACT_PARAMS));
   return <ContactFormFields key={fresh} {...props} />;
 }
 
-function ContactFormFields({ lang, dict, talent }: Props) {
+function ContactFormFields({ lang, dict }: Props) {
   const { contact, forms } = dict;
-  // `/contact?type=Talent&talent=aoife` (the "Work with" button on a talent page) preselects the enquiry type and
-  // ticks the people named; see lib/forms/prefill.ts.
-  const { enquiryType, talent: pickedIds } = contactPrefill(useSearchParams(), talent);
+  // `/contact?type=Talent` preselects the enquiry type; see lib/forms/prefill.ts.
+  const { enquiryType } = contactPrefill(useSearchParams());
   const conform = useConformForm({
     action: submitContact,
     schema: contactSchema,
-    defaultValue: { enquiryType, talent: pickedIds },
+    defaultValue: { enquiryType },
   });
   const { fields, pending } = conform;
-  // Whoever is picked is only asked about, and only stored, for a Talent enquiry.
-  const type = useFormData(conform.form.id, (data) => data.get("enquiryType"), { fallback: enquiryType });
 
   if (conform.succeeded) {
     return (
@@ -71,9 +64,6 @@ function ContactFormFields({ lang, dict, talent }: Props) {
           </option>
         ))}
       </Field>
-      {type === "Talent" && (
-        <TalentCombobox field={fields.talent} labels={{ ...contact.talent, optional: contact.optional }} options={talent} />
-      )}
       <Field
         field={fields.name}
         label={contact.name}
