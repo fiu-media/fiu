@@ -112,13 +112,6 @@ export const contactMessage = defineType({
       readOnly,
       options: { list: ["Project", "Talent", "Rentals", "Other"] },
     }),
-    defineField({
-      name: "talent",
-      description: "Who the visitor asked about (Talent enquiries).",
-      type: "array",
-      readOnly,
-      of: [defineArrayMember({ type: "reference", to: [{ type: "talent" }] })],
-    }),
     defineField({ name: "message", type: "text", readOnly }),
     defineField({ name: "createdAt", type: "datetime", readOnly }),
   ],
@@ -129,13 +122,9 @@ export const contactMessage = defineType({
       enquiry: "enquiryType",
       status: "status",
       message: "message",
-      talent0: "talent.0.name",
-      talent1: "talent.1.name",
-      talent2: "talent.2.name",
     },
-    prepare: ({ name, enquiry, status, message, talent0, talent1, talent2 }) => ({
-      // Previews can only dereference a fixed number of array entries, as on the talent roster.
-      title: [name, enquiry, [talent0, talent1, talent2].filter(Boolean).join(", ")].filter(Boolean).join(" · "),
+    prepare: ({ name, enquiry, status, message }) => ({
+      title: [name, enquiry].filter(Boolean).join(" · "),
       subtitle: [capitalise(status), excerpt(message)].filter(Boolean).join(" · "),
     }),
   },

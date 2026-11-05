@@ -1,12 +1,12 @@
 /**
  * Deep links into the forms: what a URL can prefill, how it is read, and how links are built.
  *
- *   /contact?type=Talent&talent=aoife&talent=sean
+ *   /contact?type=Talent
  *   /rentals/quote?pickup=2026-12-01&return=2026-12-03&company=Murphy+Pictures&production=Spring+shoot&item=arri-skypanel-s60-c:2
  *
  * Only what isn't personal can be prefilled. Name, email, phone and message are never read from a URL, because
  * URLs are kept in server logs and analytics, browser history, and sent in the Referer header to other sites.
- * A value that doesn't pass the same rules the form enforces (a date in the past, an unknown talent or item, a
+ * A value that doesn't pass the same rules the form enforces (a date in the past, an unknown item, a
  * number that isn't a number) is dropped rather than shown as an error the visitor didn't cause.
  */
 import { isIsoDate, isValidRange, rentalDays } from "@/lib/dates";
@@ -41,17 +41,12 @@ export function prefillKey(params: Iterable<[string, string]>, names: readonly s
 
 // --- Contact ---
 
-export const CONTACT_PARAMS = ["type", "talent"] as const;
+export const CONTACT_PARAMS = ["type"] as const;
 
-/** Enquiry type (the first, if the link names none or an unknown one) and the ids of the roster people the link names. */
-export function contactPrefill(params: Params, roster: { id: string; slug: string }[]) {
+/** Enquiry type (the first, if the link names none or an unknown one). */
+export function contactPrefill(params: Params) {
   const requested = params.get("type");
-  const picked = new Set(params.getAll("talent"));
-  return {
-    enquiryType: isEnquiryType(requested) ? requested : ENQUIRY_TYPES[0],
-    // The form carries ids; a link carries slugs, which a person can read and share.
-    talent: roster.filter((person) => picked.has(person.slug)).map((person) => person.id),
-  };
+  return { enquiryType: isEnquiryType(requested) ? requested : ENQUIRY_TYPES[0] };
 }
 
 // --- Quote ---
@@ -109,11 +104,10 @@ export function quotePrefill(params: Params, catalogue: Record<string, Catalogue
 
 const withQuery = (path: string, query: URLSearchParams) => (query.size > 0 ? `${path}?${query}` : path);
 
-/** A link to the contact form. `talent` are roster slugs. */
-export function contactHref(lang: Locale, { type, talent = [] }: { type?: EnquiryType; talent?: string[] } = {}) {
+/** A link to the contact form. */
+export function contactHref(lang: Locale, { type }: { type?: EnquiryType } = {}) {
   const query = new URLSearchParams();
   if (type) query.set("type", type);
-  for (const slug of talent) query.append("talent", slug);
   return withQuery(localizedPath(lang, "/contact"), query);
 }
 

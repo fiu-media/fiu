@@ -30,8 +30,7 @@ export const talent = defineType({
       initialValue: true,
       readOnly: readOnlyInTranslation,
       validation: (rule) => rule.required(),
-      description:
-        "Untick if they can't take on work right now. They stay on the Talent pages, but aren't offered on the contact form and their “Work with” button is hidden.",
+      description: "Untick if they can't take on work right now. Not currently used on the website.",
     }),
     orderRankField({ type: "talent" }),
   ],

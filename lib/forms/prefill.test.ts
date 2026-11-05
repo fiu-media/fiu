@@ -13,30 +13,23 @@ import {
 const TODAY = "2026-11-03";
 const q = (query: string) => new URLSearchParams(query);
 
-const roster = [
-  { id: "talent-aoife", slug: "aoife" },
-  { id: "talent-sean", slug: "sean" },
-];
 const catalogue = {
   "rental-cam": { id: "rental-cam", href: "/rentals/cam", max: 5 },
   "rental-light": { id: "rental-light", href: "/ga/rentals/light", max: 99 },
 };
 
 describe("contactPrefill", () => {
-  it("reads the enquiry type and the people named, by slug", () => {
-    expect(contactPrefill(q("type=Talent&talent=aoife&talent=sean"), roster)).toEqual({
-      enquiryType: "Talent",
-      talent: ["talent-aoife", "talent-sean"],
-    });
+  it("reads the enquiry type", () => {
+    expect(contactPrefill(q("type=Talent"))).toEqual({ enquiryType: "Talent" });
   });
 
-  it("falls back to the first type, and ignores people who aren't on the roster", () => {
-    expect(contactPrefill(q("type=nonsense&talent=nobody"), roster)).toEqual({ enquiryType: "Project", talent: [] });
-    expect(contactPrefill(q(""), roster)).toEqual({ enquiryType: "Project", talent: [] });
+  it("falls back to the first type", () => {
+    expect(contactPrefill(q("type=nonsense"))).toEqual({ enquiryType: "Project" });
+    expect(contactPrefill(q(""))).toEqual({ enquiryType: "Project" });
   });
 
   it("never reads personal details", () => {
-    const prefill = contactPrefill(q("name=Aoife&email=a@b.co&message=hi&phone=1"), roster);
+    const prefill = contactPrefill(q("name=Aoife&email=a@b.co&message=hi&phone=1"));
     expect(JSON.stringify(prefill)).not.toMatch(/Aoife|a@b\.co|hi|\+/);
   });
 });
@@ -112,9 +105,7 @@ describe("quotePrefill", () => {
 describe("links", () => {
   it("builds contact links, with nothing to say meaning a plain link", () => {
     expect(contactHref("en")).toBe("/contact");
-    expect(contactHref("en", { type: "Talent", talent: ["aoife", "sean"] })).toBe(
-      "/contact?type=Talent&talent=aoife&talent=sean",
-    );
+    expect(contactHref("en", { type: "Talent" })).toBe("/contact?type=Talent");
   });
 
   it("builds quote links, leaving a quantity of one implied and encoding text", () => {
@@ -151,15 +142,15 @@ describe("links", () => {
       production: "Spring shoot",
       items: [{ itemId: "rental-cam", qty: 3, max: 5 }],
     });
-    const contact = new URL(contactHref("en", { type: "Talent", talent: ["sean"] }), "https://fiu.test").searchParams;
-    expect(contactPrefill(contact, roster)).toEqual({ enquiryType: "Talent", talent: ["talent-sean"] });
+    const contact = new URL(contactHref("en", { type: "Talent" }), "https://fiu.test").searchParams;
+    expect(contactPrefill(contact)).toEqual({ enquiryType: "Talent" });
   });
 });
 
 describe("prefillKey", () => {
   it("keeps only the parameters a form reads", () => {
-    const params = q("type=Talent&utm_source=news&talent=aoife&name=Aoife");
-    expect(prefillKey(params, CONTACT_PARAMS)).toBe("type=Talent&talent=aoife");
+    const params = q("type=Talent&utm_source=news&name=Aoife");
+    expect(prefillKey(params, CONTACT_PARAMS)).toBe("type=Talent");
     expect(prefillKey(params, QUOTE_PARAMS)).toBe("");
   });
 });

@@ -56,7 +56,7 @@ type Props = {
 export const placeholderClass = "placeholder:text-fg-muted/70";
 const emptyDateClass = "[&[data-empty]:not(:focus)]:text-fg-muted/70";
 
-/** The down chevron on every control that opens a list: the select, the phone's country, the talent picker. */
+/** The down chevron on every control that opens a list: the select and the phone's country. */
 export const chevron = <span aria-hidden className="size-1.5 -translate-y-px rotate-45 border-r border-b border-fg/50" />;
 
 export const controlClass = `w-full rounded-2xl border bg-bg-raised px-4 py-3 text-base text-fg aria-[invalid=true]:border-accent ${placeholderClass}`;

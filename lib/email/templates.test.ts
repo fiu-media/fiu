@@ -60,7 +60,7 @@ describe("email templates", () => {
     const contactOut = await html(
       contactNotification(
         en,
-        { name: "Aoife", email: "a@example.com", enquiryType: "Rentals", talent: [], message: "Hi" },
+        { name: "Aoife", email: "a@example.com", enquiryType: "Rentals", message: "Hi" },
         "https://studio.test/",
       ),
     );
@@ -81,24 +81,12 @@ describe("email templates", () => {
   it("escapes the contact notification", async () => {
     const email = contactNotification(
       en,
-      { name: hostile, email: "a@example.com", enquiryType: "Talent", talent: [hostile], message: hostile },
+      { name: hostile, email: "a@example.com", enquiryType: "Talent", message: hostile },
       "https://studio.test/",
     );
     const out = await html(email);
     expect(out).not.toContain("<script>");
     expect(out).toContain(escaped);
     expect(email.subject).toContain("Talent");
-  });
-
-  it("lists who the visitor asked about, and leaves the row out when nobody was named", async () => {
-    // Not "Talent": that is also the label of the row being checked for.
-    const data = { name: "Aoife", email: "a@example.com", enquiryType: "Rentals", message: "Hi" };
-    const named = await text(
-      contactNotification(en, { ...data, talent: ["Aoife Ní Bhriain", "Seán Ó Súilleabháin"] }, "https://studio.test/"),
-    );
-    expect(named).toContain(en.emails.labels.talent);
-    expect(named).toContain("Aoife Ní Bhriain, Seán Ó Súilleabháin");
-    const none = await text(contactNotification(en, { ...data, talent: [] }, "https://studio.test/"));
-    expect(none).not.toContain(en.emails.labels.talent);
   });
 });
