@@ -135,13 +135,6 @@ describe("contactSchema", () => {
     expect(contactSchema.safeParse(contact).success).toBe(true);
   });
 
-  it("takes any number of talent ids, one or none, as the form sends them", () => {
-    expect(contactSchema.parse(contact).talent).toEqual([]);
-    expect(contactSchema.parse({ ...contact, talent: ["a"] }).talent).toEqual(["a"]);
-    expect(contactSchema.parse({ ...contact, talent: ["a", "b"] }).talent).toEqual(["a", "b"]);
-    expect(contactSchema.safeParse({ ...contact, talent: Array.from({ length: 21 }, (_, i) => `t${i}`) }).success).toBe(false);
-  });
-
   it("requires a message and a known enquiry type", () => {
     const result = contactSchema.safeParse({ ...contact, message: " ", enquiryType: "Spam" });
     expect(issueCodes(result)).toContain("message:required");

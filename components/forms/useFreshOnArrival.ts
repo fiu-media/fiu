@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 /**
  * A number that goes up every time a link arrives carrying something to prefill; use it as a `key` to start the
  * form over. Next keeps a page's state while you browse elsewhere (so a half-written message survives a trip to
- * another page), which also means a link like "Work with Aoife" lands on the old form: old answers, old errors, a
+ * another page), which also means a link like "Copy link to this quote" lands on the old form: old answers, old errors, a
  * "Message sent" panel, and none of what the link asked for. A link that carries a prefill gets a fresh form, even
  * if it is the very same link as last time; coming back with a plain link (an empty `prefill`) keeps the draft.
  *

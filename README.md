@@ -60,7 +60,7 @@ The notification emails are React Email components in `emails/`, rendered by `li
 
 Links can open the contact and quote forms prefilled. The parameters, how each is validated, and why name, email, phone and message are never read from a URL (they would end up in logs, analytics and Referer headers) are documented in [`lib/forms/prefill.ts`](lib/forms/prefill.ts), which also has the link builders (`contactHref`, `quoteHref`). Use those rather than assembling a query string by hand. The quote form has a "Copy link to this quote" button that builds such a link from the visitor's kit, dates, company and production.
 
-- `/contact?type=Talent&talent=<slug>&talent=<slug>`
+- `/contact?type=Talent`
 - `/rentals/quote?pickup=YYYY-MM-DD&return=YYYY-MM-DD&company=…&production=…&item=<slug>[:qty]`
 
 ## Rate limiting

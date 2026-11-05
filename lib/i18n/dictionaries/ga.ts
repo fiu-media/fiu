@@ -57,7 +57,6 @@ export const ga: DeepPartial<Dictionary> = {
     projectsOf: "Obair {name}",
     slideLabel: "{title}, {index} as {total}",
     noPortrait: "Portráid le teacht go luath",
-    workWith: "Oibrigh le {name}",
     back: "An tallann ar fad",
   },
   rentals: {
@@ -143,18 +142,6 @@ export const ga: DeepPartial<Dictionary> = {
     enquiryTypes: { Project: "Tionscadal", Talent: "Ár dtallann", Rentals: "Cíos trealaimh", Other: "Rud éigin eile" },
     name: "Ainm",
     email: "Ríomhphost",
-    optional: "roghnach",
-    talent: {
-      legend: "Cé leis ar mhaith leat oibriú?",
-      placeholder: "Cuardaigh de réir ainm",
-      selected: "Na daoine roghnaithe",
-      remove: "Bain {name}",
-      chipHint: "Brúigh Backspace nó Delete chun é a bhaint",
-      inputHint: "{count} roghnaithe. Ó thús an ionchuir, brúigh an tSaighead Chlé chun bogadh chucu",
-      open: "Taispeáin gach duine",
-      empty: "Níl éinne leis an ainm sin",
-      limit: "Is féidir suas le {max} duine a roghnú",
-    },
     message: "Teachtaireacht",
     placeholders: {
       message: "Inis dúinn faoi do thionscadal, nó faoin rud atá uait",
@@ -209,7 +196,6 @@ export const ga: DeepPartial<Dictionary> = {
       kit: "Trealamh",
       message: "Teachtaireacht",
       enquiryType: "Cineál fiosrúcháin",
-      talent: "Tallann",
     },
   },
 };

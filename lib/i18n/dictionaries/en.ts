@@ -60,7 +60,6 @@ export const en = {
     projectsOf: "{name}'s work",
     slideLabel: "{title}, {index} of {total}",
     noPortrait: "Portrait coming soon",
-    workWith: "Work with {name}",
     back: "All talent",
   },
   rentals: {
@@ -146,18 +145,6 @@ export const en = {
     enquiryTypes: { Project: "A project", Talent: "Our talent", Rentals: "Rentals", Other: "Something else" },
     name: "Name",
     email: "Email",
-    optional: "optional",
-    talent: {
-      legend: "Who would you like to work with?",
-      placeholder: "Search by name",
-      selected: "Selected people",
-      remove: "Remove {name}",
-      chipHint: "Press Backspace or Delete to remove",
-      inputHint: "{count} selected. From the start of the input, press Left Arrow to move to them",
-      open: "Show everyone",
-      empty: "No one by that name",
-      limit: "You can pick up to {max} people",
-    },
     message: "Message",
     placeholders: {
       name: "Aoife Murphy",
@@ -224,7 +211,6 @@ export const en = {
       kit: "Kit",
       message: "Message",
       enquiryType: "Enquiry type",
-      talent: "Talent",
     },
   },
 };
