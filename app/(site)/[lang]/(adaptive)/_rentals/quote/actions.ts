@@ -64,11 +64,12 @@ export async function submitQuote(_previous: FormState, formData: FormData): Pro
     return fail({ formErrors: ["failed"] });
   }
 
-  const dict = await getDictionary(data.lang);
+  const [dict, teamDict] = await Promise.all([getDictionary(data.lang), getDictionary(defaultLocale)]);
   const emailData = { ...data, kit };
   const to = await getRecipient("quote", data.lang);
   if (!to) console.warn("[quote] no recipient set in Site settings; skipping notification");
-  const notification = quoteNotification(dict, emailData, studioEditUrl(id, "quoteRequest"), data.lang);
+  // The notification goes to the team, so it is always in the default language; the confirmation follows the visitor's.
+  const notification = quoteNotification(teamDict, emailData, studioEditUrl(id, "quoteRequest"), defaultLocale);
   await sendAll([
     to ? { to, replyTo: data.email, ...notification } : null,
     { to: data.email, ...quoteConfirmation(dict, emailData) },

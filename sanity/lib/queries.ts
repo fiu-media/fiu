@@ -41,16 +41,31 @@ const RENTAL_ITEMS = `(
     + *[_type == "rentalItem" && language == $fallbackLang${RENTAL_AVAILABLE} && !(slug.current in *[_type == "rentalItem" && language == $lang${RENTAL_AVAILABLE}].slug.current)]
   )`;
 
+/** An array field, or the default-language document's when the translation left it empty. */
+const arrayOrDefault = <const F extends string>(field: F) =>
+  `select(count(${field}) > 0 => ${field}, ${DEFAULT_COUNTERPART}.${field})` as const;
+
+/**
+ * Names and brands are never translated (read-only in translations), so every language shows the
+ * default-language value. The rest falls back field by field, so a half-translated item still renders in full.
+ * `baseId` is the default-language document's id, which basket lines use so they survive a language switch.
+ * `as const` keeps the literal type, which TypeGen needs to resolve the queries that embed this.
+ */
 const RENTAL_ITEM_FIELDS = `
   _id,
-  name,
+  "baseId": coalesce(${DEFAULT_COUNTERPART}._id, _id),
+  "name": coalesce(${DEFAULT_COUNTERPART}.name, name),
   "slug": slug.current,
-  brand,
-  summary,
-  keyFeatures,
+  "brand": coalesce(${DEFAULT_COUNTERPART}.brand, brand),
+  "summary": coalesce(summary, ${DEFAULT_COUNTERPART}.summary),
+  "keyFeatures": ${arrayOrDefault("keyFeatures")},
   "maxQuantity": coalesce(${DEFAULT_COUNTERPART}.maxQuantity, maxQuantity),
-  "category": category->{ _id, title, "slug": slug.current },
-  "images": images[defined(asset)]{
+  "category": coalesce(${DEFAULT_COUNTERPART}.category, category)->{
+    _id,
+    "title": coalesce(*[_type == "rentalCategory" && language == $lang && slug.current == ^.slug.current][0].title, title),
+    "slug": slug.current
+  },
+  "images": ${arrayOrDefault("images[defined(asset)]")}[]{
     _key,
     alt,
     asset,
@@ -59,7 +74,7 @@ const RENTAL_ITEM_FIELDS = `
     "lqip": asset->metadata.lqip,
     "dimensions": asset->metadata.dimensions
   }
-`;
+` as const;
 
 export const RENTALS_QUERY = defineQuery(`{
   "categories": ${withFallback("rentalCategory", "")}${byRank("title")}{
@@ -78,8 +93,8 @@ export const RENTAL_ITEM_QUERY = defineQuery(`
     *[_type == "rentalItem" && language == $fallbackLang && slug.current == $slug${RENTAL_AVAILABLE}][0]
   ){
     ${RENTAL_ITEM_FIELDS},
-    specs[]{ _key, key, value },
-    includedInKit
+    "specs": ${arrayOrDefault("specs")}[]{ _key, key, value },
+    "includedInKit": ${arrayOrDefault("includedInKit")}
   }
 `);
 
@@ -87,11 +102,12 @@ export const RENTAL_ITEM_QUERY = defineQuery(`
 export const QUOTE_CATALOGUE_QUERY = defineQuery(`
   ${RENTAL_ITEMS}${byRank("name")}{
     _id,
-    name,
-    brand,
+    "baseId": coalesce(${DEFAULT_COUNTERPART}._id, _id),
+    "name": coalesce(${DEFAULT_COUNTERPART}.name, name),
+    "brand": coalesce(${DEFAULT_COUNTERPART}.brand, brand),
     "maxQuantity": coalesce(${DEFAULT_COUNTERPART}.maxQuantity, maxQuantity),
     "slug": slug.current,
-    "image": images[defined(asset)][0]{ alt, asset, crop, hotspot, "lqip": asset->metadata.lqip }
+    "image": ${arrayOrDefault("images[defined(asset)]")}[0]{ alt, asset, crop, hotspot, "lqip": asset->metadata.lqip }
   }
 `);
 
@@ -111,9 +127,12 @@ export const SUBMISSION_SETTINGS_QUERY = defineQuery(`
   ){ contactEmail, quoteRecipient }
 `);
 
-/** Ids of rental items that can currently be requested (published and available). */
+/**
+ * Rental items that can currently be requested (published and available). Basket lines hold the
+ * default-language id, so only those documents match and names come out in the default language.
+ */
 export const AVAILABLE_ITEM_IDS_QUERY = defineQuery(`
-  *[_type == "rentalItem" && _id in $ids${RENTAL_AVAILABLE}]{
+  *[_type == "rentalItem" && language == $fallbackLang && _id in $ids${RENTAL_AVAILABLE}]{
     _id, name, brand,
     "maxQuantity": coalesce(${DEFAULT_COUNTERPART}.maxQuantity, maxQuantity)
   }
