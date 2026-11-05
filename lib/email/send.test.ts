@@ -1,7 +1,7 @@
 import { createElement } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const mocks = vi.hoisted(() => ({ send: vi.fn(), env: {} as { RESEND_API_KEY?: string; EMAIL_FROM?: string } }));
+const mocks = vi.hoisted(() => ({ send: vi.fn(), env: {} as { RESEND_API_KEY?: string; RESEND_EMAIL_DOMAIN?: string } }));
 vi.mock("resend", () => ({
   Resend: class {
     emails = { send: mocks.send };
@@ -20,11 +20,13 @@ const email = {
 };
 
 beforeEach(() => {
+  mocks.env.RESEND_EMAIL_DOMAIN = "fiumedia.ie";
   vi.spyOn(console, "warn").mockImplementation(() => {});
   mocks.send.mockResolvedValue({ error: null });
 });
 afterEach(() => {
   mocks.env.RESEND_API_KEY = undefined;
+  mocks.env.RESEND_EMAIL_DOMAIN = undefined;
   vi.clearAllMocks();
 });
 
@@ -34,6 +36,7 @@ describe("sendEmail", () => {
     await sendEmail(email);
     expect(mocks.send).toHaveBeenCalledOnce();
     expect(mocks.send.mock.calls[0][0]).toMatchObject({
+      from: "Fiú Media <hello@fiumedia.ie>",
       to: "studio@example.com",
       subject: "Hello",
       replyTo: "a@example.com",
@@ -62,6 +65,13 @@ describe("sendEmail", () => {
   });
 
   it("skips the send without RESEND_API_KEY", async () => {
+    await sendEmail(email);
+    expect(mocks.send).not.toHaveBeenCalled();
+  });
+
+  it("skips the send without RESEND_EMAIL_DOMAIN", async () => {
+    mocks.env.RESEND_API_KEY = "re_test";
+    mocks.env.RESEND_EMAIL_DOMAIN = undefined;
     await sendEmail(email);
     expect(mocks.send).not.toHaveBeenCalled();
   });

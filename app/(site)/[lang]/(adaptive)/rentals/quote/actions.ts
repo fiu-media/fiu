@@ -67,7 +67,7 @@ export async function submitQuote(_previous: FormState, formData: FormData): Pro
   const dict = await getDictionary(data.lang);
   const emailData = { ...data, kit };
   const to = await getRecipient("quote", data.lang);
-  if (!to) console.warn("[quote] no recipient configured (Site settings or QUOTE_TO_EMAIL); skipping notification");
+  if (!to) console.warn("[quote] no recipient set in Site settings; skipping notification");
   const notification = quoteNotification(dict, emailData, studioEditUrl(id, "quoteRequest"), data.lang);
   await sendAll([
     to ? { to, replyTo: data.email, ...notification } : null,

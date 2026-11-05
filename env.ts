@@ -18,10 +18,10 @@ export const env = createEnv({
     SANITY_API_READ_TOKEN: z.string().min(1).optional(),
     // Editor token: form submissions are written with it, so a production deploy needs it.
     SANITY_API_WRITE_TOKEN: requiredInProduction,
-    // Without it emails are logged and skipped, which is only acceptable outside production.
+    // Without both, emails are logged and skipped, which is only acceptable outside production.
+    // The Resend integration on Vercel sets them; the domain is the one verified in Resend.
     RESEND_API_KEY: requiredInProduction,
-    EMAIL_FROM: z.string().min(1).optional(),
-    QUOTE_TO_EMAIL: z.email().optional(),
+    RESEND_EMAIL_DOMAIN: requiredInProduction,
     // Set by Vercel.
     VERCEL_ENV: z.enum(["production", "preview", "development"]).optional(),
     VERCEL_PROJECT_PRODUCTION_URL: z.string().min(1).optional(),
@@ -37,8 +37,7 @@ export const env = createEnv({
     SANITY_API_READ_TOKEN: process.env.SANITY_API_READ_TOKEN,
     SANITY_API_WRITE_TOKEN: process.env.SANITY_API_WRITE_TOKEN,
     RESEND_API_KEY: process.env.RESEND_API_KEY,
-    EMAIL_FROM: process.env.EMAIL_FROM,
-    QUOTE_TO_EMAIL: process.env.QUOTE_TO_EMAIL,
+    RESEND_EMAIL_DOMAIN: process.env.RESEND_EMAIL_DOMAIN,
     VERCEL_ENV: process.env.VERCEL_ENV,
     VERCEL_PROJECT_PRODUCTION_URL: process.env.VERCEL_PROJECT_PRODUCTION_URL,
     E2E_BYPASS_BOTID: process.env.E2E_BYPASS_BOTID,

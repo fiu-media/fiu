@@ -4,8 +4,7 @@ import { render } from "@react-email/components";
 import { Resend } from "resend";
 import { env } from "@/env";
 import { toDeliverable } from "./address";
-
-const SANDBOX_FROM = "Fiú Media <onboarding@resend.dev>";
+import { senderFor } from "./sender";
 
 /** Keep headings as written (html-to-text uppercases them) and lay the detail rows out as columns. */
 export const plainTextOptions = {
@@ -25,7 +24,7 @@ type Email = { to: string; subject: string; react: ReactElement; replyTo?: strin
 
 /**
  * Sends through Resend, which renders `react` to the HTML part; the plain-text part is rendered
- * here. Without RESEND_API_KEY (local dev, unconfigured previews) the email is logged and
+ * here. Without RESEND_API_KEY and RESEND_EMAIL_DOMAIN (local dev) the email is logged and
  * skipped, so the form still works end to end.
  */
 export async function sendEmail({ to, subject, react, replyTo }: Email) {
@@ -38,13 +37,13 @@ export async function sendEmail({ to, subject, react, replyTo }: Email) {
   }
   const replyAddress = replyTo === undefined ? undefined : (toDeliverable(replyTo) ?? undefined);
   const text = await render(react, plainTextOptions);
-  const key = env.RESEND_API_KEY;
-  if (!key) {
-    console.warn(`[email] RESEND_API_KEY is not set; skipping "${subject}" to ${to}\n${text}`);
+  const { RESEND_API_KEY: key, RESEND_EMAIL_DOMAIN: domain } = env;
+  if (!key || !domain) {
+    console.warn(`[email] RESEND_API_KEY or RESEND_EMAIL_DOMAIN is not set; skipping "${subject}" to ${to}\n${text}`);
     return;
   }
   const { error } = await new Resend(key).emails.send({
-    from: env.EMAIL_FROM || SANDBOX_FROM,
+    from: senderFor(domain),
     to: recipient,
     subject,
     react,
