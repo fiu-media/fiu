@@ -8,6 +8,10 @@ import { cachedSanity } from "@/sanity/lib/live";
 import { QUOTE_CATALOGUE_QUERY } from "@/sanity/lib/queries";
 import { toRentalImage } from "@/sanity/lib/rentals";
 
+// Rentals is hidden for now: the `_` prefix makes this a private folder, so none of it is routed (`/rentals*` is a
+// 404). To bring it back, rename the folder to `rentals`, restore the typed `PageProps`/`LayoutProps` generics
+// (`PageProps<"/[lang]/rentals">`, ...), re-add the nav item in lib/i18n/nav.ts and drop `testIgnore`/skips in e2e.
+
 /** Labels for basket lines. Published content only, so it is cached and keeps the shell static. */
 async function catalogueLookup(lang: Locale) {
   const { data } = await cachedSanity({
@@ -30,7 +34,13 @@ async function catalogueLookup(lang: Locale) {
   return items;
 }
 
-export default async function RentalsLayout({ children, params }: LayoutProps<"/[lang]/rentals">) {
+export default async function RentalsLayout({
+  children,
+  params,
+}: {
+  children: React.ReactNode;
+  params: Promise<{ lang: string }>;
+}) {
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
   const [dict, items] = await Promise.all([getDictionary(lang), catalogueLookup(lang)]);

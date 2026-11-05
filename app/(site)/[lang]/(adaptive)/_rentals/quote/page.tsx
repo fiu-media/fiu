@@ -10,14 +10,14 @@ import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getPageText } from "@/sanity/lib/pageText";
 import { QuoteForm } from "./QuoteForm";
 
-export async function generateMetadata({ params }: PageProps<"/[lang]/rentals/quote">): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ lang: string }> }): Promise<Metadata> {
   const { lang } = await params;
   if (!isLocale(lang)) return {};
   const { quote } = await getDictionary(lang);
   return { title: quote.title, alternates: languageAlternates(lang, "/rentals/quote"), robots: { index: false } };
 }
 
-export default async function QuotePage({ params }: PageProps<"/[lang]/rentals/quote">) {
+export default async function QuotePage({ params }: { params: Promise<{ lang: string }> }) {
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
   const [{ quote, basket, forms, common, dates }, text] = await Promise.all([getDictionary(lang), getPageText(lang)]);

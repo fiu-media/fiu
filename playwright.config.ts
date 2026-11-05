@@ -11,6 +11,14 @@ const baseURL = `http://localhost:${port}`;
 // e2e/fixtures): the server command seeds it, builds the site and starts it, and the teardown removes it. See README.
 export default defineConfig({
   testDir: "e2e",
+  // Rentals is hidden (see app/(site)/[lang]/(adaptive)/_rentals), so these have no pages to drive. Remove with it.
+  testIgnore: [
+    "**/rental-gallery.spec.ts",
+    "**/rentals-filter.spec.ts",
+    "**/quote.spec.ts",
+    "**/quote-drawer.spec.ts",
+    "**/prefill.spec.ts",
+  ],
   globalTeardown: "./e2e/global-teardown.ts",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
