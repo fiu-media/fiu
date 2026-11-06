@@ -60,6 +60,12 @@ const SLOW_FADE_MS = 700;
  */
 const HIDDEN_SCENE_OPACITY = 0.001;
 
+/**
+ * Once per page load, like the splash: the intro has played out. The page tree is mounted again when the language is
+ * switched, and the logo must come back at rest then, not spin in from the middle again.
+ */
+let introPlayed = false;
+
 type Mode = "pending" | "live" | "static";
 /** splash up, then the logo spinning, then settled (stills rotate, scene interactive). */
 type Stage = "splash" | "spin" | "settled";
@@ -103,13 +109,15 @@ export function HomeHero({ landscape, portrait }: HeroStills) {
   const [minElapsed, setMinElapsed] = useState(isSplashDismissed);
   const [timedOut, setTimedOut] = useState(isSplashDismissed);
   const [stage, setStage] = useState<Stage>(isSplashDismissed() ? "settled" : "splash");
+  // A hero mounted after the intro already played shows the SVG at rest (left) until the glass logo takes over in place.
+  const [resumed] = useState(() => introPlayed);
   const splashDone = timedOut || (minElapsed && (mode === "live" ? sceneReady : mode === "static"));
   const spinGo = stage !== "splash";
   const introDone = stage === "settled";
   // The static SVG logo starts centred under the splash, then glides left on desktop. Taking over from a
   // settled glass logo, it is already there.
-  const logoAtLeft = mode === "static" && splashDone;
-  const snapToLeft = Boolean(slow?.settled);
+  const logoAtLeft = (mode === "static" || resumed) && splashDone;
+  const snapToLeft = Boolean(slow?.settled) || resumed;
 
   useEffect(() => {
     const timers = [
@@ -131,6 +139,10 @@ export function HomeHero({ landscape, portrait }: HeroStills) {
 
   // Held until the intro is over so a still crossfade (and its extra rendering) never lands
   // mid-spin.
+  useEffect(() => {
+    if (introDone) introPlayed = true;
+  }, [introDone]);
+
   useEffect(() => {
     if (!introDone) return;
     const id = window.setInterval(() => setIndex((i) => (i + 1) % slides.length), ROTATE_SECONDS * 1000);
@@ -179,7 +191,7 @@ export function HomeHero({ landscape, portrait }: HeroStills) {
         <div
           className={cn(
             "pointer-events-none absolute inset-0 grid place-items-center",
-            splashDone && mode !== "live" && "motion-safe:transition-opacity motion-safe:duration-700",
+            splashDone && (mode !== "live" || resumed) && "motion-safe:transition-opacity motion-safe:duration-700",
           )}
           style={{ opacity: mode === "live" && sceneReady ? 0 : 1 }}
         >
@@ -208,7 +220,7 @@ export function HomeHero({ landscape, portrait }: HeroStills) {
               "absolute inset-0",
               BLEED_CLASS,
               introDone
-                ? "-z-10"
+                ? cn("-z-10", resumed && "motion-safe:transition-opacity motion-safe:duration-700")
                 : "pointer-events-none z-30 transition-opacity duration-(--splash-fade) ease-out will-change-[opacity]",
               slow && "pointer-events-none transition-opacity duration-700",
             )}
@@ -224,7 +236,9 @@ export function HomeHero({ landscape, portrait }: HeroStills) {
               rimLook="light"
               introSlide
               introHold={!spinGo}
-              splashLift={splashDone}
+              introPlayed={resumed}
+              // Resumed: no splash to lift, so the photo is in the glass from the first frame.
+              splashLift={resumed ? undefined : splashDone}
               interactive={introDone}
               onIntroEnd={onIntroEnd}
               onContextLost={onFail}

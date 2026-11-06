@@ -13,6 +13,7 @@ import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import type { NavItem } from "@/lib/i18n/nav";
 import { nudgeHomeScrollRepeatedly } from "@/components/home/bleed";
 import { HomeLink } from "./HomeLink";
+import { LanguageScrollRestore } from "./LanguageScrollRestore";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 
 type NavProps = {
@@ -60,6 +61,7 @@ function Nav({ lang, items, homeHref, labels, onImage, pathname }: NavProps & { 
   return (
     <>
       <BriertoWatermark />
+      <LanguageScrollRestore pathname={pathname} />
       <aside
         className={cn(
           "fixed inset-y-0 left-0 z-30 hidden w-[calc(4rem+env(safe-area-inset-left))] flex-col items-center gap-8 border-r border-line pt-[max(1.75rem,env(safe-area-inset-top))] pb-7 pl-[env(safe-area-inset-left)] md:flex",

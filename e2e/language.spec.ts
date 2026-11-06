@@ -43,3 +43,21 @@ test.describe("a browser that prefers English", () => {
     await expect(page).toHaveURL(at("/ga/about"));
   });
 });
+
+test.describe("switching language part-way down a page", () => {
+  test.use({ locale: "en-IE", viewport: { width: 1280, height: 600 } });
+
+  test("keeps the scroll position", async ({ page }) => {
+    await page.goto("/about");
+    const y = await page.evaluate(() => {
+      window.scrollTo({ top: 150, behavior: "instant" });
+      return window.scrollY;
+    });
+    expect(y).toBeGreaterThan(0);
+
+    await page.getByRole("link", { name: localeNames.ga }).click();
+    await expect(page).toHaveURL(at("/ga/about"));
+    await expect(page.locator("html")).toHaveAttribute("lang", "ga");
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(y);
+  });
+});
