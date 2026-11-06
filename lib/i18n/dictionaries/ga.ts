@@ -20,6 +20,12 @@ export const ga: DeepPartial<Dictionary> = {
     rentals: "Cíos",
     contact: "Teagmháil",
   },
+  notFound: {
+    heading: "Níor aimsíodh an leathanach",
+    body: "Níl an leathanach sin ann, nó tá sé bogtha.",
+    home: "Ar ais abhaile",
+    backTo: "Ar ais chuig {section}",
+  },
   vimeo: {
     play: "Seinn {title}",
     stop: "Stad an físeán",

@@ -9,6 +9,7 @@ import { PageTitle } from "@/components/ui/PageTitle";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { cn } from "@/lib/cn";
 import { emailForDisplay } from "@/lib/email/display";
+import { countryNames } from "@/lib/forms/countries";
 import { defaultLocale, isLocale, languageAlternates, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { instagramHandle } from "@/lib/instagram";
@@ -37,7 +38,7 @@ export default async function ContactPage({ params }: PageProps<"/[lang]/contact
         </header>
         {/* ContactForm reads the ?type= query, which needs a boundary to keep the page static. */}
         <Suspense fallback={<FormSkeleton label={common.loading} fields={3} />}>
-          <ContactForm lang={lang} dict={{ contact, forms }} />
+          <ContactForm lang={lang} dict={{ contact, forms }} countries={countryNames(lang)} />
         </Suspense>
       </div>
       <Suspense fallback={<DirectContactSkeleton />}>
