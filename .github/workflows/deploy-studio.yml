@@ -22,6 +22,13 @@ concurrency:
   group: deploy-studio
   cancel-in-progress: false
 
+# actions/checkout runs `git init` before it fetches our ref, and a fresh repo defaults to `master`, so git prints a
+# hint about that default changing in Git 3.0. Setting it through env quiets the hint without a step before checkout.
+env:
+  GIT_CONFIG_COUNT: 1
+  GIT_CONFIG_KEY_0: init.defaultBranch
+  GIT_CONFIG_VALUE_0: main
+
 jobs:
   deploy:
     runs-on: ubuntu-latest

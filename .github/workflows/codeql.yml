@@ -13,6 +13,13 @@ on:
 permissions:
   contents: read
 
+# actions/checkout runs `git init` before it fetches our ref, and a fresh repo defaults to `master`, so git prints a
+# hint about that default changing in Git 3.0. Setting it through env quiets the hint without a step before checkout.
+env:
+  GIT_CONFIG_COUNT: 1
+  GIT_CONFIG_KEY_0: init.defaultBranch
+  GIT_CONFIG_VALUE_0: main
+
 jobs:
   analyze:
     # Keep this name: branch protection requires `Analyze (javascript-typescript)` and
@@ -35,6 +42,12 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         if: env.SKIP != 'true'
+      # The runner's system Python has no lib-dynload on its path, which makes the Python extractor log
+      # `[WARN] Failed to find dynload path`. A regular CPython build has it.
+      - uses: actions/setup-python@v7
+        if: env.SKIP != 'true' && matrix.language == 'python'
+        with:
+          python-version: "3.x"
       - uses: github/codeql-action/init@v4
         if: env.SKIP != 'true'
         with:

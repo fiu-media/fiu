@@ -29,14 +29,13 @@
     "@conform-to/react": "^1.21.3",
     "@conform-to/zod": "^1.21.3",
     "@opentelemetry/api": "^1.9.1",
-    "@react-email/components": "^1.0.12",
     "@react-three/drei": "^10.7.9",
     "@react-three/fiber": "^9.8.2",
     "@sanity/client": "^8.11.0",
     "@sanity/document-internationalization": "^6.2.46",
     "@sanity/image-url": "^2.1.1",
     "@sanity/orderable-document-list": "^2.0.28",
-    "@sanity/vision": "^6.21.0",
+    "@sanity/vision": "^6.22.0",
     "@t3-oss/env-nextjs": "^0.13.11",
     "@vercel/analytics": "^2.0.1",
     "@vercel/otel": "^2.3.0",
@@ -56,8 +55,9 @@
     "nuqs": "^2.10.2",
     "react": "19.3.1",
     "react-dom": "19.3.1",
+    "react-email": "^6.11.8",
     "resend": "^6.37.0",
-    "sanity": "^6.20.0",
+    "sanity": "^6.22.0",
     "simple-icons": "^16.36.0",
     "styled-components": "^6.6.0",
     "tailwind-merge": "^3.7.0",
@@ -82,7 +82,6 @@
     "lint-staged": "^17.6.0",
     "prettier": "^3.9.10",
     "prettier-plugin-tailwindcss": "^0.8.1",
-    "react-email": "^6.11.6",
     "tailwindcss": "^4",
     "tsx": "^4.23.15",
     "turbo": "^2.11.10",
@@ -96,8 +95,9 @@
     ],
     "*.{css,json,md,yml}": "prettier --write"
   },
-  "overrides": {
-    "@react-email/render": "2.2.0"
-  },
-  "packageManager": "npm@11.19.1"
+  "packageManager": "npm@11.19.1",
+  "allowScripts": {
+    "esbuild": false,
+    "fsevents": false
+  }
 }

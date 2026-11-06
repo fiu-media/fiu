@@ -1,4 +1,4 @@
-import { Body, Button, Container, Head, Heading, Html, Img, Link, Preview, Text } from "@react-email/components";
+import { Body, Button, Container, Head, Heading, Html, Img, Link, Preview, Text } from "react-email";
 
 /** A row with an `href` renders its value as a link. */
 export type Row = [label: string, value: string, href?: string];
