@@ -1,0 +1,133 @@
+import type { Metadata } from "next";
+import { PortableText } from "next-sanity";
+import { notFound } from "next/navigation";
+import { Suspense } from "react";
+import { AboutContacts } from "@/components/about/AboutContacts";
+import { AboutFooter } from "@/components/about/AboutFooter";
+import { TeamBand, TeamBeside, TeamScreen, type AboutTeamProps } from "@/components/about/AboutTeamOptions";
+import { railInset } from "@/components/nav/rail";
+import { SiteNav } from "@/components/nav/SiteNav";
+import { GlassPillLink } from "@/components/ui/Glass";
+import { fallbackStills } from "@/lib/fallback-stills";
+import { defaultLocale, isLocale, localizedPath, type Locale } from "@/lib/i18n/config";
+import { getDictionary } from "@/lib/i18n/dictionaries";
+import { cachedSanity } from "@/sanity/lib/live";
+import { ABOUT_QUERY } from "@/sanity/lib/queries";
+import { toSizedImage } from "@/sanity/lib/rentals";
+
+// Sign-off page for where the team photo goes on About: three placements on the live About layout (option A). The
+// photo is a stand-in until Fiú has one, and the caption is sample copy. Unlisted, like /dev/about.
+export const metadata: Metadata = {
+  title: "About team photo options",
+  robots: { index: false, follow: false },
+};
+
+const OPTIONS = ["1", "2", "3"] as const;
+type Option = (typeof OPTIONS)[number];
+const optionName: Record<Option, string> = { "1": "Group portrait", "2": "Beside the words", "3": "Second screen" };
+const layouts = { "1": TeamBand, "2": TeamBeside, "3": TeamScreen } satisfies Record<
+  Option,
+  (p: AboutTeamProps) => React.ReactNode
+>;
+
+const sampleManifesto = (
+  <>
+    <p>
+      <strong className="font-semibold text-white">At Fíu we believe in telling a new generation of stories.</strong> We&rsquo;re
+      a production company, a home for Irish directors, cinematographers and editors, and a rental house for the kit we trust on
+      our own sets.
+    </p>
+    <p className="text-white/70">
+      We make original work, we make work for clients, and we make room for the people who make it with us.
+    </p>
+  </>
+);
+
+export default function AboutTeamOptionsPage({ params, searchParams }: PageProps<"/[lang]/dev/about-team">) {
+  return (
+    <Suspense>
+      <Options params={params} searchParams={searchParams} />
+    </Suspense>
+  );
+}
+
+async function Options({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ lang: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const { lang } = await params;
+  if (!isLocale(lang)) notFound();
+  const { option: requested } = await searchParams;
+  const option: Option = OPTIONS.find((o) => o === requested) ?? "1";
+  const [dict, settings] = await Promise.all([getDictionary(lang), getSettings(lang)]);
+
+  const fallback = fallbackStills[0];
+  const still = (settings.still ? toSizedImage(settings.still, 2400) : null) ?? {
+    src: fallback.src,
+    width: fallback.width,
+    height: fallback.height,
+    alt: fallback.alt,
+    blurDataURL: fallback.blurDataURL,
+  };
+  // A different still from the About one, so the placeholder reads as "another photo".
+  const stand = fallbackStills[2 % fallbackStills.length]!;
+  const props: AboutTeamProps = {
+    still,
+    slogan: settings.slogan ?? null,
+    gloss: settings.sloganGloss ?? null,
+    manifesto: settings.manifesto?.length ? <PortableText value={settings.manifesto} /> : sampleManifesto,
+    contacts: (
+      <AboutContacts
+        email={settings.contactEmail ?? "hello@example.com"}
+        instagram={settings.instagram ?? "https://www.instagram.com/example/"}
+        labels={{ email: dict.about.emailLabel, instagram: dict.about.instagramLabel }}
+      />
+    ),
+    footer: <AboutFooter copyright={dict.footer.copyright} />,
+    team: { src: stand.src, width: stand.width, height: stand.height, alt: "", blurDataURL: stand.blurDataURL },
+    heading: "The team",
+    caption: "Sample caption: the Fiú team on set, 2026.",
+    placeholder: true,
+  };
+  const Layout = layouts[option];
+
+  return (
+    <div data-surface="cinematic" className={`relative isolate bg-ink text-fg ${railInset}`}>
+      <SiteNav lang={lang} onImage />
+      <Layout {...props} />
+
+      <nav
+        aria-label="Team photo options"
+        className="fixed bottom-5 left-1/2 z-40 flex -translate-x-1/2 gap-2 md:top-[calc(var(--dev-bar,2.5rem)+0.75rem)] md:bottom-auto md:ml-8"
+      >
+        {OPTIONS.map((o) => (
+          <GlassPillLink
+            key={o}
+            size="sm"
+            onImage
+            scroll={false}
+            href={`${localizedPath(lang, "/dev/about-team")}?option=${o}`}
+            current={o === option}
+            aria-label={`${o}: ${optionName[o]}`}
+          >
+            {o}
+            <span className="max-sm:hidden"> · {optionName[o]}</span>
+          </GlassPillLink>
+        ))}
+      </nav>
+    </div>
+  );
+}
+
+async function getSettings(lang: Locale) {
+  const { data } = await cachedSanity({
+    query: ABOUT_QUERY,
+    params: { lang, fallbackLang: defaultLocale },
+    perspective: "published",
+    stega: false,
+  });
+  return data;
+}
