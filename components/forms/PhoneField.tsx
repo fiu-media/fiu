@@ -2,28 +2,15 @@
 
 import { BaseControl, useControl } from "@conform-to/react/future";
 import * as flags from "country-flag-icons/react/3x2";
-import { getCountries, type CountryCode } from "libphonenumber-js/min";
-import { useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type ChangeEvent } from "react";
+import type { CountryCode } from "libphonenumber-js/min";
+import { useLayoutEffect, useRef, useState, type ChangeEvent } from "react";
 import { cn } from "@/lib/cn";
-import { dateLocale, type Locale } from "@/lib/i18n/config";
-import { COUNTRY_NAMES_GA } from "@/lib/forms/country-names-ga";
+import type { CountryList, CountryOption } from "@/lib/forms/countries";
 import { callingCode, caretWithDigitsAfter, digitsIn, initial, interpret } from "@/lib/forms/phone";
 import { chevron, controlClass, FieldFrame, placeholderClass, type FieldProps } from "./Field";
 
-const noSubscription = () => () => {};
-/** False while rendering on the server and hydrating, true after: for what the server and the browser can't agree on. */
-const useHydrated = () =>
-  useSyncExternalStore(
-    noSubscription,
-    () => true,
-    () => false,
-  );
-
 /** What an example looks like, as the number input shows it (no trunk 0, no dialling code). */
 const SAMPLE: Partial<Record<CountryCode, string>> = { IE: "(83) 123 4567" };
-
-/** Listed first: where the studio is, and where most visitors will be calling from. */
-const PINNED: CountryCode[] = ["IE", "GB", "US"];
 
 const FLAGS = flags as unknown as Record<string, React.ComponentType<React.SVGAttributes<SVGElement>> | undefined>;
 /**
@@ -38,13 +25,13 @@ export function PhoneField({
   label,
   optionalLabel,
   countryLabel,
-  lang,
+  countries,
   autoComplete = "tel",
   defaultCountry = "IE",
 }: {
   field: FieldProps;
-  /** Language of the country names in the list. */
-  lang: Locale;
+  /** The country list, named and ordered for the page's language (see `countryList`, which builds it on the server). */
+  countries: CountryList;
   label: string;
   optionalLabel?: string;
   /** Accessible name of the country select. */
@@ -68,27 +55,6 @@ export function PhoneField({
     caretFromEnd.current = null;
   }, [text]);
 
-  // The names and their order come from the runtime's ICU data, which Node and the browser don't share (the server
-  // and the client disagreed on where "British Virgin Islands" sorts). So the full list is built in the browser, after
-  // hydration; until then the select holds only the chosen country, which is all anyone sees of it (the flag shows).
-  const hydrated = useHydrated();
-  const countries = useMemo(() => {
-    if (!hydrated) return null;
-    const tag = dateLocale[lang];
-    // Irish names come from our own table: Chromium has no Irish region names to ask for.
-    const names = new Intl.DisplayNames([tag], { type: "region" });
-    const nameOf = (code: CountryCode) => (lang === "ga" ? COUNTRY_NAMES_GA[code] : (names.of(code) ?? code));
-    // Irish names are filed without their article ("an Fhrainc" under F).
-    const sortKey = (name: string) => (lang === "ga" ? name.replace(/^(an|na) /i, "") : name);
-    const named = getCountries()
-      .map((code) => ({ code, name: nameOf(code) }))
-      .sort((a, b) => sortKey(a.name).localeCompare(sortKey(b.name), tag));
-    return {
-      pinned: PINNED.map((code) => named.find((c) => c.code === code)!),
-      all: named.filter((c) => !PINNED.includes(c.code)),
-    };
-  }, [hydrated, lang]);
-
   function update(raw: string, selected: CountryCode, caret?: number) {
     const next = interpret(raw, selected);
     if (caret !== undefined) caretFromEnd.current = digitsIn(raw.slice(caret));
@@ -97,7 +63,7 @@ export function PhoneField({
   }
 
   const Flag = FLAGS[country];
-  const option = ({ code, name }: { code: CountryCode; name: string }) => (
+  const option = ({ code, name }: CountryOption) => (
     <option key={code} value={code}>
       {name} (+{callingCode(code)})
     </option>
@@ -121,15 +87,9 @@ export function PhoneField({
             onBlur={() => blur()}
             className="absolute inset-0 size-full cursor-pointer opacity-0"
           >
-            {countries ? (
-              <>
-                {countries.pinned.map(option)}
-                <option disabled>──────────</option>
-                {countries.all.map(option)}
-              </>
-            ) : (
-              <option value={country}>+{callingCode(country)}</option>
-            )}
+            {countries.pinned.map(option)}
+            <option disabled>──────────</option>
+            {countries.all.map(option)}
           </select>
           {/* Flag, chevron and dialling code are all under the select, so any of them opens the list. */}
           {Flag && <Flag aria-hidden className="pointer-events-none h-4 w-6 rounded-[2px] ring-1 ring-line" />}
