@@ -14,7 +14,7 @@ export const ga: DeepPartial<Dictionary> = {
     menu: "Roghchlár",
     closeMenu: "Dún an roghchlár",
     language: "Teanga",
-    about: "Fúinn",
+    about: "Eolas Fúinn",
     work: "Ár gCuid Oibre",
     talent: "Tallann",
     rentals: "Cíos",
@@ -25,7 +25,7 @@ export const ga: DeepPartial<Dictionary> = {
     stop: "Stad an físeán",
   },
   about: {
-    title: "Fúinn",
+    title: "Eolas Fúinn",
     emailLabel: "Ríomhphost",
   },
   work: {
