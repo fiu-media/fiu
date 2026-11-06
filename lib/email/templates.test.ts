@@ -1,4 +1,4 @@
-import { render } from "@react-email/components";
+import { render } from "react-email";
 import { describe, expect, it } from "vitest";
 import { plainTextOptions } from "./send";
 import { en } from "@/lib/i18n/dictionaries/en";
