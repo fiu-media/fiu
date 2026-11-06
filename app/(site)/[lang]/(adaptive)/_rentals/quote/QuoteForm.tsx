@@ -187,7 +187,13 @@ function QuoteFormFields({ lang, dict }: Props) {
             maxLength={limits.email}
             placeholder={quote.placeholders.email}
           />
-          <PhoneField field={fields.phone} label={quote.phone} optionalLabel={quote.optional} countryLabel={quote.phoneCountry} />
+          <PhoneField
+            field={fields.phone}
+            label={quote.phone}
+            optionalLabel={quote.optional}
+            countryLabel={quote.phoneCountry}
+            lang={lang}
+          />
           <Field
             field={fields.company}
             label={quote.company}

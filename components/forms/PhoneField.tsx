@@ -5,6 +5,7 @@ import * as flags from "country-flag-icons/react/3x2";
 import { getCountries, type CountryCode } from "libphonenumber-js/min";
 import { useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type ChangeEvent } from "react";
 import { cn } from "@/lib/cn";
+import { dateLocale, type Locale } from "@/lib/i18n/config";
 import { callingCode, caretWithDigitsAfter, digitsIn, initial, interpret } from "@/lib/forms/phone";
 import { chevron, controlClass, FieldFrame, placeholderClass, type FieldProps } from "./Field";
 
@@ -36,10 +37,13 @@ export function PhoneField({
   label,
   optionalLabel,
   countryLabel,
+  lang,
   autoComplete = "tel",
   defaultCountry = "IE",
 }: {
   field: FieldProps;
+  /** Language of the country names in the list. */
+  lang: Locale;
   label: string;
   optionalLabel?: string;
   /** Accessible name of the country select. */
@@ -69,15 +73,16 @@ export function PhoneField({
   const hydrated = useHydrated();
   const countries = useMemo(() => {
     if (!hydrated) return null;
-    const names = new Intl.DisplayNames(["en"], { type: "region" });
+    const tag = dateLocale[lang];
+    const names = new Intl.DisplayNames([tag], { type: "region" });
     const named = getCountries()
       .map((code) => ({ code, name: names.of(code) ?? code }))
-      .sort((a, b) => a.name.localeCompare(b.name));
+      .sort((a, b) => a.name.localeCompare(b.name, tag));
     return {
       pinned: PINNED.map((code) => named.find((c) => c.code === code)!),
       all: named.filter((c) => !PINNED.includes(c.code)),
     };
-  }, [hydrated]);
+  }, [hydrated, lang]);
 
   function update(raw: string, selected: CountryCode, caret?: number) {
     const next = interpret(raw, selected);
@@ -103,7 +108,7 @@ export function PhoneField({
           field.errors ? "border-accent" : "border-line",
         )}
       >
-        <div className="relative mr-3 flex shrink-0 items-center gap-1.5">
+        <div className="relative mr-3 flex shrink-0 items-center gap-1.5 border-r border-line pr-3">
           <select
             aria-label={countryLabel}
             value={country}
@@ -121,10 +126,13 @@ export function PhoneField({
               <option value={country}>+{callingCode(country)}</option>
             )}
           </select>
-          {Flag && <Flag aria-hidden className="h-4 w-6 rounded-[2px] ring-1 ring-line" />}
-          {chevron}
+          {/* Flag, chevron and dialling code are all under the select, so any of them opens the list. */}
+          {Flag && <Flag aria-hidden className="pointer-events-none h-4 w-6 rounded-[2px] ring-1 ring-line" />}
+          <span aria-hidden className="pointer-events-none flex">
+            {chevron}
+          </span>
+          <span className="pointer-events-none ml-1.5 text-fg-muted select-none">+{callingCode(country)}</span>
         </div>
-        <span className="mr-3 cursor-default border-r border-line pr-3 text-fg-muted select-none">+{callingCode(country)}</span>
         <input
           ref={input}
           id={field.id}

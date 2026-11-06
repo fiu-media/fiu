@@ -88,6 +88,7 @@ function ContactFormFields({ lang, dict }: Props) {
         label={contact.phone}
         optionalLabel={contact.optional}
         countryLabel={contact.phoneCountry}
+        lang={lang}
       />
       <Field
         field={fields.message}
