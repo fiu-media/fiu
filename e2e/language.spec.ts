@@ -43,3 +43,17 @@ test.describe("a browser that prefers English", () => {
     await expect(page).toHaveURL(at("/ga/about"));
   });
 });
+
+test.describe("an Irish page", () => {
+  test("shows the 404 in Irish", async ({ page }) => {
+    await page.goto("/ga/no-such-page");
+    await expect(page.locator("html")).toHaveAttribute("lang", "ga");
+    await expect(page.getByRole("heading", { level: 1, name: "Níor aimsíodh an leathanach" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Ar ais abhaile" })).toHaveAttribute("href", "/ga");
+  });
+
+  test("names the countries in the phone field in Irish", async ({ page }) => {
+    await page.goto("/ga/contact");
+    await expect(page.getByLabel("Tír na huimhreach fóin").getByRole("option", { name: "Éire (+353)" })).toBeAttached();
+  });
+});

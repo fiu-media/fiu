@@ -2,9 +2,10 @@
 
 import { BaseControl, useControl } from "@conform-to/react/future";
 import * as flags from "country-flag-icons/react/3x2";
-import { getCountries, type CountryCode } from "libphonenumber-js/min";
+import type { CountryCode } from "libphonenumber-js/min";
 import { useLayoutEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import { cn } from "@/lib/cn";
+import type { CountryName } from "@/lib/forms/countries";
 import { callingCode, caretWithDigitsAfter, digitsIn, initial, interpret } from "@/lib/forms/phone";
 import { chevron, controlClass, FieldFrame, placeholderClass, type FieldProps } from "./Field";
 
@@ -23,6 +24,7 @@ const FLAGS = flags as unknown as Record<string, React.ComponentType<React.SVGAt
  * validation and error focus work like any field.
  */
 export function PhoneField({
+  countries: allCountries,
   field,
   label,
   optionalLabel,
@@ -30,6 +32,8 @@ export function PhoneField({
   autoComplete = "tel",
   defaultCountry = "IE",
 }: {
+  /** Every country, named in the page's language and sorted (see `countryNames`). */
+  countries: CountryName[];
   field: FieldProps;
   label: string;
   optionalLabel?: string;
@@ -54,16 +58,13 @@ export function PhoneField({
     caretFromEnd.current = null;
   }, [text]);
 
-  const countries = useMemo(() => {
-    const names = new Intl.DisplayNames(["en"], { type: "region" });
-    const named = getCountries()
-      .map((code) => ({ code, name: names.of(code) ?? code }))
-      .sort((a, b) => a.name.localeCompare(b.name));
-    return {
-      pinned: PINNED.map((code) => named.find((c) => c.code === code)!),
-      all: named.filter((c) => !PINNED.includes(c.code)),
-    };
-  }, []);
+  const countries = useMemo(
+    () => ({
+      pinned: PINNED.map((code) => allCountries.find((c) => c.code === code)!),
+      all: allCountries.filter((c) => !PINNED.includes(c.code)),
+    }),
+    [allCountries],
+  );
 
   function update(raw: string, selected: CountryCode, caret?: number) {
     const next = interpret(raw, selected);
