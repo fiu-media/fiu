@@ -65,6 +65,36 @@ test.describe("contact form", () => {
     await expect(page.getByLabel(contact.name)).toHaveValue("E2E Tester");
   });
 
+  test("browsers can autofill it: standard autocomplete tokens, and a honeypot they are told to leave alone", async ({
+    page,
+  }) => {
+    await page.goto("/contact");
+    await expect(page.getByLabel(contact.name)).toHaveAttribute("autocomplete", "name");
+    await expect(page.getByLabel(contact.email)).toHaveAttribute("autocomplete", "email");
+    await expect(page.getByRole("textbox", { name: /^Phone/ })).toHaveAttribute("autocomplete", "tel");
+
+    const honeypot = page.locator("input[name=website]");
+    await expect(honeypot).toHaveAttribute("autocomplete", "off");
+    for (const optOut of ["data-1p-ignore", "data-lpignore", "data-bwignore", "data-form-type"]) {
+      await expect(honeypot, optOut).toHaveAttribute(optOut);
+    }
+  });
+
+  test("values set the way a browser's autofill sets them are kept and sent", async ({ page }) => {
+    await page.goto("/contact");
+    // Autofill assigns the value and fires input and change, which is all Playwright's `fill` does too, but for the
+    // phone it arrives already written out in full, in whichever format the browser saved.
+    await page.getByLabel(contact.name).fill("Aoife Ní Bhriain");
+    await page.getByLabel(contact.email).fill(testEmail());
+    const number = page.getByRole("textbox", { name: /^Phone/ });
+    await number.fill("+353 83 123 4567");
+    await expect(number).toHaveValue("(83) 123 4567");
+    await page.getByLabel(contact.message).fill("Hello from an autofilled form.");
+    await page.getByRole("button", { name: contact.submit }).click();
+
+    await expect(page.getByRole("heading", { name: contact.successTitle })).toBeVisible();
+  });
+
   test("a valid message is sent", async ({ page }) => {
     await page.goto("/contact?type=Rentals");
     await page.getByLabel(contact.name).fill("E2E Tester");

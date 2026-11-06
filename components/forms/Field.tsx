@@ -155,6 +155,8 @@ export function Field({
       <input
         {...shared}
         type={type}
+        // An email is never capitalised or spell-checked; on iOS this is also what lets QuickType offer the saved address.
+        {...(type === "email" && { autoCapitalize: "none", spellCheck: false, inputMode: "email" as const })}
         min={min}
         data-empty={type === "date" && !value ? "" : undefined}
         {...(value === undefined
@@ -170,13 +172,27 @@ export function Field({
   );
 }
 
-/** Hidden from people and assistive tech; bots tend to fill it, and the server rejects them for it. */
+/**
+ * Hidden from people and assistive tech; bots tend to fill it, and the server rejects them for it. The browser and
+ * password managers must not fill it, or a real visitor would be rejected: `autocomplete="off"` is ignored by some, so
+ * the `data-*` attributes are the opt-outs for 1Password, LastPass and Bitwarden, and Dashlane's form-type hint.
+ */
 export function Honeypot() {
   return (
     <div aria-hidden className="absolute -left-[9999px] h-px w-px overflow-hidden">
       <label>
         Website
-        <input type="text" name="website" tabIndex={-1} autoComplete="off" defaultValue="" />
+        <input
+          type="text"
+          name="website"
+          tabIndex={-1}
+          autoComplete="off"
+          data-1p-ignore
+          data-lpignore="true"
+          data-bwignore
+          data-form-type="other"
+          defaultValue=""
+        />
       </label>
     </div>
   );
