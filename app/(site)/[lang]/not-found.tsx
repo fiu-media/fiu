@@ -1,7 +1,9 @@
 import type { Viewport } from "next";
+import type { ReactNode } from "react";
+import { NotFoundLocale } from "@/components/NotFoundLocale";
 import { NotFoundPage } from "@/components/NotFoundPage";
 import { ThemeColor } from "@/components/ThemeColor";
-import { defaultLocale } from "@/lib/i18n/config";
+import { locales, type Locale } from "@/lib/i18n/config";
 
 const INK = "#0c0b0d";
 
@@ -9,13 +11,17 @@ const INK = "#0c0b0d";
 // ThemeColor covers a 404 that streams in under a route that already sent its colours (/rentals/unknown).
 export const viewport: Viewport = { themeColor: INK };
 
-// not-found.tsx gets no params, so this renders in the default locale (the only one so far).
+// not-found.tsx gets no params, so every language's 404 is rendered and NotFoundLocale shows the one the URL is in.
 // Compare the other layouts at /dev/not-found.
 export default function NotFound() {
+  const pages = Object.fromEntries(locales.map((lang) => [lang, <NotFoundPage key={lang} lang={lang} />])) as Record<
+    Locale,
+    ReactNode
+  >;
   return (
     <>
       <ThemeColor color={INK} />
-      <NotFoundPage lang={defaultLocale} />
+      <NotFoundLocale pages={pages} />
     </>
   );
 }
