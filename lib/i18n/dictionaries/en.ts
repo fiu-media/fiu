@@ -22,6 +22,13 @@ export const en = {
   footer: {
     copyright: "Fiú Media © {year}",
   },
+  notFound: {
+    eyebrow: "404",
+    heading: "Page not found",
+    body: "That page doesn’t exist, or it has moved.",
+    home: "Back home",
+    backTo: "Back to {section}",
+  },
   vimeo: {
     play: "Play {title}",
     stop: "Stop video",
