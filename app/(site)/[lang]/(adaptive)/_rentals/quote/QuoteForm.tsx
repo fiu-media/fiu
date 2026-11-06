@@ -144,6 +144,7 @@ function QuoteFormFields({ lang, dict }: Props) {
             type="date"
             label={quote.startDate}
             required
+            autoComplete="off"
             min={todayInDublin()}
             value={startDate}
             onChange={(v) => setDates({ startDate: v })}
@@ -153,6 +154,7 @@ function QuoteFormFields({ lang, dict }: Props) {
             type="date"
             label={quote.endDate}
             required
+            autoComplete="off"
             min={startDate || undefined}
             value={endDate}
             onChange={(v) => setDates({ endDate: v })}
@@ -199,6 +201,7 @@ function QuoteFormFields({ lang, dict }: Props) {
           field={fields.production}
           label={quote.production}
           optionalLabel={quote.optional}
+          autoComplete="off"
           maxLength={limits.production}
           placeholder={quote.placeholders.production}
         />
@@ -210,6 +213,7 @@ function QuoteFormFields({ lang, dict }: Props) {
           maxRows={10}
           label={quote.message}
           optionalLabel={quote.optional}
+          autoComplete="off"
           maxLength={limits.message}
           placeholder={quote.placeholders.message}
         />

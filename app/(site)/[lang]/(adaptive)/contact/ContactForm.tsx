@@ -59,7 +59,7 @@ function ContactFormFields({ lang, dict }: Props) {
       ]}
       className="max-w-xl gap-4"
     >
-      <Field field={fields.enquiryType} as="select" label={contact.enquiryType} required>
+      <Field field={fields.enquiryType} as="select" label={contact.enquiryType} required autoComplete="off">
         {ENQUIRY_TYPES.map((type) => (
           <option key={type} value={type}>
             {contact.enquiryTypes[type]}
@@ -97,6 +97,7 @@ function ContactFormFields({ lang, dict }: Props) {
         maxRows={16}
         label={contact.message}
         required
+        autoComplete="off"
         maxLength={limits.message}
         placeholder={contact.placeholders.message}
       />

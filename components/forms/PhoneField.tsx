@@ -3,10 +3,19 @@
 import { BaseControl, useControl } from "@conform-to/react/future";
 import * as flags from "country-flag-icons/react/3x2";
 import { getCountries, type CountryCode } from "libphonenumber-js/min";
-import { useLayoutEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
+import { useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type ChangeEvent } from "react";
 import { cn } from "@/lib/cn";
 import { callingCode, caretWithDigitsAfter, digitsIn, initial, interpret } from "@/lib/forms/phone";
 import { chevron, controlClass, FieldFrame, placeholderClass, type FieldProps } from "./Field";
+
+const noSubscription = () => () => {};
+/** False while rendering on the server and hydrating, true after: for what the server and the browser can't agree on. */
+const useHydrated = () =>
+  useSyncExternalStore(
+    noSubscription,
+    () => true,
+    () => false,
+  );
 
 /** What an example looks like, as the number input shows it (no trunk 0, no dialling code). */
 const SAMPLE: Partial<Record<CountryCode, string>> = { IE: "(83) 123 4567" };
@@ -54,7 +63,12 @@ export function PhoneField({
     caretFromEnd.current = null;
   }, [text]);
 
+  // The names and their order come from the runtime's ICU data, which Node and the browser don't share (the server
+  // and the client disagreed on where "British Virgin Islands" sorts). So the full list is built in the browser, after
+  // hydration; until then the select holds only the chosen country, which is all anyone sees of it (the flag shows).
+  const hydrated = useHydrated();
   const countries = useMemo(() => {
+    if (!hydrated) return null;
     const names = new Intl.DisplayNames(["en"], { type: "region" });
     const named = getCountries()
       .map((code) => ({ code, name: names.of(code) ?? code }))
@@ -63,7 +77,7 @@ export function PhoneField({
       pinned: PINNED.map((code) => named.find((c) => c.code === code)!),
       all: named.filter((c) => !PINNED.includes(c.code)),
     };
-  }, []);
+  }, [hydrated]);
 
   function update(raw: string, selected: CountryCode, caret?: number) {
     const next = interpret(raw, selected);
@@ -97,9 +111,15 @@ export function PhoneField({
             onBlur={() => blur()}
             className="absolute inset-0 size-full cursor-pointer opacity-0"
           >
-            {countries.pinned.map(option)}
-            <option disabled>──────────</option>
-            {countries.all.map(option)}
+            {countries ? (
+              <>
+                {countries.pinned.map(option)}
+                <option disabled>──────────</option>
+                {countries.all.map(option)}
+              </>
+            ) : (
+              <option value={country}>+{callingCode(country)}</option>
+            )}
           </select>
           {Flag && <Flag aria-hidden className="h-4 w-6 rounded-[2px] ring-1 ring-line" />}
           {chevron}
