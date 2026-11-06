@@ -6,6 +6,7 @@ import { getCountries, type CountryCode } from "libphonenumber-js/min";
 import { useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type ChangeEvent } from "react";
 import { cn } from "@/lib/cn";
 import { dateLocale, type Locale } from "@/lib/i18n/config";
+import { COUNTRY_NAMES_GA } from "@/lib/forms/country-names-ga";
 import { callingCode, caretWithDigitsAfter, digitsIn, initial, interpret } from "@/lib/forms/phone";
 import { chevron, controlClass, FieldFrame, placeholderClass, type FieldProps } from "./Field";
 
@@ -74,10 +75,14 @@ export function PhoneField({
   const countries = useMemo(() => {
     if (!hydrated) return null;
     const tag = dateLocale[lang];
+    // Irish names come from our own table: Chromium has no Irish region names to ask for.
     const names = new Intl.DisplayNames([tag], { type: "region" });
+    const nameOf = (code: CountryCode) => (lang === "ga" ? COUNTRY_NAMES_GA[code] : (names.of(code) ?? code));
+    // Irish names are filed without their article ("an Fhrainc" under F).
+    const sortKey = (name: string) => (lang === "ga" ? name.replace(/^(an|na) /i, "") : name);
     const named = getCountries()
-      .map((code) => ({ code, name: names.of(code) ?? code }))
-      .sort((a, b) => a.name.localeCompare(b.name, tag));
+      .map((code) => ({ code, name: nameOf(code) }))
+      .sort((a, b) => sortKey(a.name).localeCompare(sortKey(b.name), tag));
     return {
       pinned: PINNED.map((code) => named.find((c) => c.code === code)!),
       all: named.filter((c) => !PINNED.includes(c.code)),
