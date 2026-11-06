@@ -2,7 +2,7 @@ import { render } from "@react-email/components";
 import { describe, expect, it } from "vitest";
 import { plainTextOptions } from "./send";
 import { en } from "@/lib/i18n/dictionaries/en";
-import { contactNotification, quoteConfirmation, quoteNotification } from "./templates";
+import { contactConfirmation, contactNotification, quoteConfirmation, quoteNotification } from "./templates";
 
 const hostile = `<script>alert("x")</script> & 'q'`;
 const escaped = "&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt; &amp; &#x27;q&#x27;";
@@ -89,5 +89,19 @@ describe("email templates", () => {
     expect(out).not.toContain("<script>");
     expect(out).toContain(escaped);
     expect(email.subject).toContain("Talent");
+  });
+
+  it("escapes the contact confirmation and shows the enquiry type as the visitor saw it", async () => {
+    const email = contactConfirmation(
+      { ...en, contact: { ...en.contact, enquiryTypes: { ...en.contact.enquiryTypes, Talent: "Ár dtallann" } } },
+      { name: hostile, email: "a@example.com", phone: "+353871234567", enquiryType: "Talent", message: hostile },
+    );
+    const out = await html(email);
+    expect(out).not.toContain("<script>");
+    expect(out).toContain(escaped);
+    expect(out).toContain("Ár dtallann");
+    // They know their own details; the copy is of the message, not a second notification.
+    expect(out).not.toContain("353");
+    expect(email.subject).toBe(en.emails.contactConfirm.subject);
   });
 });

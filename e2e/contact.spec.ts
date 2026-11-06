@@ -13,6 +13,8 @@ test.describe("contact form", () => {
     await page.getByRole("button", { name: contact.submit }).click();
 
     await expect(page.getByRole("heading", { name: contact.successTitle })).toBeVisible();
+    // Resend can't deliver to this address, so the page mustn't claim a copy was emailed.
+    await expect(page.getByText(contact.successBodyNoEmail)).toBeVisible();
   });
 
   test("?type= preselects the enquiry type", async ({ page }) => {
