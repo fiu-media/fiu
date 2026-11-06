@@ -17,12 +17,14 @@ import { catalogueSlug, prefillKey, QUOTE_PARAMS, quoteHref, quotePrefill } from
 import { limits, quoteSchema } from "@/lib/forms/schemas";
 import { localizedPath, type Locale } from "@/lib/i18n/config";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
+import type { CountryList } from "@/lib/forms/countries";
 import { basketActions, useQuoteBasket } from "@/lib/quote-basket";
 import { submitQuote } from "./actions";
 
 type QuoteDict = Pick<Dictionary, "quote" | "basket" | "forms" | "common" | "dates">;
 
-type Props = { lang: Locale; dict: QuoteDict };
+/** `countries` is for the phone field; built on the server (see `countryList`). */
+type Props = { lang: Locale; dict: QuoteDict; countries: CountryList };
 
 /** The form, which starts over whenever a link arrives with something to prefill (see `useFreshOnArrival`). */
 export function QuoteForm(props: Props) {
@@ -31,7 +33,7 @@ export function QuoteForm(props: Props) {
   return <QuoteFormFields key={fresh} {...props} />;
 }
 
-function QuoteFormFields({ lang, dict }: Props) {
+function QuoteFormFields({ lang, dict, countries }: Props) {
   const { quote, forms } = dict;
   // `/rentals/quote?pickup=…&return=…&company=…&production=…&item=slug:2` prefills what isn't personal; see
   // lib/forms/prefill.ts. Text goes into the form; dates and items go into the basket, which is where they live.
@@ -187,7 +189,13 @@ function QuoteFormFields({ lang, dict }: Props) {
             maxLength={limits.email}
             placeholder={quote.placeholders.email}
           />
-          <PhoneField field={fields.phone} label={quote.phone} optionalLabel={quote.optional} countryLabel={quote.phoneCountry} />
+          <PhoneField
+            field={fields.phone}
+            label={quote.phone}
+            optionalLabel={quote.optional}
+            countryLabel={quote.phoneCountry}
+            countries={countries}
+          />
           <Field
             field={fields.company}
             label={quote.company}

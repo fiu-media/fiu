@@ -2,26 +2,15 @@
 
 import { BaseControl, useControl } from "@conform-to/react/future";
 import * as flags from "country-flag-icons/react/3x2";
-import { getCountries, type CountryCode } from "libphonenumber-js/min";
-import { useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type ChangeEvent } from "react";
+import type { CountryCode } from "libphonenumber-js/min";
+import { useLayoutEffect, useRef, useState, type ChangeEvent } from "react";
 import { cn } from "@/lib/cn";
+import type { CountryList, CountryOption } from "@/lib/forms/countries";
 import { callingCode, caretWithDigitsAfter, digitsIn, initial, interpret } from "@/lib/forms/phone";
 import { chevron, controlClass, FieldFrame, placeholderClass, type FieldProps } from "./Field";
 
-const noSubscription = () => () => {};
-/** False while rendering on the server and hydrating, true after: for what the server and the browser can't agree on. */
-const useHydrated = () =>
-  useSyncExternalStore(
-    noSubscription,
-    () => true,
-    () => false,
-  );
-
 /** What an example looks like, as the number input shows it (no trunk 0, no dialling code). */
 const SAMPLE: Partial<Record<CountryCode, string>> = { IE: "(83) 123 4567" };
-
-/** Listed first: where the studio is, and where most visitors will be calling from. */
-const PINNED: CountryCode[] = ["IE", "GB", "US"];
 
 const FLAGS = flags as unknown as Record<string, React.ComponentType<React.SVGAttributes<SVGElement>> | undefined>;
 /**
@@ -36,10 +25,13 @@ export function PhoneField({
   label,
   optionalLabel,
   countryLabel,
+  countries,
   autoComplete = "tel",
   defaultCountry = "IE",
 }: {
   field: FieldProps;
+  /** The country list, named and ordered for the page's language (see `countryList`, which builds it on the server). */
+  countries: CountryList;
   label: string;
   optionalLabel?: string;
   /** Accessible name of the country select. */
@@ -63,22 +55,6 @@ export function PhoneField({
     caretFromEnd.current = null;
   }, [text]);
 
-  // The names and their order come from the runtime's ICU data, which Node and the browser don't share (the server
-  // and the client disagreed on where "British Virgin Islands" sorts). So the full list is built in the browser, after
-  // hydration; until then the select holds only the chosen country, which is all anyone sees of it (the flag shows).
-  const hydrated = useHydrated();
-  const countries = useMemo(() => {
-    if (!hydrated) return null;
-    const names = new Intl.DisplayNames(["en"], { type: "region" });
-    const named = getCountries()
-      .map((code) => ({ code, name: names.of(code) ?? code }))
-      .sort((a, b) => a.name.localeCompare(b.name));
-    return {
-      pinned: PINNED.map((code) => named.find((c) => c.code === code)!),
-      all: named.filter((c) => !PINNED.includes(c.code)),
-    };
-  }, [hydrated]);
-
   function update(raw: string, selected: CountryCode, caret?: number) {
     const next = interpret(raw, selected);
     if (caret !== undefined) caretFromEnd.current = digitsIn(raw.slice(caret));
@@ -87,7 +63,7 @@ export function PhoneField({
   }
 
   const Flag = FLAGS[country];
-  const option = ({ code, name }: { code: CountryCode; name: string }) => (
+  const option = ({ code, name }: CountryOption) => (
     <option key={code} value={code}>
       {name} (+{callingCode(code)})
     </option>
@@ -103,7 +79,7 @@ export function PhoneField({
           field.errors ? "border-accent" : "border-line",
         )}
       >
-        <div className="relative mr-3 flex shrink-0 items-center gap-1.5">
+        <div className="relative mr-3 flex shrink-0 items-center gap-1.5 border-r border-line pr-3">
           <select
             aria-label={countryLabel}
             value={country}
@@ -111,20 +87,17 @@ export function PhoneField({
             onBlur={() => blur()}
             className="absolute inset-0 size-full cursor-pointer opacity-0"
           >
-            {countries ? (
-              <>
-                {countries.pinned.map(option)}
-                <option disabled>──────────</option>
-                {countries.all.map(option)}
-              </>
-            ) : (
-              <option value={country}>+{callingCode(country)}</option>
-            )}
+            {countries.pinned.map(option)}
+            <option disabled>──────────</option>
+            {countries.all.map(option)}
           </select>
-          {Flag && <Flag aria-hidden className="h-4 w-6 rounded-[2px] ring-1 ring-line" />}
-          {chevron}
+          {/* Flag, chevron and dialling code are all under the select, so any of them opens the list. */}
+          {Flag && <Flag aria-hidden className="pointer-events-none h-4 w-6 rounded-[2px] ring-1 ring-line" />}
+          <span aria-hidden className="pointer-events-none flex">
+            {chevron}
+          </span>
+          <span className="pointer-events-none ml-1.5 text-fg-muted select-none">+{callingCode(country)}</span>
         </div>
-        <span className="mr-3 cursor-default border-r border-line pr-3 text-fg-muted select-none">+{callingCode(country)}</span>
         <input
           ref={input}
           id={field.id}

@@ -7,6 +7,7 @@ import { PhoneField } from "@/components/forms/PhoneField";
 import { useConformForm } from "@/components/forms/useConformForm";
 import { useFreshOnArrival } from "@/components/forms/useFreshOnArrival";
 import { GlassPanel } from "@/components/ui/Glass";
+import type { CountryList } from "@/lib/forms/countries";
 import { CONTACT_PARAMS, contactPrefill, prefillKey } from "@/lib/forms/prefill";
 import { contactSchema, ENQUIRY_TYPES, limits } from "@/lib/forms/schemas";
 import type { Locale } from "@/lib/i18n/config";
@@ -16,6 +17,8 @@ import { submitContact } from "./actions";
 type Props = {
   lang: Locale;
   dict: Pick<Dictionary, "contact" | "forms">;
+  /** For the phone field; built on the server (see `countryList`). */
+  countries: CountryList;
 };
 
 /** The form, which starts over whenever a link arrives with a type to prefill (see `useFreshOnArrival`). */
@@ -25,7 +28,7 @@ export function ContactForm(props: Props) {
   return <ContactFormFields key={fresh} {...props} />;
 }
 
-function ContactFormFields({ lang, dict }: Props) {
+function ContactFormFields({ lang, dict, countries }: Props) {
   const { contact, forms } = dict;
   // `/contact?type=Talent` preselects the enquiry type; see lib/forms/prefill.ts.
   const { enquiryType } = contactPrefill(useSearchParams());
@@ -88,6 +91,7 @@ function ContactFormFields({ lang, dict }: Props) {
         label={contact.phone}
         optionalLabel={contact.optional}
         countryLabel={contact.phoneCountry}
+        countries={countries}
       />
       <Field
         field={fields.message}
