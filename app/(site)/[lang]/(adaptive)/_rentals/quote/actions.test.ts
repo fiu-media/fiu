@@ -64,6 +64,8 @@ describe("submitQuote", () => {
       items: [{ _type: "line", item: { _type: "reference", _ref: "cam" }, qty: 2 }],
     });
     expect(mocks.sendEmail.mock.calls.map(([email]) => email.to).sort()).toEqual(["aoife@example.com", "studio@example.com"]);
+    const sent = mocks.sendEmail.mock.calls.map(([email]) => email);
+    expect(sent.find((email) => email.to === "aoife@example.com")).toMatchObject({ replyTo: "studio@example.com" });
   });
 
   it("merges duplicate basket lines before checking availability", async () => {
@@ -178,5 +180,6 @@ describe("submitQuote", () => {
     mocks.getRecipient.mockResolvedValue(null);
     await submitQuote(idle, form());
     expect(mocks.sendEmail.mock.calls.map(([email]) => email.to)).toEqual(["aoife@example.com"]);
+    expect(mocks.sendEmail.mock.calls[0][0].replyTo).toBeUndefined();
   });
 });

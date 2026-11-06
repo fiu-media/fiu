@@ -33,6 +33,20 @@ if (own) {
   );
 }
 
+// The sender, too: does Resend take the From domain in Unicode (SMTPUTF8), so mail clients needn't show punycode?
+const unicodeFrom = `Fiú Media <hello@${domain}>`;
+if (unicodeFrom !== from) {
+  const { data, error } = await resend.emails.send({
+    from: unicodeFrom,
+    to: "delivered@resend.dev",
+    subject: "Fiú: internationalised sender check",
+    text: "Sent by scripts/check-resend-eai.ts.",
+  });
+  console.log(
+    `${"From with a Unicode domain".padEnd(34)} ${unicodeFrom.padEnd(34)} ${error ? `REJECTED  ${error.name}: ${error.message}` : `accepted  ${data?.id}`}`,
+  );
+}
+
 for (const [label, to] of cases) {
   const { data, error } = await resend.emails.send({
     from,

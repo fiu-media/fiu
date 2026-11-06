@@ -65,7 +65,7 @@ describe("submitContact", () => {
     expect(await submitContact(idle, form({ lang: "ga" }))).toMatchObject({ success: true, confirmation: true });
     const sent = mocks.sendEmail.mock.calls.map(([email]) => email);
     expect(sent).toContainEqual(expect.objectContaining({ to: "aoife@example.com", subject: ga.emails.contactConfirm.subject }));
-    expect(sent.find((email) => email.to === "aoife@example.com")).not.toHaveProperty("replyTo");
+    expect(sent.find((email) => email.to === "aoife@example.com")).toMatchObject({ replyTo: "studio@example.com" });
     expect(sent.find((email) => email.to === "studio@example.com").subject).toBe("Talent enquiry from Aoife");
   });
 
@@ -146,6 +146,7 @@ describe("submitContact", () => {
     expect(await submitContact(idle, form())).toMatchObject({ success: true });
     expect(mocks.sendEmail).toHaveBeenCalledOnce();
     expect(mocks.sendEmail.mock.calls[0][0]).toMatchObject({ to: "aoife@example.com" });
+    expect(mocks.sendEmail.mock.calls[0][0].replyTo).toBeUndefined();
     expect(mocks.createContact).toHaveBeenCalledOnce();
   });
 });

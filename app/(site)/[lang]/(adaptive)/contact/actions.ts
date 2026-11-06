@@ -49,7 +49,8 @@ export async function submitContact(_previous: FormState, formData: FormData): P
             ...contactNotification(teamDict, data, studioEditUrl(id, "contactMessage")),
           }
         : null,
-      { to: data.email, ...contactConfirmation(dict, data) },
+      // Replies to the confirmation reach the studio: the sending address has no mailbox.
+      { to: data.email, replyTo: to ?? undefined, ...contactConfirmation(dict, data) },
     ]),
     saveContact({ name: data.name, email: data.email, phone: data.phone }),
   ]);
