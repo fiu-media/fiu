@@ -51,7 +51,7 @@ export default function QuoteNotification({ emails, dates, data, studioUrl, site
 
 QuoteNotification.PreviewProps = {
   emails: en.emails,
-  siteUrl: "http://localhost:3000",
+  siteUrl: "https://fiú.ie",
   dates: en.dates,
   studioUrl: "https://fiu.sanity.studio/intent/edit/id=abc;type=quoteRequest/",
   data: {

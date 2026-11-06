@@ -149,7 +149,10 @@ export const ga: DeepPartial<Dictionary> = {
     submit: "Seol an teachtaireacht",
     sending: "Á sheoladh…",
     successTitle: "Teachtaireacht seolta",
-    successBody: "Go raibh maith agat as dul i dteagmháil linn. Freagróimid chomh luath agus is féidir linn.",
+    successBody:
+      "Go raibh maith agat as dul i dteagmháil linn. Sheolamar cóip chuig do ríomhphost, agus freagróimid chomh luath agus is féidir linn.",
+    successBodyNoEmail:
+      "Go raibh maith agat as dul i dteagmháil linn. Ní féidir linn cóip a sheoladh chuig an seoladh sin, ach freagróimid chomh luath agus is féidir linn.",
     directHeading: "Nó déan teagmháil linn go díreach",
     emailLabel: "Ríomhphost",
   },
@@ -185,6 +188,11 @@ export const ga: DeepPartial<Dictionary> = {
       subject: "Fuaireamar d'iarratas ar luacháil",
       heading: "Go raibh maith agat, fuaireamar d'iarratas",
       body: "Seo an méid a d'iarr tú. Freagróimid le heolas ar infhaighteacht agus le luacháil.",
+    },
+    contactConfirm: {
+      subject: "Fuaireamar do theachtaireacht",
+      heading: "Go raibh maith agat, fuaireamar do theachtaireacht",
+      body: "Seo cóip den mhéid a sheol tú. Freagróimid chomh luath agus is féidir linn.",
     },
     labels: {
       name: "Ainm",

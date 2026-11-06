@@ -1,8 +1,9 @@
 "use server";
 
+import { toDeliverable } from "@/lib/email/address";
 import { getRecipient } from "@/lib/email/settings";
 import { studioEditUrl } from "@/lib/email/studio-link";
-import { contactNotification } from "@/lib/email/templates";
+import { contactConfirmation, contactNotification } from "@/lib/email/templates";
 import { isConflict, saveContact, sendAll } from "@/lib/forms/notify";
 import { contactSchema } from "@/lib/forms/schemas";
 import type { FormState } from "@/lib/forms/state";
@@ -37,20 +38,21 @@ export async function submitContact(_previous: FormState, formData: FormData): P
 
   const to = await getRecipient("contact", data.lang);
   if (!to) console.warn("[contact] no recipient set in Site settings; skipping notification");
-  // The notification goes to the team, so it is always in the default language.
-  const dict = await getDictionary(defaultLocale);
+  // The notification goes to the team, so it is always in the default language; the confirmation follows the visitor's.
+  const [teamDict, dict] = await Promise.all([getDictionary(defaultLocale), getDictionary(data.lang)]);
   await Promise.all([
     sendAll([
       to
         ? {
             to,
             replyTo: data.email,
-            ...contactNotification(dict, data, studioEditUrl(id, "contactMessage")),
+            ...contactNotification(teamDict, data, studioEditUrl(id, "contactMessage")),
           }
         : null,
+      { to: data.email, ...contactConfirmation(dict, data) },
     ]),
     saveContact({ name: data.name, email: data.email, phone: data.phone }),
   ]);
 
-  return succeed();
+  return succeed({ confirmation: toDeliverable(data.email) !== null });
 }

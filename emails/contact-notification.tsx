@@ -27,7 +27,7 @@ export default function ContactNotification({ emails, data, studioUrl, siteUrl }
 
 ContactNotification.PreviewProps = {
   emails: en.emails,
-  siteUrl: "http://localhost:3000",
+  siteUrl: "https://fiú.ie",
   studioUrl: "https://fiu.sanity.studio/intent/edit/id=abc;type=contactMessage/",
   data: {
     name: "Aoife Ní Bhriain",

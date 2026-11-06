@@ -40,7 +40,7 @@ function ContactFormFields({ lang, dict }: Props) {
     return (
       <GlassPanel className="max-w-xl p-8" role="status">
         <h2 className="font-display text-3xl">{contact.successTitle}</h2>
-        <p className="mt-3 text-fg-muted">{contact.successBody}</p>
+        <p className="mt-3 text-fg-muted">{conform.confirmed ? contact.successBody : contact.successBodyNoEmail}</p>
       </GlassPanel>
     );
   }

@@ -2,6 +2,7 @@ import "server-only";
 import { defaultLocale, type Locale } from "@/lib/i18n/config";
 import { format } from "@/lib/i18n/format";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
+import ContactConfirmation from "@/emails/contact-confirmation";
 import ContactNotification, { type ContactEmailData } from "@/emails/contact-notification";
 import QuoteConfirmation from "@/emails/quote-confirmation";
 import QuoteNotification, { type QuoteEmailData } from "@/emails/quote-notification";
@@ -23,6 +24,15 @@ export function quoteConfirmation(dict: Dictionary, data: QuoteEmailData) {
   return {
     subject: emails.quoteConfirm.subject,
     react: <QuoteConfirmation emails={emails} dates={dict.dates} data={data} siteUrl={siteOrigin()} />,
+  };
+}
+
+export function contactConfirmation(dict: Dictionary, data: ContactEmailData) {
+  const { emails } = dict;
+  const enquiryType = dict.contact.enquiryTypes[data.enquiryType as keyof typeof dict.contact.enquiryTypes] ?? data.enquiryType;
+  return {
+    subject: emails.contactConfirm.subject,
+    react: <ContactConfirmation emails={emails} enquiryType={enquiryType} data={data} siteUrl={siteOrigin()} />,
   };
 }
 
