@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Fragment } from "react";
 import { cn } from "@/lib/cn";
 import { languageCookie, localeNames, locales, switchLocalePath, type Locale } from "@/lib/i18n/config";
+import { carryScroll } from "./languageScroll";
 
 const ONE_YEAR = 60 * 60 * 24 * 365;
 
@@ -43,12 +44,17 @@ export function LanguageSwitcher({
           {index > 0 && <span aria-hidden className={cn("bg-fg/25", rail ? "h-px w-3" : "h-3 w-px")} />}
           <Link
             href={switchLocalePath(pathname, locale)}
+            // The new language's page is a fresh tree. It is put back where this one was (languageScroll.ts), not sent to the top.
+            scroll={false}
             // A prefetch would be sent before the choice is remembered, so it would come back redirected to the old language.
             prefetch={false}
             lang={locale}
             hrefLang={locale}
             aria-current={locale === lang ? "true" : undefined}
-            onClick={() => rememberLanguage(locale)}
+            onClick={() => {
+              rememberLanguage(locale);
+              carryScroll(switchLocalePath(pathname, locale), window.scrollY);
+            }}
             className="rounded-sm font-medium tracking-[0.14em] text-fg/50 hover:text-fg aria-[current=true]:text-fg"
           >
             {locale.toUpperCase()}

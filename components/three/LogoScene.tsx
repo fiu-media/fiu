@@ -96,6 +96,7 @@ export default function LogoScene({
   sweep,
   introSlide = false,
   introHold = false,
+  introPlayed = false,
   splashLift,
   interactive = true,
   onIntroEnd,
@@ -110,6 +111,8 @@ export default function LogoScene({
   introSlide?: boolean;
   /** Freeze the intro clock (the logo waits front-facing) until this turns false. */
   introHold?: boolean;
+  /** The hero intro already played on this page load (the scene is being mounted again): start at rest, don't replay it. */
+  introPlayed?: boolean;
   /** Hero intro: false while the splash holds (glass refracts white), true once it starts lifting. */
   splashLift?: boolean;
   /** When false the canvas ignores the pointer, so whatever is beneath it (the nav) stays clickable. */
@@ -181,6 +184,7 @@ export default function LogoScene({
         onTooSlow={onTooSlow}
         introSlide={introSlide}
         introHold={introHold}
+        introPlayed={introPlayed}
         splashLift={splashLift}
         onIntroEnd={onIntroEnd}
       />
@@ -419,6 +423,7 @@ function Scene({
   onTooSlow,
   introSlide,
   introHold,
+  introPlayed,
   splashLift,
   onIntroEnd,
 }: {
@@ -436,6 +441,7 @@ function Scene({
   adaptiveQuality: boolean;
   introSlide: boolean;
   introHold: boolean;
+  introPlayed: boolean;
   splashLift: boolean | undefined;
 }) {
   const gl = useThree((s) => s.gl);
@@ -452,7 +458,7 @@ function Scene({
 
   // The rest stream in once the intro is over (uploading them mid-spin would hitch it), or
   // sooner if the hero has already moved on to another still.
-  const [introOver, setIntroOver] = useState(!introSlide);
+  const [introOver, setIntroOver] = useState(!introSlide || introPlayed);
   useLogoQuality({
     adaptive: adaptiveQuality,
     startTier,
@@ -551,6 +557,7 @@ function Scene({
         keepAwake={keepAwake}
         introSlide={introSlide}
         introHold={introHold}
+        introPlayed={introPlayed}
         onIntroEnd={handleIntroEnd}
       />
       {/* Disable still layer after MTM's FBO capture so the main/bloom pass is logo-only. */}
@@ -1194,6 +1201,7 @@ function Logo({
   keepAwake,
   introSlide,
   introHold,
+  introPlayed,
   onIntroEnd,
 }: {
   /** Set by `useLogoQuality` once the shaders are warm and the tier is settled; the intro waits for it. */
@@ -1206,6 +1214,7 @@ function Logo({
   keepAwake: (seconds: number) => void;
   introSlide: boolean;
   introHold: boolean;
+  introPlayed: boolean;
 }) {
   const size = useThree((s) => s.size);
   const viewport = useThree((s) => s.viewport);
@@ -1226,7 +1235,8 @@ function Logo({
     velX: 0,
     velY: 0,
   });
-  const intro = useRef({ time: 0, ended: false });
+  // A scene mounted after the intro already played starts where it ended: at rest, and never reports the end again.
+  const intro = useRef(introSlide && introPlayed ? { time: HERO_END, ended: true } : { time: 0, ended: false });
   const introStats = useRef({ frames: 0, ms: 0, worst: 0, logged: false });
   const invalidate = useThree((s) => s.invalidate);
   const glow = useMemo(() => new THREE.Color(), []);
