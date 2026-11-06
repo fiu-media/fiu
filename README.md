@@ -65,7 +65,7 @@ Links can open the contact and quote forms prefilled. The parameters, how each i
 
 ## Rate limiting
 
-`/contact` and `/rentals/quote` are protected by BotID and a honeypot, but neither caps volume, so a single client could still flood the Sanity inbox and the Resend emails (the quote form also emails the visitor). A Vercel Firewall rate-limit rule covers that. It blocks before any function runs, so there is no code for it in this repo. `vercel.json` can't hold it either (routes there only support `deny` and `challenge`), so the rule lives in the Vercel project's firewall and has to be created there once:
+`/contact` and `/rentals/quote` (and their `/ga/...` twins; the BotID list in `lib/forms/botid.ts` is derived from the locales) are protected by BotID and a honeypot, but neither caps volume, so a single client could still flood the Sanity inbox and the Resend emails (the quote form also emails the visitor). A Vercel Firewall rate-limit rule covers that. It blocks before any function runs, so there is no code for it in this repo. `vercel.json` can't hold it either (routes there only support `deny` and `challenge`), so the rule lives in the Vercel project's firewall and has to be created there once:
 
 ```bash
 vercel firewall rules add "Rate limit form submissions" \
