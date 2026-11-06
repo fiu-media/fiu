@@ -34,13 +34,15 @@ function Still({ still, attribute, className }: { still: SizedImage; attribute?:
   );
 }
 
-/**
- * Option A, "Slogan first": the still holds the first screen with the slogan large over it. The
- * manifesto, contact links and footer follow on plain dark, so no running text sits over the photo.
- */
-export function AboutLayoutA({ still, slogan, gloss, manifesto, contacts, footer, attributes }: AboutLayoutProps) {
+/** The first screen of Option A: the still with the slogan large over it. */
+export function AboutHeroSection({
+  still,
+  slogan,
+  gloss,
+  attributes,
+}: Pick<AboutLayoutProps, "still" | "slogan" | "gloss" | "attributes">) {
   return (
-    <main className="relative text-white">
+    <>
       <div className="sticky top-0 -z-10 h-dvh">
         <Still still={still} attribute={attributes?.still} />
       </div>
@@ -55,6 +57,18 @@ export function AboutLayoutA({ still, slogan, gloss, manifesto, contacts, footer
         {gloss && <p className="mt-4 max-w-xl text-base text-white/80 md:text-lg">{gloss}</p>}
         <ArrowDown aria-hidden className="mt-8 size-5 text-white/60" />
       </section>
+    </>
+  );
+}
+
+/**
+ * Option A, "Slogan first": the still holds the first screen with the slogan large over it. The
+ * manifesto, contact links and footer follow on plain dark, so no running text sits over the photo.
+ */
+export function AboutLayoutA({ still, slogan, gloss, manifesto, contacts, footer, attributes }: AboutLayoutProps) {
+  return (
+    <main className="relative text-white">
+      <AboutHeroSection still={still} slogan={slogan} gloss={gloss} attributes={attributes} />
 
       {/* Plain dark from here, so the surface's colours rather than the white kept for text over the photo. */}
       <section className="relative bg-ink px-5 py-24 text-fg md:px-10 md:py-36">
