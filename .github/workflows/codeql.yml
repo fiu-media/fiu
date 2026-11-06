@@ -35,6 +35,12 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         if: env.SKIP != 'true'
+      # The runner's system Python has no lib-dynload on its path, which makes the Python extractor log
+      # `[WARN] Failed to find dynload path`. A regular CPython build has it.
+      - uses: actions/setup-python@v7
+        if: env.SKIP != 'true' && matrix.language == 'python'
+        with:
+          python-version: "3.x"
       - uses: github/codeql-action/init@v4
         if: env.SKIP != 'true'
         with:
