@@ -19,6 +19,13 @@ export const en = {
     rentals: "Rentals",
     contact: "Contact",
   },
+  notFound: {
+    eyebrow: "404",
+    heading: "Page not found",
+    body: "That page doesn’t exist, or it has moved.",
+    home: "Back home",
+    backTo: "Back to {section}",
+  },
   footer: {
     copyright: "Fiú Media © {year}",
   },

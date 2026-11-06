@@ -4,18 +4,10 @@ import { NotFoundBackLink } from "@/components/NotFoundBackLink";
 import { cn } from "@/lib/cn";
 import type { Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
+import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { getNavItems } from "@/lib/i18n/nav";
 
-export type NotFoundCopy = { eyebrow: string; heading: string; body: string; home: string; backTo: string };
-
-// English only for now; the Irish text comes from Fíu.
-export const notFoundCopy: NotFoundCopy = {
-  eyebrow: "404",
-  heading: "Page not found",
-  body: "That page doesn’t exist, or it has moved.",
-  home: "Back home",
-  backTo: "Back to {section}",
-};
+export type NotFoundCopy = Dictionary["notFound"];
 
 /**
  * The site's 404: always dark, two slowly wandering lights (the #51 experiment; still when motion is
@@ -24,7 +16,7 @@ export const notFoundCopy: NotFoundCopy = {
  */
 export async function NotFoundPage({
   lang,
-  copy = notFoundCopy,
+  copy,
   className = "min-h-dvh",
 }: {
   lang: Locale;
@@ -32,6 +24,7 @@ export async function NotFoundPage({
   className?: string;
 }) {
   const dict = await getDictionary(lang);
+  copy ??= dict.notFound;
   return (
     <div
       data-surface="cinematic"
