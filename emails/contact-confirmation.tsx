@@ -30,7 +30,7 @@ export default function ContactConfirmation({ emails, enquiryType, data, siteUrl
 
 ContactConfirmation.PreviewProps = {
   emails: en.emails,
-  siteUrl: "http://localhost:3000",
+  siteUrl: "https://fiú.ie",
   enquiryType: en.contact.enquiryTypes.Talent,
   data: {
     name: "Aoife Ní Bhriain",
