@@ -5,6 +5,9 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: read
+
 # actions/checkout runs `git init` before it fetches our ref, and a fresh repo defaults to `master`, so git prints a
 # hint about that default changing in Git 3.0. Setting it through env quiets the hint without a step before checkout.
 env:
