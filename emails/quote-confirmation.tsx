@@ -28,7 +28,7 @@ export default function QuoteConfirmation({ emails, dates, data, siteUrl }: Prop
 
 QuoteConfirmation.PreviewProps = {
   emails: en.emails,
-  siteUrl: "http://localhost:3000",
+  siteUrl: "https://fiú.ie",
   dates: en.dates,
   data: {
     lang: "en",

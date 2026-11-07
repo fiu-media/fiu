@@ -19,15 +19,15 @@ export const en = {
     rentals: "Rentals",
     contact: "Contact",
   },
-  footer: {
-    copyright: "Fiú Media © {year}",
-  },
   notFound: {
     eyebrow: "404",
     heading: "Page not found",
     body: "That page doesn’t exist, or it has moved.",
     home: "Back home",
     backTo: "Back to {section}",
+  },
+  footer: {
+    copyright: "Fiú Media © {year}",
   },
   vimeo: {
     play: "Play {title}",
@@ -164,7 +164,8 @@ export const en = {
     submit: "Send message",
     sending: "Sending…",
     successTitle: "Message sent",
-    successBody: "Thanks for getting in touch. We'll reply as soon as we can.",
+    successBody: "Thanks for getting in touch. We've sent a copy to your email, and we'll reply as soon as we can.",
+    successBodyNoEmail: "Thanks for getting in touch. We can't email a copy to that address, but we'll reply as soon as we can.",
     directHeading: "Or reach us directly",
     emailLabel: "Email",
     instagramLabel: "Instagram",
@@ -204,6 +205,12 @@ export const en = {
       subject: "We've received your quote request",
       heading: "Thanks, we've got your request",
       body: "Here's what you asked for. We'll reply with availability and a quote.",
+      signoff: "Fiú Media",
+    },
+    contactConfirm: {
+      subject: "We've received your message",
+      heading: "Thanks, we've got your message",
+      body: "Here's a copy of what you sent. We'll reply as soon as we can.",
       signoff: "Fiú Media",
     },
     contactNotify: {

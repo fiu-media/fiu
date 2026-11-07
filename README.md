@@ -48,7 +48,7 @@ The notification emails are React Email components in `emails/`, rendered by `li
 `env.ts` is the one place configuration is read and validated (`@t3-oss/env-nextjs`). `next.config.ts` imports it, so `next build` and `next dev` fail with a list of what's wrong instead of losing a form submission later. Import `env` from `@/env` rather than reading `process.env`; the exceptions are `NODE_ENV`/`CI` and the standalone tooling (`scripts/`, `e2e/global-teardown.ts`, `sanity.cli.ts`, `playwright.config.ts`), which run outside Next and check their own variables.
 
 - Always required: `NEXT_PUBLIC_SANITY_PROJECT_ID`, `NEXT_PUBLIC_SANITY_DATASET`.
-- Required when `VERCEL_ENV=production`: `SANITY_API_WRITE_TOKEN`, `RESEND_API_KEY`, `RESEND_EMAIL_DOMAIN` (the last two come from the Resend integration on Vercel; mail is sent from `hello@` that domain, written as punycode if it is internationalised, so `fiú.ie` and `xn--fi-ska.ie` both work). Previews and local runs may omit them (email is then logged and skipped).
+- Required when `VERCEL_ENV=production`: `SANITY_API_WRITE_TOKEN`, `RESEND_API_KEY`, `RESEND_EMAIL_DOMAIN` (mail is sent from `hello@` that domain, written as punycode if it is internationalised, so `mail.fiú.ie` and `mail.xn--fi-ska.ie` both work; it is a subdomain verified in Resend, so its reputation stays apart from the root domain, whose `_dmarc` record covers it. Visitor confirmations carry the studio's address as Reply-To, since `hello@` has no mailbox). Previews and local runs may omit them (email is then logged and skipped).
 - Optional: `SANITY_API_READ_TOKEN`, `NEXT_PUBLIC_SITE_URL`, `RESEND_SEGMENT_ID` (the Resend segment contact-form submitters are added to as unsubscribed contacts; without it they join no segment. Resend needs a custom `phone` contact property for their phone number).
 - Notification recipients are not environment variables: editors set the Contact email and Quote request recipient in Site settings. With neither set, the notification is skipped (the visitor's confirmation is still sent).
 - Empty values count as unset. `SKIP_ENV_VALIDATION=1` skips the checks for a deliberately secret-less build.
@@ -65,7 +65,7 @@ Links can open the contact and quote forms prefilled. The parameters, how each i
 
 ## Rate limiting
 
-`/contact` and `/rentals/quote` are protected by BotID and a honeypot, but neither caps volume, so a single client could still flood the Sanity inbox and the Resend emails (the quote form also emails the visitor). A Vercel Firewall rate-limit rule covers that. It blocks before any function runs, so there is no code for it in this repo. `vercel.json` can't hold it either (routes there only support `deny` and `challenge`), so the rule lives in the Vercel project's firewall and has to be created there once:
+`/contact` and `/rentals/quote` (and their `/ga/...` twins; the BotID list in `lib/forms/botid.ts` is derived from the locales) are protected by BotID and a honeypot, but neither caps volume, so a single client could still flood the Sanity inbox and the Resend emails (the quote form also emails the visitor). A Vercel Firewall rate-limit rule covers that. It blocks before any function runs, so there is no code for it in this repo. `vercel.json` can't hold it either (routes there only support `deny` and `challenge`), so the rule lives in the Vercel project's firewall and has to be created there once:
 
 ```bash
 vercel firewall rules add "Rate limit form submissions" \

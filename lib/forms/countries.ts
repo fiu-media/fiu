@@ -1,27 +1,28 @@
+import "server-only";
 import { getCountries, type CountryCode } from "libphonenumber-js/min";
-import type { Locale } from "@/lib/i18n/config";
+import { dateLocale, type Locale } from "@/lib/i18n/config";
+
+export type CountryOption = { code: CountryCode; name: string };
+export type CountryList = { pinned: CountryOption[]; all: CountryOption[] };
+
+/** Listed first: where the studio is, and where most visitors will be calling from. */
+const PINNED: CountryCode[] = ["IE", "GB", "US"];
 
 /**
- * Irish country names lead with the article, and it changes the next letter ("an Fhrainc", "an tSín",
- * "na hOileáin Fhilipíneacha"), so sorting by the whole name puts nearly everything under A and N.
- * Strip the article and the t / h it brings, to sort by the name itself.
+ * The phone field's country list, named and ordered in `lang`. It is built here, on the server, from Node's ICU data:
+ * browsers differ (Chromium has no Irish region names at all, and sorts differently from Node), so the page sends the
+ * finished list and the browser renders it as it is, which also keeps hydration in agreement.
  */
-const LEADING_ARTICLE = /^(?:[Aa]n|[Nn]a) (?:t(?=S)|h(?=[AEIOUÁÉÍÓÚ]))?/;
-
-/** Capitalise the first letter, for names the locale writes in lower case ("an Fhrainc"). */
-const capitalise = (name: string, lang: Locale) => name.charAt(0).toLocaleUpperCase(lang) + name.slice(1);
-
-export type CountryName = { code: CountryCode; name: string };
-
-/**
- * Every country libphonenumber knows, named and sorted for `lang`. Call it on the server and pass the list to the
- * form: browsers differ in which languages they have region names for (some Chromium builds have no Irish and
- * answer in English), and a list built in the browser would then not match the server's.
- */
-export function countryNames(lang: Locale): CountryName[] {
-  const names = new Intl.DisplayNames([lang], { type: "region" });
-  const sortKey = (name: string) => (lang === "ga" ? name.replace(LEADING_ARTICLE, "") : name);
-  return getCountries()
-    .map((code) => ({ code, name: capitalise(names.of(code) ?? code, lang) }))
-    .sort((a, b) => sortKey(a.name).localeCompare(sortKey(b.name), lang));
+export function countryList(lang: Locale): CountryList {
+  const tag = dateLocale[lang];
+  const names = new Intl.DisplayNames([tag], { type: "region" });
+  // Irish names are filed without their article: "an Fhrainc" sorts under F.
+  const sortKey = (name: string) => (lang === "ga" ? name.replace(/^(an|na) /i, "") : name);
+  const named = getCountries()
+    .map((code) => ({ code, name: names.of(code) ?? code }))
+    .sort((a, b) => sortKey(a.name).localeCompare(sortKey(b.name), tag));
+  return {
+    pinned: PINNED.map((code) => named.find((c) => c.code === code)!),
+    all: named.filter((c) => !PINNED.includes(c.code)),
+  };
 }

@@ -5,7 +5,7 @@ import { pageGutter } from "@/components/nav/rail";
 import { QuoteFormSkeleton } from "@/components/forms/FormSkeleton";
 import { PageTitle } from "@/components/ui/PageTitle";
 import { cn } from "@/lib/cn";
-import { countryNames } from "@/lib/forms/countries";
+import { countryList } from "@/lib/forms/countries";
 import { isLocale, languageAlternates } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getPageText } from "@/sanity/lib/pageText";
@@ -30,7 +30,7 @@ export default async function QuotePage({ params }: { params: Promise<{ lang: st
       </header>
       {/* QuoteForm reads the link's query (prefill), which needs a boundary to keep the page static. */}
       <Suspense fallback={<QuoteFormSkeleton label={common.loading} />}>
-        <QuoteForm lang={lang} dict={{ quote, basket, forms, common, dates }} countries={countryNames(lang)} />
+        <QuoteForm lang={lang} dict={{ quote, basket, forms, common, dates }} countries={countryList(lang)} />
       </Suspense>
     </main>
   );

@@ -13,18 +13,18 @@ import { useCatalogue } from "@/components/rentals/CatalogueContext";
 import { QuoteLines } from "@/components/rentals/QuoteLines";
 import { GlassPanel, GlassPillLink } from "@/components/ui/Glass";
 import { describeRange, isIsoDate, isValidRange, todayInDublin } from "@/lib/dates";
-import type { CountryName } from "@/lib/forms/countries";
 import { catalogueSlug, prefillKey, QUOTE_PARAMS, quoteHref, quotePrefill } from "@/lib/forms/prefill";
 import { limits, quoteSchema } from "@/lib/forms/schemas";
 import { localizedPath, type Locale } from "@/lib/i18n/config";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
+import type { CountryList } from "@/lib/forms/countries";
 import { basketActions, useQuoteBasket } from "@/lib/quote-basket";
 import { submitQuote } from "./actions";
 
 type QuoteDict = Pick<Dictionary, "quote" | "basket" | "forms" | "common" | "dates">;
 
-/** `countries` is for the phone field, named in `lang` (see `countryNames`). */
-type Props = { lang: Locale; dict: QuoteDict; countries: CountryName[] };
+/** `countries` is for the phone field; built on the server (see `countryList`). */
+type Props = { lang: Locale; dict: QuoteDict; countries: CountryList };
 
 /** The form, which starts over whenever a link arrives with something to prefill (see `useFreshOnArrival`). */
 export function QuoteForm(props: Props) {
@@ -146,6 +146,7 @@ function QuoteFormFields({ lang, dict, countries }: Props) {
             type="date"
             label={quote.startDate}
             required
+            autoComplete="off"
             min={todayInDublin()}
             value={startDate}
             onChange={(v) => setDates({ startDate: v })}
@@ -155,6 +156,7 @@ function QuoteFormFields({ lang, dict, countries }: Props) {
             type="date"
             label={quote.endDate}
             required
+            autoComplete="off"
             min={startDate || undefined}
             value={endDate}
             onChange={(v) => setDates({ endDate: v })}
@@ -188,11 +190,11 @@ function QuoteFormFields({ lang, dict, countries }: Props) {
             placeholder={quote.placeholders.email}
           />
           <PhoneField
-            countries={countries}
             field={fields.phone}
             label={quote.phone}
             optionalLabel={quote.optional}
             countryLabel={quote.phoneCountry}
+            countries={countries}
           />
           <Field
             field={fields.company}
@@ -207,6 +209,7 @@ function QuoteFormFields({ lang, dict, countries }: Props) {
           field={fields.production}
           label={quote.production}
           optionalLabel={quote.optional}
+          autoComplete="off"
           maxLength={limits.production}
           placeholder={quote.placeholders.production}
         />
@@ -218,6 +221,7 @@ function QuoteFormFields({ lang, dict, countries }: Props) {
           maxRows={10}
           label={quote.message}
           optionalLabel={quote.optional}
+          autoComplete="off"
           maxLength={limits.message}
           placeholder={quote.placeholders.message}
         />

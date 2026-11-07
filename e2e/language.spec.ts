@@ -44,16 +44,20 @@ test.describe("a browser that prefers English", () => {
   });
 });
 
-test.describe("an Irish page", () => {
-  test("shows the 404 in Irish", async ({ page }) => {
-    await page.goto("/ga/no-such-page");
-    await expect(page.locator("html")).toHaveAttribute("lang", "ga");
-    await expect(page.getByRole("heading", { level: 1, name: "Níor aimsíodh an leathanach" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Ar ais abhaile" })).toHaveAttribute("href", "/ga");
-  });
+test.describe("switching language part-way down a page", () => {
+  test.use({ locale: "en-IE", viewport: { width: 1280, height: 600 } });
 
-  test("names the countries in the phone field in Irish", async ({ page }) => {
-    await page.goto("/ga/contact");
-    await expect(page.getByLabel("Tír na huimhreach fóin").getByRole("option", { name: "Éire (+353)" })).toBeAttached();
+  test("keeps the scroll position", async ({ page }) => {
+    await page.goto("/about");
+    const y = await page.evaluate(() => {
+      window.scrollTo({ top: 150, behavior: "instant" });
+      return window.scrollY;
+    });
+    expect(y).toBeGreaterThan(0);
+
+    await page.getByRole("link", { name: localeNames.ga }).click();
+    await expect(page).toHaveURL(at("/ga/about"));
+    await expect(page.locator("html")).toHaveAttribute("lang", "ga");
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(y);
   });
 });

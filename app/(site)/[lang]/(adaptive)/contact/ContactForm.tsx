@@ -7,7 +7,7 @@ import { PhoneField } from "@/components/forms/PhoneField";
 import { useConformForm } from "@/components/forms/useConformForm";
 import { useFreshOnArrival } from "@/components/forms/useFreshOnArrival";
 import { GlassPanel } from "@/components/ui/Glass";
-import type { CountryName } from "@/lib/forms/countries";
+import type { CountryList } from "@/lib/forms/countries";
 import { CONTACT_PARAMS, contactPrefill, prefillKey } from "@/lib/forms/prefill";
 import { contactSchema, ENQUIRY_TYPES, limits } from "@/lib/forms/schemas";
 import type { Locale } from "@/lib/i18n/config";
@@ -17,8 +17,8 @@ import { submitContact } from "./actions";
 type Props = {
   lang: Locale;
   dict: Pick<Dictionary, "contact" | "forms">;
-  /** For the phone field, named in `lang` (see `countryNames`). */
-  countries: CountryName[];
+  /** For the phone field; built on the server (see `countryList`). */
+  countries: CountryList;
 };
 
 /** The form, which starts over whenever a link arrives with a type to prefill (see `useFreshOnArrival`). */
@@ -43,7 +43,7 @@ function ContactFormFields({ lang, dict, countries }: Props) {
     return (
       <GlassPanel className="max-w-xl p-8" role="status">
         <h2 className="font-display text-3xl">{contact.successTitle}</h2>
-        <p className="mt-3 text-fg-muted">{contact.successBody}</p>
+        <p className="mt-3 text-fg-muted">{conform.confirmed ? contact.successBody : contact.successBodyNoEmail}</p>
       </GlassPanel>
     );
   }
@@ -62,7 +62,7 @@ function ContactFormFields({ lang, dict, countries }: Props) {
       ]}
       className="max-w-xl gap-4"
     >
-      <Field field={fields.enquiryType} as="select" label={contact.enquiryType} required>
+      <Field field={fields.enquiryType} as="select" label={contact.enquiryType} required autoComplete="off">
         {ENQUIRY_TYPES.map((type) => (
           <option key={type} value={type}>
             {contact.enquiryTypes[type]}
@@ -87,11 +87,11 @@ function ContactFormFields({ lang, dict, countries }: Props) {
         placeholder={contact.placeholders.email}
       />
       <PhoneField
-        countries={countries}
         field={fields.phone}
         label={contact.phone}
         optionalLabel={contact.optional}
         countryLabel={contact.phoneCountry}
+        countries={countries}
       />
       <Field
         field={fields.message}
@@ -101,6 +101,7 @@ function ContactFormFields({ lang, dict, countries }: Props) {
         maxRows={16}
         label={contact.message}
         required
+        autoComplete="off"
         maxLength={limits.message}
         placeholder={contact.placeholders.message}
       />

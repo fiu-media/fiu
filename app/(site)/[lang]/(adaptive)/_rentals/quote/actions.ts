@@ -72,7 +72,8 @@ export async function submitQuote(_previous: FormState, formData: FormData): Pro
   const notification = quoteNotification(teamDict, emailData, studioEditUrl(id, "quoteRequest"), defaultLocale);
   await sendAll([
     to ? { to, replyTo: data.email, ...notification } : null,
-    { to: data.email, ...quoteConfirmation(dict, emailData) },
+    // Replies to the confirmation reach the studio: the sending address has no mailbox.
+    { to: data.email, replyTo: to ?? undefined, ...quoteConfirmation(dict, emailData) },
   ]);
 
   return succeed({ confirmation: toDeliverable(data.email) !== null });

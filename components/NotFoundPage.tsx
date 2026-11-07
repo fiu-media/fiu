@@ -4,15 +4,15 @@ import { NotFoundBackLink } from "@/components/NotFoundBackLink";
 import { cn } from "@/lib/cn";
 import type { Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
+import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { getNavItems } from "@/lib/i18n/nav";
 
-export type NotFoundCopy = { eyebrow: string; heading: string; body: string; home: string; backTo: string };
+export type NotFoundCopy = Dictionary["notFound"];
 
 /**
  * The site's 404: always dark, two slowly wandering lights (the #51 experiment; still when motion is
- * reduced), the rail, and a link back to the section the URL was under, or home. The text is the dictionary's
- * `notFound`; /dev/not-found passes its own `copy` to compare wordings. `className` sets the height; the
- * default fills the viewport, /dev/not-found fits it to a preview frame.
+ * reduced), the rail, and a link back to the section the URL was under, or home. `className` sets the
+ * height; the default fills the viewport, /dev/not-found fits it to a preview frame.
  */
 export async function NotFoundPage({
   lang,
