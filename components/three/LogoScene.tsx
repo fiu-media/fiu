@@ -1183,6 +1183,8 @@ function spinAt(t: number) {
 }
 
 /** Start the return spring once coasting has nearly stopped (not exactly 0). */
+/** Floor for the interaction `weight` so a stray 0 can't divide by zero. */
+const MIN_WEIGHT = 0.05;
 const DRAG_VELOCITY_EPS = 0.08;
 const DRAG_ANGLE_EPS = 0.0015;
 
@@ -1327,7 +1329,8 @@ function Logo({
       }
       const look = paramsRef.current;
       const pitchMax = look.dragPitchMax;
-      const sens = look.dragSensitivity;
+      // Heavier = less turn per pixel (the release velocity derives from the same deltas).
+      const sens = look.dragSensitivity / Math.max(look.weight, MIN_WEIGHT);
       const now = performance.now();
       const dt = Math.max((now - d.lastT) / 1000, 1 / 120);
       const dX = (e.clientY - d.lastY) * sens;
@@ -1437,7 +1440,8 @@ function Logo({
     g.position.y = introSlide && !desktop ? viewport.height * MOBILE_TOSS * tossAt(t) : 0;
 
     // Wobble only while hovering the logo (and not dragging); ease back to rest on leave.
-    const k = 1 - Math.exp(-delta * look.hoverLerp);
+    const weight = Math.max(look.weight, MIN_WEIGHT);
+    const k = 1 - Math.exp((-delta * look.hoverLerp) / weight);
     const targetX = hover.current.active && !drag.current.active ? hover.current.y * look.hoverTiltX : 0;
     const targetY = hover.current.active && !drag.current.active ? hover.current.x * look.hoverTiltY : 0;
     tilt.current.x = THREE.MathUtils.lerp(tilt.current.x, targetX, k);
@@ -1458,12 +1462,15 @@ function Logo({
       if (!d.returning) {
         d.rotX += d.velX * delta;
         d.rotY += d.velY * delta;
-        const friction = Math.exp(-look.dragFriction * delta);
+        const friction = Math.exp((-look.dragFriction / weight) * delta);
         d.velX *= friction;
         d.velY *= friction;
       } else {
-        d.velX += (-look.dragSpringPitch * d.rotX - look.dragSpringPitchDamp * d.velX) * delta;
-        d.velY += (-look.dragSpring * d.rotY - look.dragSpringDamp * d.velY) * delta;
+        // Stiffness / mass and damping / sqrt(mass): the return slows as 1/sqrt(weight) but the
+        // damping ratio (how much it overshoots) stays the same.
+        const dampScale = 1 / Math.sqrt(weight);
+        d.velX += ((-look.dragSpringPitch * d.rotX) / weight - look.dragSpringPitchDamp * dampScale * d.velX) * delta;
+        d.velY += ((-look.dragSpring * d.rotY) / weight - look.dragSpringDamp * dampScale * d.velY) * delta;
         d.rotX += d.velX * delta;
         d.rotY += d.velY * delta;
         if (

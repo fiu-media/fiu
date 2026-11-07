@@ -39,6 +39,7 @@ export type {
 };
 
 const INTERACTION_DEFAULTS: LogoInteractionParams = {
+  weight: 1,
   dragPitchMax: 0.4,
   dragSensitivity: 0.005,
   hoverTiltX: 0.12,
@@ -468,6 +469,7 @@ export function pickMaterialParams(params: LogoGlassParams): LogoMaterialParams 
 
 export function pickInteractionParams(params: LogoGlassParams): LogoInteractionParams {
   return {
+    weight: params.weight,
     dragPitchMax: params.dragPitchMax,
     dragSensitivity: params.dragSensitivity,
     hoverTiltX: params.hoverTiltX,

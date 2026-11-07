@@ -67,6 +67,8 @@ export const lightsSchema = z.object({
 export type LogoLightsConfig = z.infer<typeof lightsSchema>;
 
 export const interactionParamsSchema = z.object({
+  /** Inertia multiplier: 1 = the baseline feel, >1 heavier (slower to turn, coast and return). */
+  weight: z.number(),
   dragPitchMax: z.number(),
   dragSensitivity: z.number(),
   hoverTiltX: z.number(),

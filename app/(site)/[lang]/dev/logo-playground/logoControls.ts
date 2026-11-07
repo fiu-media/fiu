@@ -34,6 +34,7 @@ export const GLOW_SLIDERS: SliderDef[] = [
 ];
 
 export const INTERACTION_SLIDERS: SliderDef[] = [
+  { key: "weight", label: "Weight", min: 0.25, max: 4, step: 0.05 },
   { key: "dragPitchMax", label: "Drag pitch max (rad)", min: 0.1, max: 1.2, step: 0.01 },
   { key: "dragSensitivity", label: "Drag sensitivity", min: 0.001, max: 0.02, step: 0.0005 },
   { key: "hoverTiltX", label: "Hover tilt X", min: 0, max: 0.4, step: 0.01 },
