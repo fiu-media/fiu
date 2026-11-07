@@ -19,6 +19,7 @@ import { prefersReducedMotion, subscribeToReducedMotion } from "@/lib/reduced-mo
 import { decideLogoTier, rememberTooSlow, type LogoDecision, type LogoTier } from "@/components/three/logoTier";
 import logo from "@/public/brand/fiu-logo.svg";
 import type { HeroStill, HeroStills } from "@/sanity/lib/stills";
+import { HeroFade } from "./HeroFade";
 import { isSplashDismissed, Splash } from "./Splash";
 import { SPLASH_FADE_MS, splashFadeVars } from "./splash-config";
 
@@ -183,6 +184,8 @@ export function HomeHero({ landscape, portrait }: HeroStills) {
         {slides.map((slide, i) => (
           <Slide key={i} {...slide} portraitScreen={portraitScreen} shown={i === current} priority={i === 0} />
         ))}
+        {/* The photo dissolves into the page's ink where the fold begins, under the logo layers that follow. */}
+        <HeroFade bleed />
 
         {/* SVG logo: shown on the server render, while the live scene loads, and as the
             fallback. The live logo starts its spin from this same centred, front-facing pose,

@@ -6,9 +6,10 @@ import { SiteNavClient } from "./SiteNavClient";
 /**
  * Site navigation: a slim rail on the left edge from `md`, a Menu button with a full-screen
  * overlay below it. Mount it inside a `[data-surface]` wrapper and give the content `railInset`.
- * `onImage` is for the cinematic surface, where the phone bar floats over photography.
+ * `onImage` is for the cinematic surface, where the phone bar floats over photography. `blurRail` frosts the rail's strip
+ * (blur and tint, no fill); only the /dev sign-off page uses it, the site ships without.
  */
-export async function SiteNav({ lang, onImage }: { lang: Locale; onImage?: boolean }) {
+export async function SiteNav({ lang, onImage, blurRail }: { lang: Locale; onImage?: boolean; blurRail?: boolean }) {
   const dict = await getDictionary(lang);
   return (
     <SiteNavClient
@@ -17,6 +18,7 @@ export async function SiteNav({ lang, onImage }: { lang: Locale; onImage?: boole
       homeHref={localizedPath(lang, "/")}
       labels={dict.nav}
       onImage={onImage}
+      blurRail={blurRail}
     />
   );
 }

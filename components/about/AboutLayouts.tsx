@@ -1,6 +1,7 @@
 import { ArrowDown } from "lucide-react";
 import Image from "next/image";
 import type { ReactNode } from "react";
+import { SheetFade } from "@/components/home/HeroFade";
 import { GlassPanel } from "@/components/ui/Glass";
 import { TeamFigure, type Team } from "./TeamFigure";
 import { cn } from "@/lib/cn";
@@ -87,6 +88,8 @@ export function AboutLayoutA({ still, slogan, gloss, manifesto, contacts, footer
 
       {/* Plain dark from here, so the surface's colours rather than the white kept for text over the photo. */}
       <section className="relative bg-ink px-5 py-24 text-fg md:px-10 md:py-36">
+        {/* Behind the slogan above it, in front of the photo: the sheet's top edge arrives as a fade. */}
+        <SheetFade className="-z-10" />
         {team ? (
           <div className="mx-auto grid max-w-6xl gap-12 md:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] md:gap-20">
             <TeamFigure team={team} attribute={attributes?.team} className="md:sticky md:top-16 md:self-start" />

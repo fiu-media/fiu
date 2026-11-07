@@ -16,6 +16,7 @@ import {
   type FoldProject,
   type FoldProps,
 } from "@/components/home/BelowFoldOptions";
+import { HeroFade } from "@/components/home/HeroFade";
 import { railInset } from "@/components/nav/rail";
 import { SiteNav } from "@/components/nav/SiteNav";
 import { GlassPillLink } from "@/components/ui/Glass";
@@ -57,6 +58,12 @@ const folds = {
   g: FoldReelClosing,
 } satisfies Record<Option, (props: FoldProps) => React.ReactNode>;
 
+// How the hero meets the fold, as seen from the side rail. Home ships "fade" (the photo dissolving into ink); the others
+// are kept for comparison: the photo ending in a hard edge, a frosted rail strip, and the fade with the frosted rail.
+const SEAMS = ["fade", "none", "rail", "both"] as const;
+type Seam = (typeof SEAMS)[number];
+const seamName: Record<Seam, string> = { fade: "Fade", none: "Hard edge", rail: "Frosted rail", both: "Fade + rail" };
+
 // Sample copy for what the editors haven't written yet (and for an empty dataset).
 const sampleSlogan = "Telling a new generation of stories.";
 const sampleSummary = (
@@ -93,8 +100,10 @@ async function Options({
 }) {
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
-  const { option: requested } = await searchParams;
+  const { option: requested, seam: requestedSeam } = await searchParams;
   const option: Option = OPTIONS.find((o) => o === requested) ?? "a";
+  const seam: Seam = SEAMS.find((s) => s === requestedSeam) ?? "fade";
+  const href = (o: Option, s: Seam) => `${localizedPath(lang, "/dev/home-below-fold")}?option=${o}&seam=${s}`;
   const [dict, { about, projects }] = await Promise.all([getDictionary(lang), getContent(lang)]);
 
   const props: FoldProps = {
@@ -123,8 +132,9 @@ async function Options({
   const Fold = folds[option];
 
   return (
-    <div data-surface="cinematic" className={`relative isolate bg-ink text-fg ${railInset}`}>
-      <SiteNav lang={lang} onImage />
+    // The hero runs under the rail, as on Home; only the fold is set beside it.
+    <div data-surface="cinematic" className="relative isolate bg-ink text-fg">
+      <SiteNav lang={lang} onImage blurRail={seam === "rail" || seam === "both"} />
 
       {/* Stand-in for Home's first screen. */}
       <header className="relative isolate grid h-dvh snap-start place-items-center overflow-hidden">
@@ -138,10 +148,12 @@ async function Options({
           className="absolute inset-0 -z-10 size-full object-cover"
         />
         <Image src={logo} alt="" priority className="h-auto w-[80vw] max-w-[640px] md:w-[42vw] md:max-w-none" />
+        {/* Under the logo, above the photo: in the real hero it sits between the stills and the logo layers. */}
+        {(seam === "fade" || seam === "both") && <HeroFade className="-z-10" />}
         <ArrowDown aria-hidden className="absolute bottom-[max(2rem,env(safe-area-inset-bottom))] size-5 text-white/70" />
       </header>
 
-      <main>
+      <main className={railInset}>
         <Fold {...props} />
       </main>
 
@@ -155,12 +167,23 @@ async function Options({
             size="sm"
             onImage
             scroll={false}
-            href={`${localizedPath(lang, "/dev/home-below-fold")}?option=${o}`}
+            href={href(o, seam)}
             current={o === option}
             aria-label={`${o.toUpperCase()}: ${optionName[o]}`}
           >
             {o.toUpperCase()}
             <span className="max-sm:hidden"> · {optionName[o]}</span>
+          </GlassPillLink>
+        ))}
+      </nav>
+
+      <nav
+        aria-label="Hero seam options"
+        className="fixed bottom-16 left-1/2 z-40 flex -translate-x-1/2 gap-2 md:top-[calc(var(--dev-bar,2.5rem)+3.25rem)] md:bottom-auto md:ml-8"
+      >
+        {SEAMS.map((s) => (
+          <GlassPillLink key={s} size="sm" onImage scroll={false} href={href(option, s)} current={s === seam}>
+            {seamName[s]}
           </GlassPillLink>
         ))}
       </nav>
