@@ -137,6 +137,20 @@ describe("importPlaygroundConfig", () => {
       expect(result.config.params.dragSpring).toBe(current.params.dragSpring);
     });
 
+    it("exports, imports and defaults the interaction weight", () => {
+      expect(current.params.weight).toBe(1);
+      expect(formatInteractionConfigExport(current)).toContain('"weight": 1');
+
+      const heavy = { version: 1, section: "interaction", rimLook: "light", params: { weight: 2.5 } };
+      const result = importPlaygroundConfig(current, JSON.stringify(heavy));
+      if (!result.ok) throw new Error(result.error);
+      expect(result.config.params.weight).toBe(2.5);
+
+      // Snapshots from before `weight` existed fall back to the preset's value.
+      const old = { version: 1, meshMode: "extrude", rimLook: "light", params: {} };
+      expect(parseConfigExport(JSON.stringify(old))?.params.weight).toBe(1);
+    });
+
     it("strips keys the schema does not know", () => {
       const noisy = { ...presetConfig("light"), extra: 1 };
       const parsed = parseConfigExport(JSON.stringify(noisy));
