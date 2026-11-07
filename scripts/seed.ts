@@ -60,6 +60,8 @@ const text = (key: string, value: string) => ({
 const slug = (current: string) => ({ _type: "slug", current });
 const ref = (id: string) => ({ _type: "reference", _ref: id });
 
+const TEAM_CAPTION = "Placeholder caption: the Fiú team on set.";
+
 // The project the home page rotates: the real one's id and slug on the dev and production datasets, which createIfNotExists leaves untouched.
 const HOME_PROJECT_ID = "project-and-again-the-vintage-movement";
 
@@ -67,6 +69,8 @@ async function main() {
   const stills = await Promise.all(STILLS.map((s) => uploadStill(s.file, s.alt)));
 
   const docs: Record<string, unknown>[] = [];
+  // The banquet table stands in for the team until Fiú has a photo.
+  const teamStill = { ...stills[1], alt: "Placeholder team photo" };
 
   docs.push({
     _id: "siteSettings",
@@ -77,6 +81,8 @@ async function main() {
     manifesto: [text("m1", "Placeholder manifesto. Replace this with Fiú's own words in the Studio.")],
     homeProjects: [{ ...ref(HOME_PROJECT_ID), _key: "home-1" }],
     aboutStill: { ...stills[0] },
+    teamStill,
+    teamCaption: TEAM_CAPTION,
     aboutTagline: "Fiú Words",
     workTagline: "Fiú Reels",
     talentTagline: "Fiú Faces",
@@ -200,6 +206,14 @@ async function main() {
   const tx = client.transaction();
   for (const doc of missing) tx.createIfNotExists(doc as { _id: string; _type: string });
   await tx.commit();
+
+  // Fields added to a document type after a dataset was first seeded: filled in only where they are still missing, so
+  // an existing Site settings document gets the team photo placeholder and nothing an editor has set is touched.
+  // (A caption an editor has deliberately cleared is also missing, so it comes back on the next run.)
+  if (existing.has("siteSettings")) {
+    await client.patch("siteSettings").setIfMissing({ teamStill, teamCaption: TEAM_CAPTION }).commit();
+  }
+
   console.log(
     `Created ${missing.length} of ${docs.length} documents in ${client.config().dataset}; ${existing.size} already existed and were left untouched.`,
   );

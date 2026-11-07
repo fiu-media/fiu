@@ -37,6 +37,7 @@ export const en = {
     title: "About",
     emailLabel: "Email",
     instagramLabel: "Instagram",
+    teamHeading: "The team",
   },
   work: {
     title: "Our Work",

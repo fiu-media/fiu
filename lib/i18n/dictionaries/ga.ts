@@ -33,6 +33,8 @@ export const ga: DeepPartial<Dictionary> = {
   about: {
     title: "Eolas Fúinn",
     emailLabel: "Ríomhphost",
+    // Needs a native speaker's review, like the rest of this file's first pass.
+    teamHeading: "An Fhoireann",
   },
   work: {
     title: "Ár gCuid Oibre",

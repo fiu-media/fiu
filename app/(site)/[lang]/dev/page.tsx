@@ -43,13 +43,13 @@ const concepts: Concept[] = [
     href: "/dev/about-team",
     title: "About team photo",
     kind: "Sign-off",
-    note: "Three places for a photo of the Fiú team on About (group portrait after the manifesto, beside the words, a second screen of its own), on a placeholder photo.",
+    note: "Three places for a photo of the Fiú team on About (group portrait after the manifesto, beside the words, a second screen of its own), on a placeholder photo. Option 2 (beside the words) is live at /about.",
   },
   {
     href: "/dev/home-below-fold",
     title: "Home below the fold",
     kind: "Sign-off",
-    note: "Four ways to put a condensed About and Our Work under Home's first screen (reel strip, statement + index, two doors, snap sequel) on the real slogan, About still and projects.",
+    note: "Seven ways to put a condensed About and Our Work under Home's first screen (reel strip, statement + index, two doors, snap sequel, and three reel strips with the team photo, email and Instagram) on the real slogan, About still and projects. Option F (reel + team lead) is live on Home, with the hero fading into the fold. A second row of pills compares the hero-to-fold seam: fade (live), hard edge, frosted rail, fade + rail.",
   },
   {
     href: "/dev/not-found",

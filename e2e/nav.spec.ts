@@ -33,6 +33,22 @@ test("choosing a link closes the menu and navigates", async ({ page }) => {
 test.describe("on Home", () => {
   test.use({ reducedMotion: "reduce" });
 
+  test("on a phone Home scrolls down to its fold but not up into the bleed", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/");
+    const scrollY = () => page.evaluate(() => window.scrollY);
+    // The hero starts below the 12rem bleed (BLEED_PX) and is held there.
+    await expect.poll(scrollY).toBe(192);
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await expect.poll(scrollY).toBe(192);
+
+    // The fold is reachable by scrolling, and carries the team photo's heading.
+    const team = page.getByText(en.about.teamHeading, { exact: true });
+    await team.scrollIntoViewIfNeeded();
+    await expect(team).toBeInViewport();
+    expect(await scrollY()).toBeGreaterThan(192);
+  });
+
   test("leaving Home releases its mobile scroll lock", async ({ page }) => {
     await page.goto("/");
     const html = page.locator("html");

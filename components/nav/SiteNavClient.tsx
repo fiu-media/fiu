@@ -22,6 +22,8 @@ type NavProps = {
   homeHref: string;
   labels: Dictionary["nav"];
   onImage?: boolean;
+  /** Frost the rail's strip with a backdrop blur. A /dev sign-off option, not used on the site. */
+  blurRail?: boolean;
 };
 
 export function SiteNavClient(props: NavProps) {
@@ -38,7 +40,7 @@ function RouteNav(props: NavProps) {
 
 const isCurrent = (pathname: string, href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
-function Nav({ lang, items, homeHref, labels, onImage, pathname }: NavProps & { pathname: string }) {
+function Nav({ lang, items, homeHref, labels, onImage, blurRail, pathname }: NavProps & { pathname: string }) {
   // The overlay is open for the page it was opened on, so navigating leaves it behind.
   const [openOn, setOpenOn] = useState<string | null>(null);
   const popup = useRef<HTMLDivElement>(null);
@@ -65,7 +67,10 @@ function Nav({ lang, items, homeHref, labels, onImage, pathname }: NavProps & { 
       <aside
         className={cn(
           "fixed inset-y-0 left-0 z-30 hidden w-[calc(4rem+env(safe-area-inset-left))] flex-col items-center gap-8 border-r border-line pt-[max(1.75rem,env(safe-area-inset-top))] pb-7 pl-[env(safe-area-inset-left)] md:flex",
-          onImage && "bg-gradient-to-r from-black/35 to-transparent [text-shadow:0_1px_6px_rgb(0_0_0/0.35)]",
+          onImage &&
+            (blurRail
+              ? "bg-gradient-to-r from-black/45 to-black/15 backdrop-blur-md [text-shadow:0_1px_6px_rgb(0_0_0/0.35)]"
+              : "bg-gradient-to-r from-black/35 to-transparent [text-shadow:0_1px_6px_rgb(0_0_0/0.35)]"),
         )}
       >
         {/* Sprocket rhythm: a faint, evenly spaced row of ticks, the only nod to film. */}

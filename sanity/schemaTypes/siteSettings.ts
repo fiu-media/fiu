@@ -40,6 +40,19 @@ export const siteSettings = defineType({
     }),
     defineField({ name: "manifesto", type: "array", group: "about", of: [defineArrayMember({ type: "block" })] }),
     imageWithAlt("aboutStill", "About still"),
+    {
+      ...imageWithAlt("teamStill", "Team photo"),
+      group: "about",
+      description:
+        "A photo of the whole team, shown on the About page and under the first screen of Home. Landscape works best (it is cropped to 4:3 on phones and a taller frame on desktop). Until one is added a stand-in photo is shown.",
+    },
+    defineField({
+      name: "teamCaption",
+      title: "Team photo caption",
+      type: "string",
+      group: "about",
+      description: "Optional, in this document's language: who is in the photo, where, when. Leave empty to show no caption.",
+    }),
     ...(
       [
         ["about", "About"],
