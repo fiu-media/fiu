@@ -21,7 +21,7 @@ export const ga: DeepPartial<Dictionary> = {
     contact: "Teagmháil",
   },
   notFound: {
-    heading: "Leathanach gan aimsiú",
+    heading: "Níor aimsíodh an leathanach",
     body: "Níl an leathanach sin ann, nó tá sé bogtha.",
     home: "Ar ais abhaile",
     backTo: "Ar ais chuig {section}",
@@ -118,7 +118,7 @@ export const ga: DeepPartial<Dictionary> = {
     name: "Ainm",
     email: "Ríomhphost",
     phone: "Fón",
-    phoneCountry: "Tír an uimhir fhóin",
+    phoneCountry: "Tír na huimhreach fóin",
     company: "Cuideachta",
     production: "Léiriúchán",
     message: "An bhfuil aon rud eile ar cheart dúinn a bheith ar an eolas faoi?",
@@ -149,7 +149,7 @@ export const ga: DeepPartial<Dictionary> = {
     name: "Ainm",
     email: "Ríomhphost",
     phone: "Fón",
-    phoneCountry: "Tír an uimhir fhóin",
+    phoneCountry: "Tír na huimhreach fóin",
     optional: "roghnach",
     message: "Teachtaireacht",
     placeholders: {
