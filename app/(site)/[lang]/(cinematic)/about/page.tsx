@@ -13,6 +13,7 @@ import { settingsAttribute } from "@/sanity/lib/about";
 import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
 import { ABOUT_QUERY } from "@/sanity/lib/queries";
 import { publishedId, toSizedImage } from "@/sanity/lib/rentals";
+import { toTeam } from "@/sanity/lib/team";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/about">): Promise<Metadata> {
   const { lang } = await params;
@@ -69,12 +70,14 @@ async function About({ lang }: { lang: Locale }) {
         />
       }
       footer={<AboutFooter copyright={dict.footer.copyright} />}
+      team={toTeam(settings, dict.about.teamHeading)}
       attributes={
         id
           ? {
               still: settingsAttribute(id, "aboutStill"),
               slogan: settingsAttribute(id, "slogan"),
               manifesto: settingsAttribute(id, "manifesto"),
+              team: settingsAttribute(id, "teamStill"),
             }
           : undefined
       }

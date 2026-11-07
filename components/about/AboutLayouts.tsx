@@ -2,6 +2,7 @@ import { ArrowDown } from "lucide-react";
 import Image from "next/image";
 import type { ReactNode } from "react";
 import { GlassPanel } from "@/components/ui/Glass";
+import { TeamFigure, type Team } from "./TeamFigure";
 import { cn } from "@/lib/cn";
 import type { SizedImage } from "@/sanity/lib/rentals";
 
@@ -12,8 +13,10 @@ export type AboutLayoutProps = {
   manifesto: ReactNode;
   contacts: ReactNode;
   footer: ReactNode;
+  /** The team photo. Only Option A shows it (beside the manifesto); the sign-off options B to F ignore it. */
+  team?: Team;
   /** `data-sanity` values that make the parts clickable in the Presentation tool. */
-  attributes?: { still?: string; slogan?: string; manifesto?: string };
+  attributes?: { still?: string; slogan?: string; manifesto?: string; team?: string };
 };
 
 function Still({ still, attribute, className }: { still: SizedImage; attribute?: string; className?: string }) {
@@ -63,24 +66,35 @@ export function AboutHeroSection({
 
 /**
  * Option A, "Slogan first": the still holds the first screen with the slogan large over it. The
- * manifesto, contact links and footer follow on plain dark, so no running text sits over the photo.
+ * manifesto, contact links and footer follow on plain dark, so no running text sits over the photo. With a team photo
+ * it sits beside the manifesto (above it on phones), in the same frame Home's fold uses.
  */
-export function AboutLayoutA({ still, slogan, gloss, manifesto, contacts, footer, attributes }: AboutLayoutProps) {
+export function AboutLayoutA({ still, slogan, gloss, manifesto, contacts, footer, team, attributes }: AboutLayoutProps) {
+  const body = (
+    <>
+      {manifesto && (
+        <div data-sanity={attributes?.manifesto} className="space-y-6 text-xl leading-relaxed text-fg/90 md:text-2xl">
+          {manifesto}
+        </div>
+      )}
+      {contacts}
+      {footer}
+    </>
+  );
   return (
     <main className="relative text-white">
       <AboutHeroSection still={still} slogan={slogan} gloss={gloss} attributes={attributes} />
 
       {/* Plain dark from here, so the surface's colours rather than the white kept for text over the photo. */}
       <section className="relative bg-ink px-5 py-24 text-fg md:px-10 md:py-36">
-        <div className="mx-auto flex max-w-3xl flex-col gap-14">
-          {manifesto && (
-            <div data-sanity={attributes?.manifesto} className="space-y-6 text-xl leading-relaxed text-fg/90 md:text-2xl">
-              {manifesto}
-            </div>
-          )}
-          {contacts}
-          {footer}
-        </div>
+        {team ? (
+          <div className="mx-auto grid max-w-6xl gap-12 md:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] md:gap-20">
+            <TeamFigure team={team} attribute={attributes?.team} className="md:sticky md:top-16 md:self-start" />
+            <div className="flex flex-col gap-14">{body}</div>
+          </div>
+        ) : (
+          <div className="mx-auto flex max-w-3xl flex-col gap-14">{body}</div>
+        )}
       </section>
     </main>
   );

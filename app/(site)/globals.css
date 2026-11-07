@@ -104,11 +104,10 @@ html {
   background: var(--bg);
 }
 
-/* Home on mobile is a taller-than-screen document pinned in the middle (HomeScrollLock); swipes must not move it. */
+/* Home on mobile starts below a bleed of photo that HomeScrollLock keeps the scroll from going above; no bounce into it. */
 @media (max-width: 767px) {
   html[data-home-lock],
   html[data-home-lock] body {
-    touch-action: none;
     overscroll-behavior: none;
   }
 }

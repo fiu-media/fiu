@@ -14,9 +14,11 @@ import { getDictionary } from "@/lib/i18n/dictionaries";
 import { cachedSanity } from "@/sanity/lib/live";
 import { ABOUT_QUERY } from "@/sanity/lib/queries";
 import { toSizedImage } from "@/sanity/lib/rentals";
+import { toTeam } from "@/sanity/lib/team";
 
-// Sign-off page for where the team photo goes on About: three placements on the live About layout (option A). The
-// photo is a stand-in until Fiú has one, and the caption is sample copy. Unlisted, like /dev/about.
+// Sign-off page for where the team photo goes on About: three placements on the About layout (option A). Option 2 is live
+// at /about, with the photo from Site settings. The
+// photo and caption come from Site settings (a stand-in until Fiú has uploaded one). Unlisted, like /dev/about.
 export const metadata: Metadata = {
   title: "About team photo options",
   robots: { index: false, follow: false },
@@ -72,8 +74,6 @@ async function Options({
     alt: fallback.alt,
     blurDataURL: fallback.blurDataURL,
   };
-  // A different still from the About one, so the placeholder reads as "another photo".
-  const stand = fallbackStills[2 % fallbackStills.length]!;
   const props: AboutTeamProps = {
     still,
     slogan: settings.slogan ?? null,
@@ -87,10 +87,8 @@ async function Options({
       />
     ),
     footer: <AboutFooter copyright={dict.footer.copyright} />,
-    team: { src: stand.src, width: stand.width, height: stand.height, alt: "", blurDataURL: stand.blurDataURL },
-    heading: "The team",
-    caption: "Sample caption: the Fiú team on set, 2026.",
-    placeholder: true,
+    // From Site settings like the live pages; the badge marks a photo that is still the code's stand-in.
+    team: { ...toTeam(settings, dict.about.teamHeading), placeholder: !settings.team },
   };
   const Layout = layouts[option];
 

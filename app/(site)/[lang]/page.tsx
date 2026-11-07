@@ -5,7 +5,9 @@ import { preload } from "react-dom";
 import { InlineScript } from "@/components/InlineScript";
 import { pinHomeScrollScript } from "@/components/home/bleed";
 import { HomeHero } from "@/components/home/HomeHero";
+import { HomeFoldContent } from "@/components/home/HomeFoldContent";
 import { HomeScrollLock } from "@/components/home/HomeScrollLock";
+import { railInset } from "@/components/nav/rail";
 import { SiteNav } from "@/components/nav/SiteNav";
 import { fallbackStills } from "@/lib/fallback-stills";
 import { defaultLocale, isLocale, languageAlternates, type Locale } from "@/lib/i18n/config";
@@ -27,19 +29,29 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
   if (!isLocale(lang)) notFound();
   const dict = await getDictionary(lang);
   return (
-    // On mobile the photo bleeds 12rem past the page above and below, inside a document that is pinned in the middle
-    // (HomeScrollLock), so Safari has real pixels to show behind its status bar and toolbar. Off from md up, Home is a
-    // plain h-dvh page.
-    <div data-surface="cinematic" data-home-bleed className="bg-ink max-md:py-48">
+    <div data-surface="cinematic" className="bg-ink">
       <HomeScrollLock />
-      <main className="relative isolate h-dvh bg-ink select-none md:overflow-hidden">
-        {/* The hero is imagery only: select-none stops a select-all or long-press copying the stills' alt texts as one string. */}
-        <h1 className="sr-only">{dict.site.name}</h1>
-        {/* Reads draft mode, so it streams; the fallback stills keep the first paint identical. */}
-        <Suspense fallback={<HomeHero {...fallbackHeroStills} />}>
-          <CmsHero lang={lang} />
-        </Suspense>
-        <SiteNav lang={lang} onImage />
+      <main>
+        {/* On mobile the photo bleeds 12rem past the hero above and below, inside a document that can't be scrolled above
+            the hero (HomeScrollLock), so Safari has real pixels to show behind its status bar and toolbar. Off from md
+            up, the hero is a plain h-dvh screen. */}
+        <div data-home-bleed className="max-md:py-48">
+          <div className="relative isolate h-dvh bg-ink select-none md:overflow-hidden">
+            {/* The hero is imagery only: select-none stops a select-all or long-press copying the stills' alt texts as one string. */}
+            <h1 className="sr-only">{dict.site.name}</h1>
+            {/* Reads draft mode, so it streams; the fallback stills keep the first paint identical. */}
+            <Suspense fallback={<HomeHero {...fallbackHeroStills} />}>
+              <CmsHero lang={lang} />
+            </Suspense>
+            <SiteNav lang={lang} onImage />
+          </div>
+        </div>
+        {/* Under the fold: the team, the slogan and the work. Beside the rail like every other page. */}
+        <div className={railInset}>
+          <Suspense>
+            <HomeFoldContent lang={lang} />
+          </Suspense>
+        </div>
       </main>
       <InlineScript html={pinHomeScrollScript} />
     </div>

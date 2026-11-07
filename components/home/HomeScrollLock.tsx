@@ -4,12 +4,12 @@ import { useEffect, useLayoutEffect } from "react";
 import { BLEED_PX, homeIsLocked, nudgeHomeScroll } from "./bleed";
 
 /**
- * Pins Home in the middle of a document that is taller than the screen (mobile only).
+ * Keeps Home's scroll from going above the hero (mobile only).
  *
  * Safari only shows page pixels behind its status bar and toolbar when the page has content beyond the
- * viewport edges, so Home carries BLEED_PX of photo above and below. Touch scrolling is switched off in
- * CSS (touch-action, keyed on `html[data-home-lock]`, see globals.css); this keeps the scroll position at the
- * middle regardless, e.g. after Next.js restores the scroll to the top or the toolbar changes the viewport height.
+ * viewport edges, so the hero carries BLEED_PX of photo above and below. Below that bleed the page goes on to the fold,
+ * which scrolls like any page; above the hero there is nothing to read, so the scroll is held at BLEED_PX or more,
+ * e.g. after Next.js restores the scroll to the top or the toolbar changes the viewport height.
  *
  * The flag lives on <html> and is set from an effect, not from Home's markup: Next keeps the previous route
  * mounted but hidden (Activity), so a marker in Home's DOM would outlive the page and lock every page after it.
@@ -30,7 +30,7 @@ export function HomeScrollLock() {
   useEffect(() => {
     if (!window.matchMedia("(max-width: 767px)").matches) return;
     const pin = () => {
-      if (homeIsLocked() && Math.abs(window.scrollY - BLEED_PX) > 0.5) {
+      if (homeIsLocked() && window.scrollY < BLEED_PX - 0.5) {
         window.scrollTo({ top: BLEED_PX, behavior: "instant" });
       }
     };

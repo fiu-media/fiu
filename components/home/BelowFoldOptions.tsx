@@ -1,68 +1,12 @@
 import { ArrowRight } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { TeamPhoto } from "@/components/about/TeamFigure";
 import { FullBleedScroll, FullBleedSlide } from "@/components/ui/FullBleedScroll";
 import { GlassPillLink } from "@/components/ui/Glass";
 import { cn } from "@/lib/cn";
-import type { SizedImage } from "@/sanity/lib/rentals";
-
-/** The condensed About: the slogan, its gloss and the first paragraph of the manifesto, with the About still. */
-export type FoldAbout = {
-  slogan: string;
-  gloss: string | null;
-  /** One paragraph, already rendered. */
-  summary: ReactNode;
-  still: SizedImage;
-  href: string;
-};
-
-export type FoldProject = {
-  id: string;
-  title: string;
-  /** Type · year · client. */
-  meta: string;
-  image: SizedImage;
-  href: string;
-};
-
-export type FoldProps = {
-  about: FoldAbout;
-  /** The first few projects in the editors' order. */
-  projects: FoldProject[];
-  workHref: string;
-  labels: { about: string; work: string; aboutCta: string; workCta: string; view: string };
-};
-
-const gutter = "px-5 md:px-10";
-
-/** A photo that fills its (relative, overflow-hidden) parent. */
-function Photo({
-  image,
-  sizes,
-  className,
-  priority,
-}: {
-  image: SizedImage;
-  sizes: string;
-  className?: string;
-  priority?: boolean;
-}) {
-  return (
-    <Image
-      src={image.src}
-      width={image.width}
-      height={image.height}
-      alt={image.alt}
-      sizes={sizes}
-      priority={priority}
-      placeholder={image.blurDataURL ? "blur" : "empty"}
-      blurDataURL={image.blurDataURL}
-      style={{ objectPosition: image.position }}
-      className={cn("size-full object-cover", className)}
-    />
-  );
-}
+import { gutter, HomeFold, Photo, Reel, type FoldProject, type FoldProps } from "./HomeFold";
+export type { FoldProject, FoldProps };
 
 function Eyebrow({ children }: { children: ReactNode }) {
   return <p className="text-xs font-medium tracking-[0.14em] text-white/60 uppercase">{children}</p>;
@@ -81,52 +25,92 @@ function ArrowLabel({ children }: { children: ReactNode }) {
   );
 }
 
-/**
- * Option A, "Reel strip": a slim About lead, then a row of project covers you swipe or scroll sideways, ending in
- * "All work". Image-led; About stays quiet.
- */
-export function FoldReelStrip({ about, projects, workHref, labels }: FoldProps) {
+/** The About lead of the reel options: the slogan, then the gloss and one paragraph, with an optional "About us" pill. */
+function ReelLead({ about, labels, cta = true }: Pick<FoldProps, "about" | "labels"> & { cta?: boolean }) {
   return (
-    <section className="bg-ink py-20 text-white md:py-28">
-      <div className={cn("mx-auto grid max-w-6xl gap-8 md:grid-cols-[minmax(0,6fr)_minmax(0,5fr)] md:gap-16", gutter)}>
-        <h2 className="font-display text-4xl leading-[1.05] text-balance italic md:text-6xl">{about.slogan}</h2>
-        <div className="flex flex-col items-start gap-6">
-          <div className="space-y-4 text-base leading-relaxed text-white/80 md:text-lg">
-            {about.gloss && <p className="text-white">{about.gloss}</p>}
-            {about.summary}
-          </div>
+    <div className={cn("mx-auto grid max-w-6xl gap-8 md:grid-cols-[minmax(0,6fr)_minmax(0,5fr)] md:gap-16", gutter)}>
+      <h2 className="font-display text-4xl leading-[1.05] text-balance italic md:text-6xl">{about.slogan}</h2>
+      <div className="flex flex-col items-start gap-6">
+        <div className="space-y-4 text-base leading-relaxed text-white/80 md:text-lg">
+          {about.gloss && <p className="text-white">{about.gloss}</p>}
+          {about.summary}
+        </div>
+        {cta && (
           <GlassPillLink href={about.href} onImage>
             {labels.aboutCta}
             <ArrowRight aria-hidden className="size-4" />
           </GlassPillLink>
-        </div>
+        )}
       </div>
+    </div>
+  );
+}
 
+/**
+ * Option A, "Reel strip": a slim About lead, then a row of project covers you swipe or scroll sideways, ending in
+ * "All work". Image-led; About stays quiet. Has no room for the team photo or the contact links.
+ */
+export function FoldReelStrip({ about, projects, workHref, labels }: FoldProps) {
+  return (
+    <section className="bg-ink py-20 text-white md:py-28">
+      <ReelLead about={about} labels={labels} />
+      <Reel projects={projects} workHref={workHref} labels={labels} className="mt-16 md:mt-24" />
+    </section>
+  );
+}
+
+/**
+ * Option E, "Team in the reel": the team is one more card in the strip, after the projects and in the same frame, and
+ * the email and Instagram links sit in a line under the strip.
+ */
+export function FoldReelTeamCard({ about, team, contacts, projects, workHref, labels }: FoldProps) {
+  return (
+    <section className="bg-ink pt-20 pb-16 text-white md:pt-28 md:pb-20">
+      <ReelLead about={about} labels={labels} />
+      <Reel projects={projects} workHref={workHref} labels={labels} className="mt-16 md:mt-24">
+        <Link href={about.href} className="group w-[78vw] shrink-0 snap-start md:w-[30rem]">
+          <TeamPhoto
+            team={team}
+            sizes="(min-width: 768px) 30rem, 78vw"
+            className="aspect-[4/5] rounded-2xl md:aspect-[4/3] [&_img]:transition-transform [&_img]:duration-700 [&_img]:ease-out group-hover:[&_img]:scale-[1.03]"
+          />
+          <h3 className="mt-4 font-display text-2xl italic md:text-3xl">{team.heading}</h3>
+          {team.caption && <p className="mt-1 text-sm text-white/60">{team.caption}</p>}
+        </Link>
+      </Reel>
+      <div className={cn("mx-auto mt-10 max-w-6xl border-t border-line pt-8 md:mt-14", gutter)}>{contacts}</div>
+    </section>
+  );
+}
+
+/**
+ * Option F, "Team lead": the one that shipped. It is `HomeFold`, which Home renders; kept here so the sign-off page
+ * still shows it next to the others.
+ */
+export const FoldReelTeamLead = (props: FoldProps) => <HomeFold {...props} />;
+
+/**
+ * Option G, "Closing band": the lead and the strip exactly as in A, then the section ends with the team photo beside
+ * a "say hello" block: email, Instagram and the About link. The page closes on the people.
+ */
+export function FoldReelClosing({ about, team, contacts, projects, workHref, labels }: FoldProps) {
+  return (
+    <section className="bg-ink pt-20 text-white md:pt-28">
+      <ReelLead about={about} labels={labels} cta={false} />
+      <Reel projects={projects} workHref={workHref} labels={labels} className="mt-16 md:mt-24" />
       <div
-        tabIndex={0}
-        role="region"
-        aria-label={labels.work}
         className={cn(
-          "mt-16 flex snap-x snap-mandatory scroll-px-5 [scrollbar-width:none] gap-4 overflow-x-auto pb-4 md:mt-24 md:scroll-px-10 md:gap-6 [&::-webkit-scrollbar]:hidden",
+          "mx-auto mt-16 grid max-w-6xl items-center gap-8 border-t border-line py-16 md:mt-24 md:grid-cols-[minmax(0,6fr)_minmax(0,5fr)] md:gap-16 md:py-24",
           gutter,
         )}
       >
-        {projects.map((project) => (
-          <Link key={project.id} href={project.href} className="group w-[78vw] shrink-0 snap-start md:w-[30rem]">
-            <div className="relative aspect-[4/5] overflow-hidden rounded-2xl md:aspect-[4/3]">
-              <Photo
-                image={project.image}
-                sizes="(min-width: 768px) 30rem, 78vw"
-                className="transition-transform duration-700 ease-out group-hover:scale-[1.03]"
-              />
-            </div>
-            <h3 className="mt-4 font-display text-2xl md:text-3xl">{project.title}</h3>
-            <p className="mt-1 text-sm text-white/60">{project.meta}</p>
-          </Link>
-        ))}
-        <div className="flex w-[60vw] shrink-0 snap-start items-center justify-center md:w-64">
-          <GlassPillLink href={workHref} onImage size="lg">
-            {labels.workCta}
+        <TeamPhoto team={team} sizes="(min-width: 768px) 50vw, 100vw" className="aspect-[3/2] rounded-3xl" />
+        <div className="flex flex-col items-start gap-6">
+          <p className="text-xs font-medium tracking-[0.14em] text-white/60 uppercase">{team.heading}</p>
+          {team.caption && <p className="text-base text-white/70">{team.caption}</p>}
+          {contacts}
+          <GlassPillLink href={about.href} onImage>
+            {labels.aboutCta}
             <ArrowRight aria-hidden className="size-4" />
           </GlassPillLink>
         </div>

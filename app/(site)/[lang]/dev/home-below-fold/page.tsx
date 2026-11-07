@@ -4,9 +4,13 @@ import Image from "next/image";
 import { PortableText } from "next-sanity";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { AboutContacts } from "@/components/about/AboutContacts";
 import {
   FoldIndex,
+  FoldReelClosing,
   FoldReelStrip,
+  FoldReelTeamCard,
+  FoldReelTeamLead,
   FoldSnapSequel,
   FoldTwoDoors,
   type FoldProject,
@@ -17,12 +21,14 @@ import { SiteNav } from "@/components/nav/SiteNav";
 import { GlassPillLink } from "@/components/ui/Glass";
 import { fallbackStills } from "@/lib/fallback-stills";
 import { defaultLocale, isLocale, localizedPath, type Locale } from "@/lib/i18n/config";
+import { getDictionary } from "@/lib/i18n/dictionaries";
 import { cachedSanity } from "@/sanity/lib/live";
 import { ABOUT_QUERY, WORK_QUERY } from "@/sanity/lib/queries";
 import { toSizedImage, type SizedImage } from "@/sanity/lib/rentals";
+import { toTeam } from "@/sanity/lib/team";
 import logo from "@/public/brand/fiu-logo.svg";
 
-// Sign-off page for the condensed About + Our Work under Home's first screen: four options on the real slogan, About
+// Sign-off page for the condensed About + Our Work under Home's first screen: seven options (A to D, then three reel strips that also carry the team photo, email and Instagram) on the real slogan, About
 // still and projects. Unlisted, like /dev/about. The first screen here is a stand-in (a still and the flat logo): the
 // live WebGL hero isn't needed to judge the fold, and Home's mobile scroll lock isn't applied.
 export const metadata: Metadata = {
@@ -30,19 +36,25 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-const OPTIONS = ["a", "b", "c", "d"] as const;
+const OPTIONS = ["a", "b", "c", "d", "e", "f", "g"] as const;
 type Option = (typeof OPTIONS)[number];
 const optionName: Record<Option, string> = {
   a: "Reel strip",
   b: "Statement + index",
   c: "Two doors",
   d: "Snap sequel",
+  e: "Reel + team card",
+  f: "Reel + team lead",
+  g: "Reel + closing band",
 };
 const folds = {
   a: FoldReelStrip,
   b: FoldIndex,
   c: FoldTwoDoors,
   d: FoldSnapSequel,
+  e: FoldReelTeamCard,
+  f: FoldReelTeamLead,
+  g: FoldReelClosing,
 } satisfies Record<Option, (props: FoldProps) => React.ReactNode>;
 
 // Sample copy for what the editors haven't written yet (and for an empty dataset).
@@ -83,7 +95,7 @@ async function Options({
   if (!isLocale(lang)) notFound();
   const { option: requested } = await searchParams;
   const option: Option = OPTIONS.find((o) => o === requested) ?? "a";
-  const { about, projects } = await getContent(lang);
+  const [dict, { about, projects }] = await Promise.all([getDictionary(lang), getContent(lang)]);
 
   const props: FoldProps = {
     about: {
@@ -94,6 +106,16 @@ async function Options({
       still: about.still,
       href: localizedPath(lang, "/about"),
     },
+    // From Site settings like the live pages; the badge marks a photo that is still the code's stand-in.
+    team: { ...toTeam(about, dict.about.teamHeading), placeholder: !about.team },
+    // Sample links until the editors have set the real ones.
+    contacts: (
+      <AboutContacts
+        email={about.contactEmail ?? "hello@example.com"}
+        instagram={about.instagram ?? "https://www.instagram.com/example/"}
+        labels={{ email: dict.about.emailLabel, instagram: dict.about.instagramLabel }}
+      />
+    ),
     projects,
     workHref: localizedPath(lang, "/work"),
     labels,
