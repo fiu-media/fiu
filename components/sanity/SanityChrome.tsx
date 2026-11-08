@@ -9,9 +9,12 @@ import { DisableDraftMode } from "./DisableDraftMode";
  */
 export async function SanityChrome() {
   const { isEnabled } = await draftMode();
+  // The "connected and listening" console.info is dev-only noise; errors and
+  // warnings stay. `undefined` falls back to the default handler.
+  const quiet = process.env.NODE_ENV === "production";
   return (
     <>
-      <SanityLive includeDrafts={isEnabled} />
+      <SanityLive includeDrafts={isEnabled} onWelcome={quiet ? false : undefined} />
       {isEnabled && (
         <>
           <VisualEditing />
