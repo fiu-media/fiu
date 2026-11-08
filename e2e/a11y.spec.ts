@@ -9,7 +9,7 @@ import { clickUntil } from "./helpers";
  * Axe's automated rules catch roughly a third of WCAG problems, so a pass is a floor, not a
  * verdict (manual review lives in #11). Any violation fails the test.
  */
-const PAGES = ["/about", "/work", "/talent", "/contact", "/contact?type=Talent"];
+const PAGES = ["/about", "/work", "/talent", "/contact", "/contact?type=Talent", "/privacy"];
 
 async function audit(page: Page, path: string, open?: (page: Page) => Promise<void>) {
   await page.goto(path);

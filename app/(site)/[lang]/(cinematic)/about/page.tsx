@@ -3,7 +3,6 @@ import { PortableText } from "next-sanity";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { AboutContacts } from "@/components/about/AboutContacts";
-import { AboutFooter } from "@/components/about/AboutFooter";
 import { AboutLayoutA } from "@/components/about/AboutLayouts";
 import { FullScreenSkeleton } from "@/components/ui/Skeleton";
 import { fallbackStills } from "@/lib/fallback-stills";
@@ -69,7 +68,6 @@ async function About({ lang }: { lang: Locale }) {
           labels={{ email: dict.about.emailLabel, instagram: dict.about.instagramLabel }}
         />
       }
-      footer={<AboutFooter copyright={dict.footer.copyright} />}
       team={toTeam(settings, dict.about.teamHeading)}
       attributes={
         id

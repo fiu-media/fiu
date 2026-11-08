@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { AboutContacts } from "@/components/about/AboutContacts";
-import { AboutFooter } from "@/components/about/AboutFooter";
 import {
   AboutLayoutA,
   AboutLayoutB,
@@ -103,7 +102,6 @@ async function Options({
         labels={{ email: dict.about.emailLabel, instagram: dict.about.instagramLabel }}
       />
     ),
-    footer: <AboutFooter copyright={dict.footer.copyright} />,
   };
 
   return (
