@@ -1,9 +1,10 @@
+import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { pageGutter } from "@/components/nav/rail";
 import { cn } from "@/lib/cn";
 import { emailForDisplay } from "@/lib/email/display";
-import { defaultLocale, type Locale } from "@/lib/i18n/config";
+import { defaultLocale, localizedPath, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { format } from "@/lib/i18n/format";
 import { instagramHandle } from "@/lib/instagram";
@@ -11,7 +12,7 @@ import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
 import { CONTACT_SETTINGS_QUERY } from "@/sanity/lib/queries";
 
 /**
- * The slim footer under every page: "Fiú Media © 2026", the studio email and Instagram. It is one quiet row, not a
+ * The slim footer under every page: "Fiú Media © 2026", the studio email, Instagram and Privacy. It is one quiet row, not a
  * sitemap: the nav is always on screen. `snap-end` keeps it reachable on pages that snap to their slides.
  */
 export async function SiteFooter({ lang }: { lang: Locale }) {
@@ -34,6 +35,9 @@ export async function SiteFooter({ lang }: { lang: Locale }) {
         <Suspense>
           <FooterLinks lang={lang} labels={{ email: footer.emailLabel, instagram: footer.instagramLabel }} />
         </Suspense>
+        <Link href={localizedPath(lang, "/privacy")} className="link-inline">
+          {footer.privacy}
+        </Link>
       </div>
     </footer>
   );

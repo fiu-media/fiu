@@ -32,6 +32,7 @@ export const ga: DeepPartial<Dictionary> = {
   },
   footer: {
     emailLabel: "Ríomhphost",
+    privacy: "Príobháideachas",
   },
   about: {
     title: "Eolas Fúinn",
