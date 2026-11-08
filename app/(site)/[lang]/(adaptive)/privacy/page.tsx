@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense, type ReactNode } from "react";
-import { pageGutter } from "@/components/nav/rail";
+import { pageGutter } from "@/components/layout/nav/rail";
 import { PageTitle } from "@/components/ui/PageTitle";
 import { cn } from "@/lib/cn";
 import { emailForDisplay } from "@/lib/email/display";
@@ -9,7 +9,7 @@ import { defaultLocale, isLocale, languageAlternates, localizedPath, type Locale
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { format } from "@/lib/i18n/format";
 import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
-import { CONTACT_SETTINGS_QUERY } from "@/sanity/lib/queries";
+import { CONTACT_SETTINGS_QUERY } from "@/content/siteSettings";
 
 /** Where a complaint to Ireland's data protection authority is made. */
 const DPC_URL = "https://www.dataprotection.ie";

@@ -10,7 +10,7 @@ import type { FormState } from "@/lib/forms/state";
 import { guardSubmission } from "@/lib/forms/submit";
 import { defaultLocale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
-import { AVAILABLE_ITEM_IDS_QUERY } from "@/sanity/lib/queries";
+import { AVAILABLE_ITEM_IDS_QUERY } from "@/content/rentalItem";
 import { writeClient } from "@/sanity/lib/writeClient";
 
 export async function submitQuote(_previous: FormState, formData: FormData): Promise<FormState> {

@@ -4,7 +4,7 @@ import Image, { type StaticImageData } from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense, type ReactNode } from "react";
-import { LogoMask } from "@/components/nav/HomeLink";
+import { LogoMask } from "@/components/layout/nav/HomeLink";
 import { GlassPillButton, GlassPillLink } from "@/components/ui/Glass";
 import { cn } from "@/lib/cn";
 import { isLocale, localizedPath } from "@/lib/i18n/config";

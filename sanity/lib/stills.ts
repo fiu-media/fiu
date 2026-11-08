@@ -1,6 +1,6 @@
 import type { HOME_STILLS_QUERY_RESULT } from "@/sanity.types";
 import { projectAttribute } from "./projects";
-import { toSizedImage, type SizedImage } from "./rentals";
+import { toSizedImage, type SizedImage } from "./image";
 
 export type HeroStill = SizedImage & {
   /** Precomputed studio tint (hex) for the glass logo; avoids sampling the texture. Only the bundled fallbacks have one. */

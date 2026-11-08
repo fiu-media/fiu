@@ -1,0 +1,1570 @@
+"use client";
+
+import { Environment, MeshTransmissionMaterial, useCursor, useTexture } from "@react-three/drei";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ComponentRef,
+  type MutableRefObject,
+  type RefObject,
+} from "react";
+import * as THREE from "three";
+import paths from "@/public/brand/fiu-logo-paths.json";
+import { SPLASH_FADE_MS } from "@/features/home/splash-config";
+import { RAIL_REM } from "@/components/layout/nav/rail";
+import { buildLogoGeometry, type LogoMeshMode, type LogoPaths } from "./buildLogoGeometry";
+import { LOGO_PARAM_PRESETS, type LogoGlassParams, type LogoRimLook } from "./logoConfig";
+import { MOVE_RANGE, ROTATE_RANGE, sweepAt, type LightSweep } from "./lightSweep";
+import type { LogoPerfStats } from "./logoPerf";
+import {
+  applyLogoTier,
+  FLOOR_SECONDS,
+  higherTier,
+  lowerTier,
+  medianFps,
+  MIDSESSION_FLOOR_FPS,
+  probeComplete,
+  PROBE_WARMUP_FRAMES,
+  probeVerdict,
+  TIER_SETTINGS,
+  type LogoTier,
+} from "./logoTier";
+
+export type { LogoMeshMode };
+export type { LightSweep } from "./lightSweep";
+export type { LogoRimLook, LogoGlassParams } from "./logoConfig";
+export type { LogoPerfStats } from "./logoPerf";
+export type { LogoTier } from "./logoTier";
+
+const BACKDROP_Z = -4;
+// A distant, narrow camera keeps the slab's front face from projecting wider than its back, so the
+// front-facing glass logo matches the flat SVG logo's outline (at 12 it overlapped the artwork by
+// 82%, at 48 by 93%). The fov is chosen so the view at z = 0 is the same size as the old fov-30
+// camera at z = 12, i.e. everything else keeps its size.
+const CAMERA_Z = 48;
+const CAMERA_FOV = (2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(15)) * (12 / CAMERA_Z)) * 180) / Math.PI;
+const CROSSFADE_SECONDS = 1.6;
+const SAMPLE_SIZE = 32;
+const NEUTRAL_TINT = new THREE.Color("#c8c4c0");
+/**
+ * Hero intro: the glass starts out refracting a bright white field, so it reads as the white
+ * splash logo it replaces, then clears to the photo. Above 1 because ACES tone mapping pulls
+ * a plain 1.0 down to light grey.
+ */
+const SPLASH_WHITE = 1.5;
+// The refracted field goes white → photo over exactly the splash fade (ease-out, same curve as
+// the CSS), so the glass clears as the splash lifts; a slower curve left a white glass logo
+// hanging around after the backdrop had gone.
+const REVEAL_SECONDS = SPLASH_FADE_MS / 1000;
+
+export type SceneStill = {
+  src: string;
+  width: number;
+  height: number;
+  /** CMS-provided studio tint (hex). Prefer this over client sampling — CORS-safe. */
+  lightTint?: string;
+};
+
+type Fade = { from: number; to: number; start: number };
+
+/**
+ * The live home hero: the rotating stills are drawn into the scene as a backdrop, so the
+ * glass logo actually refracts whichever still is behind it.
+ *
+ * Logo mesh is built in Three.js from `fiu-logo-paths.json` (variable-radius tubes or
+ * silhouette extrude + chamfered diamonds) — no GLB for the web.
+ *
+ * Rendering is on demand. Frames are only drawn while something moves (intro spin,
+ * crossfade, pointer parallax), so an idle hero costs nothing.
+ *
+ * Quality starts at `tier`. Before reporting ready, the scene times a few frames and may drop to a
+ * cheaper tier, or call `onTooSlow` if even the cheapest can't hold the floor (see `logoTier.ts`).
+ */
+export default function LogoScene({
+  stills,
+  index,
+  onReady,
+  meshMode = "extrude",
+  rimLook = "light",
+  params: paramsProp,
+  measurePerf = false,
+  onPerf,
+  sweep,
+  introSlide = false,
+  introHold = false,
+  introPlayed = false,
+  splashLift,
+  interactive = true,
+  onIntroEnd,
+  onContextLost,
+  tier = "high",
+  onTooSlow,
+}: {
+  stills: SceneStill[];
+  index: number;
+  onReady: () => void;
+  /** Desktop: spin in the centre, then glide to the left-hand resting position. */
+  introSlide?: boolean;
+  /** Freeze the intro clock (the logo waits front-facing) until this turns false. */
+  introHold?: boolean;
+  /** The hero intro already played on this page load (the scene is being mounted again): start at rest, don't replay it. */
+  introPlayed?: boolean;
+  /** Hero intro: false while the splash holds (glass refracts white), true once it starts lifting. */
+  splashLift?: boolean;
+  /** When false the canvas ignores the pointer, so whatever is beneath it (the nav) stays clickable. */
+  interactive?: boolean;
+  /** Fires once, when the hero intro (spin and glide) has played out in full. */
+  onIntroEnd?: () => void;
+  /** The GL context was lost and the canvas can no longer draw; the caller should swap in a fallback. */
+  onContextLost?: () => void;
+  /** `tubes` = liquid-glass taper; `extrude` = flat silhouette slab. */
+  meshMode?: LogoMeshMode;
+  /** `light` = luminous bevels; `dark` = charcoal liquid-glass bands. */
+  rimLook?: LogoRimLook;
+  /** Live overrides (playground). Defaults to the rimLook preset. */
+  params?: LogoGlassParams;
+  /** Continuous frameloop + FPS sampling (playground only). */
+  measurePerf?: boolean;
+  onPerf?: (stats: LogoPerfStats) => void;
+  /** Slowly sweeps the studio light (the /dev/moving-light experiment). Off when undefined. */
+  sweep?: LightSweep;
+  /** Starting quality. Read once: antialiasing and the env map size can't change after mount. */
+  tier?: LogoTier;
+  /** Even the cheapest tier is below the floor; the caller should swap in the SVG. */
+  onTooSlow?: () => void;
+}) {
+  const params = paramsProp ?? LOGO_PARAM_PRESETS[rimLook];
+  // The playground measures the preset as set, so it always runs at full quality and never adapts.
+  const [startTier] = useState<LogoTier>(measurePerf ? "high" : tier);
+  const settings = TIER_SETTINGS[startTier];
+  // Start loading the first still before the canvas mounts. If it has resolved by the time Scene
+  // first renders, useTexture reads it from cache and never suspends. A suspend would cost
+  // React's 300 ms Suspense reveal throttle, even with the image already in the HTTP cache.
+  preloadStill(stills[index]!.src);
+  return (
+    <Canvas
+      frameloop={measurePerf ? "always" : "demand"}
+      // R3F gives its root div an inline `pointer-events: auto`, which a class on a wrapper cannot override.
+      style={interactive ? undefined : { pointerEvents: "none" }}
+      dpr={settings.dpr}
+      camera={{ position: [0, 0, CAMERA_Z], fov: CAMERA_FOV }}
+      gl={{
+        alpha: true,
+        antialias: settings.antialias,
+        powerPreference: "high-performance",
+        toneMapping: THREE.ACESFilmicToneMapping,
+        toneMappingExposure: 1,
+        premultipliedAlpha: false,
+      }}
+      // Transparent clear so the HTML <Image> stills show through untouched;
+      // the WebGL backdrop is only sampled for logo refraction (see BackdropLayerGate).
+      onCreated={({ gl }) => {
+        gl.setClearColor(0x000000, 0);
+        gl.domElement.style.touchAction = "none";
+        gl.domElement.addEventListener("webglcontextlost", (event) => {
+          event.preventDefault();
+          onContextLost?.();
+        });
+      }}
+    >
+      <Scene
+        stills={stills}
+        index={index}
+        onReady={onReady}
+        meshMode={meshMode}
+        params={params}
+        envAlways={measurePerf}
+        sweep={sweep}
+        adaptiveQuality={!measurePerf}
+        startTier={startTier}
+        onTooSlow={onTooSlow}
+        introSlide={introSlide}
+        introHold={introHold}
+        introPlayed={introPlayed}
+        splashLift={splashLift}
+        onIntroEnd={onIntroEnd}
+      />
+      {measurePerf && onPerf ? <PerfSampler onPerf={onPerf} /> : null}
+    </Canvas>
+  );
+}
+
+/** A gap this long between frames is the demand loop waking from idle, not a slow frame. */
+const IDLE_GAP_SECONDS = 0.5;
+
+/**
+ * Picks and keeps the quality tier. First a probe: once the shaders have compiled, time
+ * `PROBE_FRAMES` frames (behind the splash, which hides the canvas) and step down, or give up, by
+ * `probeVerdict`. Only then is the scene reported ready. Once the intro is over, step down while
+ * frames stay slow and back up (never past the starting tier) once they recover; at `low`, a
+ * sustained crawl gives up too. No steps during the intro: a step recompiles the material, and a
+ * hitch mid-spin is worse than a slightly slow spin (a crawl still gives up). Without `adaptive`
+ * (the playground) it only waits out the warm-up.
+ */
+function useLogoQuality({
+  adaptive,
+  startTier,
+  tier,
+  setTier,
+  readyRef,
+  introOver,
+  onReady,
+  onTooSlow,
+}: {
+  adaptive: boolean;
+  introOver: boolean;
+  startTier: LogoTier;
+  tier: LogoTier;
+  setTier: (tier: LogoTier) => void;
+  readyRef: MutableRefObject<boolean>;
+  onReady: () => void;
+  onTooSlow: (() => void) | undefined;
+}) {
+  const invalidate = useThree((s) => s.invalidate);
+  const setDpr = useThree((s) => s.setDpr);
+  const gl = useThree((s) => s.gl);
+  const probe = useRef({
+    phase: "warmup" as "warmup" | "measure" | "done",
+    frames: 0,
+    ms: [] as number[],
+    want: startTier,
+    measured: false,
+  });
+  const run = useRef({ slow: 0, fast: 0, crawl: 0, cooldown: 0, gaveUp: false });
+  const pacing = useRef({ fences: [] as WebGLSync[], waiting: null as WebGLSync | null, timer: 0 });
+
+  // The canvas was created at the starting tier's pixel ratio; follow later steps.
+  const dprTier = useRef(startTier);
+  useEffect(() => {
+    if (tier === dprTier.current) return;
+    dprTier.current = tier;
+    setDpr(TIER_SETTINGS[tier].dpr);
+  }, [tier, setDpr]);
+
+  const releaseFences = useCallback(() => {
+    const ctx = gl.getContext() as WebGL2RenderingContext;
+    const q = pacing.current;
+    window.clearTimeout(q.timer);
+    for (const sync of q.waiting ? [q.waiting, ...q.fences] : q.fences) ctx.deleteSync(sync);
+    q.fences = [];
+    q.waiting = null;
+  }, [gl]);
+  useEffect(() => releaseFences, [releaseFences]);
+
+  const log = (message: string) => {
+    if (process.env.NODE_ENV !== "production") console.info(`[logo tier] ${message}`);
+  };
+  const step = (next: LogoTier) => {
+    probe.current.want = next;
+    run.current.cooldown = PROBE_WARMUP_FRAMES;
+    setTier(next);
+  };
+  const giveUp = (why: string) => {
+    probe.current.phase = "done";
+    run.current.gaveUp = true;
+    log(`too slow ${why}, falling back to the SVG`);
+    onTooSlow?.();
+  };
+
+  /**
+   * Asks for the next probe frame, holding it back while the GPU is more than a frame behind, so
+   * frame times include the GPU's work. Browsers normally hold rAF back like this for a slow GPU,
+   * but not all do (headless Chromium doesn't): frames then queue up faster than they're drawn, the
+   * probe reads them as fast, and the stall lands later, on screen.
+   */
+  const nextProbeFrame = () => {
+    const ctx = gl.getContext() as WebGL2RenderingContext;
+    const q = pacing.current;
+    // Placed before this frame renders, so it covers everything up to the previous frame.
+    const sync = ctx.fenceSync(ctx.SYNC_GPU_COMMANDS_COMPLETE, 0);
+    if (!sync) return invalidate();
+    ctx.flush();
+    q.fences.push(sync);
+    // The fence placed a frame ago: once it has signalled, only one frame is still in flight.
+    const behind = q.fences.length > 1 ? q.fences.shift()! : null;
+    if (!behind) return invalidate();
+    q.waiting = behind;
+    // A sync's status only updates between tasks, so a GPU that's behind is polled from timers.
+    const check = () => {
+      if (ctx.getSyncParameter(behind, ctx.SYNC_STATUS) !== ctx.SIGNALED) {
+        q.timer = window.setTimeout(check, 1);
+        return;
+      }
+      ctx.deleteSync(behind);
+      q.waiting = null;
+      invalidate();
+    };
+    check();
+  };
+
+  // A function so TypeScript doesn't keep its narrowing from before `probeFrame` ran.
+  const stillProbing = () => probe.current.phase !== "done";
+  const probeFrame = (delta: number) => {
+    const p = probe.current;
+    // A tier switch recompiles the material: wait for it to render, then warm it up again.
+    if (tier !== p.want) return;
+    if (p.phase === "warmup") {
+      if (++p.frames < PROBE_WARMUP_FRAMES) return;
+      if (adaptive && !p.measured) {
+        p.phase = "measure";
+        p.ms = [];
+        return;
+      }
+      p.phase = "done";
+      readyRef.current = true;
+      onReady();
+      return;
+    }
+    p.ms.push(delta * 1000);
+    // A device far below the floor would take ages to draw every probe frame, so it can stop early.
+    if (!probeComplete(p.ms)) return;
+    const { next, reprobe } = probeVerdict(p.ms, tier);
+    log(`probe at ${tier}: ${medianFps(p.ms).toFixed(0)} fps over ${p.ms.length} frames → ${next}`);
+    if (next === "static") return giveUp(`at ${tier}`);
+    p.measured = !reprobe;
+    p.phase = "warmup";
+    p.frames = next === tier ? PROBE_WARMUP_FRAMES - 1 : 0;
+    if (next !== tier) step(next);
+  };
+
+  useFrame((_, delta) => {
+    const p = probe.current;
+    if (p.phase !== "done") {
+      probeFrame(delta);
+      if (!stillProbing()) return releaseFences();
+      if (adaptive) nextProbeFrame();
+      else invalidate();
+      return;
+    }
+
+    const r = run.current;
+    if (!adaptive || r.gaveUp || delta > IDLE_GAP_SECONDS) return;
+    if (r.cooldown > 0) {
+      r.cooldown--;
+      return;
+    }
+    const fps = 1 / delta;
+    // A crawl gives up on the glass: during the intro at any tier (its clock is frame-capped, so a
+    // crawling intro also drags on), afterwards once there's no cheaper tier left to try.
+    if (!introOver || tier === "low") {
+      r.crawl = fps < MIDSESSION_FLOOR_FPS ? r.crawl + delta : 0;
+      if (r.crawl > FLOOR_SECONDS) return giveUp(introOver ? "mid-session" : "during the intro");
+    }
+    if (!introOver) return;
+    if (fps < 30) {
+      r.slow += delta;
+      r.fast = 0;
+      const lower = lowerTier(tier);
+      if (r.slow > 1.2 && lower) {
+        r.slow = 0;
+        log(`slow, stepping down to ${lower}`);
+        step(lower);
+      }
+    } else if (fps > 48) {
+      r.fast += delta;
+      r.slow = 0;
+      const higher = higherTier(tier, startTier);
+      if (r.fast > 2 && higher) {
+        r.fast = 0;
+        log(`recovered, stepping up to ${higher}`);
+        step(higher);
+      }
+    } else {
+      r.slow = 0;
+      r.fast = 0;
+    }
+  });
+}
+
+/** Samples FPS / frame time and renderer info ~2×/sec for the playground HUD. */
+function PerfSampler({ onPerf }: { onPerf: (stats: LogoPerfStats) => void }) {
+  const gl = useThree((s) => s.gl);
+  const onPerfRef = useRef(onPerf);
+  useEffect(() => {
+    onPerfRef.current = onPerf;
+  }, [onPerf]);
+  const bucket = useRef({ started: 0, frames: 0, frameMs: 0 });
+
+  useFrame((_, delta) => {
+    const b = bucket.current;
+    b.frames += 1;
+    b.frameMs = delta * 1000;
+    const now = performance.now();
+    if (!b.started) b.started = now;
+    if (now - b.started < 500) return;
+    const fps = (b.frames * 1000) / (now - b.started);
+    b.frames = 0;
+    b.started = now;
+    onPerfRef.current({
+      fps,
+      frameMs: b.frameMs,
+      triangles: gl.info.render.triangles,
+      calls: gl.info.render.calls,
+    });
+  });
+
+  return null;
+}
+
+function Scene({
+  stills,
+  index,
+  onReady,
+  meshMode,
+  params,
+  envAlways,
+  sweep,
+  adaptiveQuality,
+  startTier,
+  onTooSlow,
+  introSlide,
+  introHold,
+  introPlayed,
+  splashLift,
+  onIntroEnd,
+}: {
+  stills: SceneStill[];
+  index: number;
+  onReady: () => void;
+  onIntroEnd: (() => void) | undefined;
+  startTier: LogoTier;
+  onTooSlow: (() => void) | undefined;
+  meshMode: LogoMeshMode;
+  params: LogoGlassParams;
+  /** Playground: keep cubemap live while measuring / scrubbing. */
+  envAlways: boolean;
+  sweep: LightSweep | undefined;
+  adaptiveQuality: boolean;
+  introSlide: boolean;
+  introHold: boolean;
+  introPlayed: boolean;
+  splashLift: boolean | undefined;
+}) {
+  const gl = useThree((s) => s.gl);
+  const [tier, setTier] = useState(startTier);
+  const readyRef = useRef(false);
+  const tieredParams = useMemo(() => (adaptiveQuality ? applyLogoTier(params, tier) : params), [adaptiveQuality, params, tier]);
+  // Only the still on screen at mount gates the first paint (useTexture suspends until it has
+  // loaded, so .image is available on first paint here). Decoding and uploading all of them
+  // up front cost ~600 ms of the splash for stills nobody sees for another six seconds.
+  const [firstSrc] = useState(() => stills[index]!.src);
+  const [first] = useTexture([firstSrc], (loaded) => {
+    for (const t of loaded) configureStill(t);
+  });
+
+  // The rest stream in once the intro is over (uploading them mid-spin would hitch it), or
+  // sooner if the hero has already moved on to another still.
+  const [introOver, setIntroOver] = useState(!introSlide || introPlayed);
+  useLogoQuality({
+    adaptive: adaptiveQuality,
+    startTier,
+    tier,
+    setTier,
+    readyRef,
+    introOver,
+    onReady,
+    onTooSlow,
+  });
+  const handleIntroEnd = useCallback(() => {
+    setIntroOver(true);
+    onIntroEnd?.();
+  }, [onIntroEnd]);
+  const [rest, setRest] = useState<Record<string, THREE.Texture>>({});
+  const loadRest = introOver || stills[index]!.src !== firstSrc;
+  const restKey = stills.map((s) => s.src).join("|");
+  useEffect(() => {
+    if (!loadRest) return;
+    let cancelled = false;
+    const loader = new THREE.TextureLoader();
+    (async () => {
+      for (const src of restKey.split("|")) {
+        if (src === firstSrc) continue;
+        try {
+          const t = configureStill(await loader.loadAsync(src));
+          if (cancelled) return t.dispose();
+          // Upload now, at idle, rather than inside the first crossfade that samples it.
+          gl.initTexture(t);
+          setRest((prev) => ({ ...prev, [src]: t }));
+        } catch (error) {
+          // A still that fails to load just keeps the previous one behind the glass.
+          console.warn("[LogoScene] still failed to load:", src, error);
+        }
+        await new Promise((resolve) => setTimeout(resolve, 60));
+        if (cancelled) return;
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [loadRest, restKey, firstSrc, gl]);
+
+  const textures = useMemo(() => stills.map((s) => (s.src === firstSrc ? first : rest[s.src])), [stills, firstSrc, first, rest]);
+  const { keepAwake, awakeRef } = useKeepAwake();
+  const sweepGroup = useRef<THREE.Group>(null);
+  const sweepLive = useRef(false);
+  // Handed to <Environment> so its own effect re-applies the current rotation instead of resetting it.
+  const [envRotation] = useState(() => new THREE.Euler());
+  const fade = useRef<Fade>({ from: index, to: index, start: 0 });
+  const tint = useRef(NEUTRAL_TINT.clone());
+  // Logo orientation — spark lights lag behind this so highlights crawl on spin.
+  const logoPose = useRef({ x: 0, y: 0 });
+  const setLogoPose = useCallback((x: number, y: number) => {
+    logoPose.current.x = x;
+    logoPose.current.y = y;
+  }, []);
+
+  const tints = useMemo(() => stills.map((still, i) => resolveStillTint(still, textures[i])), [stills, textures]);
+
+  // Cover intro spin + first settle so env streaks track the logo. The hero intro skips this: the
+  // live env bake is the heaviest per-frame cost (freezing it took the intro from ~28 to ~42 fps in
+  // a software-GL test), and the pose returns to rest, where the frozen env is already correct, so
+  // the spin loses only the lagging highlight crawl. Logo drives its own frames until INTRO_END.
+  useEffect(() => {
+    if (!introSlide) keepAwake(INTRO_END + 1);
+  }, [keepAwake, introSlide]);
+
+  useEffect(() => {
+    const f = fade.current;
+    if (f.to === index) return;
+    f.from = f.to;
+    f.to = index;
+    f.start = performance.now();
+    keepAwake(CROSSFADE_SECONDS + 0.1);
+  }, [index, keepAwake]);
+
+  useFrame(() => {
+    const f = fade.current;
+    const progress = f.start ? Math.min((performance.now() - f.start) / (CROSSFADE_SECONDS * 1000), 1) : 1;
+    const k = progress * progress * (3 - 2 * progress);
+    tint.current.lerpColors(tints[f.from]!, tints[f.to]!, k);
+  });
+
+  return (
+    <>
+      {/* Layer 1: still plane for refraction only — not drawn to the screen (HTML stills are). */}
+      <BackdropLayerGate />
+      <Backdrop stills={stills} textures={textures} fade={fade} splashLift={splashLift} />
+      <Logo
+        readyRef={readyRef}
+        tint={tint}
+        onPose={setLogoPose}
+        meshMode={meshMode}
+        params={tieredParams}
+        keepAwake={keepAwake}
+        introSlide={introSlide}
+        introHold={introHold}
+        introPlayed={introPlayed}
+        onIntroEnd={handleIntroEnd}
+      />
+      {/* Disable still layer after MTM's FBO capture so the main/bloom pass is logo-only. */}
+      <BackdropLayerGate phase="afterTransmission" />
+      {/* Mounted before Studio so the light is placed before the cubemap bakes in the same frame. */}
+      <SweepDriver sweep={sweep} groupRef={sweepGroup} liveRef={sweepLive} envRotation={envRotation} />
+      {/* Env cubemap re-bakes only while awake (crossfade / drag / intro / a moving sweep); idle uses a frozen map. */}
+      <Studio
+        tint={tint}
+        logoPose={logoPose}
+        params={params}
+        fade={fade}
+        awakeRef={awakeRef}
+        sweepLive={sweepLive}
+        sweepGroup={sweepGroup}
+        envRotation={envRotation}
+        envAlways={envAlways}
+        envResolution={TIER_SETTINGS[startTier].envResolution}
+      />
+      {/* External sparkle: lagged point lights (env SoftLights do the glass streaks).
+          Full-scene bloom is skipped — it was tonemapping/blooming the stills too. */}
+      <SparkLights logoPose={logoPose} lights={params.lights.points} />
+    </>
+  );
+}
+
+/** Still plane lives on layer 1. Mount order matters (same useFrame priority): enable →
+ *  MeshTransmissionMaterial FBO capture → disable, so bloom/screen never draw the stills. */
+function BackdropLayerGate({ phase = "beforeTransmission" }: { phase?: "beforeTransmission" | "afterTransmission" }) {
+  useFrame(({ camera }) => {
+    if (phase === "beforeTransmission") camera.layers.enable(1);
+    else camera.layers.disable(1);
+  });
+  return null;
+}
+
+/** How quickly spark lights catch the logo pose — lower = slower highlight travel. */
+const SPARK_FOLLOW = 1.1;
+
+/**
+ * Soft fill only — point lights make round specular blobs. Streaks come from
+ * elongated env SoftLights + anisotropic transmission instead.
+ */
+function SparkLights({
+  logoPose,
+  lights,
+}: {
+  logoPose: MutableRefObject<{ x: number; y: number }>;
+  lights: LogoGlassParams["lights"]["points"];
+}) {
+  const follow = useRef<THREE.Group>(null);
+  const fixed = lights.filter((l) => l.enabled && !l.followPose);
+  const moving = lights.filter((l) => l.enabled && l.followPose);
+  useFrame((_, delta) => {
+    const g = follow.current;
+    if (!g) return;
+    g.rotation.x = THREE.MathUtils.damp(g.rotation.x, logoPose.current.x, SPARK_FOLLOW, delta);
+    g.rotation.y = THREE.MathUtils.damp(g.rotation.y, logoPose.current.y, SPARK_FOLLOW, delta);
+  });
+  return (
+    <>
+      {fixed.map((l) => (
+        <pointLight
+          key={l.id}
+          position={[l.x, l.y, l.z]}
+          intensity={l.intensity}
+          distance={l.distance}
+          decay={l.decay}
+          color={l.color}
+        />
+      ))}
+      <group ref={follow}>
+        {moving.map((l) => (
+          <pointLight
+            key={l.id}
+            position={[l.x, l.y, l.z]}
+            intensity={l.intensity}
+            distance={l.distance}
+            decay={l.decay}
+            color={l.color}
+          />
+        ))}
+      </group>
+    </>
+  );
+}
+
+/** Keeps the demand-driven loop running for `seconds` from now. */
+function useKeepAwake() {
+  const invalidate = useThree((s) => s.invalidate);
+  const until = useRef(0);
+  const awakeRef = useRef(true);
+  useFrame(() => {
+    const awake = performance.now() < until.current;
+    awakeRef.current = awake;
+    if (awake) invalidate();
+  });
+  const keepAwake = useCallback(
+    (seconds: number) => {
+      until.current = Math.max(until.current, performance.now() + seconds * 1000);
+      awakeRef.current = true;
+      invalidate();
+    },
+    [invalidate],
+  );
+  return { keepAwake, awakeRef };
+}
+
+/**
+ * Env portal frames: Infinity while the scene is moving (tint / pose), else 1 so the
+ * cubemap freezes. Playground passes envAlways to keep scrubbing live.
+ */
+function useEnvFrames(
+  fade: RefObject<Fade>,
+  awakeRef: MutableRefObject<boolean>,
+  sweepLive: MutableRefObject<boolean>,
+  envAlways: boolean,
+) {
+  const [frames, setFrames] = useState<number>(Infinity);
+  const liveRef = useRef(true);
+  useFrame(() => {
+    const f = fade.current;
+    const fading = Boolean(f?.start) && performance.now() - f.start < CROSSFADE_SECONDS * 1000;
+    const live = envAlways || awakeRef.current || sweepLive.current || fading;
+    if (live === liveRef.current) return;
+    liveRef.current = live;
+    setFrames(live ? Infinity : 1);
+  });
+  return frames;
+}
+
+/** Prefer CMS `lightTint`; else sample the texture; else neutral. Sampling failures (CORS) fall through. */
+/** Same cache key as `useTexture([src])` in Scene. */
+function preloadStill(src: string) {
+  useTexture.preload([src]);
+}
+
+function configureStill(t: THREE.Texture) {
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 4;
+  return t;
+}
+
+function resolveStillTint(still: SceneStill, texture?: THREE.Texture): THREE.Color {
+  if (still.lightTint) {
+    try {
+      return new THREE.Color(still.lightTint);
+    } catch {
+      /* fall through */
+    }
+  }
+  if (texture?.image) {
+    const sampled = sampleAverageColor(texture);
+    if (sampled) return sampled;
+  }
+  return NEUTRAL_TINT.clone();
+}
+
+/** Downsample and average. Returns null if the image can't be read (tainted / not ready). */
+function sampleAverageColor(texture: THREE.Texture): THREE.Color | null {
+  const img = texture.image as CanvasImageSource | undefined;
+  if (!img || typeof document === "undefined") return null;
+
+  try {
+    const canvas = document.createElement("canvas");
+    canvas.width = SAMPLE_SIZE;
+    canvas.height = SAMPLE_SIZE;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    if (!ctx) return null;
+    ctx.drawImage(img, 0, 0, SAMPLE_SIZE, SAMPLE_SIZE);
+    const { data } = ctx.getImageData(0, 0, SAMPLE_SIZE, SAMPLE_SIZE);
+
+    let r = 0;
+    let g = 0;
+    let b = 0;
+    let w = 0;
+    for (let i = 0; i < data.length; i += 4) {
+      const lr = data[i]! / 255;
+      const lg = data[i + 1]! / 255;
+      const lb = data[i + 2]! / 255;
+      // Bright pixels weigh more — they dominate how glass reads temperature.
+      const lum = 0.2126 * lr + 0.7152 * lg + 0.0722 * lb;
+      const weight = 0.2 + lum * lum;
+      r += lr * weight;
+      g += lg * weight;
+      b += lb * weight;
+      w += weight;
+    }
+    if (w < 1e-6) return null;
+
+    const color = new THREE.Color(r / w, g / w, b / w);
+    const hsl = { h: 0, s: 0, l: 0 };
+    color.getHSL(hsl);
+    // Push chroma so glass reflections read the still's temperature clearly.
+    color.setHSL(hsl.h, Math.min(0.75, Math.max(0.35, hsl.s * 1.6)), THREE.MathUtils.clamp(hsl.l, 0.32, 0.58));
+    return color;
+  } catch {
+    return null;
+  }
+}
+
+const backdropVertex = /* glsl */ `
+varying vec2 vUv;
+void main() {
+  vUv = uv;
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+}`;
+
+// Same cover-fit as the HTML <Image> stills (object-fit: cover) so refraction matches
+// the full-bleed hero behind the logo.
+const backdropFragment = /* glsl */ `
+uniform sampler2D tFrom;
+uniform sampler2D tTo;
+uniform float fromAspect;
+uniform float toAspect;
+uniform float planeAspect;
+uniform float progress;
+uniform float reveal;
+uniform float whiteLevel;
+varying vec2 vUv;
+vec2 cover(vec2 uv, float imageAspect) {
+  vec2 scale = planeAspect > imageAspect
+    ? vec2(1.0, imageAspect / planeAspect)
+    : vec2(planeAspect / imageAspect, 1.0);
+  return (uv - 0.5) * scale + 0.5;
+}
+void main() {
+  vec4 a = texture2D(tFrom, cover(vUv, fromAspect));
+  vec4 b = texture2D(tTo, cover(vUv, toAspect));
+  vec4 still = mix(a, b, smoothstep(0.0, 1.0, progress));
+  gl_FragColor = vec4(mix(vec3(whiteLevel), still.rgb, reveal), still.a);
+  #include <colorspace_fragment>
+}`;
+
+function Backdrop({
+  stills,
+  textures,
+  fade,
+  splashLift,
+}: {
+  stills: SceneStill[];
+  /** `undefined` while a still is still streaming in; the backdrop shows whichever side has loaded. */
+  textures: (THREE.Texture | undefined)[];
+  fade: RefObject<Fade>;
+  splashLift: boolean | undefined;
+}) {
+  const camera = useThree((s) => s.camera);
+  const viewport = useThree((s) => s.viewport);
+
+  const material = useRef<THREE.ShaderMaterial>(null);
+  const [uniforms] = useState(() => ({
+    tFrom: { value: null as THREE.Texture | null },
+    tTo: { value: null as THREE.Texture | null },
+    fromAspect: { value: 1 },
+    toAspect: { value: 1 },
+    planeAspect: { value: 1 },
+    progress: { value: 1 },
+    reveal: { value: 1 },
+    whiteLevel: { value: SPLASH_WHITE },
+  }));
+  const revealStart = useRef<number | null>(null);
+
+  const { width, height } = viewport.getCurrentViewport(camera, new THREE.Vector3(0, 0, BACKDROP_Z));
+
+  useFrame(() => {
+    const f = fade.current;
+    const u = material.current?.uniforms;
+    if (!f || !u) return;
+    const ready = textures[f.to] ?? textures[f.from] ?? textures.find(Boolean)!;
+    u.tFrom.value = textures[f.from] ?? ready;
+    u.tTo.value = textures[f.to] ?? ready;
+    u.fromAspect.value = stills[f.from]!.width / stills[f.from]!.height;
+    u.toAspect.value = stills[f.to]!.width / stills[f.to]!.height;
+    u.planeAspect.value = width / height;
+    u.progress.value = f.start ? Math.min((performance.now() - f.start) / (CROSSFADE_SECONDS * 1000), 1) : 1;
+
+    // Playground (splashLift undefined) always sees the photo.
+    let reveal = 1;
+    if (splashLift === false) {
+      revealStart.current = null;
+      reveal = 0;
+    } else if (splashLift) {
+      revealStart.current ??= performance.now();
+      const k = THREE.MathUtils.clamp((performance.now() - revealStart.current) / 1000 / REVEAL_SECONDS, 0, 1);
+      reveal = 1 - (1 - k) * (1 - k);
+    }
+    u.reveal.value = reveal;
+  });
+
+  return (
+    <mesh
+      position={[0, 0, BACKDROP_Z]}
+      renderOrder={-1}
+      ref={(m) => {
+        if (m) m.layers.set(1);
+      }}
+    >
+      <planeGeometry args={[width, height]} />
+      <shaderMaterial
+        ref={material}
+        vertexShader={backdropVertex}
+        fragmentShader={backdropFragment}
+        uniforms={uniforms}
+        depthWrite={false}
+        toneMapped={false}
+        transparent
+      />
+    </mesh>
+  );
+}
+
+/** Radial alpha falloff so softboxes don't hard-cut at the rim. */
+function useFeatherMap() {
+  return useMemo(() => {
+    const size = 256;
+    const canvas = document.createElement("canvas");
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext("2d")!;
+    const g = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+    g.addColorStop(0, "rgba(255,255,255,1)");
+    g.addColorStop(0.45, "rgba(255,255,255,0.85)");
+    g.addColorStop(0.75, "rgba(255,255,255,0.35)");
+    g.addColorStop(1, "rgba(255,255,255,0)");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, size, size);
+    const map = new THREE.CanvasTexture(canvas);
+    map.colorSpace = THREE.NoColorSpace;
+    return map;
+  }, []);
+}
+
+/** The sweep redraws at this rate, not every display frame: the glare is slow, and each frame costs a cubemap bake. */
+const SWEEP_FRAME_MS = 1000 / 30;
+
+/**
+ * Moves the studio light along the sweep and keeps the demand loop alive only while it is visibly
+ * moving. It stands down (no frames at all) when the sweep is paused or off, the tab is hidden, the
+ * canvas is scrolled out of view, or the user prefers reduced motion; in the last case the light
+ * rests at its centre. Without a sweep it does nothing, so the live hero is unaffected.
+ */
+function SweepDriver({
+  sweep,
+  groupRef,
+  liveRef,
+  envRotation,
+}: {
+  sweep: LightSweep | undefined;
+  groupRef: RefObject<THREE.Group | null>;
+  liveRef: MutableRefObject<boolean>;
+  envRotation: THREE.Euler;
+}) {
+  const gl = useThree((s) => s.gl);
+  const scene = useThree((s) => s.scene);
+  const invalidate = useThree((s) => s.invalidate);
+  const sweepRef = useRef(sweep);
+  const inView = useRef(true);
+  const reduced = useRef(false);
+  const timer = useRef<number | undefined>(undefined);
+
+  useEffect(() => {
+    sweepRef.current = sweep;
+    invalidate();
+  }, [sweep, invalidate]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(([entry]) => {
+      inView.current = entry.isIntersecting;
+      invalidate();
+    });
+    observer.observe(gl.domElement);
+    const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const onMotion = () => {
+      reduced.current = motion.matches;
+      invalidate();
+    };
+    onMotion();
+    motion.addEventListener("change", onMotion);
+    document.addEventListener("visibilitychange", onMotion);
+    return () => {
+      observer.disconnect();
+      motion.removeEventListener("change", onMotion);
+      document.removeEventListener("visibilitychange", onMotion);
+      window.clearTimeout(timer.current);
+    };
+  }, [gl, invalidate]);
+
+  useFrame(() => {
+    const s = sweepRef.current;
+    const running = Boolean(s) && s!.pausedAt === null && !reduced.current && inView.current && !document.hidden;
+    const o = s && !reduced.current ? sweepAt(s, performance.now()) : { x: 0, y: 0 };
+    liveRef.current = running && s!.technique === "move";
+
+    const g = groupRef.current;
+    if (g) g.position.set(s?.technique === "move" ? o.x * MOVE_RANGE : 0, s?.technique === "move" ? o.y * MOVE_RANGE : 0, 0);
+    // Turning the frozen cubemap about Y slides the glare along X, about X along Y.
+    if (s?.technique === "rotate") envRotation.set(-o.y * ROTATE_RANGE, o.x * ROTATE_RANGE, 0);
+    else envRotation.set(0, 0, 0);
+    // <Environment> copies its `environmentRotation` into the scene only when it re-renders, so the
+    // scene gets the live value directly (envRotation is what it re-applies, so they never disagree).
+    scene.environmentRotation.copy(envRotation);
+
+    if (running && timer.current === undefined) {
+      timer.current = window.setTimeout(() => {
+        timer.current = undefined;
+        invalidate();
+      }, SWEEP_FRAME_MS);
+    }
+  });
+
+  return null;
+}
+
+/**
+ * Dual-key front studio: large feathered softboxes (upper-left key + lower-right fill),
+ * still-tinted, plus lagged white streak lights for sparkle lines inside the glass.
+ */
+function Studio({
+  tint,
+  logoPose,
+  params,
+  fade,
+  awakeRef,
+  sweepLive,
+  sweepGroup,
+  envRotation,
+  envAlways,
+  envResolution,
+}: {
+  tint: MutableRefObject<THREE.Color>;
+  logoPose: MutableRefObject<{ x: number; y: number }>;
+  params: LogoGlassParams;
+  fade: RefObject<Fade>;
+  awakeRef: MutableRefObject<boolean>;
+  sweepLive: MutableRefObject<boolean>;
+  sweepGroup: RefObject<THREE.Group | null>;
+  envRotation: THREE.Euler;
+  envAlways: boolean;
+  /** Fixed per canvas: a new size would rebuild the cube render target. */
+  envResolution: number;
+}) {
+  const follow = useRef<THREE.Group>(null);
+  const feather = useFeatherMap();
+  const frames = useEnvFrames(fade, awakeRef, sweepLive, envAlways);
+  const soft = params.lights.soft.filter((l) => l.enabled);
+  const fixed = soft.filter((l) => !l.followPose);
+  const moving = soft.filter((l) => l.followPose);
+  useFrame((_, delta) => {
+    const g = follow.current;
+    if (!g) return;
+    g.rotation.x = THREE.MathUtils.damp(g.rotation.x, logoPose.current.x, SPARK_FOLLOW, delta);
+    g.rotation.y = THREE.MathUtils.damp(g.rotation.y, logoPose.current.y, SPARK_FOLLOW, delta);
+  });
+  return (
+    <Environment resolution={envResolution} frames={frames} environmentRotation={envRotation}>
+      <group ref={sweepGroup}>
+        {fixed.map((l) => (
+          <SoftLight
+            key={l.id}
+            tint={tint}
+            mixWhite={l.mixWhite}
+            intensity={l.intensity}
+            lift={l.lift}
+            position={[l.x, l.y, l.z]}
+            scale={[l.scaleX, l.scaleY, l.scaleZ]}
+            streak={l.kind === "streak"}
+            roll={l.roll}
+            feather={l.feather ? feather : undefined}
+          />
+        ))}
+        <group ref={follow}>
+          {moving.map((l) => (
+            <SoftLight
+              key={l.id}
+              tint={tint}
+              mixWhite={l.mixWhite}
+              intensity={l.intensity}
+              lift={l.lift}
+              position={[l.x, l.y, l.z]}
+              scale={[l.scaleX, l.scaleY, l.scaleZ]}
+              streak={l.kind === "streak"}
+              roll={l.roll}
+              feather={l.feather ? feather : undefined}
+            />
+          ))}
+        </group>
+      </group>
+    </Environment>
+  );
+}
+
+function SoftLight({
+  tint,
+  mixWhite,
+  intensity,
+  lift = 1,
+  position,
+  scale,
+  ring = false,
+  streak = false,
+  roll = 0,
+  feather,
+}: {
+  tint: MutableRefObject<THREE.Color>;
+  mixWhite: number;
+  intensity: number;
+  lift?: number;
+  position: [number, number, number];
+  scale: number | [number, number, number];
+  ring?: boolean;
+  /** Long thin plane — reads as a sparkle line once refracted through the glass. */
+  streak?: boolean;
+  /** Twist around the look-at axis (radians). */
+  roll?: number;
+  /** Optional radial alpha map for soft falloff. */
+  feather?: THREE.Texture;
+}) {
+  const mesh = useRef<THREE.Mesh>(null);
+  const mat = useRef<THREE.MeshBasicMaterial>(null);
+  const tmp = useMemo(() => new THREE.Color(), []);
+
+  const [px, py, pz] = position;
+  useEffect(() => {
+    const m = mesh.current;
+    if (!m) return;
+    m.lookAt(0, 0, 0);
+    if (roll) m.rotateZ(roll);
+  }, [px, py, pz, roll]);
+
+  useFrame(() => {
+    const m = mat.current;
+    if (!m) return;
+    tmp.copy(tint.current).multiplyScalar(lift);
+    m.color.setRGB(
+      THREE.MathUtils.lerp(tmp.r, 1, mixWhite) * intensity,
+      THREE.MathUtils.lerp(tmp.g, 1, mixWhite) * intensity,
+      THREE.MathUtils.lerp(tmp.b, 1, mixWhite) * intensity,
+    );
+  });
+
+  return (
+    <mesh ref={mesh} position={position} scale={scale}>
+      {streak ? (
+        <planeGeometry args={[1, 1]} />
+      ) : ring ? (
+        <ringGeometry args={[0.22, 0.5, 24]} />
+      ) : (
+        <ringGeometry args={[0, 0.5, 24]} />
+      )}
+      <meshBasicMaterial
+        ref={mat}
+        side={THREE.DoubleSide}
+        toneMapped={false}
+        map={feather}
+        transparent={Boolean(feather)}
+        depthWrite={false}
+      />
+    </mesh>
+  );
+}
+
+// Intro spin, from the original Blender keyframes (24 fps): a full turn, overshoot, settle.
+const SPIN: [seconds: number, radians: number][] = [
+  [0, 0],
+  [71 / 24, -Math.PI * 2],
+  [83 / 24, -Math.PI * 2 - 0.1],
+  [95 / 24, -Math.PI * 2],
+];
+
+/** The side rail's width in CSS px (the notch inset can't be read from here). */
+const RAIL_PX = RAIL_REM * 16;
+
+const SPIN_END = SPIN[SPIN.length - 1][0];
+
+// Hero intro (`introSlide`): `HERO_TURNS` turns that spin up fast and decelerate like a spun coin,
+// then a springy glide to the left that overshoots and settles. Times in seconds.
+const HERO_TURNS = 1;
+const HERO_SPIN_SECONDS = 1.6;
+/** Glide starts mid-deceleration so the spin hands over to the move. */
+const SLIDE_START = 0.6;
+const SLIDE_SECONDS = 1.8;
+/** Spring: damping ratio < 1 overshoots (0.65 ≈ 7% past the target); omega sets the speed. */
+const SLIDE_DAMPING = 0.65;
+const SLIDE_OMEGA = 5.5;
+const HERO_END = Math.max(HERO_SPIN_SECONDS, SLIDE_START + SLIDE_SECONDS);
+/** Longest intro, so the demand loop stays awake for it. */
+const INTRO_END = Math.max(SPIN_END, HERO_END);
+/** Mobile has no glide, so the logo is tossed up this fraction of the viewport height and lands. */
+const MOBILE_TOSS = 0.035;
+
+function heroSpinAt(t: number) {
+  const k = Math.min(Math.max(t / HERO_SPIN_SECONDS, 0), 1);
+  // k^0.6 front-loads the speed; the cosine ease gives a soft start and a long settle.
+  return -Math.PI * 2 * HERO_TURNS * (0.5 - 0.5 * Math.cos(Math.PI * k ** 0.6));
+}
+
+/** 0 → 1 → 0 over the spin: the coin-toss arc the mobile logo rides while it spins in place. */
+function tossAt(t: number) {
+  const k = Math.min(Math.max(t / HERO_SPIN_SECONDS, 0), 1);
+  return Math.sin(Math.PI * k) ** 2;
+}
+
+/** Damped-spring step response: 0 → 1 with overshoot, snapped to 1 once settled. */
+function slideAt(t: number) {
+  const tau = t - SLIDE_START;
+  if (tau <= 0) return 0;
+  if (tau >= SLIDE_SECONDS) return 1;
+  const z = SLIDE_DAMPING;
+  const wd = SLIDE_OMEGA * Math.sqrt(1 - z * z);
+  return 1 - Math.exp(-z * SLIDE_OMEGA * tau) * (Math.cos(wd * tau) + ((z * SLIDE_OMEGA) / wd) * Math.sin(wd * tau));
+}
+
+function spinAt(t: number) {
+  for (let i = 1; i < SPIN.length; i++) {
+    const [t1, v1] = SPIN[i];
+    const [t0, v0] = SPIN[i - 1];
+    if (t <= t1) {
+      const k = (t - t0) / (t1 - t0);
+      return v0 + (v1 - v0) * k * k * (3 - 2 * k); // smoothstep ≈ Blender's auto-clamped Bézier
+    }
+  }
+  return SPIN[SPIN.length - 1][1];
+}
+
+/** Start the return spring once coasting has nearly stopped (not exactly 0). */
+/** Floor for the interaction `weight` so a stray 0 can't divide by zero. */
+const MIN_WEIGHT = 0.05;
+const DRAG_VELOCITY_EPS = 0.08;
+const DRAG_ANGLE_EPS = 0.0015;
+
+/** Wrap to (-π, π] so return takes the shortest way home. */
+function shortestAngle(radians: number) {
+  const wrapped = ((((radians + Math.PI) % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2)) - Math.PI;
+  return wrapped === -Math.PI ? Math.PI : wrapped;
+}
+
+function Logo({
+  readyRef,
+  tint,
+  onPose,
+  meshMode,
+  params,
+  keepAwake,
+  introSlide,
+  introHold,
+  introPlayed,
+  onIntroEnd,
+}: {
+  /** Set by `useLogoQuality` once the shaders are warm and the tier is settled; the intro waits for it. */
+  readyRef: MutableRefObject<boolean>;
+  onIntroEnd: (() => void) | undefined;
+  tint: MutableRefObject<THREE.Color>;
+  onPose: (x: number, y: number) => void;
+  meshMode: LogoMeshMode;
+  params: LogoGlassParams;
+  keepAwake: (seconds: number) => void;
+  introSlide: boolean;
+  introHold: boolean;
+  introPlayed: boolean;
+}) {
+  const size = useThree((s) => s.size);
+  const viewport = useThree((s) => s.viewport);
+  const group = useRef<THREE.Group>(null);
+  const mesh = useRef<THREE.Mesh>(null);
+  // drei types MeshTransmissionMaterial's ref as its props shape, not MeshPhysicalMaterial.
+  const material = useRef<ComponentRef<typeof MeshTransmissionMaterial>>(null);
+  const hover = useRef({ active: false, x: 0, y: 0 });
+  const tilt = useRef({ x: 0, y: 0 });
+  const drag = useRef({
+    active: false,
+    returning: false,
+    lastX: 0,
+    lastY: 0,
+    lastT: 0,
+    rotX: 0,
+    rotY: 0,
+    velX: 0,
+    velY: 0,
+  });
+  // A scene mounted after the intro already played starts where it ended: at rest, and never reports the end again.
+  const intro = useRef(introSlide && introPlayed ? { time: HERO_END, ended: true } : { time: 0, ended: false });
+  const introStats = useRef({ frames: 0, ms: 0, worst: 0, logged: false });
+  const invalidate = useThree((s) => s.invalidate);
+  const glow = useMemo(() => new THREE.Color(), []);
+  const localPoint = useMemo(() => new THREE.Vector3(), []);
+  const paramsRef = useRef(params);
+  useEffect(() => {
+    paramsRef.current = params;
+  }, [params]);
+  const [hovered, setHovered] = useState(false);
+  const [dragging, setDragging] = useState(false);
+  useCursor(hovered || dragging, dragging ? "grabbing" : "grab");
+
+  const extrudeOverride = params.extrude;
+  const depth = extrudeOverride?.depth;
+  const bevelThickness = extrudeOverride?.bevelThickness;
+  const bevelSize = extrudeOverride?.bevelSize;
+
+  const geometry = useMemo(() => {
+    const base = paths as unknown as LogoPaths;
+    if (
+      meshMode === "extrude" &&
+      base.extrude &&
+      depth !== undefined &&
+      bevelThickness !== undefined &&
+      bevelSize !== undefined
+    ) {
+      return buildLogoGeometry({ ...base, extrude: { ...base.extrude, depth, bevelThickness, bevelSize } }, meshMode);
+    }
+    return buildLogoGeometry(base, meshMode);
+  }, [meshMode, depth, bevelThickness, bevelSize]);
+
+  useEffect(() => () => geometry.dispose(), [geometry]);
+
+  // Width of the silhouette as the camera sees it, front-facing: the front of the slab sits nearer
+  // the camera than z = 0, so its edges project slightly wider than the bounding box. Sizing by this
+  // makes the glass logo the width of the flat SVG logo it replaces.
+  const modelWidth = useMemo(() => {
+    const pos = geometry.getAttribute("position");
+    let min = Infinity;
+    let max = -Infinity;
+    for (let i = 0; i < pos.count; i++) {
+      const x = (pos.getX(i) * CAMERA_Z) / (CAMERA_Z - pos.getZ(i));
+      if (x < min) min = x;
+      if (x > max) max = x;
+    }
+    return max - min;
+  }, [geometry]);
+
+  // Mirror the static layout: 42vw starting 2vw clear of the side rail on desktop (the gutter also
+  // absorbs the glide's overshoot), centred at up to 80vw on mobile.
+  const desktop = size.width >= 768;
+  const targetWidth = desktop ? viewport.width * 0.42 : Math.min(viewport.width * 0.8, (viewport.width * 640) / size.width);
+  const scale = targetWidth / modelWidth;
+  const x = desktop ? -viewport.width / 2 + (RAIL_PX + size.width * 0.02) * (viewport.width / size.width) + targetWidth / 2 : 0;
+
+  useEffect(() => {
+    invalidate();
+  }, [invalidate]);
+
+  // Nothing moves while the intro is held, so no frames are drawn then (beyond the quality probe's);
+  // the release has to restart them.
+  useEffect(() => {
+    if (!introHold) invalidate();
+  }, [introHold, invalidate]);
+
+  // Redraw after mesh / material param changes without resetting intro spin state.
+  useEffect(() => {
+    invalidate();
+  }, [geometry, params, invalidate]);
+
+  // Drag continues on the window so rotation doesn't stop when the pointer leaves the mesh.
+  useEffect(() => {
+    const onUp = () => {
+      if (!drag.current.active) return;
+      drag.current.active = false;
+      setDragging(false);
+      // Keep the demand loop alive through coast + bounce settle.
+      keepAwake(8);
+    };
+    const onMove = (e: PointerEvent) => {
+      const d = drag.current;
+      if (!d.active) return;
+      // The release was missed (e.g. the window lost focus mid-drag): end the drag instead of
+      // letting the stale last position turn into one huge jump.
+      if (e.buttons === 0 && e.pointerType === "mouse") {
+        onUp();
+        return;
+      }
+      const look = paramsRef.current;
+      const pitchMax = look.dragPitchMax;
+      // Heavier = less turn per pixel (the release velocity derives from the same deltas).
+      const sens = look.dragSensitivity / Math.max(look.weight, MIN_WEIGHT);
+      const now = performance.now();
+      const dt = Math.max((now - d.lastT) / 1000, 1 / 120);
+      const dX = (e.clientY - d.lastY) * sens;
+      const dY = (e.clientX - d.lastX) * sens;
+      d.rotX = THREE.MathUtils.clamp(d.rotX + dX, -pitchMax, pitchMax);
+      d.rotY += dY;
+      // Kill pitch momentum at the soft stop so coasting can't flip it vertical.
+      if (Math.abs(d.rotX) >= pitchMax - 1e-4) d.velX = 0;
+      // Exponential moving average of angular velocity (rad/s).
+      const vx = dX / dt;
+      const vy = dY / dt;
+      d.velX = THREE.MathUtils.lerp(d.velX, vx, 0.45);
+      d.velY = THREE.MathUtils.lerp(d.velY, vy, 0.45);
+      d.lastX = e.clientX;
+      d.lastY = e.clientY;
+      d.lastT = now;
+      keepAwake(1.2);
+    };
+    const onHidden = () => {
+      if (document.hidden) onUp();
+    };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
+    window.addEventListener("blur", onUp);
+    document.addEventListener("visibilitychange", onHidden);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+      window.removeEventListener("blur", onUp);
+      document.removeEventListener("visibilitychange", onHidden);
+    };
+  }, [keepAwake]);
+
+  const setHoverFromPoint = (point: THREE.Vector3) => {
+    const g = group.current;
+    const box = geometry.boundingBox;
+    if (!g || !box) return;
+    localPoint.copy(point);
+    g.worldToLocal(localPoint);
+    const nx = THREE.MathUtils.clamp(((localPoint.x - box.min.x) / (box.max.x - box.min.x)) * 2 - 1, -1, 1);
+    const ny = THREE.MathUtils.clamp(((localPoint.y - box.min.y) / (box.max.y - box.min.y)) * 2 - 1, -1, 1);
+    hover.current.x = nx;
+    hover.current.y = ny;
+    hover.current.active = true;
+  };
+
+  useFrame((_, rawDelta) => {
+    const g = group.current;
+    if (!g) return;
+    // rAF pauses in background tabs, so the first frame back can carry a delta of minutes; cap it
+    // so drag coast and the return spring don't integrate that whole gap in one step.
+    const delta = Math.min(rawDelta, 1 / 30);
+
+    // Internal glow picks up the still temperature (like liquid-glass.jpg's warm core).
+    const mat = material.current as (THREE.MeshPhysicalMaterial & { attenuationColor: THREE.Color }) | null;
+    const look = paramsRef.current;
+    if (mat?.attenuationColor) {
+      glow.copy(tint.current);
+      const hsl = { h: 0, s: 0, l: 0 };
+      glow.getHSL(hsl);
+      glow.setHSL(
+        hsl.h,
+        Math.min(0.85, hsl.s * look.glowSat),
+        THREE.MathUtils.clamp(hsl.l + look.glowLift, look.glowLMin, look.glowLMax),
+      );
+      mat.attenuationColor.copy(glow);
+    }
+
+    // The first frames compile shaders and can stall for a long time, so the intro is
+    // driven by capped frame deltas rather than wall-clock time: it always plays in full,
+    // just slower on a struggling device. It (and the canvas reveal) waits for the quality probe.
+    const a = intro.current;
+    const ready = readyRef.current;
+    if (ready && !introHold) a.time += delta;
+    // The hero intro is shorter than the playground's Blender spin, so it ends (and stops
+    // drawing) on its own clock.
+    const introEnd = introSlide ? HERO_END : INTRO_END;
+    if (a.time < introEnd && !introHold) invalidate();
+    const t = a.time;
+    if (introSlide && !a.ended && t >= introEnd) {
+      a.ended = true;
+      onIntroEnd?.();
+    }
+
+    // Dev only: how smooth the hero intro really is on this machine (GPU cost can't be seen in a
+    // CPU profile). Logged once, when the intro ends.
+    if (process.env.NODE_ENV !== "production" && introSlide && ready && !introHold) {
+      const st = introStats.current;
+      if (t < introEnd) {
+        st.frames++;
+        st.ms += rawDelta * 1000;
+        st.worst = Math.max(st.worst, rawDelta * 1000);
+      } else if (!st.logged && st.frames > 0) {
+        st.logged = true;
+        console.info(
+          `[logo intro] ${st.frames} frames over ${(st.ms / 1000).toFixed(2)}s: ` +
+            `${((st.frames * 1000) / st.ms).toFixed(0)} fps avg, worst frame ${st.worst.toFixed(0)} ms`,
+        );
+      }
+    }
+
+    // Start centred and glide to the resting x; `x` is read fresh so resizes stay correct.
+    const slide = introSlide ? slideAt(t) : 1;
+    g.position.x = x * slide;
+    g.position.y = introSlide && !desktop ? viewport.height * MOBILE_TOSS * tossAt(t) : 0;
+
+    // Wobble only while hovering the logo (and not dragging); ease back to rest on leave.
+    const weight = Math.max(look.weight, MIN_WEIGHT);
+    const k = 1 - Math.exp((-delta * look.hoverLerp) / weight);
+    const targetX = hover.current.active && !drag.current.active ? hover.current.y * look.hoverTiltX : 0;
+    const targetY = hover.current.active && !drag.current.active ? hover.current.x * look.hoverTiltY : 0;
+    tilt.current.x = THREE.MathUtils.lerp(tilt.current.x, targetX, k);
+    tilt.current.y = THREE.MathUtils.lerp(tilt.current.y, targetY, k);
+
+    const d = drag.current;
+    if (!d.active) {
+      // Latch return once coasting is nearly done — don't flip back when the bounce speeds up.
+      if (!d.returning && Math.abs(d.velX) < DRAG_VELOCITY_EPS && Math.abs(d.velY) < DRAG_VELOCITY_EPS) {
+        d.returning = true;
+        d.velX = 0;
+        d.velY = 0;
+        // Don't unwind full turns — spring along the nearest angle to rest.
+        d.rotX = shortestAngle(d.rotX);
+        d.rotY = shortestAngle(d.rotY);
+      }
+
+      if (!d.returning) {
+        d.rotX += d.velX * delta;
+        d.rotY += d.velY * delta;
+        const friction = Math.exp((-look.dragFriction / weight) * delta);
+        d.velX *= friction;
+        d.velY *= friction;
+      } else {
+        // Stiffness / mass and damping / sqrt(mass): the return slows as 1/sqrt(weight) but the
+        // damping ratio (how much it overshoots) stays the same.
+        const dampScale = 1 / Math.sqrt(weight);
+        d.velX += ((-look.dragSpringPitch * d.rotX) / weight - look.dragSpringPitchDamp * dampScale * d.velX) * delta;
+        d.velY += ((-look.dragSpring * d.rotY) / weight - look.dragSpringDamp * dampScale * d.velY) * delta;
+        d.rotX += d.velX * delta;
+        d.rotY += d.velY * delta;
+        if (
+          Math.abs(d.rotX) < DRAG_ANGLE_EPS &&
+          Math.abs(d.rotY) < DRAG_ANGLE_EPS &&
+          Math.abs(d.velX) < DRAG_VELOCITY_EPS &&
+          Math.abs(d.velY) < DRAG_VELOCITY_EPS
+        ) {
+          d.rotX = 0;
+          d.rotY = 0;
+          d.velX = 0;
+          d.velY = 0;
+          d.returning = false;
+        }
+      }
+      const pitchMax = paramsRef.current.dragPitchMax;
+      if (Math.abs(d.rotX) > pitchMax) {
+        d.rotX = THREE.MathUtils.clamp(d.rotX, -pitchMax, pitchMax);
+        d.velX = 0;
+      }
+      if (d.velX || d.velY || d.rotX || d.rotY || d.returning) invalidate();
+    }
+
+    g.rotation.set(tilt.current.x + d.rotX, (introSlide ? heroSpinAt(t) : spinAt(t)) + tilt.current.y + d.rotY, 0);
+    onPose(g.rotation.x, g.rotation.y);
+  });
+
+  return (
+    <group ref={group} position={[x, 0, 0]} scale={scale}>
+      <mesh
+        ref={mesh}
+        geometry={geometry}
+        onPointerOver={(e) => {
+          e.stopPropagation();
+          setHovered(true);
+          setHoverFromPoint(e.point);
+          keepAwake(1.2);
+        }}
+        onPointerMove={(e) => {
+          e.stopPropagation();
+          if (drag.current.active) return;
+          setHoverFromPoint(e.point);
+          keepAwake(1.2);
+        }}
+        onPointerOut={() => {
+          hover.current.active = false;
+          setHovered(false);
+          keepAwake(0.6);
+        }}
+        onPointerDown={(e) => {
+          e.stopPropagation();
+          const { clientX, clientY } = e.nativeEvent;
+          const d = drag.current;
+          d.active = true;
+          d.returning = false;
+          d.lastX = clientX;
+          d.lastY = clientY;
+          d.lastT = performance.now();
+          d.velX = 0;
+          d.velY = 0;
+          hover.current.active = false;
+          setDragging(true);
+          setHovered(true);
+          keepAwake(2);
+        }}
+      >
+        <MeshTransmissionMaterial
+          ref={material}
+          // Banding fix stays (blur + dither); CA / env / tint restored for color.
+          samples={params.samples}
+          // No `resolution`: drei then sizes the transmission buffers to the canvas (with its
+          // pixel ratio). A number makes them square, which squashes the wide viewport into it and
+          // leaves horizontal detail well under one buffer pixel per screen pixel on desktop.
+          backside={params.backside}
+          backsideEnvMapIntensity={params.backsideEnvMapIntensity}
+          dithering
+          backsideThickness={params.backsideThickness}
+          thickness={params.thickness}
+          ior={params.ior}
+          chromaticAberration={params.chromaticAberration}
+          anisotropicBlur={params.anisotropicBlur}
+          distortion={params.distortion}
+          distortionScale={params.distortionScale}
+          temporalDistortion={0}
+          roughness={params.roughness}
+          clearcoat={params.clearcoat}
+          clearcoatRoughness={params.clearcoatRoughness}
+          specularIntensity={params.specularIntensity}
+          envMapIntensity={params.envMapIntensity}
+          color="#ffffff"
+          attenuationColor="#fff6f0"
+          attenuationDistance={params.attenuationDistance}
+        />
+      </mesh>
+    </group>
+  );
+}

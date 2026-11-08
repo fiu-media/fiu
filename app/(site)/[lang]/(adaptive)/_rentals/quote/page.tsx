@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { pageGutter } from "@/components/nav/rail";
+import { pageGutter } from "@/components/layout/nav/rail";
 import { QuoteFormSkeleton } from "@/components/forms/FormSkeleton";
 import { PageTitle } from "@/components/ui/PageTitle";
 import { cn } from "@/lib/cn";

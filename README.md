@@ -26,18 +26,34 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 
 ## Studio
 
-The Studio is hosted by Sanity at https://fiu.sanity.studio (it opens inside the Sanity dashboard), not in this app. It auto-updates its Sanity packages (`deployment.autoUpdates` in `sanity.cli.ts`), but our schemas, structure and plugins only change when it is deployed: `.github/workflows/deploy-studio.yml` does that on every merge to `main` that touches `sanity/`, using the `SANITY_AUTH_TOKEN` secret (a project token with the `deploy-studio` role). To deploy by hand: `npx sanity deploy`.
+The Studio is hosted by Sanity at https://fiu.sanity.studio (it opens inside the Sanity dashboard), not in this app. It auto-updates its Sanity packages (`deployment.autoUpdates` in `sanity.cli.ts`), but our schemas, structure and plugins only change when it is deployed: `.github/workflows/deploy-studio.yml` does that on every merge to `main` that touches `sanity/` or `content/`, using the `SANITY_AUTH_TOKEN` secret (a project token with the `deploy-studio` role). To deploy by hand: `npx sanity deploy`.
 
-- It is built by Sanity's tooling, so it reads `sanity/studio-env.ts` (`SANITY_STUDIO_*` variables) rather than `@/env`. Keep `next/*`, `server-only` and `@/` imports out of everything `sanity.config.ts` pulls in.
+- It is built by Sanity's tooling, so it reads `sanity/studio-env.ts` (`SANITY_STUDIO_*` variables) rather than `@/env`. Keep `next/*`, `server-only` and `@/` imports out of everything `sanity.config.ts` pulls in: `sanity/schema/`, `sanity/studio/` and every `content/*/schema.ts`. Use relative imports there, and no React DOM.
 - Presentation previews the live site (`previewOrigin` in `sanity/studio-env.ts`). The site's draft-mode route sets partitioned cookies, so the preview works inside the Studio's frame.
 - Sign in with Google, GitHub or email. The Vercel sign-in is hidden: it goes through the integration's SSO and ends on sanity.io instead of the Studio.
 - `sanity dev` runs it locally; add `http://localhost:3333` to the project's CORS origins if it isn't there.
 
+## Folder structure
+
+Code is grouped by product area, not by kind. The rule for where something goes: does it belong to one Sanity document type (a **content module**), or to one page area (a **feature area**)?
+
+| Folder                                                      | What it holds                                                                                                                                       |
+| ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `content/<type>/`                                           | One per Sanity document type: its `schema.ts`, GROQ `queries.ts`, mappers and own UI (e.g. `content/project/components/ProjectSlide.tsx`).          |
+| `features/<area>/`                                          | One per page area (`home`, `about`, `work`, `talent`, `rentals`, `site`, `logo`). It composes content modules and holds UI that is only used there. |
+| `components/ui/`, `components/forms/`, `components/layout/` | Generic UI, form fields, and the site chrome (nav, 404, theme colour, watermark).                                                                   |
+| `lib/`                                                      | Pure utilities, i18n, email and forms helpers; `lib/hooks/` has the client hooks.                                                                   |
+| `sanity/lib/`                                               | Shared Sanity plumbing: client, live fetching, image sizing (`image.ts`) and the GROQ fragments queries are built from (`groq.ts`).                 |
+| `sanity/schema/`, `sanity/studio/`                          | The Studio's schema index and shared fields, and its structure, languages, icon and Presentation resolver.                                          |
+| `app/(site)/[lang]/dev/_concepts/`                          | Design sign-off options that only the `/dev` pages use. They stay out of production modules.                                                        |
+
+Every content module and feature area has an `index.ts` that re-exports what other modules and `app/` import; import through it, and use relative or direct imports inside a module. A content module's index does not re-export `schema.ts`: only the Studio imports schemas, through `sanity/schema/index.ts`. Where an index import would create a cycle, or would pull a heavy module into the main bundle (the lazy `features/logo/LogoScene`), import the file directly.
+
 ## Sanity types
 
-The types of Sanity query results are generated from the schema and the `defineQuery` queries in `sanity/lib/queries.ts`. `sanity.types.ts` and `sanity/extract.json` are not committed: `npm run typegen` creates them, and `npm run setup`, `predev`, `prebuild` and `pretypecheck` run it automatically (so Vercel builds and CI generate them too). It needs `NEXT_PUBLIC_SANITY_PROJECT_ID` and `NEXT_PUBLIC_SANITY_DATASET` (any values will do), which the CLI reads from `.env.local`.
+The types of Sanity query results are generated from the schema and the `defineQuery` queries in `content/<type>/queries.ts`. `sanity.types.ts` and `sanity/extract.json` are not committed: `npm run typegen` creates them, and `npm run setup`, `predev`, `prebuild` and `pretypecheck` run it automatically (so Vercel builds and CI generate them too). It needs `NEXT_PUBLIC_SANITY_PROJECT_ID` and `NEXT_PUBLIC_SANITY_DATASET` (any values will do), which the CLI reads from `.env.local`.
 
-After changing a schema or a query, `npm run typecheck` shows what breaks. TypeGen evaluates queries statically, so build them from string literals and the generic helpers in `queries.ts` (called with literal arguments), not from arbitrary expressions.
+After changing a schema or a query, `npm run typecheck` shows what breaks. TypeGen evaluates queries statically, so build them from string literals and the generic helpers in `sanity/lib/groq.ts` (called with literal arguments), not from arbitrary expressions.
 
 ## Emails
 

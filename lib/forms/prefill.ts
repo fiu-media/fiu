@@ -11,7 +11,7 @@
  */
 import { isIsoDate, isValidRange, rentalDays } from "@/lib/dates";
 import { localizedPath, type Locale } from "@/lib/i18n/config";
-import { clampQty } from "@/lib/basket-qty";
+import { clampQty } from "@/features/rentals/basket/quantity";
 import { ENQUIRY_TYPES, isEnquiryType, limits, MAX_HIRE_DAYS, MAX_LEAD_DAYS, type EnquiryType } from "./schemas";
 
 /** Most `item` parameters read from one link. */

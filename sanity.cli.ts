@@ -13,7 +13,14 @@ export default defineCliConfig({
   // The site's public/ folder (stills, 3D assets) isn't part of the Studio, so don't upload it with the bundle.
   vite: (config) => ({ ...config, publicDir: false }),
   typegen: {
-    path: ["app/**/*.{ts,tsx}", "components/**/*.{ts,tsx}", "lib/**/*.{ts,tsx}", "sanity/lib/**/*.ts"],
+    path: [
+      "app/**/*.{ts,tsx}",
+      "components/**/*.{ts,tsx}",
+      "lib/**/*.{ts,tsx}",
+      "sanity/lib/**/*.ts",
+      "content/**/*.{ts,tsx}",
+      "features/**/*.{ts,tsx}",
+    ],
     schema: "sanity/extract.json",
     generates: "sanity.types.ts",
   },

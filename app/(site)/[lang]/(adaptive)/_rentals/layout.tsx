@@ -1,12 +1,11 @@
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { CatalogueProvider, type CatalogueItem } from "@/components/rentals/CatalogueContext";
-import { QuoteDrawer } from "@/components/rentals/QuoteDrawer";
+import { CatalogueProvider, type CatalogueItem, QuoteDrawer } from "@/features/rentals";
 import { defaultLocale, isLocale, localizedPath, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { cachedSanity } from "@/sanity/lib/live";
-import { QUOTE_CATALOGUE_QUERY } from "@/sanity/lib/queries";
-import { toRentalImage } from "@/sanity/lib/rentals";
+import { QUOTE_CATALOGUE_QUERY } from "@/content/rentalItem";
+import { toSizedImage } from "@/sanity/lib/image";
 
 // Rentals is hidden for now: the `_` prefix makes this a private folder, so none of it is routed (`/rentals*` is a
 // 404). To bring it back, rename the folder to `rentals`, restore the typed `PageProps`/`LayoutProps` generics
@@ -28,7 +27,7 @@ async function catalogueLookup(lang: Locale) {
       brand: entry.brand,
       href: localizedPath(lang, `/rentals/${entry.slug}`),
       max: entry.maxQuantity ?? 99,
-      image: entry.image ? toRentalImage({ ...entry.image, dimensions: null }, 160) : null,
+      image: entry.image ? toSizedImage({ ...entry.image, dimensions: null }, 160) : null,
     };
   }
   return items;

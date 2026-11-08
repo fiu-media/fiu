@@ -3,16 +3,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { pageGutter } from "@/components/nav/rail";
-import { DetailAddToQuote } from "@/components/rentals/DetailAddToQuote";
-import { ItemSkeleton } from "@/components/rentals/RentalSkeletons";
-import { RentalGallery } from "@/components/rentals/RentalGallery";
+import { pageGutter } from "@/components/layout/nav/rail";
+import { DetailAddToQuote, ItemSkeleton, RentalGallery } from "@/features/rentals";
 import { cn } from "@/lib/cn";
 import { defaultLocale, isLocale, languageAlternates, localizedPath, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
-import { RENTAL_ITEM_QUERY } from "@/sanity/lib/queries";
-import { publishedId, toRentalImage } from "@/sanity/lib/rentals";
+import { RENTAL_ITEM_QUERY } from "@/content/rentalItem";
+import { publishedId, toSizedImage } from "@/sanity/lib/image";
 
 async function getItem(lang: Locale, slug: string) {
   const { perspective, variant } = await getDynamicFetchOptions();
@@ -56,7 +54,7 @@ async function Item({ lang, slug }: { lang: string; slug: string }) {
   const [{ rentals }, item] = await Promise.all([getDictionary(lang), getItem(lang, slug)]);
   if (!item) notFound();
 
-  const images = (item.images ?? []).flatMap((image) => toRentalImage(image, 1400) ?? []);
+  const images = (item.images ?? []).flatMap((image) => toSizedImage(image, 1400) ?? []);
   const features = item.keyFeatures ?? [];
   const specs = item.specs ?? [];
   const kit = item.includedInKit ?? [];

@@ -2,17 +2,17 @@ import type { Metadata } from "next";
 import { PortableText } from "next-sanity";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { AboutContacts } from "@/components/about/AboutContacts";
-import { TeamBand, TeamBeside, TeamScreen, type AboutTeamProps } from "@/components/about/AboutTeamOptions";
-import { railInset } from "@/components/nav/rail";
-import { SiteNav } from "@/components/nav/SiteNav";
+import { AboutContacts } from "@/features/about";
+import { TeamBand, TeamBeside, TeamScreen, type AboutTeamProps } from "@/app/(site)/[lang]/dev/_concepts/about/AboutTeamOptions";
+import { railInset } from "@/components/layout/nav/rail";
+import { SiteNav } from "@/components/layout/nav/SiteNav";
 import { GlassPillLink } from "@/components/ui/Glass";
-import { fallbackStills } from "@/lib/fallback-stills";
+import { fallbackStills } from "@/features/home";
 import { defaultLocale, isLocale, localizedPath, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { cachedSanity } from "@/sanity/lib/live";
-import { ABOUT_QUERY } from "@/sanity/lib/queries";
-import { toSizedImage } from "@/sanity/lib/rentals";
+import { ABOUT_QUERY } from "@/content/siteSettings";
+import { toSizedImage } from "@/sanity/lib/image";
 import { toTeam } from "@/sanity/lib/team";
 
 // Sign-off page for where the team photo goes on About: three placements on the About layout (option A). Option 2 is live

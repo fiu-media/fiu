@@ -1,17 +1,16 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { pageGutter } from "@/components/nav/rail";
-import { CatalogueSkeleton } from "@/components/rentals/RentalSkeletons";
-import { RentalCatalogue, type CatalogueCard } from "@/components/rentals/RentalCatalogue";
+import { pageGutter } from "@/components/layout/nav/rail";
+import { CatalogueSkeleton, RentalCatalogue, type CatalogueCard } from "@/features/rentals";
 import { PageTitle } from "@/components/ui/PageTitle";
 import { cn } from "@/lib/cn";
 import { defaultLocale, isLocale, languageAlternates, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
 import { getPageText } from "@/sanity/lib/pageText";
-import { RENTALS_QUERY } from "@/sanity/lib/queries";
-import { publishedId, toRentalImage } from "@/sanity/lib/rentals";
+import { RENTALS_QUERY } from "@/content/rentalItem";
+import { publishedId, toSizedImage } from "@/sanity/lib/image";
 
 export async function generateMetadata({ params }: { params: Promise<{ lang: string }> }): Promise<Metadata> {
   const { lang } = await params;
@@ -57,7 +56,7 @@ async function Catalogue({ lang }: { lang: Locale }) {
     brand: item.brand,
     summary: item.summary,
     categoryId: item.category?.slug ?? null,
-    image: item.images?.[0] ? toRentalImage(item.images[0], 800) : null,
+    image: item.images?.[0] ? toSizedImage(item.images[0], 800) : null,
   }));
 
   return (

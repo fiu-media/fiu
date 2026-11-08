@@ -1,4 +1,4 @@
-import { LOGO_PARAM_PRESETS, type LogoExtrudeOverride, type LogoGlassParams } from "@/components/three/logoConfig";
+import { LOGO_PARAM_PRESETS, type LogoExtrudeOverride, type LogoGlassParams } from "@/features/logo";
 
 type NumericParamKey = {
   [K in keyof LogoGlassParams]: LogoGlassParams[K] extends number ? K : never;

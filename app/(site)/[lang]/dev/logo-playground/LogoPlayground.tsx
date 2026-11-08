@@ -12,8 +12,8 @@ import {
   type CSSProperties,
   type ReactNode,
 } from "react";
-import type { LogoMeshMode } from "@/components/three/buildLogoGeometry";
 import {
+  type LogoMeshMode,
   formatConfigExport,
   formatInteractionConfigExport,
   formatLightingConfigExport,
@@ -30,17 +30,19 @@ import {
   type LogoPointLightConfig,
   type LogoRimLook,
   type LogoSoftLightConfig,
-} from "@/components/three/logoConfig";
-import type { SweepAxis, SweepTechnique } from "@/components/three/lightSweep";
-import { diffConfigs } from "@/components/three/logoDiff";
-import { costVsPreset, type LogoPerfStats } from "@/components/three/logoPerf";
+  type SweepAxis,
+  type SweepTechnique,
+  diffConfigs,
+  costVsPreset,
+  type LogoPerfStats,
+} from "@/features/logo";
 import { GlassPillButton } from "@/components/ui/Glass";
 import logo from "@/public/brand/fiu-logo.svg";
 import { LogoDiffView } from "./LogoDiffView";
 import { DIFF_LABELS } from "./logoControls";
 import { useSweepState, type SweepMode } from "./useSweepState";
 
-const LogoScene = dynamic(() => import("@/components/three/LogoScene"), { ssr: false });
+const LogoScene = dynamic(() => import("@/features/logo/LogoScene"), { ssr: false });
 // Leva reads Math.random while creating its store, so it renders on the client only.
 const LevaParams = dynamic(() => import("./LevaParams").then((m) => m.LevaParams), { ssr: false });
 

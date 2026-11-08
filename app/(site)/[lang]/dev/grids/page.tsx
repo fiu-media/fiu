@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image, { type StaticImageData } from "next/image";
 import { notFound } from "next/navigation";
 import { Suspense, type ReactNode } from "react";
-import { NameIndex } from "@/components/talent/NameIndex";
+import { NameIndex } from "@/features/talent";
 import { GlassPillButton, GlassPillLink } from "@/components/ui/Glass";
 import { isLocale, localizedPath } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";

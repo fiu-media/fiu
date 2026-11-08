@@ -1,7 +1,7 @@
 import Image from "next/image";
-import { NotFoundPage, type NotFoundCopy } from "@/components/NotFoundPage";
-import { SiteNav } from "@/components/nav/SiteNav";
-import { railInset } from "@/components/nav/rail";
+import { NotFoundPage, type NotFoundCopy } from "@/components/layout/NotFoundPage";
+import { SiteNav } from "@/components/layout/nav/SiteNav";
+import { railInset } from "@/components/layout/nav/rail";
 import { GlassPillLink } from "@/components/ui/Glass";
 import { localizedPath, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
@@ -66,7 +66,7 @@ export async function OptionB({ lang, copy }: Props) {
   );
 }
 
-/** C · Cinematic with a slowly drifting patch of light (the #51 experiment); still when motion is reduced. The live 404 (components/NotFoundPage.tsx). */
+/** C · Cinematic with a slowly drifting patch of light (the #51 experiment); still when motion is reduced. The live 404 (components/layout/NotFoundPage.tsx). */
 export function OptionC({ lang, copy }: Props) {
   return <NotFoundPage lang={lang} copy={copy} className="h-full" />;
 }

@@ -4,11 +4,11 @@ import { defineConfig } from "sanity";
 import { presentationTool } from "sanity/presentation";
 import { structureTool } from "sanity/structure";
 import { apiVersion, dataset, previewOrigin, projectId } from "./sanity/studio-env";
-import { languages, translatedTypes } from "./sanity/languages";
-import { resolve } from "./sanity/presentation/resolve";
-import { FiuIcon } from "./sanity/FiuIcon";
-import { schemaTypes } from "./sanity/schemaTypes";
-import { hiddenTemplates, singletonActions, structure } from "./sanity/structure";
+import { languages, translatedTypes } from "./sanity/studio/languages";
+import { resolve } from "./sanity/studio/presentation/resolve";
+import { FiuIcon } from "./sanity/studio/FiuIcon";
+import { schemaTypes } from "./sanity/schema";
+import { hiddenTemplates, singletonActions, structure } from "./sanity/studio/structure";
 
 export default defineConfig({
   name: "default",
