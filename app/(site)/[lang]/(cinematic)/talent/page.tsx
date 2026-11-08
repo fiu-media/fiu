@@ -1,17 +1,17 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { floatingBarInset, pageGutter, pageTop } from "@/components/nav/rail";
+import { floatingBarInset, pageGutter, pageTop } from "@/components/layout/nav/rail";
 import { PageTitle } from "@/components/ui/PageTitle";
 import { Skeleton, SkeletonGroup } from "@/components/ui/Skeleton";
-import { NameIndex, type IndexItem } from "@/components/talent/NameIndex";
+import { NameIndex, type IndexItem } from "@/features/talent";
 import { cn } from "@/lib/cn";
 import { defaultLocale, isLocale, languageAlternates, localizedPath, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
 import { getPageText } from "@/sanity/lib/pageText";
-import { TALENT_QUERY } from "@/sanity/lib/queries";
-import { toSizedImage } from "@/sanity/lib/rentals";
+import { TALENT_QUERY } from "@/content/talent";
+import { toSizedImage } from "@/sanity/lib/image";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/talent">): Promise<Metadata> {
   const { lang } = await params;

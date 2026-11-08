@@ -9,8 +9,7 @@ import { PhoneField } from "@/components/forms/PhoneField";
 import { QuoteFormSkeleton } from "@/components/forms/FormSkeleton";
 import { useConformForm } from "@/components/forms/useConformForm";
 import { useFreshOnArrival } from "@/components/forms/useFreshOnArrival";
-import { useCatalogue } from "@/components/rentals/CatalogueContext";
-import { QuoteLines } from "@/components/rentals/QuoteLines";
+import { useCatalogue, QuoteLines, basketActions, useQuoteBasket } from "@/features/rentals";
 import { GlassPanel, GlassPillLink } from "@/components/ui/Glass";
 import { describeRange, isIsoDate, isValidRange, todayInDublin } from "@/lib/dates";
 import { catalogueSlug, prefillKey, QUOTE_PARAMS, quoteHref, quotePrefill } from "@/lib/forms/prefill";
@@ -18,7 +17,6 @@ import { limits, quoteSchema } from "@/lib/forms/schemas";
 import { localizedPath, type Locale } from "@/lib/i18n/config";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import type { CountryList } from "@/lib/forms/countries";
-import { basketActions, useQuoteBasket } from "@/lib/quote-basket";
 import { submitQuote } from "./actions";
 
 type QuoteDict = Pick<Dictionary, "quote" | "basket" | "forms" | "common" | "dates">;

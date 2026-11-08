@@ -2,16 +2,15 @@ import type { Metadata } from "next";
 import { PortableText } from "next-sanity";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { AboutContacts } from "@/components/about/AboutContacts";
-import { AboutLayoutA } from "@/components/about/AboutLayouts";
+import { AboutContacts, AboutLayoutA } from "@/features/about";
 import { FullScreenSkeleton } from "@/components/ui/Skeleton";
-import { fallbackStills } from "@/lib/fallback-stills";
+import { fallbackStills } from "@/features/home";
 import { defaultLocale, isLocale, languageAlternates, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { settingsAttribute } from "@/sanity/lib/about";
 import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
-import { ABOUT_QUERY } from "@/sanity/lib/queries";
-import { publishedId, toSizedImage } from "@/sanity/lib/rentals";
+import { ABOUT_QUERY } from "@/content/siteSettings";
+import { publishedId, toSizedImage } from "@/sanity/lib/image";
 import { toTeam } from "@/sanity/lib/team";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/about">): Promise<Metadata> {

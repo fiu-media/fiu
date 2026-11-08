@@ -24,7 +24,7 @@ const eslintConfig = defineConfig([
   ]),
   {
     // The Studio is built by Sanity's tooling, not Next, so Next's rules (no next/image, next/link, ...) don't apply.
-    files: ["sanity/FiuIcon.tsx"],
+    files: ["sanity/studio/FiuIcon.tsx"],
     rules: Object.fromEntries(nextRules.map((r) => [r, "off"])),
   },
 ]);

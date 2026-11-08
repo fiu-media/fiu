@@ -3,7 +3,7 @@
 import { Menu, X } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from "react";
-import { LogoMask } from "@/components/nav/HomeLink";
+import { LogoMask } from "@/components/layout/nav/HomeLink";
 import type { NavItem } from "@/lib/i18n/nav";
 import { GlassPanel, GlassPillButton } from "@/components/ui/Glass";
 import conservatory from "@/public/stills/conservatory.jpg";

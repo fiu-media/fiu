@@ -4,7 +4,7 @@ import Image from "next/image";
 import { PortableText } from "next-sanity";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { AboutContacts } from "@/components/about/AboutContacts";
+import { AboutContacts } from "@/features/about";
 import {
   FoldIndex,
   FoldReelClosing,
@@ -15,17 +15,17 @@ import {
   FoldTwoDoors,
   type FoldProject,
   type FoldProps,
-} from "@/components/home/BelowFoldOptions";
-import { HeroFade } from "@/components/home/HeroFade";
-import { railInset } from "@/components/nav/rail";
-import { SiteNav } from "@/components/nav/SiteNav";
+} from "@/app/(site)/[lang]/dev/_concepts/home/BelowFoldOptions";
+import { HeroFade, fallbackStills } from "@/features/home";
+import { railInset } from "@/components/layout/nav/rail";
+import { SiteNav } from "@/components/layout/nav/SiteNav";
 import { GlassPillLink } from "@/components/ui/Glass";
-import { fallbackStills } from "@/lib/fallback-stills";
 import { defaultLocale, isLocale, localizedPath, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { cachedSanity } from "@/sanity/lib/live";
-import { ABOUT_QUERY, WORK_QUERY } from "@/sanity/lib/queries";
-import { toSizedImage, type SizedImage } from "@/sanity/lib/rentals";
+import { ABOUT_QUERY } from "@/content/siteSettings";
+import { WORK_QUERY } from "@/content/project";
+import { toSizedImage, type SizedImage } from "@/sanity/lib/image";
 import { toTeam } from "@/sanity/lib/team";
 import logo from "@/public/brand/fiu-logo.svg";
 

@@ -4,17 +4,15 @@ import { PortableText } from "next-sanity";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { pageGutter } from "@/components/nav/rail";
+import { pageGutter } from "@/components/layout/nav/rail";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { ProjectSlide } from "@/components/work/ProjectSlide";
-import { ProjectStills, type Still } from "@/components/work/ProjectStills";
+import { ProjectSlide, ProjectStills, type Still, PROJECT_ORDER_QUERY, PROJECT_QUERY } from "@/content/project";
 import { cn } from "@/lib/cn";
 import { defaultLocale, isLocale, languageAlternates, localizedPath, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
 import { projectAttribute } from "@/sanity/lib/projects";
-import { PROJECT_ORDER_QUERY, PROJECT_QUERY } from "@/sanity/lib/queries";
-import { toSizedImage } from "@/sanity/lib/rentals";
+import { toSizedImage } from "@/sanity/lib/image";
 
 async function getProject(lang: Locale, slug: string) {
   const { perspective, variant } = await getDynamicFetchOptions();

@@ -1,7 +1,7 @@
 import type { PAGE_TEXT_QUERY_RESULT } from "@/sanity.types";
 import { defaultLocale, type Locale } from "@/lib/i18n/config";
 import { cachedSanity } from "./live";
-import { PAGE_TEXT_QUERY } from "./queries";
+import { PAGE_TEXT_QUERY } from "@/content/siteSettings";
 
 /**
  * The intro lines under the Rentals, Request a quote, Contact, Our Work and Talent titles, and the Fiú line

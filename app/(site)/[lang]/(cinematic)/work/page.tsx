@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { floatingBarInset, pageGutter, pageTop } from "@/components/nav/rail";
+import { floatingBarInset, pageGutter, pageTop } from "@/components/layout/nav/rail";
 import { FullBleedScroll } from "@/components/ui/FullBleedScroll";
 import { GlassPillLink } from "@/components/ui/Glass";
 import { PageTitle } from "@/components/ui/PageTitle";
 import { FullScreenSkeleton, Skeleton } from "@/components/ui/Skeleton";
-import { ProjectSlide } from "@/components/work/ProjectSlide";
-import { SlideProgress } from "@/components/work/SlideProgress";
+import { ProjectSlide, WORK_QUERY } from "@/content/project";
+import { SlideProgress } from "@/features/work";
 import { cn } from "@/lib/cn";
 import { defaultLocale, isLocale, languageAlternates, localizedPath, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
@@ -15,8 +15,7 @@ import { format } from "@/lib/i18n/format";
 import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
 import { getPageText } from "@/sanity/lib/pageText";
 import { projectAttribute } from "@/sanity/lib/projects";
-import { WORK_QUERY } from "@/sanity/lib/queries";
-import { toSizedImage } from "@/sanity/lib/rentals";
+import { toSizedImage } from "@/sanity/lib/image";
 
 const SCROLL_ID = "work-scroll";
 

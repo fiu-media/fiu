@@ -5,17 +5,17 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { floatingBarInset, pageGutter, pageTop } from "@/components/nav/rail";
+import { floatingBarInset, pageGutter, pageTop } from "@/components/layout/nav/rail";
 import { FullBleedScroll } from "@/components/ui/FullBleedScroll";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { ProjectSlide } from "@/components/work/ProjectSlide";
+import { ProjectSlide, TALENT_PROJECTS_QUERY } from "@/content/project";
 import { cn } from "@/lib/cn";
 import { defaultLocale, isLocale, languageAlternates, localizedPath, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { format } from "@/lib/i18n/format";
 import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
-import { TALENT_PROFILE_QUERY, TALENT_PROJECTS_QUERY } from "@/sanity/lib/queries";
-import { publishedId, toSizedImage } from "@/sanity/lib/rentals";
+import { TALENT_PROFILE_QUERY } from "@/content/talent";
+import { publishedId, toSizedImage } from "@/sanity/lib/image";
 import { talentAttribute } from "@/sanity/lib/talent";
 
 async function getProfile(lang: Locale, slug: string) {

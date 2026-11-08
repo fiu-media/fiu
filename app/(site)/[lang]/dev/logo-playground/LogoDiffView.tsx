@@ -9,7 +9,7 @@ import {
   type DiffEntry,
   type DiffGroup,
   type DiffValue,
-} from "@/components/three/logoDiff";
+} from "@/features/logo";
 
 function formatNumber(n: number): string {
   if (Number.isInteger(n)) return String(n);

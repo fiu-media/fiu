@@ -8,6 +8,7 @@ on:
     branches: [main]
     paths:
       - sanity/**
+      - content/**
       - sanity.config.ts
       - sanity.cli.ts
       - lib/i18n/**
