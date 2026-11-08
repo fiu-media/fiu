@@ -28,6 +28,8 @@ export const en = {
   },
   footer: {
     copyright: "Fiú Media © {year}",
+    emailLabel: "Email",
+    instagramLabel: "Instagram",
   },
   vimeo: {
     play: "Play {title}",

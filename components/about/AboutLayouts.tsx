@@ -13,7 +13,6 @@ export type AboutLayoutProps = {
   gloss: string | null;
   manifesto: ReactNode;
   contacts: ReactNode;
-  footer: ReactNode;
   /** The team photo. Only Option A shows it (beside the manifesto); the sign-off options B to F ignore it. */
   team?: Team;
   /** `data-sanity` values that make the parts clickable in the Presentation tool. */
@@ -67,10 +66,10 @@ export function AboutHeroSection({
 
 /**
  * Option A, "Slogan first": the still holds the first screen with the slogan large over it. The
- * manifesto, contact links and footer follow on plain dark, so no running text sits over the photo. With a team photo
+ * manifesto and contact links follow on plain dark, so no running text sits over the photo. With a team photo
  * it sits beside the manifesto (above it on phones), in the same frame Home's fold uses.
  */
-export function AboutLayoutA({ still, slogan, gloss, manifesto, contacts, footer, team, attributes }: AboutLayoutProps) {
+export function AboutLayoutA({ still, slogan, gloss, manifesto, contacts, team, attributes }: AboutLayoutProps) {
   const body = (
     <>
       {manifesto && (
@@ -79,7 +78,6 @@ export function AboutLayoutA({ still, slogan, gloss, manifesto, contacts, footer
         </div>
       )}
       {contacts}
-      {footer}
     </>
   );
   return (
@@ -104,11 +102,11 @@ export function AboutLayoutA({ still, slogan, gloss, manifesto, contacts, footer
 }
 
 /**
- * Option B, "Split screen": the slogan, manifesto, contact links and footer sit in a solid dark
+ * Option B, "Split screen": the slogan, manifesto and contact links sit in a solid dark
  * column beside the still, which stays clean on the right. On phones the still comes first and the
  * column follows below it.
  */
-export function AboutLayoutB({ still, slogan, gloss, manifesto, contacts, footer, attributes }: AboutLayoutProps) {
+export function AboutLayoutB({ still, slogan, gloss, manifesto, contacts, attributes }: AboutLayoutProps) {
   return (
     <main className="relative flex min-h-dvh flex-col bg-ink text-white md:grid md:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
       <div className="flex flex-col justify-center px-5 py-16 md:px-10 md:py-20">
@@ -126,7 +124,6 @@ export function AboutLayoutB({ still, slogan, gloss, manifesto, contacts, footer
             {manifesto}
           </div>
           {contacts}
-          {footer}
         </div>
       </div>
 
@@ -141,7 +138,7 @@ export function AboutLayoutB({ still, slogan, gloss, manifesto, contacts, footer
  * Option C, "Letterbox": one screen, like a film frame. The slogan sits above a wide band of the
  * still, with the manifesto and the contact links below it on plain dark.
  */
-export function AboutLayoutC({ still, slogan, gloss, manifesto, contacts, footer, attributes }: AboutLayoutProps) {
+export function AboutLayoutC({ still, slogan, gloss, manifesto, contacts, attributes }: AboutLayoutProps) {
   return (
     <main className="relative flex min-h-dvh flex-col justify-center gap-8 bg-ink px-5 py-24 text-white md:gap-10 md:px-10 md:py-16">
       <header className="max-w-5xl">
@@ -157,10 +154,7 @@ export function AboutLayoutC({ still, slogan, gloss, manifesto, contacts, footer
         <div data-sanity={attributes?.manifesto} className="space-y-4 text-base leading-relaxed text-white/85 md:text-lg">
           {manifesto}
         </div>
-        <div className="flex flex-col gap-8 md:justify-between">
-          {contacts}
-          {footer}
-        </div>
+        <div className="flex flex-col gap-8 md:justify-between">{contacts}</div>
       </div>
     </main>
   );
@@ -168,9 +162,9 @@ export function AboutLayoutC({ still, slogan, gloss, manifesto, contacts, footer
 
 /**
  * Option D, "Poster": the still has the first screen to itself, with nothing over it. The slogan,
- * manifesto, contact links and footer follow below on plain dark, in two columns on desktop.
+ * manifesto and contact links follow below on plain dark, in two columns on desktop.
  */
-export function AboutLayoutD({ still, slogan, gloss, manifesto, contacts, footer, attributes }: AboutLayoutProps) {
+export function AboutLayoutD({ still, slogan, gloss, manifesto, contacts, attributes }: AboutLayoutProps) {
   return (
     <main className="relative bg-ink text-white">
       <div className="relative h-dvh">
@@ -189,7 +183,6 @@ export function AboutLayoutD({ still, slogan, gloss, manifesto, contacts, footer
               {manifesto}
             </div>
             {contacts}
-            {footer}
           </div>
         </div>
       </section>
@@ -201,7 +194,7 @@ export function AboutLayoutD({ still, slogan, gloss, manifesto, contacts, footer
  * Option E, "Statement": type first. The slogan fills the first screen on plain dark, the still
  * follows as a framed print, then the manifesto in two columns with the contact links.
  */
-export function AboutLayoutE({ still, slogan, gloss, manifesto, contacts, footer, attributes }: AboutLayoutProps) {
+export function AboutLayoutE({ still, slogan, gloss, manifesto, contacts, attributes }: AboutLayoutProps) {
   return (
     <main className="relative bg-ink px-5 text-white md:px-10">
       <section className="flex min-h-dvh flex-col justify-center py-24 md:py-16">
@@ -222,10 +215,7 @@ export function AboutLayoutE({ still, slogan, gloss, manifesto, contacts, footer
         <div data-sanity={attributes?.manifesto} className="space-y-5 text-lg leading-relaxed text-white/85 md:text-xl">
           {manifesto}
         </div>
-        <div className="flex flex-col gap-10">
-          {contacts}
-          {footer}
-        </div>
+        <div className="flex flex-col gap-10">{contacts}</div>
       </section>
     </main>
   );
@@ -233,9 +223,9 @@ export function AboutLayoutE({ still, slogan, gloss, manifesto, contacts, footer
 
 /**
  * Option F, "Glass caption": the full-bleed still with only the short slogan in a small clear-glass
- * card, like a film title card. The manifesto, contact links and footer follow on plain dark.
+ * card, like a film title card. The manifesto and contact links follow on plain dark.
  */
-export function AboutLayoutF({ still, slogan, gloss, manifesto, contacts, footer, attributes }: AboutLayoutProps) {
+export function AboutLayoutF({ still, slogan, gloss, manifesto, contacts, attributes }: AboutLayoutProps) {
   return (
     <main className="relative bg-ink text-white">
       <section className="relative isolate flex h-dvh items-end px-5 pb-[max(2.5rem,env(safe-area-inset-bottom))] md:px-10 md:pb-14">
@@ -255,7 +245,6 @@ export function AboutLayoutF({ still, slogan, gloss, manifesto, contacts, footer
             {manifesto}
           </div>
           {contacts}
-          {footer}
         </div>
       </section>
     </main>

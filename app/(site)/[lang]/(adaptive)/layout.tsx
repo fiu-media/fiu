@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { SiteFooter } from "@/components/footer/SiteFooter";
 import { pageTop, railInset } from "@/components/nav/rail";
 import { SiteNav } from "@/components/nav/SiteNav";
 import { cn } from "@/lib/cn";
@@ -12,6 +13,7 @@ export default async function AdaptiveLayout({ children, params }: LayoutProps<"
     <div data-surface="adaptive" className={cn("min-h-dvh bg-bg text-fg", pageTop, railInset)}>
       <SiteNav lang={lang} />
       {children}
+      <SiteFooter lang={lang} />
     </div>
   );
 }

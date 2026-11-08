@@ -3,7 +3,6 @@ import { PortableText } from "next-sanity";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { AboutContacts } from "@/components/about/AboutContacts";
-import { AboutFooter } from "@/components/about/AboutFooter";
 import { TeamBand, TeamBeside, TeamScreen, type AboutTeamProps } from "@/components/about/AboutTeamOptions";
 import { railInset } from "@/components/nav/rail";
 import { SiteNav } from "@/components/nav/SiteNav";
@@ -86,7 +85,6 @@ async function Options({
         labels={{ email: dict.about.emailLabel, instagram: dict.about.instagramLabel }}
       />
     ),
-    footer: <AboutFooter copyright={dict.footer.copyright} />,
     // From Site settings like the live pages; the badge marks a photo that is still the code's stand-in.
     team: { ...toTeam(settings, dict.about.teamHeading), placeholder: !settings.team },
   };

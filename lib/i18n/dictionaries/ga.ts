@@ -30,6 +30,9 @@ export const ga: DeepPartial<Dictionary> = {
     play: "Seinn {title}",
     stop: "Stad an físeán",
   },
+  footer: {
+    emailLabel: "Ríomhphost",
+  },
   about: {
     title: "Eolas Fúinn",
     emailLabel: "Ríomhphost",

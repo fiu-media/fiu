@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { preload } from "react-dom";
 import { InlineScript } from "@/components/InlineScript";
 import { pinHomeScrollScript } from "@/components/home/bleed";
+import { SiteFooter } from "@/components/footer/SiteFooter";
 import { HomeHero } from "@/components/home/HomeHero";
 import { HomeFoldContent } from "@/components/home/HomeFoldContent";
 import { HomeScrollLock } from "@/components/home/HomeScrollLock";
@@ -51,6 +52,7 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
           <Suspense>
             <HomeFoldContent lang={lang} />
           </Suspense>
+          <SiteFooter lang={lang} />
         </div>
       </main>
       <InlineScript html={pinHomeScrollScript} />

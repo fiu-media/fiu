@@ -1,5 +1,6 @@
 import type { Viewport } from "next";
 import { notFound } from "next/navigation";
+import { SiteFooter } from "@/components/footer/SiteFooter";
 import { railInset } from "@/components/nav/rail";
 import { SiteNav } from "@/components/nav/SiteNav";
 import { cn } from "@/lib/cn";
@@ -15,6 +16,7 @@ export default async function CinematicLayout({ children, params }: LayoutProps<
     <div data-surface="cinematic" className={cn("relative isolate min-h-dvh bg-ink text-fg", railInset)}>
       <SiteNav lang={lang} onImage />
       {children}
+      <SiteFooter lang={lang} />
     </div>
   );
 }

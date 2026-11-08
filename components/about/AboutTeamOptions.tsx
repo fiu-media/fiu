@@ -35,7 +35,7 @@ function Shell({ props, children }: { props: AboutTeamProps; children: ReactNode
  * before the contact links. Reads as "this is who we are" right after the words.
  */
 export function TeamBand(props: AboutTeamProps) {
-  const { manifesto, attributes, contacts, footer, team } = props;
+  const { manifesto, attributes, contacts, team } = props;
   return (
     <Shell props={props}>
       <section className="relative bg-ink px-5 pt-24 pb-24 text-fg md:px-10 md:pt-36 md:pb-36">
@@ -53,10 +53,7 @@ export function TeamBand(props: AboutTeamProps) {
             {team.caption && <span className="text-sm text-fg-muted">{team.caption}</span>}
           </figcaption>
         </figure>
-        <div className="mx-auto mt-20 flex max-w-3xl flex-col gap-14 md:mt-28">
-          {contacts}
-          {footer}
-        </div>
+        <div className="mx-auto mt-20 flex max-w-3xl flex-col gap-14 md:mt-28">{contacts}</div>
       </section>
     </Shell>
   );
@@ -75,7 +72,7 @@ export function TeamBeside(props: AboutTeamProps) {
  * clear-glass caption, like a title card. The manifesto and contact links follow on plain dark.
  */
 export function TeamScreen(props: AboutTeamProps) {
-  const { manifesto, attributes, contacts, footer, team } = props;
+  const { manifesto, attributes, contacts, team } = props;
   return (
     <Shell props={props}>
       <section className="relative isolate flex h-dvh items-end px-5 pb-[max(2.5rem,env(safe-area-inset-bottom))] md:px-10 md:pb-14">
@@ -89,7 +86,6 @@ export function TeamScreen(props: AboutTeamProps) {
         <div className="mx-auto flex max-w-3xl flex-col gap-14">
           <Manifesto manifesto={manifesto} attributes={attributes} className="text-xl md:text-2xl" />
           {contacts}
-          {footer}
         </div>
       </section>
     </Shell>
