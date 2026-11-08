@@ -18,24 +18,17 @@ import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSyn
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { createClient } from "@sanity/client";
+import { translatedTypes } from "../sanity/schema/documentTypes";
+import { env, toolingClient } from "./lib/sanity";
 
 const SOURCE = "production";
 const TARGET = "dev";
-/** Everything editors author. Inbox types and Sanity's own documents are deliberately absent. */
-const CONTENT_TYPES = ["siteSettings", "project", "talent", "projectType", "role", "rentalCategory", "rentalItem"];
-
-function env(name: string) {
-  const value = process.env[name];
-  if (!value) throw new Error(`Missing ${name} (set it in .env.local)`);
-  return value;
-}
+/** Everything editors author: the translated types. Inbox types and Sanity's own documents are deliberately absent. */
+const CONTENT_TYPES = translatedTypes;
 
 const projectId = env("NEXT_PUBLIC_SANITY_PROJECT_ID");
-const token = env("SANITY_API_WRITE_TOKEN");
 const sanity = (...args: string[]) => execFileSync("npx", ["sanity", ...args, "--project-id", projectId], { stdio: "inherit" });
-const clientFor = (dataset: string) =>
-  createClient({ projectId, dataset, token, apiVersion: "2026-10-01", useCdn: false, perspective: "raw" });
+const clientFor = (dataset: string) => toolingClient({ token: "write", dataset });
 
 type Doc = { _id: string; [key: string]: unknown };
 const META = new Set(["_rev", "_createdAt", "_updatedAt"]);
@@ -43,6 +36,9 @@ const withoutMeta = (doc: Doc) => Object.fromEntries(Object.entries(doc).filter(
 const same = (a: Doc, b: Doc) => JSON.stringify(withoutMeta(a)) === JSON.stringify(withoutMeta(b));
 
 async function main() {
+  // Built first, so a missing token fails now rather than after the export and import.
+  const [prod, dev] = [clientFor(SOURCE), clientFor(TARGET)];
+
   const work = mkdtempSync(join(tmpdir(), "sync-dev-"));
   try {
     const full = join(work, "full.tar.gz");
@@ -67,7 +63,6 @@ async function main() {
 
   // Import replaces but never deletes, and production may have changed during the export.
   const query = `*[_type in $types] | order(_id asc)`;
-  const [prod, dev] = [clientFor(SOURCE), clientFor(TARGET)];
   const source = await prod.fetch<Doc[]>(query, { types: CONTENT_TYPES });
   const target = await dev.fetch<Doc[]>(query, { types: CONTENT_TYPES });
   const sourceIds = new Set(source.map((doc) => doc._id));
