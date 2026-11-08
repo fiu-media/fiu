@@ -1,10 +1,10 @@
 // Pure, so the browser's phone field and its tests share it. See components/forms/PhoneField.tsx.
 import {
   AsYouType,
+  type CountryCode,
   getCountries,
   getCountryCallingCode,
   parsePhoneNumberFromString,
-  type CountryCode,
 } from "libphonenumber-js/min";
 
 export const callingCode = (country: CountryCode) => getCountryCallingCode(country);

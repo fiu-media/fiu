@@ -1,6 +1,6 @@
+import { describeRange } from "../lib/dates";
 import type { Dictionary } from "../lib/i18n/dictionaries/en";
 import { en } from "../lib/i18n/dictionaries/en";
-import { describeRange } from "../lib/dates";
 import { Layout, present } from "./_layout";
 import type { QuoteEmailData } from "./quote-notification";
 

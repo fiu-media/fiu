@@ -4,43 +4,45 @@ import dynamic from "next/dynamic";
 import Image, { type StaticImageData } from "next/image";
 import {
   Component,
+  type CSSProperties,
+  type ReactNode,
   useCallback,
   useEffect,
   useMemo,
   useState,
   useSyncExternalStore,
-  type CSSProperties,
-  type ReactNode,
 } from "react";
+
+import { GlassPillButton } from "@/components/ui/Glass";
 import {
-  type LogoMeshMode,
+  costVsPreset,
+  diffConfigs,
   formatConfigExport,
   formatInteractionConfigExport,
   formatLightingConfigExport,
   formatMaterialConfigExport,
   importPlaygroundConfig,
-  presetConfig,
-  resetInteractionParams,
-  resetLightingParams,
-  resetMaterialParams,
   type LogoDisplayMode,
   type LogoGlassParams,
   type LogoImportKind,
+  type LogoMeshMode,
+  type LogoPerfStats,
   type LogoPlaygroundConfig,
   type LogoPointLightConfig,
   type LogoRimLook,
   type LogoSoftLightConfig,
+  presetConfig,
+  resetInteractionParams,
+  resetLightingParams,
+  resetMaterialParams,
   type SweepAxis,
   type SweepTechnique,
-  diffConfigs,
-  costVsPreset,
-  type LogoPerfStats,
 } from "@/features/logo";
-import { GlassPillButton } from "@/components/ui/Glass";
 import logo from "@/public/brand/fiu-logo.svg";
-import { LogoDiffView } from "./LogoDiffView";
+
 import { DIFF_LABELS } from "./logoControls";
-import { useSweepState, type SweepMode } from "./useSweepState";
+import { LogoDiffView } from "./LogoDiffView";
+import { type SweepMode, useSweepState } from "./useSweepState";
 
 const LogoScene = dynamic(() => import("@/features/logo/LogoScene"), { ssr: false });
 // Leva reads Math.random while creating its store, so it renders on the client only.

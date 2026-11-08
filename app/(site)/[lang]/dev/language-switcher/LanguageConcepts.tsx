@@ -1,11 +1,13 @@
 "use client";
 
 import { X } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { type ReactNode, useState } from "react";
+
 import { GlassPillButton } from "@/components/ui/Glass";
 import { cn } from "@/lib/cn";
+import { type Locale, localeNames, locales } from "@/lib/i18n/config";
+
 import { SchemeSwitcher } from "../specimen/SchemeSwitcher";
-import { localeNames, locales, type Locale } from "@/lib/i18n/config";
 
 export type OptionKey = "a" | "b" | "c" | "d" | "e";
 export type Placement = "links" | "bottom";

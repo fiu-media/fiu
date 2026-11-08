@@ -9,10 +9,11 @@
  * A value that doesn't pass the same rules the form enforces (a date in the past, an unknown item, a
  * number that isn't a number) is dropped rather than shown as an error the visitor didn't cause.
  */
-import { isIsoDate, isValidRange, rentalDays } from "@/lib/dates";
-import { localizedPath, type Locale } from "@/lib/i18n/config";
 import { clampQty } from "@/features/rentals/basket/quantity";
-import { ENQUIRY_TYPES, isEnquiryType, limits, MAX_HIRE_DAYS, MAX_LEAD_DAYS, type EnquiryType } from "./schemas";
+import { isIsoDate, isValidRange, rentalDays } from "@/lib/dates";
+import { type Locale, localizedPath } from "@/lib/i18n/config";
+
+import { ENQUIRY_TYPES, type EnquiryType, isEnquiryType, limits, MAX_HIRE_DAYS, MAX_LEAD_DAYS } from "./schemas";
 
 /** Most `item` parameters read from one link. */
 export const MAX_ITEM_PARAMS = 20;
@@ -76,9 +77,9 @@ export function quotePrefill(params: Params, catalogue: Record<string, Catalogue
       ? requestedStart
       : undefined;
   const endOk =
-    isIsoDate(requestedEnd) &&
-    requestedEnd >= today &&
-    (start ? isValidRange(start, requestedEnd) && rentalDays(start, requestedEnd) <= MAX_HIRE_DAYS : true);
+    isIsoDate(requestedEnd)
+    && requestedEnd >= today
+    && (start ? isValidRange(start, requestedEnd) && rentalDays(start, requestedEnd) <= MAX_HIRE_DAYS : true);
   const end = endOk ? requestedEnd! : undefined;
 
   const bySlug = new Map(Object.values(catalogue).map((entry) => [slugOf(entry.href), entry]));

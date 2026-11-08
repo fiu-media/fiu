@@ -1,4 +1,4 @@
-import { localizedPath, type Locale } from "./config";
+import { type Locale, localizedPath } from "./config";
 import type { Dictionary } from "./dictionaries/en";
 
 export type NavItem = { href: string; label: string };

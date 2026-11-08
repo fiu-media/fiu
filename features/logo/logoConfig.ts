@@ -4,7 +4,6 @@ import {
   interactionImportSchema,
   interactionParamsSchema,
   lightingImportSchema,
-  materialImportSchema,
   type LogoDisplayMode,
   type LogoExtrudeOverride,
   type LogoGlassParams,
@@ -20,6 +19,7 @@ import {
   type LogoPointLightConfig,
   type LogoRimLook,
   type LogoSoftLightConfig,
+  materialImportSchema,
 } from "./logoSchemas";
 
 export type {
@@ -55,8 +55,8 @@ const INTERACTION_DEFAULTS: LogoInteractionParams = {
 const INTERACTION_KEYS = interactionParamsSchema.keyof().options;
 
 function soft(
-  partial: Omit<LogoSoftLightConfig, "feather" | "followPose" | "roll" | "lift" | "scaleZ"> &
-    Partial<Pick<LogoSoftLightConfig, "feather" | "followPose" | "roll" | "lift" | "scaleZ">>,
+  partial: Omit<LogoSoftLightConfig, "feather" | "followPose" | "roll" | "lift" | "scaleZ">
+    & Partial<Pick<LogoSoftLightConfig, "feather" | "followPose" | "roll" | "lift" | "scaleZ">>,
 ): LogoSoftLightConfig {
   return {
     feather: false,

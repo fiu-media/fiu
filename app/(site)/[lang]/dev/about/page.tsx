@@ -1,17 +1,19 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { AboutContacts, AboutLayoutA } from "@/features/about";
-import { AboutLayoutB, AboutLayoutC, AboutLayoutD, AboutLayoutE, AboutLayoutF } from "../_concepts/about/AboutLayoutOptions";
+
 import { railInset } from "@/components/layout/nav/rail";
 import { SiteNav } from "@/components/layout/nav/SiteNav";
 import { GlassPillLink } from "@/components/ui/Glass";
-import { fallbackStills } from "@/features/home";
-import { defaultLocale, isLocale, localizedPath, type Locale } from "@/lib/i18n/config";
-import { getDictionary } from "@/lib/i18n/dictionaries";
-import { cachedSanity } from "@/sanity/lib/live";
 import { ABOUT_QUERY } from "@/content/siteSettings";
+import { AboutContacts, AboutLayoutA } from "@/features/about";
+import { fallbackStills } from "@/features/home";
+import { defaultLocale, isLocale, type Locale, localizedPath } from "@/lib/i18n/config";
+import { getDictionary } from "@/lib/i18n/dictionaries";
 import { toSizedImage } from "@/sanity/lib/image";
+import { cachedSanity } from "@/sanity/lib/live";
+
+import { AboutLayoutB, AboutLayoutC, AboutLayoutD, AboutLayoutE, AboutLayoutF } from "../_concepts/about/AboutLayoutOptions";
 
 // Sign-off page for the About layout (issue #55): six options on the real still, slogan and gloss.
 // The manifesto and contact links are sample copy because the real ones aren't written yet. Unlisted, like /dev/grids.

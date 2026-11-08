@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+
 import { cn } from "@/lib/cn";
 
 /** A pulsing placeholder block. Decorative: wrap a group in <SkeletonGroup> to announce loading once. */

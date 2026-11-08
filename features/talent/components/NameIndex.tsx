@@ -4,6 +4,7 @@ import { LazyMotion, m, useSpring } from "motion/react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRef, useState } from "react";
+
 import { useReducedMotion } from "@/lib/hooks/useReducedMotion";
 
 export type IndexItem = {

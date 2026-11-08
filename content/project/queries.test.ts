@@ -1,5 +1,6 @@
 import { evaluate, parse } from "groq-js";
 import { describe, expect, it } from "vitest";
+
 import { PROJECT_QUERY } from "./queries";
 
 type Doc = Record<string, unknown>;

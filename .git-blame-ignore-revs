@@ -1,2 +1,4 @@
 # Prettier reformat of the whole codebase (#80)
 edf4358183a643a000c5297ac739c91696981aef
+# ESLint autofix and Prettier options (#177)
+c0700f0c4c9df2261fc877d4f88bb099689ca67f

@@ -3,12 +3,13 @@ import { visionTool } from "@sanity/vision";
 import { defineConfig } from "sanity";
 import { presentationTool } from "sanity/presentation";
 import { structureTool } from "sanity/structure";
-import { apiVersion, dataset, previewOrigin, projectId } from "./sanity/studio-env";
+
+import { schemaTypes } from "./sanity/schema";
+import { FiuIcon } from "./sanity/studio/FiuIcon";
 import { languages, translatedTypes } from "./sanity/studio/languages";
 import { resolve } from "./sanity/studio/presentation/resolve";
-import { FiuIcon } from "./sanity/studio/FiuIcon";
-import { schemaTypes } from "./sanity/schema";
 import { hiddenTemplates, singletonActions, structure } from "./sanity/studio/structure";
+import { apiVersion, dataset, previewOrigin, projectId } from "./sanity/studio-env";
 
 export default defineConfig({
   name: "default",

@@ -1,4 +1,4 @@
-import { featuredTalent, project, projectType, rentalCategories, rentalItems, role, talentRoster, type PhotoKey } from "./data";
+import { featuredTalent, type PhotoKey, project, projectType, rentalCategories, rentalItems, role, talentRoster } from "./data";
 
 type Doc = { _id: string; _type: string; [field: string]: unknown };
 

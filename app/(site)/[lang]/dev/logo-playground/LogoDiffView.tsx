@@ -2,10 +2,11 @@
 
 import { ArrowRight } from "lucide-react";
 import { useMemo } from "react";
+
 import {
+  type ConfigDiff,
   DIFF_GROUP_LABELS,
   DIFF_GROUP_ORDER,
-  type ConfigDiff,
   type DiffEntry,
   type DiffGroup,
   type DiffValue,

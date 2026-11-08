@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
+
 import { LOGO_PARAM_PRESETS } from "./logoConfig";
 import {
   applyLogoTier,
+  type DeviceInfo,
   higherTier,
   isTooSlowFresh,
   lowerTier,
@@ -12,7 +14,6 @@ import {
   STORED_TTL_MS,
   tierFromDevice,
   tooSlowSchema,
-  type DeviceInfo,
 } from "./logoTier";
 
 const desktop: DeviceInfo = {

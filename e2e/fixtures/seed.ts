@@ -6,8 +6,9 @@
  * It first clears out anything an earlier, crashed run left behind, so it is safe to run twice.
  */
 import { randomUUID } from "node:crypto";
+
 import { cleanup } from "./cleanup";
-import { FIXTURE_ASSET_LABEL, FIXTURE_PREFIX, PHOTOS, type PhotoKey } from "./data";
+import { FIXTURE_ASSET_LABEL, FIXTURE_PREFIX, type PhotoKey, PHOTOS } from "./data";
 import { fixtureDocuments } from "./documents";
 import { solidPng } from "./images";
 import { fixtureClient } from "./sanity";

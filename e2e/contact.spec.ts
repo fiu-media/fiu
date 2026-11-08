@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+
 import { en } from "../lib/i18n/dictionaries/en";
 import { testEmail } from "./helpers";
 

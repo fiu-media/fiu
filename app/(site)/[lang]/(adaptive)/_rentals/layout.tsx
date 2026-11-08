@@ -1,11 +1,12 @@
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { CatalogueProvider, type CatalogueItem, QuoteDrawer } from "@/features/rentals";
-import { defaultLocale, isLocale, localizedPath, type Locale } from "@/lib/i18n/config";
-import { getDictionary } from "@/lib/i18n/dictionaries";
-import { cachedSanity } from "@/sanity/lib/live";
+
 import { QUOTE_CATALOGUE_QUERY } from "@/content/rentalItem";
+import { type CatalogueItem, CatalogueProvider, QuoteDrawer } from "@/features/rentals";
+import { defaultLocale, isLocale, type Locale, localizedPath } from "@/lib/i18n/config";
+import { getDictionary } from "@/lib/i18n/dictionaries";
 import { toSizedImage } from "@/sanity/lib/image";
+import { cachedSanity } from "@/sanity/lib/live";
 
 // Rentals is hidden for now: the `_` prefix makes this a private folder, so none of it is routed (`/rentals*` is a
 // 404). To bring it back, rename the folder to `rentals`, restore the typed `PageProps`/`LayoutProps` generics

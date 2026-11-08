@@ -1,7 +1,9 @@
 import { z } from "zod";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { createStore } from "zustand/vanilla";
+
 import { safeStorage } from "@/lib/safe-storage";
+
 import type { LogoGlassParams } from "./logoConfig";
 
 /**

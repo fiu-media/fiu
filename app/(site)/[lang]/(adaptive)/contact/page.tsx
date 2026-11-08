@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { siInstagram } from "simple-icons";
 import { Suspense } from "react";
-import { pageGutter } from "@/components/layout/nav/rail";
+import { siInstagram } from "simple-icons";
+
 import { FormSkeleton } from "@/components/forms/FormSkeleton";
+import { pageGutter } from "@/components/layout/nav/rail";
 import { BrandIcon } from "@/components/ui/BrandIcon";
 import { PageTitle } from "@/components/ui/PageTitle";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { CONTACT_SETTINGS_QUERY } from "@/content/siteSettings";
 import { cn } from "@/lib/cn";
 import { emailForDisplay } from "@/lib/email/display";
 import { countryList } from "@/lib/forms/countries";
@@ -15,7 +17,7 @@ import { getDictionary } from "@/lib/i18n/dictionaries";
 import { instagramHandle } from "@/lib/instagram";
 import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
 import { getPageText } from "@/sanity/lib/pageText";
-import { CONTACT_SETTINGS_QUERY } from "@/content/siteSettings";
+
 import { ContactForm } from "./ContactForm";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/contact">): Promise<Metadata> {

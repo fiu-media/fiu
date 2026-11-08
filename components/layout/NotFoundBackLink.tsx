@@ -1,8 +1,9 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+
 import { GlassPillLink } from "@/components/ui/Glass";
-import { isLocale, localizedPath, type Locale } from "@/lib/i18n/config";
+import { isLocale, type Locale, localizedPath } from "@/lib/i18n/config";
 import type { NavItem } from "@/lib/i18n/nav";
 
 /**

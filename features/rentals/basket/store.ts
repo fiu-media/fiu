@@ -4,8 +4,10 @@ import { useEffect, useSyncExternalStore } from "react";
 import { z } from "zod";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import { clampQty, MAX_QTY } from "./quantity";
+
 import { safeStorage } from "@/lib/safe-storage";
+
+import { clampQty, MAX_QTY } from "./quantity";
 
 export { clampQty };
 

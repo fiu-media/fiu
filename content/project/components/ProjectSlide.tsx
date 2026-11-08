@@ -1,18 +1,20 @@
 "use client";
 
-import { Play } from "lucide-react";
 import type Player from "@vimeo/player";
+import { Play } from "lucide-react";
 import Image, { getImageProps } from "next/image";
 import Link from "next/link";
 import { type CSSProperties, useCallback, useEffect, useRef, useState } from "react";
+
 import { FullBleedSlide } from "@/components/ui/FullBleedScroll";
 import { GlassPillButton, GlassPillLink } from "@/components/ui/Glass";
 import { cn } from "@/lib/cn";
-import { format } from "@/lib/i18n/format";
-import { PORTRAIT } from "@/lib/media";
 import { usePortrait } from "@/lib/hooks/usePortrait";
 import { useReducedMotion } from "@/lib/hooks/useReducedMotion";
+import { format } from "@/lib/i18n/format";
+import { PORTRAIT } from "@/lib/media";
 import { parseVimeo, vimeoEmbedUrl } from "@/lib/vimeo";
+
 import { useVimeoPlayer } from "../video/useVimeoPlayer";
 import { runVimeoShortcut } from "../video/vimeoShortcuts";
 

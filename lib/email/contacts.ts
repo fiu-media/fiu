@@ -1,6 +1,9 @@
 import "server-only";
+
 import { Resend } from "resend";
+
 import { env } from "@/env";
+
 import { toDeliverable } from "./address";
 
 type Contact = { name: string; email: string; phone?: string };

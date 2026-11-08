@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { caretWithDigitsAfter, formatPhone, initial, interpret } from "./phone";
 
 describe("interpret", () => {

@@ -1,6 +1,8 @@
 import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
+import importX from "eslint-plugin-import-x";
+import simpleImportSort from "eslint-plugin-simple-import-sort";
 
 // Every `@next/next/*` rule the Next presets turn on.
 const nextRules = [...new Set([...nextVitals, ...nextTs].flatMap((c) => Object.keys(c.rules ?? {})))].filter((r) =>
@@ -22,6 +24,36 @@ const eslintConfig = defineConfig([
     // Vendored Draco decoder (copied from three/examples for self-hosting).
     "public/draco/**",
   ]),
+  {
+    // A disable comment that no longer silences anything is dead weight; fail on it.
+    linterOptions: { reportUnusedDisableDirectives: "error" },
+    // `react` and `@typescript-eslint` are already registered by the Next presets.
+    plugins: { "simple-import-sort": simpleImportSort, "import-x": importX },
+    rules: {
+      // Imports and exports
+      "simple-import-sort/imports": "error",
+      "simple-import-sort/exports": "error",
+      "@typescript-eslint/consistent-type-imports": ["error", { fixStyle: "inline-type-imports" }],
+      "import-x/no-duplicates": "error",
+      // Plain JS style
+      eqeqeq: ["error", "always", { null: "ignore" }],
+      "object-shorthand": "error",
+      "prefer-template": "error",
+      "no-useless-rename": "error",
+      "no-else-return": ["error", { allowElseIf: false }],
+      // JSX style
+      "react/self-closing-comp": "error",
+      "react/jsx-curly-brace-presence": ["error", { props: "never", children: "never" }],
+      "react/jsx-no-useless-fragment": ["error", { allowExpressions: true }],
+      // Production code logs only through warn/error.
+      "no-console": ["error", { allow: ["warn", "error"] }],
+    },
+  },
+  {
+    // Command-line tooling is meant to print.
+    files: ["scripts/**", "e2e/**", "migrations/**"],
+    rules: { "no-console": "off" },
+  },
   {
     // The Studio is built by Sanity's tooling, not Next, so Next's rules (no next/image, next/link, ...) don't apply.
     files: ["sanity/studio/FiuIcon.tsx"],

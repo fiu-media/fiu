@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import Image, { type StaticImageData } from "next/image";
 import { notFound } from "next/navigation";
-import { Suspense, type ReactNode } from "react";
-import { NameIndex } from "@/features/talent";
+import { type ReactNode, Suspense } from "react";
+
 import { GlassPillButton, GlassPillLink } from "@/components/ui/Glass";
+import { NameIndex } from "@/features/talent";
 import { isLocale, localizedPath } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
-
 import banquet from "@/public/stills/banquet.jpg";
 import bouquet from "@/public/stills/bouquet.jpg";
 import citrus from "@/public/stills/citrus.jpg";
@@ -177,32 +177,30 @@ async function Grids({
         title: "Full-bleed scroll",
         note: "One project per screen with snap scrolling, like the Home hero. Scroll inside the frame. Striking, but best for a short list.",
         content: (
-          <>
-            <div
-              tabIndex={0}
-              role="region"
-              aria-label="Full-bleed scroll preview"
-              className="h-[70vh] snap-y snap-mandatory overflow-y-auto rounded-2xl"
-            >
-              {projects.slice(0, 5).map((p) => (
-                <a key={p.title} href="#" className="group relative isolate block h-full snap-start overflow-hidden">
-                  <Image
-                    src={p.still}
-                    alt=""
-                    fill
-                    placeholder="blur"
-                    sizes="(min-width: 1152px) 1152px, 100vw"
-                    className="-z-10 object-cover transition-transform duration-1000 ease-out group-hover:scale-[1.03] motion-reduce:transition-none"
-                  />
-                  <div className="absolute inset-0 -z-10 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-                  <div className="absolute bottom-6 left-6 text-white md:bottom-10 md:left-10">
-                    <p className="font-display text-4xl italic md:text-7xl">{p.title}</p>
-                    <p className="mt-1 text-sm text-white/75 md:text-base">{p.meta}</p>
-                  </div>
-                </a>
-              ))}
-            </div>
-          </>
+          <div
+            tabIndex={0}
+            role="region"
+            aria-label="Full-bleed scroll preview"
+            className="h-[70vh] snap-y snap-mandatory overflow-y-auto rounded-2xl"
+          >
+            {projects.slice(0, 5).map((p) => (
+              <a key={p.title} href="#" className="group relative isolate block h-full snap-start overflow-hidden">
+                <Image
+                  src={p.still}
+                  alt=""
+                  fill
+                  placeholder="blur"
+                  sizes="(min-width: 1152px) 1152px, 100vw"
+                  className="-z-10 object-cover transition-transform duration-1000 ease-out group-hover:scale-[1.03] motion-reduce:transition-none"
+                />
+                <div className="absolute inset-0 -z-10 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                <div className="absolute bottom-6 left-6 text-white md:bottom-10 md:left-10">
+                  <p className="font-display text-4xl italic md:text-7xl">{p.title}</p>
+                  <p className="mt-1 text-sm text-white/75 md:text-base">{p.meta}</p>
+                </div>
+              </a>
+            ))}
+          </div>
         ),
       },
     },
@@ -211,74 +209,64 @@ async function Grids({
         title: "Uniform portraits",
         note: "A strict 4:5 portrait grid. Reads like a roster, every person gets the same weight.",
         content: (
-          <>
-            <ul className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-              {people.map((p) => (
-                <li key={p.title}>
-                  <Tile sample={p} ratio="4/5" sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw" />
-                </li>
-              ))}
-            </ul>
-          </>
+          <ul className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+            {people.map((p) => (
+              <li key={p.title}>
+                <Tile sample={p} ratio="4/5" sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw" />
+              </li>
+            ))}
+          </ul>
         ),
       },
       b: {
         title: "Staggered portraits",
         note: "Portraits at different heights, with alternate columns dropped down. Looser and more editorial.",
         content: (
-          <>
-            <ul className="grid grid-cols-2 items-start gap-4 md:grid-cols-3 lg:grid-cols-4">
-              {people.map((p) => (
-                <li key={p.title} className="max-md:even:mt-10 md:max-lg:nth-[3n+2]:mt-10 lg:even:mt-12">
-                  <Tile sample={p} ratio={p.ratio} sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw" />
-                </li>
-              ))}
-            </ul>
-          </>
+          <ul className="grid grid-cols-2 items-start gap-4 md:grid-cols-3 lg:grid-cols-4">
+            {people.map((p) => (
+              <li key={p.title} className="max-md:even:mt-10 md:max-lg:nth-[3n+2]:mt-10 lg:even:mt-12">
+                <Tile sample={p} ratio={p.ratio} sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw" />
+              </li>
+            ))}
+          </ul>
         ),
       },
       c: {
         title: "Name index",
         note: "Names in large type; the portrait follows the cursor (thumbnails on touch). Suits a small, established roster.",
         content: (
-          <>
-            <NameIndex
-              label="Index"
-              items={people.map((p) => ({ title: p.title, meta: p.meta, href: "#", image: p.still }))}
-              ratio="4/5"
-              previewWidth={220}
-            />
-          </>
+          <NameIndex
+            label="Index"
+            items={people.map((p) => ({ title: p.title, meta: p.meta, href: "#", image: p.still }))}
+            ratio="4/5"
+            previewWidth={220}
+          />
         ),
       },
       d: {
         title: "Large two-up",
         note: "Fewer, bigger portraits with the role overlaid. A more premium feel if the roster stays under about a dozen.",
         content: (
-          <>
-            <ul className="grid gap-4 sm:grid-cols-2">
-              {people.slice(0, 4).map((p) => (
-                <li key={p.title}>
-                  <Tile sample={p} ratio="4/5" large sizes="(min-width: 640px) 50vw, 100vw" />
-                </li>
-              ))}
-            </ul>
-          </>
+          <ul className="grid gap-4 sm:grid-cols-2">
+            {people.slice(0, 4).map((p) => (
+              <li key={p.title}>
+                <Tile sample={p} ratio="4/5" large sizes="(min-width: 640px) 50vw, 100vw" />
+              </li>
+            ))}
+          </ul>
         ),
       },
       e: {
         title: "Hover reveal",
         note: "Name only at rest; the role and a showreel loop (placeholder here) fade in on hover or focus. On touch the role is always shown.",
         content: (
-          <>
-            <ul className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-              {people.map((p, i) => (
-                <li key={p.title}>
-                  <RevealTile sample={p} alt={people[(i + 3) % people.length].still} />
-                </li>
-              ))}
-            </ul>
-          </>
+          <ul className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+            {people.map((p, i) => (
+              <li key={p.title}>
+                <RevealTile sample={p} alt={people[(i + 3) % people.length].still} />
+              </li>
+            ))}
+          </ul>
         ),
       },
     },

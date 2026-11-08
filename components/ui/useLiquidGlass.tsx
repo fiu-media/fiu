@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useId, useState, type CSSProperties, type PointerEvent, type ReactNode, type RefObject } from "react";
+import { type CSSProperties, type PointerEvent, type ReactNode, type RefObject, useEffect, useId, useState } from "react";
+
 import { displacementMap, supportsLensing } from "@/lib/liquid-glass";
 
 export type LiquidGlassOptions = {

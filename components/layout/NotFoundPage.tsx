@@ -1,5 +1,5 @@
-import { SiteNav } from "@/components/layout/nav/SiteNav";
 import { pageGutter, railInset } from "@/components/layout/nav/rail";
+import { SiteNav } from "@/components/layout/nav/SiteNav";
 import { NotFoundBackLink } from "@/components/layout/NotFoundBackLink";
 import { cn } from "@/lib/cn";
 import type { Locale } from "@/lib/i18n/config";

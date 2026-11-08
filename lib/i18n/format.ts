@@ -1,4 +1,5 @@
 import { IntlMessageFormat } from "intl-messageformat";
+
 import { defaultLocale, type Locale } from "./config";
 
 type Values = Record<string, string | number>;

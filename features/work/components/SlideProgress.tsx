@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { type ReactNode, useEffect, useState } from "react";
+
 import { cn } from "@/lib/cn";
-import { format } from "@/lib/i18n/format";
 import { prefersReducedMotion } from "@/lib/hooks/useReducedMotion";
+import { format } from "@/lib/i18n/format";
 
 /** Past this many projects the ticks would overflow the screen, so only the counter is shown. */
 const MAX_TICKS = 24;

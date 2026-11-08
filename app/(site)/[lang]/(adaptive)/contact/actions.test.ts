@@ -15,6 +15,7 @@ vi.mock("@/lib/email/contacts", () => ({ createContact: mocks.createContact }));
 vi.mock("@/lib/email/settings", () => ({ getRecipient: mocks.getRecipient }));
 
 import { getDictionary } from "@/lib/i18n/dictionaries";
+
 import { submitContact } from "./actions";
 
 const SUBMISSION_ID = "3f1c2b4e-8a6d-4c1e-9b7a-0d5e6f7a8b9c";

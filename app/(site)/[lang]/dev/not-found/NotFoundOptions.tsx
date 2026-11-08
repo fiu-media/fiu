@@ -1,11 +1,11 @@
 import Image from "next/image";
-import { NotFoundPage, type NotFoundCopy } from "@/components/layout/NotFoundPage";
-import { SiteNav } from "@/components/layout/nav/SiteNav";
-import { railInset } from "@/components/layout/nav/rail";
-import { GlassPillLink } from "@/components/ui/Glass";
-import { localizedPath, type Locale } from "@/lib/i18n/config";
-import { getDictionary } from "@/lib/i18n/dictionaries";
 
+import { railInset } from "@/components/layout/nav/rail";
+import { SiteNav } from "@/components/layout/nav/SiteNav";
+import { type NotFoundCopy, NotFoundPage } from "@/components/layout/NotFoundPage";
+import { GlassPillLink } from "@/components/ui/Glass";
+import { type Locale, localizedPath } from "@/lib/i18n/config";
+import { getDictionary } from "@/lib/i18n/dictionaries";
 import glow from "@/public/stills/glow.jpg";
 
 export type Copy = NotFoundCopy;

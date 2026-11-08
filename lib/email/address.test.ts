@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { domainToAscii, isEmailAddress, toDeliverable } from "./address";
 
 describe("isEmailAddress", () => {

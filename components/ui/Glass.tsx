@@ -3,8 +3,10 @@
 import { mergeProps } from "@base-ui/react/merge-props";
 import { useRender } from "@base-ui/react/use-render";
 import Link from "next/link";
-import { useRef, type ComponentProps, type ReactNode } from "react";
+import { type ComponentProps, type ReactNode, useRef } from "react";
+
 import { cn } from "@/lib/cn";
+
 import { useLiquidGlass } from "./useLiquidGlass";
 
 type Size = "sm" | "md" | "lg";

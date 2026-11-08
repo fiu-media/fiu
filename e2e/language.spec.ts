@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+
 import { localeNames } from "../lib/i18n/config";
 
 const at = (pathname: string) => (url: URL) => url.pathname === pathname;

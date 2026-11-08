@@ -1,8 +1,9 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useState, type CSSProperties } from "react";
 import "./brierto-watermark.module.css";
+
+import { useSearchParams } from "next/navigation";
+import { type CSSProperties, Suspense, useEffect, useState } from "react";
 
 const PHRASE = "★ DESIGNED BY BRIERTO ★";
 const TILES = Array.from({ length: 30 }, (_, index) => index);
@@ -65,9 +66,9 @@ function audioContext(): AudioContext | null {
 function squeakyVoice(): SpeechSynthesisVoice | undefined {
   const voices = window.speechSynthesis?.getVoices() ?? [];
   return (
-    voices.find((voice) => /zarvox|bad news|bahh|bells|boing|junior|superstar|albert/i.test(voice.name)) ??
-    voices.find((voice) => voice.lang.startsWith("en")) ??
-    voices[0]
+    voices.find((voice) => /zarvox|bad news|bahh|bells|boing|junior|superstar|albert/i.test(voice.name))
+    ?? voices.find((voice) => voice.lang.startsWith("en"))
+    ?? voices[0]
   );
 }
 

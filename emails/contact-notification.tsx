@@ -1,6 +1,6 @@
+import { formatPhone } from "../lib/forms/phone";
 import type { Dictionary } from "../lib/i18n/dictionaries/en";
 import { en } from "../lib/i18n/dictionaries/en";
-import { formatPhone } from "../lib/forms/phone";
 import { Layout, mailto, present, tel } from "./_layout";
 
 export type ContactEmailData = { name: string; email: string; phone: string; enquiryType: string; message: string };

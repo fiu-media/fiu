@@ -1,18 +1,6 @@
 export type { LogoMeshMode } from "./buildLogoGeometry";
-export { sweepCssTime } from "./lightSweep";
 export type { LightSweep, SweepAxis, SweepTechnique } from "./lightSweep";
-export {
-  LOGO_PARAM_PRESETS,
-  formatConfigExport,
-  formatInteractionConfigExport,
-  formatLightingConfigExport,
-  formatMaterialConfigExport,
-  importPlaygroundConfig,
-  presetConfig,
-  resetInteractionParams,
-  resetLightingParams,
-  resetMaterialParams,
-} from "./logoConfig";
+export { sweepCssTime } from "./lightSweep";
 export type {
   LogoDisplayMode,
   LogoExtrudeOverride,
@@ -23,9 +11,21 @@ export type {
   LogoRimLook,
   LogoSoftLightConfig,
 } from "./logoConfig";
-export { DIFF_GROUP_LABELS, DIFF_GROUP_ORDER, diffConfigs } from "./logoDiff";
+export {
+  formatConfigExport,
+  formatInteractionConfigExport,
+  formatLightingConfigExport,
+  formatMaterialConfigExport,
+  importPlaygroundConfig,
+  LOGO_PARAM_PRESETS,
+  presetConfig,
+  resetInteractionParams,
+  resetLightingParams,
+  resetMaterialParams,
+} from "./logoConfig";
 export type { ConfigDiff, DiffEntry, DiffGroup, DiffValue } from "./logoDiff";
-export { costVsPreset } from "./logoPerf";
+export { DIFF_GROUP_LABELS, DIFF_GROUP_ORDER, diffConfigs } from "./logoDiff";
 export type { LogoPerfStats } from "./logoPerf";
-export { decideLogoTier, rememberTooSlow } from "./logoTier";
+export { costVsPreset } from "./logoPerf";
 export type { LogoDecision, LogoTier } from "./logoTier";
+export { decideLogoTier, rememberTooSlow } from "./logoTier";

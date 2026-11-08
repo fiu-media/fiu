@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { preferredLocale } from "./negotiate";
 
 describe("preferredLocale", () => {

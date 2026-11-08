@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { localizedPath, locales } from "@/lib/i18n/config";
+
+import { locales, localizedPath } from "@/lib/i18n/config";
+
 import { botIdProtectedPaths } from "./botid";
 
 describe("botIdProtectedPaths", () => {

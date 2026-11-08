@@ -1,4 +1,5 @@
 import { expect, type Locator } from "@playwright/test";
+
 import { TEST_EMAIL_DOMAIN } from "./fixtures/data";
 
 export const testEmail = () => `e2e-${crypto.randomUUID().slice(0, 8)}@${TEST_EMAIL_DOMAIN}`;

@@ -3,40 +3,42 @@
 import { Environment, MeshTransmissionMaterial, useCursor, useTexture } from "@react-three/drei";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import {
+  type ComponentRef,
+  type MutableRefObject,
+  type RefObject,
   useCallback,
   useEffect,
   useMemo,
   useRef,
   useState,
-  type ComponentRef,
-  type MutableRefObject,
-  type RefObject,
 } from "react";
 import * as THREE from "three";
-import paths from "@/public/brand/fiu-logo-paths.json";
-import { SPLASH_FADE_MS } from "@/features/home/splash-config";
+
 import { RAIL_REM } from "@/components/layout/nav/rail";
+import { SPLASH_FADE_MS } from "@/features/home/splash-config";
+import paths from "@/public/brand/fiu-logo-paths.json";
+
 import { buildLogoGeometry, type LogoMeshMode, type LogoPaths } from "./buildLogoGeometry";
+import { type LightSweep, MOVE_RANGE, ROTATE_RANGE, sweepAt } from "./lightSweep";
 import { LOGO_PARAM_PRESETS, type LogoGlassParams, type LogoRimLook } from "./logoConfig";
-import { MOVE_RANGE, ROTATE_RANGE, sweepAt, type LightSweep } from "./lightSweep";
 import type { LogoPerfStats } from "./logoPerf";
 import {
   applyLogoTier,
   FLOOR_SECONDS,
   higherTier,
+  type LogoTier,
   lowerTier,
   medianFps,
   MIDSESSION_FLOOR_FPS,
-  probeComplete,
   PROBE_WARMUP_FRAMES,
+  probeComplete,
   probeVerdict,
   TIER_SETTINGS,
-  type LogoTier,
 } from "./logoTier";
 
 export type { LogoMeshMode };
 export type { LightSweep } from "./lightSweep";
-export type { LogoRimLook, LogoGlassParams } from "./logoConfig";
+export type { LogoGlassParams, LogoRimLook } from "./logoConfig";
 export type { LogoPerfStats } from "./logoPerf";
 export type { LogoTier } from "./logoTier";
 
@@ -256,6 +258,8 @@ function useLogoQuality({
   useEffect(() => releaseFences, [releaseFences]);
 
   const log = (message: string) => {
+    // Dev-only tier diagnostics.
+    // eslint-disable-next-line no-console
     if (process.env.NODE_ENV !== "production") console.info(`[logo tier] ${message}`);
   };
   const step = (next: LogoTier) => {
@@ -1259,11 +1263,11 @@ function Logo({
   const geometry = useMemo(() => {
     const base = paths as unknown as LogoPaths;
     if (
-      meshMode === "extrude" &&
-      base.extrude &&
-      depth !== undefined &&
-      bevelThickness !== undefined &&
-      bevelSize !== undefined
+      meshMode === "extrude"
+      && base.extrude
+      && depth !== undefined
+      && bevelThickness !== undefined
+      && bevelSize !== undefined
     ) {
       return buildLogoGeometry({ ...base, extrude: { ...base.extrude, depth, bevelThickness, bevelSize } }, meshMode);
     }
@@ -1427,9 +1431,11 @@ function Logo({
         st.worst = Math.max(st.worst, rawDelta * 1000);
       } else if (!st.logged && st.frames > 0) {
         st.logged = true;
+        // One-off intro frame-rate readout.
+        // eslint-disable-next-line no-console
         console.info(
-          `[logo intro] ${st.frames} frames over ${(st.ms / 1000).toFixed(2)}s: ` +
-            `${((st.frames * 1000) / st.ms).toFixed(0)} fps avg, worst frame ${st.worst.toFixed(0)} ms`,
+          `[logo intro] ${st.frames} frames over ${(st.ms / 1000).toFixed(2)}s: `
+            + `${((st.frames * 1000) / st.ms).toFixed(0)} fps avg, worst frame ${st.worst.toFixed(0)} ms`,
         );
       }
     }
@@ -1474,10 +1480,10 @@ function Logo({
         d.rotX += d.velX * delta;
         d.rotY += d.velY * delta;
         if (
-          Math.abs(d.rotX) < DRAG_ANGLE_EPS &&
-          Math.abs(d.rotY) < DRAG_ANGLE_EPS &&
-          Math.abs(d.velX) < DRAG_VELOCITY_EPS &&
-          Math.abs(d.velY) < DRAG_VELOCITY_EPS
+          Math.abs(d.rotX) < DRAG_ANGLE_EPS
+          && Math.abs(d.rotY) < DRAG_ANGLE_EPS
+          && Math.abs(d.velX) < DRAG_VELOCITY_EPS
+          && Math.abs(d.velY) < DRAG_VELOCITY_EPS
         ) {
           d.rotX = 0;
           d.rotY = 0;

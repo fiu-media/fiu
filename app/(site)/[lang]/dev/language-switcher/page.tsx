@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+
 import { isLocale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
+
 import { LanguageConcepts, type OptionKey } from "./LanguageConcepts";
 
 // Sign-off page for the language switcher: five looks in the side rail and the phone menu. Option E is the

@@ -1,4 +1,5 @@
 import { defineArrayMember, defineField, type SanityDocument } from "sanity";
+
 import { defaultLocale } from "../../lib/i18n/config";
 
 /**

@@ -1,9 +1,12 @@
+import "./treatments.css";
+
 import type { Metadata } from "next";
 import { Inter_Tight } from "next/font/google";
 import Image, { type StaticImageData } from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Suspense, type ReactNode } from "react";
+import { type ReactNode, Suspense } from "react";
+
 import { LogoMask } from "@/components/layout/nav/HomeLink";
 import { GlassPillButton, GlassPillLink } from "@/components/ui/Glass";
 import { cn } from "@/lib/cn";
@@ -16,10 +19,10 @@ import conservatory from "@/public/stills/conservatory.jpg";
 import glow from "@/public/stills/glow.jpg";
 import pond from "@/public/stills/pond.jpg";
 import supper from "@/public/stills/supper.jpg";
+
 import { SchemeSwitcher } from "../specimen/SchemeSwitcher";
 import { QuoteSample } from "./QuoteSample";
-import { ASPECTS, aspectLabel, TREATMENTS, treatments, type Treatment } from "./treatments";
-import "./treatments.css";
+import { aspectLabel, ASPECTS, type Treatment, TREATMENTS, treatments } from "./treatments";
 
 // Sign-off page for the design treatment (issue #50): expressive (live), a middle ground, and cold + clinical, side by
 // side and then in full on real-looking surfaces. Unlisted and kept out of search engines, like the other /dev pages.

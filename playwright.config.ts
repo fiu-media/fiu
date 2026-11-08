@@ -1,4 +1,5 @@
 import { existsSync } from "node:fs";
+
 import { defineConfig, devices } from "@playwright/test";
 
 // Locally the Sanity project, dataset and tokens come from .env.local; CI sets them directly.

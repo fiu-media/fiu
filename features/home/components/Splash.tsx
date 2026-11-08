@@ -2,9 +2,11 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
+
 import { cn } from "@/lib/cn";
 import { prefersReducedMotion } from "@/lib/hooks/useReducedMotion";
 import logo from "@/public/brand/fiu-logo.svg";
+
 import { nudgeHomeScroll } from "../bleed";
 import { SPLASH_FADE_MS, splashFadeVars } from "../splash-config";
 

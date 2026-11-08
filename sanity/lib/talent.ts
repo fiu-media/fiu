@@ -1,4 +1,5 @@
 import { createDataAttribute } from "next-sanity";
+
 import type { SizedImage } from "./image";
 
 export type TalentSlide = {

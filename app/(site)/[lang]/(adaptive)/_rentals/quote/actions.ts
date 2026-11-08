@@ -1,16 +1,16 @@
 "use server";
 
+import { AVAILABLE_ITEM_IDS_QUERY } from "@/content/rentalItem";
 import { toDeliverable } from "@/lib/email/address";
 import { getRecipient } from "@/lib/email/settings";
 import { studioEditUrl } from "@/lib/email/studio-link";
-import { quoteConfirmation, quoteNotification, type KitLine } from "@/lib/email/templates";
+import { type KitLine, quoteConfirmation, quoteNotification } from "@/lib/email/templates";
 import { isConflict, sendAll } from "@/lib/forms/notify";
 import { quoteSchema } from "@/lib/forms/schemas";
 import type { FormState } from "@/lib/forms/state";
 import { guardSubmission } from "@/lib/forms/submit";
 import { defaultLocale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
-import { AVAILABLE_ITEM_IDS_QUERY } from "@/content/rentalItem";
 import { writeClient } from "@/sanity/lib/writeClient";
 
 export async function submitQuote(_previous: FormState, formData: FormData): Promise<FormState> {

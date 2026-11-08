@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { describe, expect, it } from "vitest";
+
 import { proxy } from "./proxy";
 
 const run = (path: string, init?: { headers?: Record<string, string>; method?: string }) =>

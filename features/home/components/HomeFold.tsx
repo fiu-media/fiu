@@ -2,8 +2,9 @@ import { ArrowRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { TeamFigure, type Team } from "@/content/siteSettings";
+
 import { GlassPillLink } from "@/components/ui/Glass";
+import { type Team, TeamFigure } from "@/content/siteSettings";
 import { cn } from "@/lib/cn";
 import type { SizedImage } from "@/sanity/lib/image";
 

@@ -2,10 +2,11 @@
 
 import { Menu, X } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from "react";
+import { type CSSProperties, type ReactNode, type RefObject, useEffect, useRef, useState } from "react";
+
 import { LogoMask } from "@/components/layout/nav/HomeLink";
-import type { NavItem } from "@/lib/i18n/nav";
 import { GlassPanel, GlassPillButton } from "@/components/ui/Glass";
+import type { NavItem } from "@/lib/i18n/nav";
 import conservatory from "@/public/stills/conservatory.jpg";
 import glow from "@/public/stills/glow.jpg";
 import pond from "@/public/stills/pond.jpg";
