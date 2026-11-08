@@ -3,14 +3,15 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+
 import { pageGutter } from "@/components/layout/nav/rail";
+import { RENTAL_ITEM_QUERY } from "@/content/rentalItem";
 import { DetailAddToQuote, ItemSkeleton, RentalGallery } from "@/features/rentals";
 import { cn } from "@/lib/cn";
-import { defaultLocale, isLocale, languageAlternates, localizedPath, type Locale } from "@/lib/i18n/config";
+import { defaultLocale, isLocale, languageAlternates, type Locale, localizedPath } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
-import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
-import { RENTAL_ITEM_QUERY } from "@/content/rentalItem";
 import { publishedId, toSizedImage } from "@/sanity/lib/image";
+import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
 
 async function getItem(lang: Locale, slug: string) {
   const { perspective, variant } = await getDynamicFetchOptions();

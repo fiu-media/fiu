@@ -5,13 +5,15 @@ import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
+
 import { BriertoWatermark } from "@/components/layout/brierto/BriertoWatermark";
 import { GlassPillButton } from "@/components/ui/Glass";
+import { nudgeHomeScrollRepeatedly } from "@/features/home/bleed";
 import { cn } from "@/lib/cn";
 import type { Locale } from "@/lib/i18n/config";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import type { NavItem } from "@/lib/i18n/nav";
-import { nudgeHomeScrollRepeatedly } from "@/features/home/bleed";
+
 import { HomeLink } from "./HomeLink";
 import { LanguageScrollRestore } from "./LanguageScrollRestore";
 import { LanguageSwitcher } from "./LanguageSwitcher";
@@ -67,8 +69,8 @@ function Nav({ lang, items, homeHref, labels, onImage, blurRail, pathname }: Nav
       <aside
         className={cn(
           "fixed inset-y-0 left-0 z-30 hidden w-[calc(4rem+env(safe-area-inset-left))] flex-col items-center gap-8 border-r border-line pt-[max(1.75rem,env(safe-area-inset-top))] pb-7 pl-[env(safe-area-inset-left)] md:flex",
-          onImage &&
-            (blurRail
+          onImage
+            && (blurRail
               ? "bg-gradient-to-r from-black/45 to-black/15 backdrop-blur-md [text-shadow:0_1px_6px_rgb(0_0_0/0.35)]"
               : "bg-gradient-to-r from-black/35 to-transparent [text-shadow:0_1px_6px_rgb(0_0_0/0.35)]"),
         )}

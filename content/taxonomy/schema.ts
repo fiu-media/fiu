@@ -1,5 +1,6 @@
 import { orderRankField, orderRankOrdering } from "@sanity/orderable-document-list";
 import { defineField, defineType } from "sanity";
+
 import { languageField, slugField } from "../../sanity/schema/fields";
 
 // Editor-managed vocabularies, like rental categories: the code never lists them. Projects and

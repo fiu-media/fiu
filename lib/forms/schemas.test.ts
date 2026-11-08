@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { MAX_HIRE_DAYS, MAX_LEAD_DAYS, contactSchema, isEnquiryType, limits, quoteSchema } from "./schemas";
+
+import { contactSchema, isEnquiryType, limits, MAX_HIRE_DAYS, MAX_LEAD_DAYS, quoteSchema } from "./schemas";
 import { toErrorCode } from "./state";
 
 const common = { lang: "en", submissionId: "3f1c2b4e-8a6d-4c1e-9b7a-0d5e6f7a8b9c" };
@@ -143,7 +144,7 @@ describe("contactSchema", () => {
 
   it("says required for an empty email and emailInvalid for a malformed or over-long one", () => {
     expect(issueCodes(contactSchema.safeParse({ ...contact, email: undefined }))).toEqual(["email:required"]);
-    for (const email of ["nope", "a@b", "a b@c.com", "x".repeat(limits.email) + "@example.com"]) {
+    for (const email of ["nope", "a@b", "a b@c.com", `${"x".repeat(limits.email)}@example.com`]) {
       expect(issueCodes(contactSchema.safeParse({ ...contact, email }))).toHaveLength(1);
     }
     expect(issueCodes(contactSchema.safeParse({ ...contact, email: "nope" }))).toEqual(["email:emailInvalid"]);

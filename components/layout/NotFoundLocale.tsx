@@ -1,7 +1,8 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { Suspense, type ReactNode } from "react";
+import { type ReactNode, Suspense } from "react";
+
 import { defaultLocale, isLocale, type Locale } from "@/lib/i18n/config";
 
 /** The locale of a public pathname: its first segment if that is a language, else the default (`/unknown` is English). */

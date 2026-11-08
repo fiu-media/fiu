@@ -1,9 +1,9 @@
+import { describeRange } from "../lib/dates";
+import { formatPhone } from "../lib/forms/phone";
+import type { Locale } from "../lib/i18n/config";
 import type { Dictionary } from "../lib/i18n/dictionaries/en";
 import { en } from "../lib/i18n/dictionaries/en";
-import { describeRange } from "../lib/dates";
-import type { Locale } from "../lib/i18n/config";
-import { formatPhone } from "../lib/forms/phone";
-import { Layout, mailto, present, tel, type KitLine } from "./_layout";
+import { type KitLine, Layout, mailto, present, tel } from "./_layout";
 
 export type QuoteEmailData = {
   lang: Locale;

@@ -1,11 +1,12 @@
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { TeamPhoto } from "@/content/siteSettings";
+
 import { FullBleedScroll, FullBleedSlide } from "@/components/ui/FullBleedScroll";
 import { GlassPillLink } from "@/components/ui/Glass";
+import { TeamPhoto } from "@/content/siteSettings";
+import { type FoldProject, type FoldProps, gutter, HomeFold, Photo, Reel } from "@/features/home";
 import { cn } from "@/lib/cn";
-import { gutter, HomeFold, Photo, Reel, type FoldProject, type FoldProps } from "@/features/home";
 export type { FoldProject, FoldProps };
 
 function Eyebrow({ children }: { children: ReactNode }) {

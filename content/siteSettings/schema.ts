@@ -1,4 +1,5 @@
 import { defineArrayMember, defineField, defineType } from "sanity";
+
 import { defaultLanguageReference, imageWithAlt, languageField } from "../../sanity/schema/fields";
 
 export const siteSettings = defineType({

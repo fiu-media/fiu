@@ -1,6 +1,7 @@
 "use client";
 
 import { useLayoutEffect } from "react";
+
 import { takeCarriedScroll } from "./languageScroll";
 
 /** The page may still be streaming in, so wait this many frames for it to grow tall enough before giving up. */

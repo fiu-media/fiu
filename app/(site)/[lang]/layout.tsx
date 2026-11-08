@@ -1,15 +1,17 @@
-import type { Metadata, Viewport } from "next";
-import { notFound } from "next/navigation";
-import { Fraunces, Manrope } from "next/font/google";
+import "../globals.css";
+
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import type { Metadata, Viewport } from "next";
+import { Fraunces, Manrope } from "next/font/google";
+import { notFound } from "next/navigation";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { Suspense } from "react";
+
 import { InlineScript } from "@/components/layout/InlineScript";
 import { SanityChrome } from "@/components/sanity/SanityChrome";
 import { isLocale, locales } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
-import "../globals.css";
 
 // Type pairing "Expressive": Fraunces for display, Manrope for text.
 const fraunces = Fraunces({

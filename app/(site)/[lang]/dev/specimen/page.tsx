@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image, { type StaticImageData } from "next/image";
 import { notFound } from "next/navigation";
+
 import { GlassPanel, GlassPillButton } from "@/components/ui/Glass";
 import { isLocale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
@@ -16,6 +17,7 @@ import grapes from "@/public/stills/grapes.jpg";
 import parlor from "@/public/stills/parlor.jpg";
 import pond from "@/public/stills/pond.jpg";
 import supper from "@/public/stills/supper.jpg";
+
 import { SchemeSwitcher } from "./SchemeSwitcher";
 
 // Living reference for the site's design theme: type (Fraunces + Manrope), cinematic and

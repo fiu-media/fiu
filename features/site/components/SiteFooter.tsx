@@ -1,15 +1,16 @@
 import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
+
 import { pageGutter } from "@/components/layout/nav/rail";
+import { CONTACT_SETTINGS_QUERY } from "@/content/siteSettings";
 import { cn } from "@/lib/cn";
 import { emailForDisplay } from "@/lib/email/display";
-import { defaultLocale, localizedPath, type Locale } from "@/lib/i18n/config";
+import { defaultLocale, type Locale, localizedPath } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { format } from "@/lib/i18n/format";
 import { instagramHandle } from "@/lib/instagram";
 import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
-import { CONTACT_SETTINGS_QUERY } from "@/content/siteSettings";
 
 /**
  * The slim footer under every page: "Fiú Media © 2026", the studio email, Instagram and Privacy. It is one quiet row, not a

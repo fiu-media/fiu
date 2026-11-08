@@ -1,14 +1,16 @@
 import { PortableText } from "next-sanity";
+
+import { WORK_QUERY } from "@/content/project";
+import { ABOUT_QUERY } from "@/content/siteSettings";
 import { AboutContacts } from "@/features/about";
-import { defaultLocale, localizedPath, type Locale } from "@/lib/i18n/config";
+import { defaultLocale, type Locale, localizedPath } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { settingsAttribute } from "@/sanity/lib/about";
-import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
-import { ABOUT_QUERY } from "@/content/siteSettings";
-import { WORK_QUERY } from "@/content/project";
 import { publishedId, toSizedImage } from "@/sanity/lib/image";
+import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
 import { toTeam } from "@/sanity/lib/team";
-import { HomeFold, type FoldProject } from "./HomeFold";
+
+import { type FoldProject, HomeFold } from "./HomeFold";
 
 /** How many projects the strip shows before "All work". */
 const STRIP_PROJECTS = 5;

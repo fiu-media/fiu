@@ -1,8 +1,9 @@
 import type { ReactNode } from "react";
+
 import { GlassPanel } from "@/components/ui/Glass";
-import { cn } from "@/lib/cn";
+import { type Team, TeamPhoto } from "@/content/siteSettings";
 import { AboutHeroSection, AboutLayoutA, type AboutLayoutProps } from "@/features/about";
-import { TeamPhoto, type Team } from "@/content/siteSettings";
+import { cn } from "@/lib/cn";
 
 /** The About props with the team photo required: the sign-off page always has one (the editors', or the stand-in). */
 export type AboutTeamProps = Omit<AboutLayoutProps, "team"> & { team: Team };

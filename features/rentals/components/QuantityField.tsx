@@ -2,6 +2,7 @@
 
 import { NumberField } from "@base-ui/react/number-field";
 import { Minus, Plus } from "lucide-react";
+
 import { clampQty } from "@/features/rentals/basket/quantity";
 
 const stepClass =

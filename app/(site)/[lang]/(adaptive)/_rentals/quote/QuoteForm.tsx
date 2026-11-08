@@ -2,21 +2,23 @@
 
 import { useSearchParams } from "next/navigation";
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
+
 import { CopyLinkButton } from "@/components/forms/CopyLinkButton";
 import { Field } from "@/components/forms/Field";
 import { Form, SubmitButton } from "@/components/forms/Form";
-import { PhoneField } from "@/components/forms/PhoneField";
 import { QuoteFormSkeleton } from "@/components/forms/FormSkeleton";
+import { PhoneField } from "@/components/forms/PhoneField";
 import { useConformForm } from "@/components/forms/useConformForm";
 import { useFreshOnArrival } from "@/components/forms/useFreshOnArrival";
-import { useCatalogue, QuoteLines, basketActions, useQuoteBasket } from "@/features/rentals";
 import { GlassPanel, GlassPillLink } from "@/components/ui/Glass";
+import { basketActions, QuoteLines, useCatalogue, useQuoteBasket } from "@/features/rentals";
 import { describeRange, isIsoDate, isValidRange, todayInDublin } from "@/lib/dates";
+import type { CountryList } from "@/lib/forms/countries";
 import { catalogueSlug, prefillKey, QUOTE_PARAMS, quoteHref, quotePrefill } from "@/lib/forms/prefill";
 import { limits, quoteSchema } from "@/lib/forms/schemas";
-import { localizedPath, type Locale } from "@/lib/i18n/config";
+import { type Locale, localizedPath } from "@/lib/i18n/config";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
-import type { CountryList } from "@/lib/forms/countries";
+
 import { submitQuote } from "./actions";
 
 type QuoteDict = Pick<Dictionary, "quote" | "basket" | "forms" | "common" | "dates">;

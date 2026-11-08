@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { Fragment } from "react";
+
 import { cn } from "@/lib/cn";
-import { languageCookie, localeNames, locales, switchLocalePath, type Locale } from "@/lib/i18n/config";
+import { languageCookie, type Locale, localeNames, locales, switchLocalePath } from "@/lib/i18n/config";
+
 import { carryScroll } from "./languageScroll";
 
 const ONE_YEAR = 60 * 60 * 24 * 365;

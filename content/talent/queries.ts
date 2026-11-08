@@ -1,4 +1,5 @@
 import { defineQuery } from "next-sanity";
+
 import { byRank, DEFAULT_COUNTERPART, TALENT_CARD_FIELDS, withFallback } from "@/sanity/lib/groq";
 
 /** The Talent index: the roster in the editors' drag-and-drop order. */

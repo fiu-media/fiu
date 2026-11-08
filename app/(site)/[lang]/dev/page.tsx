@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+
 import { GlassPanel } from "@/components/ui/Glass";
 import { isLocale, localizedPath } from "@/lib/i18n/config";
 

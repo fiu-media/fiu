@@ -3,9 +3,11 @@
 import { X } from "lucide-react";
 import Link from "next/link";
 import { useEffect } from "react";
-import { format } from "@/lib/i18n/format";
-import type { Dictionary } from "@/lib/i18n/dictionaries/en";
+
 import { useQuoteBasket } from "@/features/rentals/basket/store";
+import type { Dictionary } from "@/lib/i18n/dictionaries/en";
+import { format } from "@/lib/i18n/format";
+
 import { useCatalogue } from "../basket/CatalogueContext";
 import { QuantityField } from "./QuantityField";
 import { RentalImageView } from "./RentalImageView";

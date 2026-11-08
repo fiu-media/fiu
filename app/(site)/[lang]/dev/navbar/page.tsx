@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+
 import { GlassPillLink } from "@/components/ui/Glass";
 import { isLocale, localizedPath } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getNavItems } from "@/lib/i18n/nav";
+
 import { SchemeSwitcher } from "../specimen/SchemeSwitcher";
 import { NavPreview, type OptionKey } from "./NavConcepts";
 

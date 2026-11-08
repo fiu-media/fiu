@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect } from "react";
+
 import { BLEED_PX, homeIsLocked, nudgeHomeScroll } from "../bleed";
 
 /**

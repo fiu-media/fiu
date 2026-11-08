@@ -1,4 +1,4 @@
-import { locales, type Locale } from "./config";
+import { type Locale, locales } from "./config";
 
 /**
  * The first supported locale a browser asks for, from an `Accept-Language` header, or null when it

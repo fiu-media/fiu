@@ -1,4 +1,5 @@
-import { expect, test, type Locator, type Page } from "@playwright/test";
+import { expect, type Locator, type Page, test } from "@playwright/test";
+
 import { en } from "../lib/i18n/dictionaries/en";
 import { rentalItems } from "./fixtures/data";
 import { isoDateFromNow } from "./helpers";
@@ -10,10 +11,10 @@ const lines = (box: Locator) =>
   box.evaluate((el) => {
     const style = getComputedStyle(el);
     const chrome =
-      parseFloat(style.paddingTop) +
-      parseFloat(style.paddingBottom) +
-      parseFloat(style.borderTopWidth) +
-      parseFloat(style.borderBottomWidth);
+      parseFloat(style.paddingTop)
+      + parseFloat(style.paddingBottom)
+      + parseFloat(style.borderTopWidth)
+      + parseFloat(style.borderBottomWidth);
     return {
       lines: (el.getBoundingClientRect().height - chrome) / parseFloat(style.lineHeight),
       height: el.getBoundingClientRect().height,

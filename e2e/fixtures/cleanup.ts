@@ -1,4 +1,5 @@
 import type { SanityClient } from "@sanity/client";
+
 import { FIXTURE_ASSET_LABEL, FIXTURE_PREFIX, TEST_EMAIL_DOMAIN } from "./data";
 
 /**

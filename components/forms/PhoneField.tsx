@@ -3,11 +3,13 @@
 import { BaseControl, useControl } from "@conform-to/react/future";
 import * as flags from "country-flag-icons/react/3x2";
 import type { CountryCode } from "libphonenumber-js/min";
-import { useLayoutEffect, useRef, useState, type ChangeEvent } from "react";
+import { type ChangeEvent, useLayoutEffect, useRef, useState } from "react";
+
 import { cn } from "@/lib/cn";
 import type { CountryList, CountryOption } from "@/lib/forms/countries";
 import { callingCode, caretWithDigitsAfter, digitsIn, initial, interpret } from "@/lib/forms/phone";
-import { chevron, controlClass, FieldFrame, placeholderClass, type FieldProps } from "./Field";
+
+import { chevron, controlClass, FieldFrame, type FieldProps, placeholderClass } from "./Field";
 
 /** What an example looks like, as the number input shows it (no trunk 0, no dialling code). */
 const SAMPLE: Partial<Record<CountryCode, string>> = { IE: "(83) 123 4567" };

@@ -1,14 +1,16 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { pageGutter } from "@/components/layout/nav/rail";
+
 import { QuoteFormSkeleton } from "@/components/forms/FormSkeleton";
+import { pageGutter } from "@/components/layout/nav/rail";
 import { PageTitle } from "@/components/ui/PageTitle";
 import { cn } from "@/lib/cn";
 import { countryList } from "@/lib/forms/countries";
 import { isLocale, languageAlternates } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getPageText } from "@/sanity/lib/pageText";
+
 import { QuoteForm } from "./QuoteForm";
 
 export async function generateMetadata({ params }: { params: Promise<{ lang: string }> }): Promise<Metadata> {

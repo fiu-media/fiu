@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+
 import banquet from "@/public/stills/banquet.jpg";
 import bouquet from "@/public/stills/bouquet.jpg";
 import citrus from "@/public/stills/citrus.jpg";
@@ -9,6 +10,7 @@ import grapes from "@/public/stills/grapes.jpg";
 import parlor from "@/public/stills/parlor.jpg";
 import pond from "@/public/stills/pond.jpg";
 import supper from "@/public/stills/supper.jpg";
+
 import { LogoPlayground } from "./LogoPlayground";
 
 // Unlisted tuning surface — same stills as the home hero.

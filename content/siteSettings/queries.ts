@@ -1,4 +1,5 @@
 import { defineQuery } from "next-sanity";
+
 import { IMAGE_FIELDS } from "@/sanity/lib/groq";
 
 export const CONTACT_SETTINGS_QUERY = defineQuery(`{

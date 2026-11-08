@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
-import { devices, expect, test, type Page } from "@playwright/test";
+import { devices, expect, type Page, test } from "@playwright/test";
+
 import { en } from "../lib/i18n/dictionaries/en";
 import { rentalItems } from "./fixtures/data";
 import { isoDateFromNow } from "./helpers";

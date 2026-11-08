@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+
 import { PORTRAIT } from "../media";
 
 function subscribeToPortrait(onChange: () => void) {

@@ -7,6 +7,7 @@ import { VideoIcon } from "@sanity/icons/Video";
 import { orderableDocumentListDeskItem } from "@sanity/orderable-document-list";
 import type { ComponentType } from "react";
 import type { StructureResolver } from "sanity/structure";
+
 import { defaultLocale } from "../../lib/i18n/config";
 
 const singletons = ["siteSettings"];

@@ -4,24 +4,26 @@ import dynamic from "next/dynamic";
 import Image, { getImageProps } from "next/image";
 import {
   Component,
+  type CSSProperties,
+  type ReactNode,
   useCallback,
   useEffect,
   useMemo,
   useState,
   useSyncExternalStore,
-  type CSSProperties,
-  type ReactNode,
 } from "react";
+
+import { decideLogoTier, type LogoDecision, type LogoTier, rememberTooSlow } from "@/features/logo";
 import { cn } from "@/lib/cn";
-import { PORTRAIT } from "@/lib/media";
 import { usePortrait } from "@/lib/hooks/usePortrait";
 import { prefersReducedMotion, subscribeToReducedMotion } from "@/lib/hooks/useReducedMotion";
-import { decideLogoTier, rememberTooSlow, type LogoDecision, type LogoTier } from "@/features/logo";
+import { PORTRAIT } from "@/lib/media";
 import logo from "@/public/brand/fiu-logo.svg";
 import type { HeroStill, HeroStills } from "@/sanity/lib/stills";
+
+import { SPLASH_FADE_MS, splashFadeVars } from "../splash-config";
 import { HeroFade } from "./HeroFade";
 import { isSplashDismissed, Splash } from "./Splash";
-import { SPLASH_FADE_MS, splashFadeVars } from "../splash-config";
 
 const LogoScene = dynamic(() => import("@/features/logo/LogoScene"), { ssr: false });
 
@@ -205,8 +207,8 @@ export function HomeHero({ landscape, portrait }: HeroStills) {
             sizes="(min-width: 768px) 42vw, 80vw"
             className={cn(
               "h-auto w-[80vw] max-w-[640px] md:w-[42vw] md:max-w-none",
-              !snapToLeft &&
-                "motion-safe:transition-transform motion-safe:delay-300 motion-safe:duration-1000 motion-safe:ease-in-out",
+              !snapToLeft
+                && "motion-safe:transition-transform motion-safe:delay-300 motion-safe:duration-1000 motion-safe:ease-in-out",
               logoAtLeft ? "md:-translate-x-[calc(27vw-4rem-env(safe-area-inset-left))]" : "md:translate-x-0",
             )}
           />

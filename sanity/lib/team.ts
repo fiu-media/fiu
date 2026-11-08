@@ -1,6 +1,7 @@
 import type { Team } from "@/content/siteSettings";
 import { fallbackStills } from "@/features/home/fallback-stills";
-import { toSizedImage, type QueriedImage } from "./image";
+
+import { type QueriedImage, toSizedImage } from "./image";
 
 /** Shown until the editors upload a team photo (Site settings → About), the way About falls back to a project still. */
 const standIn = fallbackStills[2 % fallbackStills.length]!;

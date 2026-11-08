@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
+
 import {
+  CONTACT_PARAMS,
   contactHref,
   contactPrefill,
-  CONTACT_PARAMS,
   MAX_ITEM_PARAMS,
   prefillKey,
   QUOTE_PARAMS,
@@ -81,7 +82,7 @@ describe("quotePrefill", () => {
   it("ignores items that aren't in the catalogue, repeats, and anything past the cap", () => {
     expect(read("item=unknown&item=also-unknown").items).toEqual([]);
     expect(read("item=cam:2&item=cam:4").items).toEqual([{ itemId: "rental-cam", qty: 2, max: 5 }]);
-    const many = Array.from({ length: MAX_ITEM_PARAMS + 5 }, (_, i) => `item=nothing-${i}`).join("&") + "&item=cam";
+    const many = `${Array.from({ length: MAX_ITEM_PARAMS + 5 }, (_, i) => `item=nothing-${i}`).join("&")}&item=cam`;
     expect(read(many).items).toEqual([]); // cam was past the cap
   });
 

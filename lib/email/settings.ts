@@ -1,7 +1,8 @@
 import "server-only";
+
+import { SUBMISSION_SETTINGS_QUERY } from "@/content/siteSettings";
 import { defaultLocale, type Locale } from "@/lib/i18n/config";
 import { writeClient } from "@/sanity/lib/writeClient";
-import { SUBMISSION_SETTINGS_QUERY } from "@/content/siteSettings";
 
 /**
  * Where notification emails go: the addresses editors set in Site settings.

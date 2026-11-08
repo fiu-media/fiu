@@ -1,5 +1,7 @@
 import "server-only";
-import { getCountries, type CountryCode } from "libphonenumber-js/min";
+
+import { type CountryCode, getCountries } from "libphonenumber-js/min";
+
 import { dateLocale, type Locale } from "@/lib/i18n/config";
 
 export type CountryOption = { code: CountryCode; name: string };

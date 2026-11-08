@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { sweepCssTime, type LightSweep, type SweepAxis, type SweepTechnique } from "@/features/logo";
+
+import { type LightSweep, type SweepAxis, sweepCssTime, type SweepTechnique } from "@/features/logo";
 
 export type SweepMode = "off" | "webgl" | "css" | "both";
 

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { defaultLocale, isLocale, languageAlternates, localizedPath, locales, switchLocalePath } from "./config";
+
+import { defaultLocale, isLocale, languageAlternates, locales, localizedPath, switchLocalePath } from "./config";
 
 describe("isLocale", () => {
   it("recognises configured locales only", () => {

@@ -1,12 +1,14 @@
 import { cookies, draftMode } from "next/headers";
 import {
   defineLive,
+  type LivePerspective,
   resolvePerspectiveFromCookies,
   resolveVariantFromCookies,
-  type LivePerspective,
   type StrictDefinedFetchType,
 } from "next-sanity/live";
+
 import { env } from "@/env";
+
 import { client } from "./client";
 
 const token = env.SANITY_API_READ_TOKEN;

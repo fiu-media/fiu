@@ -1,4 +1,5 @@
 import { siInstagram } from "simple-icons";
+
 import { BrandIcon } from "@/components/ui/BrandIcon";
 import { emailForDisplay } from "@/lib/email/display";
 import { instagramHandle } from "@/lib/instagram";

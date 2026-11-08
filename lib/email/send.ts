@@ -1,8 +1,11 @@
 import "server-only";
+
 import type { ReactElement } from "react";
 import { render } from "react-email";
 import { Resend } from "resend";
+
 import { env } from "@/env";
+
 import { toDeliverable } from "./address";
 import { senderFor } from "./sender";
 

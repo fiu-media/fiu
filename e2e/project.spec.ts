@@ -1,4 +1,5 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
+
 import { en } from "../lib/i18n/dictionaries/en";
 import { format } from "../lib/i18n/format";
 import { project } from "./fixtures/data";

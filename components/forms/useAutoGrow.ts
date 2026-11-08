@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, type RefObject } from "react";
+import { type RefObject, useLayoutEffect } from "react";
 
 /**
  * Sizes a textarea to its content, for browsers without CSS `field-sizing: content` (which does this by itself, and

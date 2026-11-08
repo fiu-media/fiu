@@ -1,10 +1,12 @@
 "use client";
 
 import { useId, useState } from "react";
+
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { format } from "@/lib/i18n/format";
-import { AddToQuote } from "./AddToQuote";
+
 import { useCatalogue } from "../basket/CatalogueContext";
+import { AddToQuote } from "./AddToQuote";
 import { QuantityField } from "./QuantityField";
 
 /** Quantity picker + "Add to quote" for the item page. */

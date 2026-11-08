@@ -10,6 +10,7 @@
  * RESEND_EMAIL_DOMAIN in .env.local.
  */
 import { Resend } from "resend";
+
 import { domainToAscii } from "../lib/email/address";
 import { senderFor } from "../lib/email/sender";
 

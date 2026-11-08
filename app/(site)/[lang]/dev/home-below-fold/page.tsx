@@ -1,33 +1,34 @@
 import { ArrowDown } from "lucide-react";
 import type { Metadata } from "next";
 import Image from "next/image";
-import { PortableText } from "next-sanity";
 import { notFound } from "next/navigation";
+import { PortableText } from "next-sanity";
 import { Suspense } from "react";
-import { AboutContacts } from "@/features/about";
+
 import {
   FoldIndex,
+  type FoldProject,
+  type FoldProps,
   FoldReelClosing,
   FoldReelStrip,
   FoldReelTeamCard,
   FoldReelTeamLead,
   FoldSnapSequel,
   FoldTwoDoors,
-  type FoldProject,
-  type FoldProps,
 } from "@/app/(site)/[lang]/dev/_concepts/home/BelowFoldOptions";
-import { HeroFade, fallbackStills } from "@/features/home";
 import { railInset } from "@/components/layout/nav/rail";
 import { SiteNav } from "@/components/layout/nav/SiteNav";
 import { GlassPillLink } from "@/components/ui/Glass";
-import { defaultLocale, isLocale, localizedPath, type Locale } from "@/lib/i18n/config";
-import { getDictionary } from "@/lib/i18n/dictionaries";
-import { cachedSanity } from "@/sanity/lib/live";
-import { ABOUT_QUERY } from "@/content/siteSettings";
 import { WORK_QUERY } from "@/content/project";
-import { toSizedImage, type SizedImage } from "@/sanity/lib/image";
-import { toTeam } from "@/sanity/lib/team";
+import { ABOUT_QUERY } from "@/content/siteSettings";
+import { AboutContacts } from "@/features/about";
+import { fallbackStills, HeroFade } from "@/features/home";
+import { defaultLocale, isLocale, type Locale, localizedPath } from "@/lib/i18n/config";
+import { getDictionary } from "@/lib/i18n/dictionaries";
 import logo from "@/public/brand/fiu-logo.svg";
+import { type SizedImage, toSizedImage } from "@/sanity/lib/image";
+import { cachedSanity } from "@/sanity/lib/live";
+import { toTeam } from "@/sanity/lib/team";
 
 // Sign-off page for the condensed About + Our Work under Home's first screen: seven options (A to D, then three reel strips that also carry the team photo, email and Instagram) on the real slogan, About
 // still and projects. Unlisted, like /dev/about. The first screen here is a stand-in (a still and the flat logo): the

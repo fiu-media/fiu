@@ -4,10 +4,12 @@ import { Toggle } from "@base-ui/react/toggle";
 import { ToggleGroup } from "@base-ui/react/toggle-group";
 import Link from "next/link";
 import { parseAsString, useQueryState } from "nuqs";
+
 import { GlassPillButton } from "@/components/ui/Glass";
+import { type Locale, localizedPath } from "@/lib/i18n/config";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
-import { localizedPath, type Locale } from "@/lib/i18n/config";
 import type { SizedImage } from "@/sanity/lib/image";
+
 import { AddToQuote } from "./AddToQuote";
 import { RentalImageView } from "./RentalImageView";
 

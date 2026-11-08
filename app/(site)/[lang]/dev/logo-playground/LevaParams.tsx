@@ -4,13 +4,15 @@ import { LevaPanel, useControls, useCreateStore } from "leva";
 import type { Schema } from "leva/dist/declarations/src/types";
 import { useEffect, useEffectEvent, useRef } from "react";
 import { createPortal } from "react-dom";
+
 import {
-  type LogoMeshMode,
   type LogoExtrudeOverride,
   type LogoGlassParams,
+  type LogoMeshMode,
   type LogoPointLightConfig,
   type LogoSoftLightConfig,
 } from "@/features/logo";
+
 import {
   DEFAULT_EXTRUDE,
   EXTRUDE_SLIDERS,

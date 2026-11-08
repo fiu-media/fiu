@@ -1,6 +1,7 @@
-import { localizedPath, type Locale } from "@/lib/i18n/config";
+import { type Locale, localizedPath } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getNavItems } from "@/lib/i18n/nav";
+
 import { SiteNavClient } from "./SiteNavClient";
 
 /**

@@ -1,4 +1,5 @@
 import "server-only";
+
 import { env } from "@/env";
 import { studioUrl } from "@/sanity/studio-env";
 
@@ -9,8 +10,8 @@ import { studioUrl } from "@/sanity/studio-env";
  */
 export function siteOrigin() {
   const origin =
-    env.NEXT_PUBLIC_SITE_URL ||
-    (env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${env.VERCEL_PROJECT_PRODUCTION_URL}` : "https://xn--fi-ska.ie");
+    env.NEXT_PUBLIC_SITE_URL
+    || (env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${env.VERCEL_PROJECT_PRODUCTION_URL}` : "https://xn--fi-ska.ie");
   return origin.replace(/\/$/, "");
 }
 

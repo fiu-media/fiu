@@ -2,17 +2,18 @@ import type { Metadata, Viewport } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { preload } from "react-dom";
+
 import { InlineScript } from "@/components/layout/InlineScript";
-import { pinHomeScrollScript, HomeHero, HomeFoldContent, HomeScrollLock, fallbackStills } from "@/features/home";
-import { SiteFooter } from "@/features/site";
 import { railInset } from "@/components/layout/nav/rail";
 import { SiteNav } from "@/components/layout/nav/SiteNav";
+import { HOME_STILLS_QUERY } from "@/content/siteSettings";
+import { fallbackStills, HomeFoldContent, HomeHero, HomeScrollLock, pinHomeScrollScript } from "@/features/home";
+import { SiteFooter } from "@/features/site";
 import { defaultLocale, isLocale, languageAlternates, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { LANDSCAPE, PORTRAIT } from "@/lib/media";
 import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
-import { HOME_STILLS_QUERY } from "@/content/siteSettings";
-import { toHeroStills, type HeroStills } from "@/sanity/lib/stills";
+import { type HeroStills, toHeroStills } from "@/sanity/lib/stills";
 
 export const viewport: Viewport = { themeColor: "#0c0b0d" };
 

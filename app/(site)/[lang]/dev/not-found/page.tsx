@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { Suspense, type ReactNode } from "react";
+import { type ReactNode, Suspense } from "react";
+
 import { GlassPillLink } from "@/components/ui/Glass";
-import { isLocale, localizedPath, type Locale } from "@/lib/i18n/config";
-import { OptionA, OptionB, OptionC, type Copy } from "./NotFoundOptions";
+import { isLocale, type Locale, localizedPath } from "@/lib/i18n/config";
+
+import { type Copy, OptionA, OptionB, OptionC } from "./NotFoundOptions";
 
 // Sign-off page for the custom 404 (issue #56): three layouts, two copy sets. Unlisted and kept
 // out of search engines, like /dev/grids.

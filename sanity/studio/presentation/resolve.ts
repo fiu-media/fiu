@@ -1,5 +1,6 @@
 import { defineLocations, type PresentationPluginOptions } from "sanity/presentation";
-import { localizedPath, type Locale } from "../../../lib/i18n/config";
+
+import { type Locale, localizedPath } from "../../../lib/i18n/config";
 
 // Home, rentals, talent and Our Work read from the CMS so far.
 export const resolve: PresentationPluginOptions["resolve"] = {

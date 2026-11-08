@@ -17,6 +17,7 @@ import { execFileSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+
 import { createClient } from "@sanity/client";
 
 const SOURCE = "production";
@@ -55,7 +56,7 @@ async function main() {
     const kept = readFileSync(data, "utf8")
       .split("\n")
       .filter((line) => line.trim() && CONTENT_TYPES.includes(JSON.parse(line)._type));
-    writeFileSync(data, kept.join("\n") + "\n");
+    writeFileSync(data, `${kept.join("\n")}\n`);
 
     const filtered = join(work, "filtered.tar.gz");
     execFileSync("tar", ["-czf", filtered, "-C", extracted, folder]);

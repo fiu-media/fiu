@@ -1,4 +1,5 @@
 import "server-only";
+
 import type { Locale } from "../config";
 import type { Dictionary } from "./en";
 import { deepMerge } from "./merge";

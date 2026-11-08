@@ -1,5 +1,6 @@
-import { NextResponse, type NextRequest } from "next/server";
-import { defaultLocale, isLocale, languageCookie, localizedPath, locales, type Locale } from "@/lib/i18n/config";
+import { type NextRequest, NextResponse } from "next/server";
+
+import { defaultLocale, isLocale, languageCookie, type Locale, locales, localizedPath } from "@/lib/i18n/config";
 import { preferredLocale } from "@/lib/i18n/negotiate";
 
 /** Turn off to stop sending visitors to the language their browser prefers (the switcher and cookie still work). */

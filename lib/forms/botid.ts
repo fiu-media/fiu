@@ -1,4 +1,4 @@
-import { localizedPath, locales } from "@/lib/i18n/config";
+import { locales, localizedPath } from "@/lib/i18n/config";
 
 /** Pages that host a form. Server Actions POST to the URL of the page they sit on. */
 const formPages = ["/contact", "/rentals/quote"];

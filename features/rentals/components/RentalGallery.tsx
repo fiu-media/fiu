@@ -3,11 +3,13 @@
 import { Tabs } from "@base-ui/react/tabs";
 import useEmblaCarousel from "embla-carousel-react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
+import { type KeyboardEvent, type PointerEvent, useEffect, useRef, useState } from "react";
+
 import { cn } from "@/lib/cn";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { format } from "@/lib/i18n/format";
 import type { SizedImage } from "@/sanity/lib/image";
+
 import { RentalImageView } from "./RentalImageView";
 
 /** How far (px) a pointer must travel sideways on the large view to count as a swipe. */

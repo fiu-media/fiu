@@ -4,11 +4,13 @@ import { Drawer } from "@base-ui/react/drawer";
 import { X } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+
 import { GlassPanel, GlassPillButton, GlassPillLink } from "@/components/ui/Glass";
-import { localizedPath, type Locale } from "@/lib/i18n/config";
-import { format } from "@/lib/i18n/format";
-import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { useQuoteBasket } from "@/features/rentals/basket/store";
+import { type Locale, localizedPath } from "@/lib/i18n/config";
+import type { Dictionary } from "@/lib/i18n/dictionaries/en";
+import { format } from "@/lib/i18n/format";
+
 import { QuoteLines } from "./QuoteLines";
 
 /** Floating quote basket: a pill that opens a glass drawer, which swipes away to the right (Base UI's Drawer). */

@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+
 import { runVimeoShortcut } from "./vimeoShortcuts";
 
 function fakePlayer(state: { paused?: boolean; time?: number; volume?: number; muted?: boolean } = {}) {

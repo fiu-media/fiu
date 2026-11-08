@@ -1,7 +1,8 @@
 import { isPossiblePhoneNumber, parsePhoneNumberFromString } from "libphonenumber-js/min";
 import { z } from "zod";
-import { isEmailAddress } from "@/lib/email/address";
+
 import { isIsoDate, isValidRange, rentalDays, todayInDublin } from "@/lib/dates";
+import { isEmailAddress } from "@/lib/email/address";
 import { locales } from "@/lib/i18n/config";
 
 export const ENQUIRY_TYPES = ["Project", "Talent", "Rentals", "Other"] as const;

@@ -1,4 +1,5 @@
 import { defineQuery } from "next-sanity";
+
 import {
   arrayOrDefault,
   byRank,

@@ -1,5 +1,5 @@
 import { GlassPanel } from "@/components/ui/Glass";
-import { Still, type AboutLayoutProps } from "@/features/about";
+import { type AboutLayoutProps, Still } from "@/features/about";
 
 /**
  * Option B, "Split screen": the slogan, manifesto and contact links sit in a solid dark

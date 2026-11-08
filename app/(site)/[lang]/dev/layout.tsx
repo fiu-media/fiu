@@ -1,5 +1,7 @@
 import { notFound } from "next/navigation";
+
 import { isLocale, localizedPath } from "@/lib/i18n/config";
+
 import { BackToDev } from "./BackToDev";
 
 // Height of the back bar. Full-viewport pages subtract it so they don't scroll.
