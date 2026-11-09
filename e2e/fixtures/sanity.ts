@@ -1,6 +1,6 @@
 import type { SanityClient } from "@sanity/client";
 
-import { toolingClient } from "../../scripts/lib/sanity";
+import { toolingClient } from "../../sanity/tooling-client";
 
 /**
  * The datasets the e2e suite may create fixtures in and delete from: `dev`, or a scratch copy named `dev-…`.

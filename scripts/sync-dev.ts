@@ -19,7 +19,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { translatedTypes } from "../sanity/schema/documentTypes";
-import { env, toolingClient } from "./lib/sanity";
+import { env, toolingClient } from "../sanity/tooling-client";
 
 const SOURCE = "production";
 const TARGET = "dev";

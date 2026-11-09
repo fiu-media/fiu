@@ -12,7 +12,7 @@
 import { createReadStream } from "node:fs";
 import { basename, join } from "node:path";
 
-import { toolingClient } from "./lib/sanity";
+import { toolingClient } from "../sanity/tooling-client";
 
 // `published` is the client's default perspective; keep it, so what counts as already existing is unchanged.
 const client = toolingClient({ token: "write", perspective: "published" });

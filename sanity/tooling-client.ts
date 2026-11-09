@@ -1,6 +1,6 @@
 import { type ClientPerspective, createClient, type SanityClient } from "@sanity/client";
 
-import { apiVersion } from "../../sanity/studio-env";
+import { apiVersion } from "./studio-env";
 
 /** A required environment variable, or an error that says where to set it. */
 export function env(name: string) {
