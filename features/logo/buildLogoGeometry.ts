@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
-import type { LogoMeshMode } from "./logoSchemas";
+import type { LogoMeshMode } from "./config/schemas";
 export type { LogoMeshMode };
 
 export type LogoStroke = {

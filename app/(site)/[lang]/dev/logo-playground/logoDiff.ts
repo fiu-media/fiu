@@ -1,4 +1,7 @@
-import { type LogoExtrudeOverride, type LogoPlaygroundConfig, pickInteractionParams } from "./logoConfig";
+import type { LogoExtrudeOverride } from "@/features/logo";
+
+import { pickInteractionParams } from "./playgroundConfig";
+import type { LogoPlaygroundConfig } from "./playgroundSchemas";
 
 export type DiffGroup = "config" | "material" | "glow" | "extrude" | "interaction" | "lighting";
 

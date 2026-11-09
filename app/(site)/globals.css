@@ -59,7 +59,7 @@
 
     /*
      * Liquid glass: clear acrylic, matching the live logo (LIGHT_PARAMS in
-     * features/logo/logoConfig.ts). Faces are untinted and unfrosted; the glass is
+     * features/logo/config/presets.ts). Faces are untinted and unfrosted; the glass is
      * defined by a thin grey edge and a faint light bevel just inside it.
      */
     --glass-tint: light-dark(rgb(255 255 255 / 0.04), rgb(255 255 255 / 0.015));
