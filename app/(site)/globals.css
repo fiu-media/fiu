@@ -93,6 +93,9 @@ html:has([data-snap="mandatory"]:not([style*="display: none"] *)) {
   --color-on-accent: var(--on-accent);
   --color-paper: var(--paper);
   --color-ink: var(--ink);
+  /* Over footage the scheme never applies: type is always white and darkening is always black, whatever the surface. */
+  --color-on-image: #fff;
+  --color-scrim: #000;
 
   --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-fraunces), ui-serif, Georgia, serif;
@@ -453,6 +456,68 @@ body {
   [data-sweep-axis] .glass {
     --sx: 50%;
     --sy: 50%;
+  }
+}
+
+/*
+ * Halo: the desktop rail where Home's hero runs under it. No hairline, full-white labels and a tight shadow hugging each
+ * letter (and the logo and language mark). Unlayered, so it beats the rail's utilities. The logo's shadow is on its link,
+ * not the logo: the logo is a CSS mask, which would clip a filter on itself.
+ */
+.rail-halo {
+  border-right-color: transparent;
+  text-shadow:
+    0 0 1px rgb(0 0 0 / 0.63),
+    0 0 4px rgb(0 0 0 / 0.53),
+    0 0 10px rgb(0 0 0 / 0.39),
+    0 0 18px rgb(0 0 0 / 0.25);
+}
+/* One set of tones for the labels and the language codes over footage: 80% white at rest (what --hero-edge is sized
+   for, TEXT_ALPHA in features/home/heroEdge.ts), full white for the current language and on hover. */
+.rail-halo nav a,
+.rail-halo .rail-lang a {
+  color: color-mix(in srgb, var(--color-on-image) 80%, transparent);
+}
+.rail-halo nav a:hover,
+.rail-halo .rail-lang a:hover,
+.rail-halo .rail-lang a[aria-current="true"] {
+  color: var(--color-on-image);
+}
+.rail-halo nav a:hover {
+  text-decoration-line: underline;
+  text-underline-offset: 5px;
+}
+.rail-halo > a,
+.rail-halo .rail-lang {
+  filter: drop-shadow(0 0 1px rgb(0 0 0 / 0.56)) drop-shadow(0 0 8px rgb(0 0 0 / 0.35));
+}
+
+/*
+ * Behind a bright hero still, the edge under the rail darkens just enough for its labels to hold 4.5:1: useHeroEdge
+ * measures the strip under the rail and sets --hero-edge (0 on most stills), and the change eases over the stills'
+ * crossfade. It lives in the photo layer, under the logo, so the logo is never dimmed.
+ */
+@property --hero-edge {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+
+.hero-edge {
+  background: linear-gradient(
+    to right,
+    rgb(0 0 0 / var(--hero-edge)) 0,
+    rgb(0 0 0 / var(--hero-edge)) 4rem,
+    rgb(0 0 0 / calc(var(--hero-edge) * 0.45)) 50%,
+    rgb(0 0 0 / calc(var(--hero-edge) * 0.12)) 80%,
+    transparent
+  );
+  /* useHeroEdge sets the duration: quick when the next still needs more, slower once a crossfade has finished. */
+  transition: --hero-edge var(--hero-edge-duration, 0ms) ease-in-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-edge {
+    transition: none;
   }
 }
 

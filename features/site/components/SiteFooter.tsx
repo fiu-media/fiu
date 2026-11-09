@@ -16,6 +16,9 @@ import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
  * The slim footer under every page: "Fiú Media © 2026", the studio email, Instagram and Privacy. It is one quiet row, not a
  * sitemap: the nav is always on screen. `snap-end` keeps it reachable on pages that snap to their slides.
  */
+/** Footer links are short text, so padding (cancelled by a negative margin) gives them a 44px tap height without moving them. */
+const footerLink = "link-inline -my-3 py-3";
+
 export async function SiteFooter({ lang }: { lang: Locale }) {
   const { footer } = await getDictionary(lang);
   const copyright = format(footer.copyright, { year: "" }).trim();
@@ -36,7 +39,7 @@ export async function SiteFooter({ lang }: { lang: Locale }) {
         <Suspense>
           <FooterLinks lang={lang} labels={{ email: footer.emailLabel, instagram: footer.instagramLabel }} />
         </Suspense>
-        <Link href={localizedPath(lang, "/privacy")} className="link-inline">
+        <Link href={localizedPath(lang, "/privacy")} className={footerLink}>
           {footer.privacy}
         </Link>
       </div>
@@ -65,13 +68,13 @@ async function FooterLinks({ lang, labels }: { lang: Locale; labels: { email: st
   return (
     <>
       {email && (
-        <a href={`mailto:${email}`} className="link-inline">
+        <a href={`mailto:${email}`} className={footerLink}>
           <span className="sr-only">{labels.email}: </span>
           {email}
         </a>
       )}
       {instagram && (
-        <a href={instagram} target="_blank" rel="noopener noreferrer" className="link-inline">
+        <a href={instagram} target="_blank" rel="noopener noreferrer" className={footerLink}>
           <span className="sr-only">{labels.instagram}: </span>
           {instagramHandle(instagram)}
         </a>

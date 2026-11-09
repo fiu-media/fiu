@@ -26,6 +26,8 @@ type NavProps = {
   onImage?: boolean;
   /** Frost the rail's strip with a backdrop blur. A /dev sign-off option, not used on the site. */
   blurRail?: boolean;
+  /** The phone bar floats over footage (Home's hero), so it gets a scrim behind it. */
+  overFootage?: boolean;
 };
 
 export function SiteNavClient(props: NavProps) {
@@ -42,7 +44,7 @@ function RouteNav(props: NavProps) {
 
 const isCurrent = (pathname: string, href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
-function Nav({ lang, items, homeHref, labels, onImage, blurRail, pathname }: NavProps & { pathname: string }) {
+function Nav({ lang, items, homeHref, labels, onImage, blurRail, overFootage, pathname }: NavProps & { pathname: string }) {
   // The overlay is open for the page it was opened on, so navigating leaves it behind.
   const [openOn, setOpenOn] = useState<string | null>(null);
   const popup = useRef<HTMLDivElement>(null);
@@ -69,10 +71,13 @@ function Nav({ lang, items, homeHref, labels, onImage, blurRail, pathname }: Nav
       <aside
         className={cn(
           "fixed inset-y-0 left-0 z-30 hidden w-[calc(4rem+env(safe-area-inset-left))] flex-col items-center gap-8 border-r border-line pt-[max(1.75rem,env(safe-area-inset-top))] pb-7 pl-[env(safe-area-inset-left)] md:flex",
-          onImage
-            && (blurRail
-              ? "bg-gradient-to-r from-black/45 to-black/15 backdrop-blur-md [text-shadow:0_1px_6px_rgb(0_0_0/0.35)]"
-              : "bg-gradient-to-r from-black/35 to-transparent [text-shadow:0_1px_6px_rgb(0_0_0/0.35)]"),
+          // Over Home's hero: a letter halo, and edge light only behind bright stills (`rail-halo` in globals.css).
+          overFootage
+            ? "rail-halo"
+            : onImage
+                && (blurRail
+                  ? "bg-gradient-to-r from-scrim/45 to-scrim/15 backdrop-blur-md [text-shadow:0_1px_6px_rgb(0_0_0/0.35)]"
+                  : "bg-gradient-to-r from-scrim/35 to-transparent [text-shadow:0_1px_6px_rgb(0_0_0/0.35)]"),
         )}
       >
         {/* Sprocket rhythm: a faint, evenly spaced row of ticks, the only nod to film. */}
@@ -93,7 +98,9 @@ function Nav({ lang, items, homeHref, labels, onImage, blurRail, pathname }: Nav
             </Link>
           ))}
         </nav>
-        <LanguageSwitcher variant="rail" lang={lang} pathname={pathname} label={labels.language} />
+        <div className="rail-lang">
+          <LanguageSwitcher variant="rail" lang={lang} pathname={pathname} label={labels.language} />
+        </div>
       </aside>
 
       {/* On cinematic pages the bar floats over the content; on adaptive pages it takes its own row. */}
@@ -101,6 +108,9 @@ function Nav({ lang, items, homeHref, labels, onImage, blurRail, pathname }: Nav
         className={cn(
           "z-30 flex items-center justify-between px-[max(1.25rem,env(safe-area-inset-left))] pt-[max(1.25rem,env(safe-area-inset-top))] pr-[max(1.25rem,env(safe-area-inset-right))] pb-4 md:hidden",
           onImage ? "absolute inset-x-0 top-0" : "relative",
+          // Over footage, a soft scrim behind the logo and the Menu button keeps them legible against a bright sky.
+          overFootage
+            && "before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:-z-10 before:h-40 before:bg-gradient-to-b before:from-scrim/50 before:to-transparent",
         )}
       >
         <HomeLink href={homeHref} label={labels.home} className="h-9" />

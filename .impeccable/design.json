@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-09T01:53:09+00:00",
+  "generatedAt": "2026-11-09T23:46:36+00:00",
   "title": "Design System: Fiú Media",
   "extensions": {
     "colorMeta": {
@@ -192,6 +192,34 @@
           "oklch(84% 0.000 0)",
           "oklch(95% 0.000 0)"
         ]
+      },
+      "on-image": {
+        "role": "neutral",
+        "displayName": "On Image",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(25% 0 0)",
+          "oklch(35% 0 0)",
+          "oklch(48% 0 0)",
+          "oklch(60% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(100% 0 0)"
+        ]
+      },
+      "scrim": {
+        "role": "neutral",
+        "displayName": "Scrim",
+        "tonalRamp": [
+          "oklch(0% 0 0)",
+          "oklch(15% 0 0)",
+          "oklch(25% 0 0)",
+          "oklch(35% 0 0)",
+          "oklch(48% 0 0)",
+          "oklch(60% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)"
+        ]
       }
     },
     "typographyMeta": {
@@ -230,6 +258,10 @@
       "eyebrow": {
         "displayName": "Eyebrow",
         "purpose": "Small spaced uppercase above a heading."
+      },
+      "button-sm": {
+        "displayName": "Button, small",
+        "purpose": "Small glass pill labels (filters, the Menu button)."
       }
     },
     "shadows": [
@@ -274,6 +306,11 @@
         "name": "sine-sweep",
         "value": "cubic-bezier(0.37, 0, 0.63, 1)",
         "purpose": "Experimental moving-light band across glass (playground only)."
+      },
+      {
+        "name": "hero-edge",
+        "value": "--hero-edge: 250ms up, 600ms down after the 1.6s crossfade",
+        "purpose": "The rail's adaptive edge light: rises before a brighter still fades in, eases off once the crossfade is done."
       }
     ],
     "breakpoints": [
@@ -336,7 +373,7 @@
       "name": "Side Rail",
       "kind": "nav",
       "refersTo": "nav-rail",
-      "description": "64px rail: vertical Manrope labels, current page white with a 1px rule, sprocket ticks.",
+      "description": "64px rail: vertical Manrope labels, current page white with a 1px rule, sprocket ticks. Over Home's footage the labels and language codes share 80%/100% white tones with a letter halo, and the edge darkens only behind bright stills.",
       "html": "<div class=\"ds-rail\"><span class=\"ds-mark\">fiú</span><nav class=\"ds-railnav\"><a href=\"#\">About Us</a><a href=\"#\" aria-current=\"page\">Our Work</a><a href=\"#\">Talent</a><a href=\"#\">Contact</a></nav><span class=\"ds-lang\">EN</span></div>",
       "css": ".ds-rail{position:relative;width:64px;height:420px;background:#0c0b0d;border-right:1px solid rgb(255 255 255 / 0.12);display:flex;flex-direction:column;align-items:center;gap:32px;padding:28px 0;}.ds-rail::after{content:\"\";position:absolute;top:0;bottom:0;right:4px;width:2px;background:repeating-linear-gradient(to bottom,#f2eee8 0 6px,transparent 6px 18px);opacity:0.1;}.ds-mark{font:italic 450 1.25rem Fraunces,ui-serif,Georgia,serif;color:#f2eee8;}.ds-railnav{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;}.ds-railnav a{position:relative;writing-mode:vertical-rl;transform:rotate(180deg);font:500 0.875rem Manrope,ui-sans-serif,system-ui,sans-serif;letter-spacing:0.025em;color:rgb(242 238 232 / 0.6);text-decoration:none;}.ds-railnav a:hover{color:#f2eee8;}.ds-railnav a:focus-visible{outline:2px solid #8ab4ff;outline-offset:3px;}.ds-railnav a[aria-current=page]{color:#f2eee8;}.ds-railnav a[aria-current=page]::after{content:\"\";position:absolute;top:0;bottom:0;left:-10px;width:1px;background:currentColor;}.ds-lang{font:500 0.75rem Manrope,ui-sans-serif,system-ui,sans-serif;color:#f2eee8;}"
     },
@@ -359,7 +396,7 @@
   ],
   "narrative": {
     "northStar": "The Screening Room",
-    "overview": "The site is a dark room built for watching. Films and stills run edge to edge and supply all the colour. The interface is the house lighting: low, warm and steady, with just enough light to find your seat. Every page is dark whatever the visitor's OS setting, and the browser chrome is tinted to match (`#0c0b0d`). The chrome steps back so the footage can lead, and the care shows in small finished details: a three-pixel dot under the current filter, a glint that follows the pointer across a pill, a caption that sits exactly in line with the logo.\n\nThe mood is cinematic, quiet and warm. Warmth comes from the type, not from colour. Fraunces is set soft (SOFT 100, optical size 144), and its italic carries the brand's voice: the Irish slogan, the playful \"Fiú line\" under each page title, project titles and talent names. Manrope does the work around it, upright and plain. The one material is clear acrylic, matching the live glass logo. It has no tint and no frost, and you see it only through a thin grey edge, a faint bevel and a moving glint.\n\nConfirmed rejections: old-fashioned ornament in the UI (swashes, diamond markers, leaning shapes, italic nav); frosted or tinted glassmorphism; the agency-template look (gradient blobs, bento grids, big stat counters); bright colour accents in the chrome.",
+    "overview": "**Creative North Star: \"The Screening Room\"**\n\nThe site is a dark room built for watching. Films and stills run edge to edge and supply all the colour. The interface is the house lighting: low, warm and steady, with just enough light to find your seat. Every page is dark whatever the visitor's OS setting, and the browser chrome is tinted to match (`#0c0b0d`). The chrome steps back so the footage can lead, and the care shows in small finished details: a three-pixel dot under the current filter, a glint that follows the pointer across a pill, a caption that sits exactly in line with the logo.\n\nThe mood is cinematic, quiet and warm. Warmth comes from the type, not from colour. Fraunces is set soft (SOFT 100, optical size 144), and its italic carries the brand's voice: the Irish slogan, the playful \"Fiú line\" under each page title, project titles and talent names. Manrope does the work around it, upright and plain. The one material is clear acrylic, matching the live glass logo. It has no tint and no frost, and you see it only through a thin grey edge, a faint bevel and a moving glint.\n\nConfirmed rejections: old-fashioned ornament in the UI (swashes, diamond markers, leaning shapes, italic nav); frosted or tinted glassmorphism; the agency-template look (gradient blobs, bento grids, big stat counters); bright colour accents in the chrome.",
     "keyCharacteristics": [
       "Always dark. Near-black Ink page with warm off-white type.",
       "Footage runs full-bleed, one project per screen, with scroll-snap.",
@@ -372,6 +409,11 @@
       {
         "name": "The Footage Is the Colour Rule",
         "body": "Colour on screen comes from the films and stills. The chrome stays Ink, white and grey. Signal Red marks an error or a count and nothing else: no red links, no red buttons, no red decoration.",
+        "section": "colors"
+      },
+      {
+        "name": "The Scrim Rule",
+        "body": "Nothing light sits on footage without a Scrim under it, and the Scrim is light falling off, never a band: soft gradients that fade to nothing, no hard edges, no opaque strips. Text over imagery must hold 4.5:1 against the brightest frame it can land on, and icons 3:1; the scrim, not a text shadow, is what guarantees it. Where the footage is usually dark enough on its own, the Scrim can be adaptive: measured per still and applied only to the frames that need it (the rail over Home's hero, see Navigation).",
         "section": "colors"
       },
       {
@@ -407,7 +449,9 @@
       "**Do** set brand voice (slogan, taglines, titles, names) in soft italic Fraunces, and everything you operate in upright Manrope.",
       "**Do** use `light-dark()` tokens and `data-surface` for every colour, so a surface can be pinned light.",
       "**Do** honour `prefers-reduced-motion` (no tilt, no drift, no pulse) and `prefers-reduced-transparency` (opaque glass).",
-      "**Do** pad every screen edge with `env(safe-area-inset-*)`."
+      "**Do** pad every screen edge with `env(safe-area-inset-*)`.",
+      "**Do** put a Scrim under anything light that sits on footage, and use `on-image` / `scrim` rather than literal white and black there.",
+      "**Do** give every control a tap area of at least 44px, even when it looks smaller."
     ],
     "donts": [
       "**Don't** add ornament to the chrome: no swashes, diamond markers, leaning shapes or italic nav.",

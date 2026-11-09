@@ -33,7 +33,7 @@ export function FullBleedSlide({
     <section
       aria-roledescription="slide"
       aria-label={label}
-      className={cn("relative isolate h-dvh snap-start snap-always overflow-hidden bg-ink text-white", className)}
+      className={cn("relative isolate h-dvh snap-start snap-always overflow-hidden bg-ink text-on-image", className)}
     >
       {children}
     </section>

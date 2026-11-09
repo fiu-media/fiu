@@ -77,7 +77,8 @@ async function Filters({ lang, searchParams }: { lang: Locale; searchParams: Pag
   const base = localizedPath(lang, "/work");
   return (
     <nav aria-label={work.filterLabel} className="mt-8">
-      <ul className="flex flex-wrap gap-2">
+      {/* 12px between rows, so the 44px tap areas of wrapped pills meet without overlapping. */}
+      <ul className="flex flex-wrap gap-x-2 gap-y-3">
         <li>
           <GlassPillLink href={base} size="sm" current={active === null}>
             {work.all}

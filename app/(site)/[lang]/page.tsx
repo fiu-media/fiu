@@ -41,7 +41,7 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
             <Suspense fallback={<HomeHero {...fallbackHeroStills} />}>
               <CmsHero lang={lang} />
             </Suspense>
-            <SiteNav lang={lang} onImage />
+            <SiteNav lang={lang} onImage overFootage />
           </div>
         </div>
         {/* Under the fold: the team, the slogan and the work. Beside the rail like every other page. */}

@@ -16,6 +16,11 @@ export type HeroStills = { landscape: HeroStill[]; portrait: HeroStill[] };
 type HomeProject = NonNullable<NonNullable<NonNullable<HOME_STILLS_QUERY_RESULT>["projects"]>[number]>;
 
 const HERO_WIDTH = 2400;
+/**
+ * Portrait stills are only drawn on phones held upright, whose screens are at most about 1320 device pixels wide. The
+ * logo scene uploads each still as a texture, so a wider one only costs download time and GPU memory.
+ */
+const PORTRAIT_HERO_WIDTH = 1320;
 /** The most stills one set rotates, which keeps the page's images and the logo scene's textures bounded. */
 export const MAX_HERO_STILLS = 10;
 
@@ -40,7 +45,7 @@ function toProjectSets(project: HomeProject) {
 
 function toStills(projectId: string, field: "stills" | "stillsMobile", stills: HomeProject["stills"]): HeroStill[] {
   return (stills ?? []).flatMap((still) => {
-    const image = toSizedImage(still, HERO_WIDTH);
+    const image = toSizedImage(still, field === "stillsMobile" ? PORTRAIT_HERO_WIDTH : HERO_WIDTH);
     if (!image) return [];
     return [{ ...image, dataSanity: projectAttribute(projectId, `${field}[_key=="${still._key}"]`) }];
   });

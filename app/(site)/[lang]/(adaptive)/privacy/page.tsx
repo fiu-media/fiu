@@ -31,8 +31,9 @@ export default async function PrivacyPage({ params }: PageProps<"/[lang]/privacy
   const { privacy } = await getDictionary(lang);
   const date = new Date(`${UPDATED}T00:00:00Z`).toLocaleDateString(lang, { dateStyle: "long", timeZone: "UTC" });
   const { who, collect, why, providers, storage, retention, transfers, rights } = privacy;
+  // A reading column: about 65 characters a line.
   return (
-    <main className={cn("mx-auto max-w-3xl pb-16", pageGutter)}>
+    <main className={cn("mx-auto max-w-prose pb-16", pageGutter)}>
       <header className="mb-12">
         <PageTitle title={privacy.title} />
         <p className="mt-3 text-sm text-fg-muted">{format(privacy.updated, { date })}</p>
