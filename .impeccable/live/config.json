@@ -1,0 +1,6 @@
+{
+  "files": ["app/(site)/[lang]/layout.tsx"],
+  "insertBefore": "</body>",
+  "commentSyntax": "jsx",
+  "cspChecked": true
+}
