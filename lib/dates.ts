@@ -46,7 +46,14 @@ export function formatDateRange(start: string, end: string, locale: string): str
   return formatter.formatRange(from, to);
 }
 
-/** "3–5 Nov 2026 · 3 days": the localised range with its length, for the form and the quote emails. */
+/** A localised day and month such as "3 Nov", for lists where the year is obvious. Calendar date, so formatted in UTC. */
+export function formatShortDate(iso: string, locale: string): string {
+  const time = parseIso(iso);
+  if (time === null) return iso;
+  return new Intl.DateTimeFormat(locale, { day: "numeric", month: "short", timeZone: "UTC" }).format(time);
+}
+
+/** "3–5 Nov 2026 · 3 days":the localised range with its length, for the form and the quote emails. */
 export function describeRange(dates: Dictionary["dates"], lang: Locale, start: string, end: string): string {
   const days = rentalDays(start, end);
   return format(dates.rangeSummary, {

@@ -1,4 +1,6 @@
-import { createClient, type SanityClient } from "@sanity/client";
+import type { SanityClient } from "@sanity/client";
+
+import { toolingClient } from "../../sanity/tooling-client";
 
 /**
  * The datasets the e2e suite may create fixtures in and delete from: `dev`, or a scratch copy named `dev-…`.
@@ -22,5 +24,5 @@ export function fixtureClient(): SanityClient {
       `[e2e] NEXT_PUBLIC_SANITY_DATASET is "${dataset}". The e2e tests only run against "dev" (or "dev-…"), because they create and delete content.`,
     );
   }
-  return createClient({ projectId, dataset, token, apiVersion: "2026-10-01", useCdn: false, perspective: "raw" });
+  return toolingClient({ token: "write", dataset });
 }
