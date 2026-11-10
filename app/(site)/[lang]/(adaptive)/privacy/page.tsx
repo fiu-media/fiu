@@ -1,16 +1,15 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import { type ReactNode, Suspense } from "react";
+import { Suspense } from "react";
 
-import { pageGutter } from "@/components/layout/nav/rail";
+import { PageShell } from "@/components/ui/PageShell";
 import { PageTitle } from "@/components/ui/PageTitle";
-import { CONTACT_SETTINGS_QUERY } from "@/content/siteSettings";
-import { cn } from "@/lib/cn";
-import { emailForDisplay } from "@/lib/email/display";
-import { defaultLocale, isLocale, languageAlternates, type Locale, localizedPath } from "@/lib/i18n/config";
+import { ContactLinks, getSiteSettings } from "@/content/siteSettings";
+import { BulletList, PolicySection as Section, StorageGroup, WithLink } from "@/features/privacy";
+import { formatLongDate } from "@/lib/dates";
+import { dateLocale, getLocale, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { format } from "@/lib/i18n/format";
-import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
+import { href, pageMetadata, routes } from "@/lib/routes";
 
 /** Where a complaint to Ireland's data protection authority is made. */
 const DPC_URL = "https://www.dataprotection.ie";
@@ -19,21 +18,19 @@ const DPC_URL = "https://www.dataprotection.ie";
 const UPDATED = "2026-11-08";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/privacy">): Promise<Metadata> {
-  const { lang } = await params;
-  if (!isLocale(lang)) return {};
+  const lang = await getLocale(params);
   const { privacy } = await getDictionary(lang);
-  return { title: privacy.title, alternates: languageAlternates(lang, "/privacy") };
+  return pageMetadata(lang, routes.privacy(), { title: privacy.title });
 }
 
 export default async function PrivacyPage({ params }: PageProps<"/[lang]/privacy">) {
-  const { lang } = await params;
-  if (!isLocale(lang)) notFound();
+  const lang = await getLocale(params);
   const { privacy } = await getDictionary(lang);
-  const date = new Date(`${UPDATED}T00:00:00Z`).toLocaleDateString(lang, { dateStyle: "long", timeZone: "UTC" });
+  const date = formatLongDate(UPDATED, dateLocale[lang]);
   const { who, collect, why, providers, storage, retention, transfers, rights } = privacy;
   // A reading column: about 65 characters a line.
   return (
-    <main className={cn("mx-auto max-w-prose pb-16", pageGutter)}>
+    <PageShell className="max-w-prose pb-16">
       <header className="mb-12">
         <PageTitle title={privacy.title} />
         <p className="mt-3 text-sm text-fg-muted">{format(privacy.updated, { date })}</p>
@@ -115,120 +112,24 @@ export default async function PrivacyPage({ params }: PageProps<"/[lang]/privacy
 
         <Section heading={privacy.contactHeading}>
           <p>{privacy.contactBody}</p>
-          <ul className="space-y-2">
-            <li>
-              <a href={localizedPath(lang, "/contact")} className="link-inline">
-                {privacy.contactForm}
-              </a>
-            </li>
-            {/* Reads draft mode, so it streams in behind the rest of the page. */}
-            <Suspense>
-              <Email lang={lang} />
-            </Suspense>
-          </ul>
+          <p>
+            <a href={href(lang, routes.contact())} className="link-inline">
+              {privacy.contactForm}
+            </a>
+          </p>
+          {/* Reads draft mode, so it streams in behind the rest of the page. */}
+          <Suspense>
+            <Email lang={lang} />
+          </Suspense>
         </Section>
       </div>
-    </main>
+    </PageShell>
   );
 }
-
-/** `text` with `placeholder` replaced by an external link, so a translation can put the link wherever its grammar wants it. */
-function WithLink({
-  text,
-  placeholder,
-  href,
-  label,
-  newTab,
-}: {
-  text: string;
-  placeholder: string;
-  href: string;
-  label: string;
-  newTab: string;
-}) {
-  const [before, after = ""] = text.split(placeholder);
-  return (
-    <>
-      {before}
-      <a href={href} target="_blank" rel="noopener noreferrer" className="link-inline">
-        {label}
-        <span className="sr-only"> ({newTab})</span>
-      </a>
-      {after}
-    </>
-  );
-}
-
-/** A titled block of running text. */
-function Section({ heading, children }: { heading: string; children: ReactNode }) {
-  const id = slug(heading);
-  return (
-    <section aria-labelledby={id}>
-      <h2 id={id} className="font-display text-2xl">
-        {heading}
-      </h2>
-      <div className="mt-3 space-y-3 leading-relaxed text-fg/90">{children}</div>
-    </section>
-  );
-}
-
-function BulletList({ items }: { items: readonly string[] }) {
-  return (
-    <ul className="list-disc space-y-2 pl-5 marker:text-fg-muted">
-      {items.map((item) => (
-        <li key={item}>{item}</li>
-      ))}
-    </ul>
-  );
-}
-
-type StorageEntry = { name: string; type: string; lasts: string; description: string };
-
-/** What a site stores in the browser, one entry per cookie or key: its name as code, then what it is for. */
-function StorageGroup({ title, items }: { title: string; items: readonly StorageEntry[] }) {
-  return (
-    <div className="pt-2">
-      <h3 className="font-medium text-fg">{title}</h3>
-      <dl className="mt-3 divide-y divide-line border-y border-line">
-        {items.map((item) => (
-          <div key={item.name} className="py-4">
-            <dt className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-              <code className="rounded-md bg-bg-raised px-2 py-0.5 font-mono text-sm text-fg">{item.name}</code>
-              <span className="text-sm text-fg-muted">
-                {item.type} · {item.lasts}
-              </span>
-            </dt>
-            <dd className="mt-2">{item.description}</dd>
-          </div>
-        ))}
-      </dl>
-    </div>
-  );
-}
-
-/** A heading as an id: "Who handles it for us" → "who-handles-it-for-us". */
-const slug = (heading: string) =>
-  `privacy-${heading
-    .toLowerCase()
-    .replace(/[^\p{L}\p{N}]+/gu, "-")
-    .replace(/^-|-$/g, "")}`;
 
 async function Email({ lang }: { lang: Locale }) {
-  const { perspective, variant } = await getDynamicFetchOptions();
-  const { data } = await cachedSanity({
-    query: CONTACT_SETTINGS_QUERY,
-    params: { lang, fallbackLang: defaultLocale },
-    perspective,
-    variant,
-    stega: false,
-  });
-  if (!data?.contactEmail) return null;
-  const email = emailForDisplay(data.contactEmail);
+  const [{ contact: links }, { contact }] = await Promise.all([getSiteSettings(lang), getDictionary(lang)]);
   return (
-    <li>
-      <a href={`mailto:${email}`} className="link-inline">
-        {email}
-      </a>
-    </li>
+    <ContactLinks contact={links} labels={{ email: contact.emailLabel, instagram: contact.instagramLabel }} variant="list" />
   );
 }
