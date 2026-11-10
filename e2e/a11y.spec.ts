@@ -4,7 +4,7 @@ import { expect, type Page, test } from "@playwright/test";
 import { en } from "../lib/i18n/dictionaries/en";
 import { format } from "../lib/i18n/format";
 import { featuredTalent, rentalItems } from "./fixtures/data";
-import { clickUntil } from "./helpers";
+import { clickUntil, rentalsTest } from "./helpers";
 
 /**
  * Axe's automated rules catch roughly a third of WCAG problems, so a pass is a floor, not a
@@ -40,8 +40,8 @@ test.describe("home", () => {
   });
 });
 
-// Rentals is hidden; see playwright.config.ts.
-test.skip("axe: a rental item page", async ({ page }) => {
+// Rentals is hidden while `features.rentals` is off (see playwright.config.ts).
+rentalsTest("axe: a rental item page", async ({ page }) => {
   await audit(page, `/rentals/${rentalItems.multi.slug}`);
 });
 
@@ -61,7 +61,7 @@ test.describe("with a dialog open", () => {
     });
   });
 
-  test.skip("axe: the quote drawer", async ({ page }) => {
+  rentalsTest("axe: the quote drawer", async ({ page }) => {
     await audit(page, "/rentals", async (page) => {
       const added = page.getByRole("button", { name: format(en.rentals.inQuote, { qty: 1 }) }).first();
       await clickUntil(page.getByRole("button", { name: en.rentals.addToQuote }).first(), () =>

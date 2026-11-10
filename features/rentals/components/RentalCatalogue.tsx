@@ -6,6 +6,7 @@ import Link from "next/link";
 import { parseAsString, useQueryState } from "nuqs";
 
 import { GlassPillButton } from "@/components/ui/Glass";
+import { selectFilter } from "@/lib/filter";
 import type { Locale } from "@/lib/i18n/config";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { href, routes } from "@/lib/routes";
@@ -38,15 +39,17 @@ export function RentalCatalogue({
   items: CatalogueCard[];
   dict: Dictionary["rentals"];
 }) {
-  // Only offer categories that actually have kit in them.
-  const usable = categories.filter((c) => items.some((i) => i.categoryId === c.id));
   // `push` so Back/Forward step through filters; an unknown ?category= falls back to everything.
   const [requested, setRequested] = useQueryState(
     "category",
     parseAsString.withOptions({ history: "push", clearOnDefault: true }),
   );
-  const category = usable.find((c) => c.id === requested)?.id ?? null;
-  const visible = category ? items.filter((i) => i.categoryId === category) : items;
+  // Only categories that have kit in them are offered.
+  const {
+    usable,
+    active: category,
+    visible,
+  } = selectFilter(categories, items, requested, { idOf: (c) => c.id, groupOf: (i) => i.categoryId });
 
   return (
     <div>

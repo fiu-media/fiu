@@ -8,7 +8,7 @@ import { useQuoteBasket } from "@/features/rentals/basket/store";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { format } from "@/lib/i18n/format";
 
-import { useCatalogue } from "../basket/CatalogueContext";
+import { itemMax, useCatalogue } from "../basket/CatalogueContext";
 import { QuantityField } from "./QuantityField";
 import { RentalImageView } from "./RentalImageView";
 
@@ -30,7 +30,7 @@ export function QuoteLines({ dict, onNavigate }: { dict: Dictionary["basket"]; o
       {lines.map(({ itemId, qty }) => {
         const item = catalogue[itemId];
         const name = item?.name ?? dict.unknownItem;
-        const max = item?.max ?? 99;
+        const max = itemMax(catalogue, itemId);
         return (
           <li key={itemId} className="flex items-center gap-3 py-3">
             <RentalImageView image={item?.image ?? null} placeholder="" sizes="56px" className="size-14 shrink-0 rounded-xl" />

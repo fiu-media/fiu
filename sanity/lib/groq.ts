@@ -20,7 +20,8 @@ export const DEFAULT_COUNTERPART = `*[_type == ^._type && language == $fallbackL
  * Rental items the default-language document has marked unavailable are hidden in every language:
  * availability and stock are read-only in translations (see readOnlyInTranslation), so they can't be trusted there.
  */
-export const RENTAL_AVAILABLE = ` && !(slug.current in *[_type == "rentalItem" && language == $fallbackLang && available == false].slug.current)`;
+export const RENTAL_AVAILABLE =
+  ` && !(slug.current in *[_type == "rentalItem" && language == $fallbackLang && available == false].slug.current)` as const;
 
 /**
  * Orders a document list by the editor-set drag-and-drop rank. Every language shares the default
@@ -33,34 +34,49 @@ export const byRank = <const T extends string>(tiebreak: T) =>
     "rank": coalesce(${DEFAULT_COUNTERPART}.orderRank, orderRank)
   } | order(rank asc, ${tiebreak} asc)` as const;
 
-/** Available rental items in `$lang`, plus default-language ones with no translation. Written out (not `withFallback`) so TypeGen can resolve it. */
+/**
+ * Available rental items in `$lang`, plus default-language ones with no translation. This is `withFallback("rentalItem",
+ * RENTAL_AVAILABLE)` written out: TypeGen can't follow a constant passed as `withFallback`'s `extra` ("Could not find
+ * binding for node extra"), only a literal.
+ */
 export const RENTAL_ITEMS = `(
     *[_type == "rentalItem" && language == $lang${RENTAL_AVAILABLE}]
     + *[_type == "rentalItem" && language == $fallbackLang${RENTAL_AVAILABLE} && !(slug.current in *[_type == "rentalItem" && language == $lang${RENTAL_AVAILABLE}].slug.current)]
-  )`;
+  )` as const;
 
 /** An array field, or the default-language document's when the translation left it empty. */
 export const arrayOrDefault = <const F extends string>(field: F) =>
   `select(count(${field}) > 0 => ${field}, ${DEFAULT_COUNTERPART}.${field})` as const;
 
+/** The title of a role or project type in `$lang`; those references always point at the default-language document. */
+export const translatedTitle = <const T extends string>(type: T) =>
+  `coalesce(*[_type == "${type}" && language == $lang && slug.current == ^.slug.current][0].title, title)` as const;
+
 /**
- * Names and brands are never translated (read-only in translations), so every language shows the
- * default-language value. The rest falls back field by field, so a half-translated item still renders in full.
- * `baseId` is the default-language document's id, which basket lines use so they survive a language switch.
- * `as const` keeps the literal type, which TypeGen needs to resolve the queries that embed this.
+ * What names a rental item and its cap, shared by every rental query. Names and brands are never translated (read-only
+ * in translations), so every language shows the default-language value. `baseId` is the default-language document's
+ * id, which basket lines use so they survive a language switch. `as const` keeps the literal type for TypeGen.
  */
-export const RENTAL_ITEM_FIELDS = `
+export const RENTAL_ITEM_IDENTITY = `
   _id,
   "baseId": coalesce(${DEFAULT_COUNTERPART}._id, _id),
   "name": coalesce(${DEFAULT_COUNTERPART}.name, name),
-  "slug": slug.current,
   "brand": coalesce(${DEFAULT_COUNTERPART}.brand, brand),
+  "maxQuantity": coalesce(${DEFAULT_COUNTERPART}.maxQuantity, maxQuantity)
+` as const;
+
+/**
+ * A rental item's identity plus the rest, which falls back field by field so a half-translated item still renders in
+ * full. `as const` keeps the literal type, which TypeGen needs to resolve the queries that embed this.
+ */
+export const RENTAL_ITEM_FIELDS = `
+  ${RENTAL_ITEM_IDENTITY},
+  "slug": slug.current,
   "summary": coalesce(summary, ${DEFAULT_COUNTERPART}.summary),
   "keyFeatures": ${arrayOrDefault("keyFeatures")},
-  "maxQuantity": coalesce(${DEFAULT_COUNTERPART}.maxQuantity, maxQuantity),
   "category": coalesce(${DEFAULT_COUNTERPART}.category, category)->{
     _id,
-    "title": coalesce(*[_type == "rentalCategory" && language == $lang && slug.current == ^.slug.current][0].title, title),
+    "title": ${translatedTitle("rentalCategory")},
     "slug": slug.current
   },
   "images": ${arrayOrDefault("images[defined(asset)]")}[]{
@@ -73,10 +89,6 @@ export const RENTAL_ITEM_FIELDS = `
     "dimensions": asset->metadata.dimensions
   }
 ` as const;
-
-/** The title of a role or project type in `$lang`; those references always point at the default-language document. */
-export const translatedTitle = <const T extends string>(type: T) =>
-  `coalesce(*[_type == "${type}" && language == $lang && slug.current == ^.slug.current][0].title, title)` as const;
 
 export const IMAGE_FIELDS = `alt, asset, crop, hotspot, "lqip": asset->metadata.lqip, "dimensions": asset->metadata.dimensions`;
 

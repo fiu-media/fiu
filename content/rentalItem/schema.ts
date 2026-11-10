@@ -1,6 +1,7 @@
 import { orderRankField, orderRankOrdering } from "@sanity/orderable-document-list";
 import { defineArrayMember, defineField, defineType } from "sanity";
 
+import { MAX_QTY } from "../../features/rentals/basket/quantity";
 import {
   defaultLanguageReference,
   imageArrayMember,
@@ -73,7 +74,7 @@ export const rentalItem = defineType({
       type: "number",
       description: "How many of this item you own. A quote can't ask for more than this.",
       readOnly: readOnlyInTranslation,
-      validation: (rule) => rule.required().integer().min(1).max(99),
+      validation: (rule) => rule.required().integer().min(1).max(MAX_QTY),
     }),
     defineField({
       name: "available",

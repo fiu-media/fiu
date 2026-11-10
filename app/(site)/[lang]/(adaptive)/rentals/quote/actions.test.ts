@@ -13,6 +13,8 @@ vi.mock("@/sanity/lib/writeClient", () => ({ writeClient: { fetch: mocks.fetch, 
 vi.mock("@/lib/email/send", () => ({ sendEmail: mocks.sendEmail }));
 vi.mock("@/lib/email/settings", () => ({ getRecipient: mocks.getRecipient }));
 
+import { MAX_QTY } from "@/features/rentals/basket/quantity";
+
 import { submitQuote } from "./actions";
 
 const SUBMISSION_ID = "3f1c2b4e-8a6d-4c1e-9b7a-0d5e6f7a8b9c";
@@ -134,9 +136,9 @@ describe("submitQuote", () => {
     expect(mocks.create).not.toHaveBeenCalled();
   });
 
-  it("falls back to a cap of 99 when the item has none", async () => {
+  it("falls back to MAX_QTY when the item has none", async () => {
     mocks.fetch.mockResolvedValue([{ ...camera, maxQuantity: null }]);
-    expect(await submitQuote(idle, form({ items: JSON.stringify([{ itemId: "cam", qty: 99 }]) }))).toMatchObject({
+    expect(await submitQuote(idle, form({ items: JSON.stringify([{ itemId: "cam", qty: MAX_QTY }]) }))).toMatchObject({
       success: true,
     });
   });
