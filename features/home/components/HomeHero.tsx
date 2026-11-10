@@ -8,8 +8,8 @@ import { ArtDirectedImage } from "@/components/ui/ArtDirectedImage";
 import { cn } from "@/lib/cn";
 import { usePortrait } from "@/lib/hooks/usePortrait";
 import logo from "@/public/brand/fiu-logo.svg";
-import type { HeroStill, HeroStills } from "@/sanity/lib/stills";
 
+import type { HeroStill, HeroStills } from "../mappers";
 import { splashFadeVars } from "../splash-config";
 import { useHeroEdge } from "../useHeroEdge";
 import { useHeroIntro, useStillRotation } from "../useHeroIntro";

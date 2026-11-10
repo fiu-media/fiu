@@ -22,16 +22,14 @@ import { railInset, railWidth } from "@/components/layout/nav/rail";
 import { SiteNav } from "@/components/layout/nav/SiteNav";
 import { GlassPillLink } from "@/components/ui/Glass";
 import { WORK_QUERY } from "@/content/project";
-import { ABOUT_QUERY } from "@/content/siteSettings";
-import { AboutContacts } from "@/features/about";
+import { ContactLinks, getSiteSettings, toTeam } from "@/content/siteSettings";
 import { fallbackStills, HeroFade } from "@/features/home";
 import { cn } from "@/lib/cn";
-import { defaultLocale, isLocale, type Locale, localizedPath } from "@/lib/i18n/config";
+import { isLocale, type Locale, localizedPath } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import logo from "@/public/brand/fiu-logo.svg";
-import { type SizedImage, toSizedImage } from "@/sanity/lib/image";
-import { cachedSanity } from "@/sanity/lib/live";
-import { toTeam } from "@/sanity/lib/team";
+import { fetchContent } from "@/sanity/lib/fetch";
+import { toSizedImage } from "@/sanity/lib/image";
 
 // Sign-off page for the condensed About + Our Work under Home's first screen: seven options (A to D, then three reel strips that also carry the team photo, email and Instagram) on the real slogan, About
 // still and projects. Unlisted, like /dev/about. The first screen here is a stand-in (a still and the flat logo): the
@@ -134,12 +132,15 @@ async function Options({
       href: localizedPath(lang, "/about"),
     },
     // From Site settings like the live pages; the badge marks a photo that is still the code's stand-in.
-    team: { ...toTeam(about, dict.about.teamHeading), placeholder: !about.team },
+    team: { ...toTeam(about, dict.about.teamHeading), placeholder: !about.teamStill },
     // Sample links until the editors have set the real ones.
     contacts: (
-      <AboutContacts
-        email={about.contactEmail ?? "hello@example.com"}
-        instagram={about.instagram ?? "https://www.instagram.com/example/"}
+      <ContactLinks
+        variant="list"
+        contact={{
+          email: about.contact.email ?? "hello@example.com",
+          instagram: about.contact.instagram ?? { href: "https://www.instagram.com/example/", handle: "@example" },
+        }}
         labels={{ email: dict.about.emailLabel, instagram: dict.about.instagramLabel }}
       />
     ),
@@ -228,21 +229,12 @@ async function Options({
 }
 
 async function getContent(lang: Locale) {
-  const params = { lang, fallbackLang: defaultLocale };
-  const [{ data: aboutData }, { data: workData }] = await Promise.all([
-    cachedSanity({ query: ABOUT_QUERY, params, perspective: "published", stega: false }),
-    cachedSanity({ query: WORK_QUERY, params, perspective: "published", stega: false }),
+  const [aboutData, workData] = await Promise.all([
+    getSiteSettings(lang, { draft: false }),
+    fetchContent(WORK_QUERY, lang, {}, { draft: false }),
   ]);
 
-  const fallback = fallbackStills[0];
-  const fallbackImage: SizedImage = {
-    src: fallback.src,
-    width: fallback.width,
-    height: fallback.height,
-    alt: fallback.alt,
-    blurDataURL: fallback.blurDataURL,
-  };
-  const still = (aboutData.still ? toSizedImage(aboutData.still, 2400) : null) ?? fallbackImage;
+  const still = (aboutData.aboutStill ? toSizedImage(aboutData.aboutStill, 2400) : null) ?? fallbackStills[0]!;
 
   const real: FoldProject[] = workData.projects
     .map((project) => {

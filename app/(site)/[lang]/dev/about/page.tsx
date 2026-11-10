@@ -5,13 +5,12 @@ import { Suspense } from "react";
 import { railInset } from "@/components/layout/nav/rail";
 import { SiteNav } from "@/components/layout/nav/SiteNav";
 import { GlassPillLink } from "@/components/ui/Glass";
-import { ABOUT_QUERY } from "@/content/siteSettings";
-import { AboutContacts, AboutLayoutA } from "@/features/about";
+import { ContactLinks, getSiteSettings } from "@/content/siteSettings";
+import { AboutLayoutA } from "@/features/about";
 import { fallbackStills } from "@/features/home";
-import { defaultLocale, isLocale, type Locale, localizedPath } from "@/lib/i18n/config";
+import { isLocale, type Locale, localizedPath } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { toSizedImage } from "@/sanity/lib/image";
-import { cachedSanity } from "@/sanity/lib/live";
 
 import { AboutLayoutB, AboutLayoutC, AboutLayoutD, AboutLayoutE, AboutLayoutF } from "../_concepts/about/AboutLayoutOptions";
 
@@ -75,14 +74,7 @@ async function Options({
   const option: Option = OPTIONS.find((o) => o === requested) ?? "a";
   const [dict, settings] = await Promise.all([getDictionary(lang), getSettings(lang)]);
 
-  const fallback = fallbackStills[0];
-  const still = (settings.still ? toSizedImage(settings.still, 2400) : null) ?? {
-    src: fallback.src,
-    width: fallback.width,
-    height: fallback.height,
-    alt: fallback.alt,
-    blurDataURL: fallback.blurDataURL,
-  };
+  const still = (settings.aboutStill ? toSizedImage(settings.aboutStill, 2400) : null) ?? fallbackStills[0]!;
   const Layout = layouts[option];
   const props = {
     still,
@@ -91,9 +83,12 @@ async function Options({
     manifesto: sampleManifesto,
     // Sample links until the editors have set the real ones.
     contacts: (
-      <AboutContacts
-        email={settings.contactEmail ?? "hello@example.com"}
-        instagram={settings.instagram ?? "https://www.instagram.com/example/"}
+      <ContactLinks
+        variant="list"
+        contact={{
+          email: settings.contact.email ?? "hello@example.com",
+          instagram: settings.contact.instagram ?? { href: "https://www.instagram.com/example/", handle: "@example" },
+        }}
         labels={{ email: dict.about.emailLabel, instagram: dict.about.instagramLabel }}
       />
     ),
@@ -127,12 +122,4 @@ async function Options({
   );
 }
 
-async function getSettings(lang: Locale) {
-  const { data } = await cachedSanity({
-    query: ABOUT_QUERY,
-    params: { lang, fallbackLang: defaultLocale },
-    perspective: "published",
-    stega: false,
-  });
-  return data;
-}
+const getSettings = (lang: Locale) => getSiteSettings(lang, { draft: false });

@@ -1,31 +1,35 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { preload } from "react-dom";
 
 import { InlineScript } from "@/components/layout/InlineScript";
 import { railInset } from "@/components/layout/nav/rail";
 import { SiteNav } from "@/components/layout/nav/SiteNav";
-import { HOME_STILLS_QUERY } from "@/content/siteSettings";
-import { fallbackStills, HomeFoldContent, HomeHero, HomeScrollLock, pinHomeScrollScript } from "@/features/home";
+import {
+  fallbackHeroStills,
+  getHomeFold,
+  getHomeStills,
+  HomeFold,
+  HomeHero,
+  HomeScrollLock,
+  pinHomeScrollScript,
+} from "@/features/home";
 import { SiteFooter } from "@/features/site";
-import { defaultLocale, isLocale, languageAlternates, type Locale } from "@/lib/i18n/config";
+import { getLocale, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { LANDSCAPE, PORTRAIT } from "@/lib/media";
+import { pageMetadata, routes } from "@/lib/routes";
 import { cinematicViewport } from "@/lib/theme";
-import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
-import { type HeroStills, toHeroStills } from "@/sanity/lib/stills";
 
 export const viewport = cinematicViewport;
 
 export async function generateMetadata({ params }: PageProps<"/[lang]">): Promise<Metadata> {
-  const { lang } = await params;
-  return isLocale(lang) ? { alternates: languageAlternates(lang, "/") } : {};
+  const lang = await getLocale(params);
+  return pageMetadata(lang, routes.home());
 }
 
 export default async function Home({ params }: PageProps<"/[lang]">) {
-  const { lang } = await params;
-  if (!isLocale(lang)) notFound();
+  const lang = await getLocale(params);
   const dict = await getDictionary(lang);
   return (
     <div data-surface="cinematic" className="bg-ink">
@@ -48,7 +52,7 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
         {/* Under the fold: the team, the slogan and the work. Beside the rail like every other page. */}
         <div className={railInset}>
           <Suspense>
-            <HomeFoldContent lang={lang} />
+            <Fold lang={lang} />
           </Suspense>
           <SiteFooter lang={lang} />
         </div>
@@ -58,11 +62,8 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
   );
 }
 
-const fallbackHeroStills: HeroStills = { landscape: fallbackStills, portrait: fallbackStills };
-
 async function CmsHero({ lang }: { lang: Locale }) {
-  const { perspective, variant } = await getDynamicFetchOptions();
-  const stills = await homeStills(lang, perspective, variant);
+  const stills = await getHomeStills(lang);
   // The glass logo's WebGL scene can't draw until its first still has loaded. Start that download
   // with the HTML, not after the scene's code has mounted. `crossOrigin` must match the texture
   // loader's request (anonymous CORS) or the browser won't reuse the preloaded response. The scene draws the
@@ -76,18 +77,7 @@ async function CmsHero({ lang }: { lang: Locale }) {
   return <HomeHero {...stills} />;
 }
 
-async function homeStills(
-  lang: Locale,
-  perspective: Awaited<ReturnType<typeof getDynamicFetchOptions>>["perspective"],
-  variant: string | undefined,
-): Promise<HeroStills> {
-  const { data } = await cachedSanity({
-    query: HOME_STILLS_QUERY,
-    params: { lang, fallbackLang: defaultLocale },
-    perspective,
-    variant,
-    stega: false,
-  });
-  const stills = toHeroStills(data?.projects ?? []);
-  return stills.landscape.length + stills.portrait.length > 0 ? stills : fallbackHeroStills;
+/** Home's fold, under the hero. Reads draft mode, so it streams in. */
+async function Fold({ lang }: { lang: Locale }) {
+  return <HomeFold {...await getHomeFold(lang)} />;
 }

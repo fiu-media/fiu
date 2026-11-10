@@ -1,7 +1,11 @@
-import type { HOME_STILLS_QUERY_RESULT } from "@/sanity.types";
+import { projectMeta } from "@/content/project";
+import type { Locale } from "@/lib/i18n/config";
+import { href, routes } from "@/lib/routes";
+import type { HOME_STILLS_QUERY_RESULT, WORK_QUERY_RESULT } from "@/sanity.types";
+import { type SizedImage, toSizedImage } from "@/sanity/lib/image";
+import { projectAttribute } from "@/sanity/lib/projects";
 
-import { type SizedImage, toSizedImage } from "./image";
-import { projectAttribute } from "./projects";
+import type { FoldProject } from "./components/HomeFold";
 
 export type HeroStill = SizedImage & {
   /** Precomputed studio tint (hex) for the glass logo; avoids sampling the texture. Only the bundled fallbacks have one. */
@@ -60,4 +64,26 @@ function takeTurns(lists: HeroStill[][]): HeroStill[] {
     }
   }
   return out;
+}
+
+/** How many projects the fold's strip shows before "All work". */
+export const STRIP_PROJECTS = 5;
+
+/** The first projects of Our Work for the fold's strip; one without a cover or a slug is skipped. */
+export function toFoldProjects(projects: WORK_QUERY_RESULT["projects"], lang: Locale): FoldProject[] {
+  return projects
+    .flatMap((project): FoldProject[] => {
+      const image = project.cover ? toSizedImage(project.cover, 1600) : null;
+      if (!image || !project.slug) return [];
+      return [
+        {
+          id: project._id,
+          title: project.title,
+          meta: projectMeta(project),
+          image,
+          href: href(lang, routes.project(project.slug)),
+        },
+      ];
+    })
+    .slice(0, STRIP_PROJECTS);
 }
