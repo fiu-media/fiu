@@ -28,9 +28,13 @@ export function projectMeta({ type, year, client }: Meta): string {
 }
 
 /** The data props of a `ProjectSlide`; the caller adds the rest (label, link, priority, dictionary). */
-export function toProjectSlideData(
-  project: ProjectSlideSource,
-): Pick<ProjectSlideProps, "title" | "meta" | "image" | "mobileImage" | "vimeoUrl" | "previewLoopUrl" | "titleAttribute"> {
+export type ProjectSlideData = Pick<
+  ProjectSlideProps,
+  "title" | "meta" | "image" | "mobileImage" | "vimeoUrl" | "previewLoopUrl" | "titleAttribute"
+>;
+
+/** A project as the data props of a `ProjectSlide`. */
+export function toProjectSlideData(project: ProjectSlideSource): ProjectSlideData {
   return {
     title: project.title,
     meta: projectMeta(project),
