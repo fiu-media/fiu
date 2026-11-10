@@ -16,7 +16,7 @@ export async function SanityChrome() {
   const quiet = process.env.NODE_ENV === "production";
   return (
     <>
-      <SanityLive includeDrafts={isEnabled} onWelcome={quiet ? false : undefined} />
+      <SanityLive includeDrafts={isEnabled} {...(quiet ? { onWelcome: false as const } : {})} />
       {isEnabled && (
         <>
           <VisualEditing />

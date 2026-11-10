@@ -87,7 +87,7 @@ export const siteSettings = defineType({
         rows: 3,
         group: "pages",
         description,
-        validation: required ? (rule) => rule.required() : undefined,
+        validation: (rule) => (required ? rule.required() : rule),
       }),
     ),
     defineField({ name: "instagram", title: "Instagram URL", type: "url", group: "contact" }),

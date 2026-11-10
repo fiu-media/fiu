@@ -25,9 +25,9 @@ type NavProps = {
   items: NavItem[];
   homeHref: string;
   labels: Dictionary["nav"];
-  onImage?: boolean;
+  onImage?: boolean | undefined;
   /** The phone bar floats over footage (Home's hero), so it gets a scrim behind it. */
-  overFootage?: boolean;
+  overFootage?: boolean | undefined;
 };
 
 export function SiteNavClient(props: NavProps) {

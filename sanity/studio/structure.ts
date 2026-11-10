@@ -9,6 +9,7 @@ import type { ComponentType } from "react";
 import type { StructureResolver } from "sanity/structure";
 
 import { defaultLocale } from "../../lib/i18n/config";
+import { omitUndefined } from "../../lib/omitUndefined";
 import { inboxTypes, singletonTypes } from "../schema/documentTypes";
 
 /**
@@ -25,7 +26,7 @@ const orderableList = (
   orderableDocumentListDeskItem({
     type,
     title,
-    icon,
+    ...omitUndefined({ icon }),
     S,
     context,
     filter: "language == $lang",

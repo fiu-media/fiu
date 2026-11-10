@@ -12,6 +12,7 @@ import {
   type LogoPointLightConfig,
   type LogoSoftLightConfig,
 } from "@/features/logo";
+import { omitUndefined } from "@/lib/omitUndefined";
 
 import {
   DEFAULT_EXTRUDE,
@@ -83,7 +84,7 @@ function useFolder(
   build: (params: LogoGlassParams) => Schema,
   collapsed?: boolean,
 ) {
-  const [, set] = useControls(name, () => build(params), { collapsed }, { store }, []);
+  const [, set] = useControls(name, () => build(params), omitUndefined({ collapsed }), { store }, []);
   const reload = useEffectEvent((next: LogoGlassParams) => set(valuesOf(build(next))));
   const mounted = useRef(false);
   useEffect(() => {

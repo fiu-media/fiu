@@ -1,6 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const mocks = vi.hoisted(() => ({ create: vi.fn(), env: {} as { RESEND_API_KEY?: string; RESEND_SEGMENT_ID?: string } }));
+const mocks = vi.hoisted(() => ({
+  create: vi.fn(),
+  env: {} as { RESEND_API_KEY?: string | undefined; RESEND_SEGMENT_ID?: string | undefined },
+}));
 vi.mock("resend", () => ({
   Resend: class {
     contacts = { create: mocks.create };

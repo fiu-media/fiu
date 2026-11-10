@@ -24,24 +24,24 @@ export type ProjectSlideProps = {
   /** One line under the title: type, year, client. */
   meta: string;
   /** `data-sanity` value that makes the title clickable in the Presentation tool. */
-  titleAttribute?: string;
+  titleAttribute?: string | undefined;
   /** What this person did on the project (talent pages only). */
-  role?: string;
+  role?: string | undefined;
   /** The project's own page. With it, the title links there and a "view" pill sits beside Play. */
-  href?: string;
+  href?: string | undefined;
   /** Heading level for the title: the project's own page makes it the page's `<h1>`. */
-  as?: "h1" | "h2";
+  as?: "h1" | "h2" | undefined;
   /** Overrides the slide's size (the project page's hero is shorter than a screen). */
-  className?: string;
+  className?: string | undefined;
   image: SizedImage | null;
   /** Portrait cover for portrait screens (phones). Without one, `image` is cropped to fit. */
-  mobileImage?: SizedImage | null;
-  vimeoUrl?: string | null;
+  mobileImage?: SizedImage | null | undefined;
+  vimeoUrl?: string | null | undefined;
   /** Short silent loop shown while the slide is on screen (a Vimeo background embed, which needs Vimeo Plus). */
-  previewLoopUrl?: string | null;
+  previewLoopUrl?: string | null | undefined;
   /** The first slide loads eagerly; the rest are lazy. */
-  priority?: boolean;
-  dict: { play: string; playTitle: string; stop: string; view?: string };
+  priority?: boolean | undefined;
+  dict: { play: string; playTitle: string; stop: string; view?: string | undefined };
 };
 
 /**

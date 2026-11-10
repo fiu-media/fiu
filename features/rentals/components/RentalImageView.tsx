@@ -17,9 +17,9 @@ export function RentalImageView({
   image: SizedImage | null;
   placeholder: string;
   sizes: string;
-  priority?: boolean;
-  loading?: "eager" | "lazy";
-  className?: string;
+  priority?: boolean | undefined;
+  loading?: "eager" | "lazy" | undefined;
+  className?: string | undefined;
 }) {
   if (!image) {
     return (

@@ -84,7 +84,7 @@ function selectTab(tab: ConfigTab) {
   window.dispatchEvent(new Event(TAB_EVENT));
 }
 
-export type PlaygroundStill = StaticImageData & { lightTint?: string; label?: string };
+export type PlaygroundStill = StaticImageData & { lightTint?: string | undefined; label?: string | undefined };
 
 const SWEEP_MODES: { value: SweepMode; label: string }[] = [
   { value: "off", label: "Off" },

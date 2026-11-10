@@ -26,9 +26,9 @@ export type SizedImage = {
   width: number;
   height: number;
   alt: string;
-  blurDataURL?: string;
+  blurDataURL?: string | undefined;
   /** CSS object-position from the editor's hotspot (for cropped uses like portraits; rentals show whole). */
-  position?: string;
+  position?: string | undefined;
 };
 
 /** A queried Sanity image as a sized, cropped `next/image` source (null without dimensions). */

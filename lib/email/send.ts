@@ -5,6 +5,7 @@ import { render } from "react-email";
 import { Resend } from "resend";
 
 import { env } from "@/env";
+import { omitUndefined } from "@/lib/omitUndefined";
 
 import { toDeliverable } from "./address";
 import { senderFor } from "./sender";
@@ -23,7 +24,7 @@ export const plainTextOptions = {
   },
 } as const;
 
-type Email = { to: string; subject: string; react: ReactElement; replyTo?: string };
+type Email = { to: string; subject: string; react: ReactElement; replyTo?: string | undefined };
 
 /**
  * Sends through Resend, which renders `react` to the HTML part; the plain-text part is rendered
@@ -51,7 +52,7 @@ export async function sendEmail({ to, subject, react, replyTo }: Email) {
     subject,
     react,
     text,
-    replyTo: replyAddress,
+    ...omitUndefined({ replyTo: replyAddress }),
   });
   if (error) throw new Error(`Resend rejected "${subject}": ${error.name}: ${error.message}`);
 }

@@ -1,7 +1,10 @@
 import { createElement } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const mocks = vi.hoisted(() => ({ send: vi.fn(), env: {} as { RESEND_API_KEY?: string; RESEND_EMAIL_DOMAIN?: string } }));
+const mocks = vi.hoisted(() => ({
+  send: vi.fn(),
+  env: {} as { RESEND_API_KEY?: string | undefined; RESEND_EMAIL_DOMAIN?: string | undefined },
+}));
 vi.mock("resend", () => ({
   Resend: class {
     emails = { send: mocks.send };

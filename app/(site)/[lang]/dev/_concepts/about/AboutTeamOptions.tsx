@@ -13,7 +13,7 @@ function Manifesto({
   manifesto,
   attributes,
   className,
-}: Pick<AboutTeamProps, "manifesto" | "attributes"> & { className?: string }) {
+}: Pick<AboutTeamProps, "manifesto" | "attributes"> & { className?: string | undefined }) {
   return (
     manifesto && (
       <div data-sanity={attributes?.manifesto} className={cn("space-y-6 leading-relaxed text-fg/90", className)}>

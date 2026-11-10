@@ -1,9 +1,13 @@
 import { defineCliConfig } from "sanity/cli";
 
+import { omitUndefined } from "./lib/omitUndefined";
+
 export default defineCliConfig({
   api: {
-    projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
-    dataset: process.env.NEXT_PUBLIC_SANITY_DATASET,
+    ...omitUndefined({
+      projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
+      dataset: process.env.NEXT_PUBLIC_SANITY_DATASET,
+    }),
   },
   deployment: {
     // The hosted Studio at fiu.sanity.studio keeps its Sanity packages up to date. Deployed by .github/workflows/deploy-studio.yml.

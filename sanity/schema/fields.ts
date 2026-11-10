@@ -1,13 +1,14 @@
 import { defineArrayMember, defineField, type SanityDocument } from "sanity";
 
 import { defaultLocale } from "../../lib/i18n/config";
+import { omitUndefined } from "../../lib/omitUndefined";
 import { apiVersion } from "../studio-env";
 
 /**
  * `readOnly` for language-neutral fields (slugs, stock, availability, facts about a project or
  * person). Only the default-language document is edited; translations read these from it.
  */
-export const readOnlyInTranslation = ({ document }: { document?: SanityDocument }) =>
+export const readOnlyInTranslation = ({ document }: { document?: SanityDocument | undefined }) =>
   !!document?.language && document.language !== defaultLocale;
 
 /**
@@ -55,7 +56,7 @@ export const vimeoUrlField = (name: string, title: string, description?: string)
     name,
     title,
     type: "url",
-    description,
+    ...omitUndefined({ description }),
     readOnly: readOnlyInTranslation,
     validation: (rule) =>
       rule.uri({ scheme: ["https"] }).custom((url) => {
@@ -80,7 +81,7 @@ export const imageWithAlt = (name: string, title: string, required = false) =>
     type: "image",
     options: { hotspot: true },
     fields: [altField],
-    validation: required ? (rule) => rule.required() : undefined,
+    validation: (rule) => (required ? rule.required() : rule),
   });
 
 /**

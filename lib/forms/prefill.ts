@@ -55,10 +55,10 @@ export const QUOTE_PARAMS = ["pickup", "return", "company", "production", "item"
 type CatalogueEntry = { id: string; slug: string; max: number };
 
 export type QuotePrefill = {
-  start?: string;
-  end?: string;
-  company?: string;
-  production?: string;
+  start?: string | undefined;
+  end?: string | undefined;
+  company?: string | undefined;
+  production?: string | undefined;
   items: { itemId: string; qty: number; max: number }[];
 };
 
@@ -119,7 +119,13 @@ export function quoteHref(
     company,
     production,
     items = [],
-  }: { start?: string; end?: string; company?: string; production?: string; items?: { slug: string; qty: number }[] } = {},
+  }: {
+    start?: string | undefined;
+    end?: string | undefined;
+    company?: string | undefined;
+    production?: string | undefined;
+    items?: { slug: string; qty: number }[];
+  } = {},
 ) {
   const query = new URLSearchParams();
   if (start) query.set("pickup", start);

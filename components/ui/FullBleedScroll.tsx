@@ -26,7 +26,7 @@ export function FullBleedSlide({
 }: {
   /** Accessible name, e.g. "Solas, 2 of 5". */
   label: string;
-  className?: string;
+  className?: string | undefined;
   children: ReactNode;
 }) {
   return (

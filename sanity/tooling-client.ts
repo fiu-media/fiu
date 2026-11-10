@@ -1,5 +1,7 @@
 import { type ClientPerspective, createClient, type SanityClient } from "@sanity/client";
 
+import { omitUndefined } from "@/lib/omitUndefined";
+
 import { apiVersion } from "./studio-env";
 
 /** A required environment variable, or an error that says where to set it. */
@@ -24,7 +26,7 @@ export function toolingClient({
   return createClient({
     projectId: env("NEXT_PUBLIC_SANITY_PROJECT_ID"),
     dataset: dataset ?? env("NEXT_PUBLIC_SANITY_DATASET"),
-    token: token && env(tokenNames[token]),
+    ...omitUndefined({ token: token && env(tokenNames[token]) }),
     apiVersion,
     useCdn: false,
     perspective,

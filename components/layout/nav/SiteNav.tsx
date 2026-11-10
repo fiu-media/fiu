@@ -10,7 +10,15 @@ import { SiteNavClient } from "./SiteNavClient";
  * `onImage` is for the cinematic surface, where the phone bar floats over photography. `overFootage` is for Home, whose
  * hero runs under the phone bar: a scrim fades down behind the logo and the Menu button.
  */
-export async function SiteNav({ lang, onImage, overFootage }: { lang: Locale; onImage?: boolean; overFootage?: boolean }) {
+export async function SiteNav({
+  lang,
+  onImage,
+  overFootage,
+}: {
+  lang: Locale;
+  onImage?: boolean | undefined;
+  overFootage?: boolean | undefined;
+}) {
   const dict = await getDictionary(lang);
   return (
     <SiteNavClient

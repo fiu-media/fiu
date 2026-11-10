@@ -9,7 +9,7 @@ export type SceneStill = {
   width: number;
   height: number;
   /** CMS-provided studio tint (hex). Prefer this over client sampling — CORS-safe. */
-  lightTint?: string;
+  lightTint?: string | undefined;
 };
 
 /** Same cache key as `useTexture([src])` in Scene. */

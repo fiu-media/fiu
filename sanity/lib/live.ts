@@ -8,6 +8,7 @@ import {
 } from "next-sanity/live";
 
 import { env } from "@/env";
+import { omitUndefined } from "@/lib/omitUndefined";
 
 import { client } from "./client";
 
@@ -15,8 +16,7 @@ const token = env.SANITY_API_READ_TOKEN;
 
 const { sanityFetch, SanityLive } = defineLive({
   client,
-  serverToken: token,
-  browserToken: token,
+  ...omitUndefined({ serverToken: token, browserToken: token }),
   strict: true,
 });
 
@@ -33,7 +33,7 @@ export const cachedSanity: StrictDefinedFetchType = async (options) => {
 
 export interface DynamicFetchOptions {
   perspective: LivePerspective;
-  variant?: string;
+  variant?: string | undefined;
   stega: boolean;
 }
 
