@@ -7,6 +7,7 @@
     "strict": true,
     "noFallthroughCasesInSwitch": true,
     "verbatimModuleSyntax": true,
+    "noImplicitOverride": true,
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",
