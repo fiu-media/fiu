@@ -4,7 +4,7 @@ import { createStore } from "zustand/vanilla";
 
 import { safeStorage } from "@/lib/safe-storage";
 
-import type { LogoGlassParams } from "./logoConfig";
+import type { LogoGlassParams } from "./config/schemas";
 
 /**
  * How much glass a device gets. `high` is the full preset; `medium` and `low` trade samples,

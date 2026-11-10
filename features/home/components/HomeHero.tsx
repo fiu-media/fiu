@@ -256,8 +256,6 @@ export function HomeHero({ landscape, portrait }: HeroStills) {
               stills={sceneStills}
               index={current}
               onReady={onReady}
-              meshMode="extrude"
-              rimLook="light"
               introSlide
               introHold={!spinGo}
               introPlayed={resumed}

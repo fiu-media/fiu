@@ -8,7 +8,7 @@ import {
   importPlaygroundConfig,
   parseConfigExport,
   presetConfig,
-} from "./logoConfig";
+} from "./playgroundConfig";
 
 const current = presetConfig("light");
 
