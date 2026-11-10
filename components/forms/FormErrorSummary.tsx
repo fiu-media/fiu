@@ -3,10 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 
 import { errorMessage, type ErrorMessages } from "./Field";
+import { inPageOrder, useFormLabels } from "./FormLabels";
 import type { ConformForm } from "./useConformForm";
-
-/** Field names with their visible labels, in the order they appear on the page. */
-export type SummaryLabels = readonly (readonly [name: string, label: string])[];
 
 /**
  * Announced and focused when a submission fails, so keyboard and screen-reader users land on
@@ -14,13 +12,11 @@ export type SummaryLabels = readonly (readonly [name: string, label: string])[];
  */
 export function FormErrorSummary({
   form,
-  labels,
   title,
   messages,
   attempt,
 }: {
   form: ConformForm["form"];
-  labels: SummaryLabels;
   title: string;
   messages: ErrorMessages;
   /** Changes on every submit and server reply so focus moves even when the errors are identical. */
@@ -36,7 +32,9 @@ export function FormErrorSummary({
     return () => clearTimeout(timer);
   }, [attempt]);
 
-  const items = labels.flatMap(([name, label]) => {
+  // Each field registered its own label; they are listed in the order they appear on the page.
+  const labels = useFormLabels();
+  const items = inPageOrder(labels).flatMap(({ name, label }) => {
     const message = errorMessage(messages, form.fieldErrors[name]);
     return message ? [{ name, label, message }] : [];
   });

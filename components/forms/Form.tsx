@@ -8,40 +8,39 @@ import type { Locale } from "@/lib/i18n/config";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 
 import { FormMessages, Honeypot } from "./Field";
-import { FormErrorSummary, type SummaryLabels } from "./FormErrorSummary";
+import { FormErrorSummary } from "./FormErrorSummary";
+import { FormLabelsProvider } from "./FormLabels";
 import type { ConformForm } from "./useConformForm";
 
 /**
  * The shared shell of a public form: the hidden locale and submission id, the honeypot, the error
- * summary, and the localised error copy its `<Field>`s read.
+ * summary (which learns each field's label from the `<Field>`s), and the localised error copy they read.
  */
 export function Form({
   conform,
   lang,
   forms,
-  labels,
   className,
   children,
 }: {
   conform: ConformForm;
   lang: Locale;
   forms: Dictionary["forms"];
-  labels: SummaryLabels;
   className?: string;
   children: ReactNode;
 }) {
   const { form, formProps, submissionId, attempt, attempted } = conform;
   return (
     <FormMessages value={forms.errors}>
-      <form {...formProps} className={cn("relative flex flex-col", className)}>
-        <input type="hidden" name="lang" value={lang} />
-        <input type="hidden" name="submissionId" value={submissionId} />
-        <Honeypot />
-        {attempted && (
-          <FormErrorSummary form={form} labels={labels} title={forms.errorSummary} messages={forms.errors} attempt={attempt} />
-        )}
-        {children}
-      </form>
+      <FormLabelsProvider>
+        <form {...formProps} className={cn("relative flex flex-col", className)}>
+          <input type="hidden" name="lang" value={lang} />
+          <input type="hidden" name="submissionId" value={submissionId} />
+          <Honeypot />
+          {attempted && <FormErrorSummary form={form} title={forms.errorSummary} messages={forms.errors} attempt={attempt} />}
+          {children}
+        </form>
+      </FormLabelsProvider>
     </FormMessages>
   );
 }

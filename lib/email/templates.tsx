@@ -11,37 +11,75 @@ import { format } from "@/lib/i18n/format";
 import { siteOrigin } from "./studio-link";
 
 export type { KitLine } from "@/emails/_layout";
-export type { QuoteEmailData };
+export type { ContactEmailData, QuoteEmailData };
 
-export function quoteNotification(dict: Dictionary, data: QuoteEmailData, studioUrl: string, lang: Locale = defaultLocale) {
-  const { emails } = dict;
-  return {
-    subject: format(emails.quoteNotify.subject, { name: data.name, count: data.kit.length }, lang),
-    react: <QuoteNotification emails={emails} dates={dict.dates} data={data} studioUrl={studioUrl} siteUrl={siteOrigin()} />,
-  };
+/** The data each email is built from. */
+type Data = {
+  contactNotification: ContactEmailData;
+  contactConfirmation: ContactEmailData;
+  quoteNotification: QuoteEmailData;
+  quoteConfirmation: QuoteEmailData;
+};
+
+export type EmailKind = keyof Data;
+
+export type Built = { subject: string; react: React.ReactElement };
+
+type Options = {
+  /** Where the notifications link to; the Studio page of the stored document. */
+  studioLink?: string;
+  /** The language the email is written in, for formatting its subject. The dictionary is the caller's choice. */
+  lang?: Locale;
+};
+
+/** The visitor's enquiry type as they saw it in the form, or as submitted if it isn't one we know. */
+function enquiryLabel(dict: Dictionary, type: string) {
+  return dict.contact.enquiryTypes[type as keyof typeof dict.contact.enquiryTypes] ?? type;
 }
 
-export function quoteConfirmation(dict: Dictionary, data: QuoteEmailData) {
+/** Every email, built the same way: its kind, the dictionary it is written in, and what the visitor submitted. */
+export function build<K extends EmailKind>(
+  kind: K,
+  dict: Dictionary,
+  data: Data[K],
+  { studioLink = "", lang = defaultLocale }: Options = {},
+): Built {
   const { emails } = dict;
-  return {
-    subject: emails.quoteConfirm.subject,
-    react: <QuoteConfirmation emails={emails} dates={dict.dates} data={data} siteUrl={siteOrigin()} />,
-  };
-}
+  const siteUrl = siteOrigin();
+  const quote = data as QuoteEmailData;
+  const contact = data as ContactEmailData;
 
-export function contactConfirmation(dict: Dictionary, data: ContactEmailData) {
-  const { emails } = dict;
-  const enquiryType = dict.contact.enquiryTypes[data.enquiryType as keyof typeof dict.contact.enquiryTypes] ?? data.enquiryType;
-  return {
-    subject: emails.contactConfirm.subject,
-    react: <ContactConfirmation emails={emails} enquiryType={enquiryType} data={data} siteUrl={siteOrigin()} />,
-  };
-}
-
-export function contactNotification(dict: Dictionary, data: ContactEmailData, studioUrl: string) {
-  const { emails } = dict;
-  return {
-    subject: format(emails.contactNotify.subject, { name: data.name, type: data.enquiryType }),
-    react: <ContactNotification emails={emails} data={data} studioUrl={studioUrl} siteUrl={siteOrigin()} />,
-  };
+  switch (kind as EmailKind) {
+    case "quoteNotification":
+      return {
+        subject: format(emails.quoteNotify.subject, { name: quote.name, count: quote.kit.length }, lang),
+        react: <QuoteNotification emails={emails} dates={dict.dates} data={quote} studioUrl={studioLink} siteUrl={siteUrl} />,
+      };
+    case "quoteConfirmation":
+      return {
+        subject: emails.quoteConfirm.subject,
+        react: <QuoteConfirmation emails={emails} dates={dict.dates} data={quote} siteUrl={siteUrl} />,
+      };
+    case "contactNotification":
+      return {
+        subject: format(
+          emails.contactNotify.subject,
+          { name: contact.name, type: enquiryLabel(dict, contact.enquiryType) },
+          lang,
+        ),
+        react: <ContactNotification emails={emails} data={contact} studioUrl={studioLink} siteUrl={siteUrl} />,
+      };
+    case "contactConfirmation":
+      return {
+        subject: emails.contactConfirm.subject,
+        react: (
+          <ContactConfirmation
+            emails={emails}
+            enquiryType={enquiryLabel(dict, contact.enquiryType)}
+            data={contact}
+            siteUrl={siteUrl}
+          />
+        ),
+      };
+  }
 }
