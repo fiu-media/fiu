@@ -5,7 +5,7 @@ import { en } from "../lib/i18n/dictionaries/en";
 import { rentalItems } from "./fixtures/data";
 import { isoDateFromNow } from "./helpers";
 
-const { quote } = en;
+const { quote, forms } = en;
 
 /** The rental the deep-link tests quote: one in stock, so "Add one more" is never on offer. */
 const slug = rentalItems.single.slug;
@@ -35,8 +35,8 @@ test.describe("quote deep links", () => {
   test("nothing personal is read from a link", async ({ page }) => {
     await page.goto(`/rentals/quote?item=${slug}&name=Aoife&email=a%40example.com&phone=%2B353871234567&message=Hello`);
     await expect(page.getByLabel(quote.company)).toBeVisible();
-    await expect(page.getByLabel(quote.name)).toHaveValue("");
-    await expect(page.getByLabel(quote.email)).toHaveValue("");
+    await expect(page.getByLabel(forms.fields.name)).toHaveValue("");
+    await expect(page.getByLabel(forms.fields.email)).toHaveValue("");
     await expect(page.getByRole("textbox", { name: /^Phone/ })).toHaveValue("");
     await expect(page.getByLabel(quote.message)).toHaveValue("");
   });
@@ -83,8 +83,8 @@ test.describe("copy link", () => {
 
     await page.getByLabel(quote.company).fill("Murphy & Co");
     await page.getByLabel(quote.production).fill("Spring shoot");
-    await page.getByLabel(quote.name).fill("Aoife Murphy");
-    await page.getByLabel(quote.email).fill("aoife@example.com");
+    await page.getByLabel(forms.fields.name).fill("Aoife Murphy");
+    await page.getByLabel(forms.fields.email).fill("aoife@example.com");
     await page.getByRole("textbox", { name: /^Phone/ }).fill("871234567");
     await page.getByLabel(quote.message).fill("Private note");
     const button = page.getByRole("button", { name: quote.copyLink });
@@ -111,7 +111,7 @@ test.describe("copy link", () => {
     await other.goto(copied);
     await expect(other.getByLabel(quote.startDate)).toHaveValue(pickup);
     await expect(other.getByLabel(quote.company)).toHaveValue("Murphy & Co");
-    await expect(other.getByLabel(quote.name)).toHaveValue("");
+    await expect(other.getByLabel(forms.fields.name)).toHaveValue("");
   });
 });
 
@@ -136,8 +136,8 @@ test.describe("share link on a phone", () => {
     await page.addInitScript(stub(share));
     await page.goto(`/rentals/quote?pickup=${isoDateFromNow(14)}&return=${isoDateFromNow(16)}&item=${slug}`);
     await expect(page.getByLabel(quote.company)).toBeVisible();
-    await page.getByLabel(quote.name).fill("Aoife Murphy");
-    await page.getByLabel(quote.email).fill("aoife@example.com");
+    await page.getByLabel(forms.fields.name).fill("Aoife Murphy");
+    await page.getByLabel(forms.fields.email).fill("aoife@example.com");
   }
 
   const read = (page: Page) =>

@@ -17,7 +17,7 @@ import { format } from "@/lib/i18n/format";
 const footerLink = "link-inline -my-3 py-3";
 
 export async function SiteFooter({ lang }: { lang: Locale }) {
-  const { footer } = await getDictionary(lang);
+  const { footer, contactLinks } = await getDictionary(lang);
   const copyright = format(footer.copyright, { year: "" }).trim();
   return (
     <footer
@@ -34,7 +34,7 @@ export async function SiteFooter({ lang }: { lang: Locale }) {
         </p>
         {/* Reads draft mode, so it streams in after the copyright. */}
         <Suspense>
-          <FooterLinks lang={lang} labels={{ email: footer.emailLabel, instagram: footer.instagramLabel }} />
+          <FooterLinks lang={lang} labels={contactLinks} />
         </Suspense>
         <Link href={localizedPath(lang, "/privacy")} className={footerLink}>
           {footer.privacy}

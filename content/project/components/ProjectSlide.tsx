@@ -41,7 +41,7 @@ export type ProjectSlideProps = {
   previewLoopUrl?: string | null;
   /** The first slide loads eagerly; the rest are lazy. */
   priority?: boolean;
-  dict: { play: string; stop: string; view?: string };
+  dict: { play: string; playTitle: string; stop: string; view?: string };
 };
 
 /**
@@ -160,11 +160,11 @@ export function ProjectSlide({
                   size="lg"
                   onImage
                   onClick={play}
-                  aria-label={format(dict.play, { title })}
+                  aria-label={format(dict.playTitle, { title })}
                   className="shrink-0"
                 >
                   <Play aria-hidden fill="currentColor" className="size-4" />
-                  <span className="max-sm:sr-only">{dict.play.replace(/\s*\{title\}/, "")}</span>
+                  <span className="max-sm:sr-only">{dict.play}</span>
                 </GlassPillButton>
               )}
             </div>

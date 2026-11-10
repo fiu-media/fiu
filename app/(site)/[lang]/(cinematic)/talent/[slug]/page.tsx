@@ -37,7 +37,7 @@ export default function TalentProfilePage({ params }: PageProps<"/[lang]/talent/
 
 async function Profile({ params }: Pick<PageProps<"/[lang]/talent/[slug]">, "params">) {
   const [lang, { slug }] = await Promise.all([getLocale(params), params]);
-  const [{ talent, vimeo }, profile] = await Promise.all([getDictionary(lang), getTalentProfile(lang, slug)]);
+  const [{ talent, vimeo, slides }, profile] = await Promise.all([getDictionary(lang), getTalentProfile(lang, slug)]);
   if (!profile) notFound();
 
   const { name, roles, portrait, bio, attrs, projects } = profile;
@@ -94,7 +94,7 @@ async function Profile({ params }: Pick<PageProps<"/[lang]/talent/[slug]">, "par
             <ProjectSlide
               key={id}
               {...project}
-              label={format(talent.slideLabel, { title: project.title, index: i + 1, total: projects.length })}
+              label={format(slides.label, { title: project.title, index: i + 1, total: projects.length })}
               dict={vimeo}
             />
           ))}

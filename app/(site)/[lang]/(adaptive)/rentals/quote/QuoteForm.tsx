@@ -156,32 +156,32 @@ function QuoteFormFields({ lang, dict, countries }: Props) {
         <div className="grid gap-4 sm:grid-cols-2">
           <Field
             field={fields.name}
-            label={quote.name}
+            label={forms.fields.name}
             required
             autoComplete="name"
             maxLength={limits.name}
-            placeholder={quote.placeholders.name}
+            placeholder={forms.fields.placeholders.name}
           />
           <Field
             field={fields.email}
             type="email"
-            label={quote.email}
+            label={forms.fields.email}
             required
             autoComplete="email"
             maxLength={limits.email}
-            placeholder={quote.placeholders.email}
+            placeholder={forms.fields.placeholders.email}
           />
           <PhoneField
             field={fields.phone}
-            label={quote.phone}
-            optionalLabel={quote.optional}
-            countryLabel={quote.phoneCountry}
+            label={forms.fields.phone}
+            optionalLabel={forms.fields.optional}
+            countryLabel={forms.fields.phoneCountry}
             countries={countries}
           />
           <Field
             field={fields.company}
             label={quote.company}
-            optionalLabel={quote.optional}
+            optionalLabel={forms.fields.optional}
             autoComplete="organization"
             maxLength={limits.company}
             placeholder={quote.placeholders.company}
@@ -190,7 +190,7 @@ function QuoteFormFields({ lang, dict, countries }: Props) {
         <Field
           field={fields.production}
           label={quote.production}
-          optionalLabel={quote.optional}
+          optionalLabel={forms.fields.optional}
           autoComplete="off"
           maxLength={limits.production}
           placeholder={quote.placeholders.production}
@@ -202,7 +202,7 @@ function QuoteFormFields({ lang, dict, countries }: Props) {
           minRows={3}
           maxRows={10}
           label={quote.message}
-          optionalLabel={quote.optional}
+          optionalLabel={forms.fields.optional}
           autoComplete="off"
           maxLength={limits.message}
           placeholder={quote.placeholders.message}
@@ -211,7 +211,7 @@ function QuoteFormFields({ lang, dict, countries }: Props) {
 
       <div className="flex flex-col gap-6">
         <div>
-          <SubmitButton pending={pending}>{pending ? quote.sending : quote.submit}</SubmitButton>
+          <SubmitButton pending={pending}>{pending ? forms.fields.sending : quote.submit}</SubmitButton>
         </div>
         {/* Apart from sending, under its own rule: the copied link leaves out what Send includes (contact details). */}
         <div className="flex flex-wrap items-center gap-x-4 gap-y-3 border-t border-line pt-6">

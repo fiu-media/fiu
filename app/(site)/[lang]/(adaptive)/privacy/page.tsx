@@ -128,8 +128,6 @@ export default async function PrivacyPage({ params }: PageProps<"/[lang]/privacy
 }
 
 async function Email({ lang }: { lang: Locale }) {
-  const [{ contact: links }, { contact }] = await Promise.all([getSiteSettings(lang), getDictionary(lang)]);
-  return (
-    <ContactLinks contact={links} labels={{ email: contact.emailLabel, instagram: contact.instagramLabel }} variant="list" />
-  );
+  const [{ contact: links }, { contactLinks }] = await Promise.all([getSiteSettings(lang), getDictionary(lang)]);
+  return <ContactLinks contact={links} labels={contactLinks} variant="list" />;
 }

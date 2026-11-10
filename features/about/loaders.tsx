@@ -20,13 +20,7 @@ export async function getAbout(lang: Locale): Promise<AboutLayoutProps> {
     slogan: slogan ?? dict.about.title,
     gloss: sloganGloss ?? null,
     manifesto: manifesto?.length ? <PortableText value={manifesto} /> : null,
-    contacts: (
-      <ContactLinks
-        variant="list"
-        contact={settings.contact}
-        labels={{ email: dict.about.emailLabel, instagram: dict.about.instagramLabel }}
-      />
-    ),
+    contacts: <ContactLinks variant="list" contact={settings.contact} labels={dict.contactLinks} />,
     team: toTeam(settings, dict.about.teamHeading),
     attributes: _id
       ? { still: attr("aboutStill"), slogan: attr("slogan"), manifesto: attr("manifesto"), team: attr("teamStill") }

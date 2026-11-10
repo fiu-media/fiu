@@ -22,8 +22,8 @@ test.describe("quote request", () => {
 
     await page.getByLabel(quote.startDate).fill(isoDateFromNow(14));
     await page.getByLabel(quote.endDate).fill(isoDateFromNow(16));
-    await page.getByLabel(quote.name).fill("E2E Tester");
-    await page.getByLabel(quote.email).fill(testEmail());
+    await page.getByLabel(forms.fields.name).fill("E2E Tester");
+    await page.getByLabel(forms.fields.email).fill(testEmail());
     // Ireland (+353) is preselected, so a national number is enough.
     await page.getByRole("textbox", { name: /^Phone/ }).pressSequentially("871234567");
     await page.getByRole("button", { name: quote.submit }).click();
@@ -96,29 +96,29 @@ test.describe("quote request", () => {
   test("a validation error is announced and focused", async ({ page }) => {
     await page.getByLabel(quote.startDate).fill(isoDateFromNow(14));
     await page.getByLabel(quote.endDate).fill(isoDateFromNow(16));
-    await page.getByLabel(quote.name).fill("E2E Tester");
-    await page.getByLabel(quote.email).fill("tester@localhost");
+    await page.getByLabel(forms.fields.name).fill("E2E Tester");
+    await page.getByLabel(forms.fields.email).fill("tester@localhost");
     await page.getByRole("button", { name: quote.submit }).click();
 
     const summary = page.getByRole("alert").filter({ hasText: forms.errorSummary });
     await expect(summary).toBeFocused();
-    const link = summary.getByRole("link", { name: quote.email });
-    await expect(link).toHaveAttribute("href", `#${await page.getByLabel(quote.email).getAttribute("id")}`);
+    const link = summary.getByRole("link", { name: forms.fields.email });
+    await expect(link).toHaveAttribute("href", `#${await page.getByLabel(forms.fields.email).getAttribute("id")}`);
     // The visitor's input survives the failed attempt.
-    await expect(page.getByLabel(quote.name)).toHaveValue("E2E Tester");
+    await expect(page.getByLabel(forms.fields.name)).toHaveValue("E2E Tester");
   });
 
   test("a pick-up in the past is caught before anything is sent", async ({ page }) => {
     await page.getByLabel(quote.startDate).fill(isoDateFromNow(-3));
     await page.getByLabel(quote.endDate).fill(isoDateFromNow(2));
-    await page.getByLabel(quote.name).fill("E2E Tester");
-    await page.getByLabel(quote.email).fill(testEmail());
+    await page.getByLabel(forms.fields.name).fill("E2E Tester");
+    await page.getByLabel(forms.fields.email).fill(testEmail());
     await page.getByRole("button", { name: quote.submit }).click();
 
     const summary = page.getByRole("alert").filter({ hasText: forms.errorSummary });
     await expect(summary).toBeFocused();
     await expect(summary.getByText(forms.errors.past)).toBeVisible();
-    await expect(page.getByLabel(quote.name)).toHaveValue("E2E Tester");
+    await expect(page.getByLabel(forms.fields.name)).toHaveValue("E2E Tester");
   });
 
   test("an error only the server knows about comes back in the summary", async ({ page }) => {
@@ -133,13 +133,13 @@ test.describe("quote request", () => {
 
     await page.getByLabel(quote.startDate).fill(isoDateFromNow(14));
     await page.getByLabel(quote.endDate).fill(isoDateFromNow(16));
-    await page.getByLabel(quote.name).fill("E2E Tester");
-    await page.getByLabel(quote.email).fill(testEmail());
+    await page.getByLabel(forms.fields.name).fill("E2E Tester");
+    await page.getByLabel(forms.fields.email).fill(testEmail());
     await page.getByRole("button", { name: quote.submit }).click();
 
     const summary = page.getByRole("alert").filter({ hasText: forms.errors.unavailable });
     await expect(summary).toBeFocused();
     await expect(page.getByText(en.basket.unknownItem)).toBeVisible();
-    await expect(page.getByLabel(quote.name)).toHaveValue("E2E Tester");
+    await expect(page.getByLabel(forms.fields.name)).toHaveValue("E2E Tester");
   });
 });

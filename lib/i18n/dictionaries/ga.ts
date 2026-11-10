@@ -20,6 +20,16 @@ export const ga: DeepPartial<Dictionary> = {
     rentals: "Cíos",
     contact: "Teagmháil",
   },
+  home: {
+    aboutCta: "Eolas Fúinn",
+    workCta: "An obair ar fad",
+  },
+  slides: {
+    label: "{title}, {index} as {total}",
+  },
+  contactLinks: {
+    email: "Ríomhphost",
+  },
   notFound: {
     heading: "Níor aimsíodh an leathanach",
     body: "Níl an leathanach sin ann, nó tá sé bogtha.",
@@ -27,16 +37,15 @@ export const ga: DeepPartial<Dictionary> = {
     backTo: "Ar ais chuig {section}",
   },
   vimeo: {
-    play: "Seinn {title}",
+    play: "Seinn",
+    playTitle: "Seinn {title}",
     stop: "Stad an físeán",
   },
   footer: {
-    emailLabel: "Ríomhphost",
     privacy: "Príobháideachas",
   },
   about: {
     title: "Eolas Fúinn",
-    emailLabel: "Ríomhphost",
     // Needs a native speaker's review, like the rest of this file's first pass.
     teamHeading: "An Fhoireann",
   },
@@ -56,7 +65,6 @@ export const ga: DeepPartial<Dictionary> = {
     next: "An chéad tionscadal eile",
     back: "An obair ar fad",
     view: "Féach ar an tionscadal",
-    slideLabel: "{title}, {index} as {total}",
     progressLabel: "Tionscadail",
     goTo: "Téigh go {title}",
   },
@@ -67,7 +75,6 @@ export const ga: DeepPartial<Dictionary> = {
     showreel: "Ríl taispeána",
     projects: "Tionscadail",
     projectsOf: "Obair {name}",
-    slideLabel: "{title}, {index} as {total}",
     noPortrait: "Portráid le teacht go luath",
     back: "An tallann ar fad",
   },
@@ -121,14 +128,9 @@ export const ga: DeepPartial<Dictionary> = {
     startDate: "Bailiú",
     endDate: "Tabhairt ar ais",
     contactHeading: "Do shonraí",
-    name: "Ainm",
-    email: "Ríomhphost",
-    phone: "Fón",
-    phoneCountry: "Tír na huimhreach fóin",
     company: "Cuideachta",
     production: "Léiriúchán",
     message: "An bhfuil aon rud eile ar cheart dúinn a bheith ar an eolas faoi?",
-    optional: "roghnach",
     copyLink: "Cóipeáil an nasc",
     shareLink: "Roinn an nasc",
     shareTitle: "Luacháil ó Fiú Media",
@@ -140,7 +142,6 @@ export const ga: DeepPartial<Dictionary> = {
       message: "Suíomh, méid na foirne, aon rud a théann i bhfeidhm ar an trealamh",
     },
     submit: "Seol an t-iarratas ar luacháil",
-    sending: "Á sheoladh…",
     successTitle: "Iarratas seolta",
     successBody:
       "Go raibh maith agat, fuaireamar d'iarratas ar luacháil agus sheolamar deimhniú chuig do ríomhphost. Beimid i dteagmháil go luath.",
@@ -152,26 +153,27 @@ export const ga: DeepPartial<Dictionary> = {
     title: "Teagmháil",
     enquiryType: "Cad atá i gceist?",
     enquiryTypes: { Project: "Tionscadal", Talent: "Ár dtallann", Rentals: "Cíos trealaimh", Other: "Rud éigin eile" },
-    name: "Ainm",
-    email: "Ríomhphost",
-    phone: "Fón",
-    phoneCountry: "Tír na huimhreach fóin",
-    optional: "roghnach",
     message: "Teachtaireacht",
     placeholders: {
       message: "Inis dúinn faoi do thionscadal, nó faoin rud atá uait",
     },
     submit: "Seol an teachtaireacht",
-    sending: "Á sheoladh…",
     successTitle: "Teachtaireacht seolta",
     successBody:
       "Go raibh maith agat as dul i dteagmháil linn. Sheolamar cóip chuig do ríomhphost, agus freagróimid chomh luath agus is féidir linn.",
     successBodyNoEmail:
       "Go raibh maith agat as dul i dteagmháil linn. Ní féidir linn cóip a sheoladh chuig an seoladh sin, ach freagróimid chomh luath agus is féidir linn.",
     directHeading: "Nó déan teagmháil linn go díreach",
-    emailLabel: "Ríomhphost",
   },
   forms: {
+    fields: {
+      name: "Ainm",
+      email: "Ríomhphost",
+      phone: "Fón",
+      phoneCountry: "Tír na huimhreach fóin",
+      optional: "roghnach",
+      sending: "Á sheoladh…",
+    },
     errorSummary: "Seiceáil na réimsí aibhsithe, le do thoil",
     errors: {
       required: "Tá an réimse seo riachtanach.",
