@@ -10,6 +10,8 @@ vi.mock("resend", () => ({
 // `env` is parsed once at import, so tests swap the values on a mock instead of stubbing process.env.
 vi.mock("@/env", () => ({ env: mocks.env }));
 
+import { at } from "@/lib/at";
+
 import { sendEmail } from "./send";
 
 const email = {
@@ -35,27 +37,27 @@ describe("sendEmail", () => {
     mocks.env.RESEND_API_KEY = "re_test";
     await sendEmail(email);
     expect(mocks.send).toHaveBeenCalledOnce();
-    expect(mocks.send.mock.calls[0][0]).toMatchObject({
+    expect(at(mocks.send.mock.calls, 0)[0]).toMatchObject({
       from: "Fiú Media <hello@fiumedia.ie>",
       to: "studio@example.com",
       subject: "Hello",
       replyTo: "a@example.com",
       react: email.react,
     });
-    expect(mocks.send.mock.calls[0][0].text).toContain("Body copy");
+    expect(at(mocks.send.mock.calls, 0)[0].text).toContain("Body copy");
   });
 
   it("sends from an internationalised sending domain as punycode", async () => {
     mocks.env.RESEND_API_KEY = "re_1";
     mocks.env.RESEND_EMAIL_DOMAIN = "fiú.ie";
     await sendEmail(email);
-    expect(mocks.send.mock.calls[0][0]).toMatchObject({ from: "Fiú Media <hello@xn--fi-ska.ie>" });
+    expect(at(mocks.send.mock.calls, 0)[0]).toMatchObject({ from: "Fiú Media <hello@xn--fi-ska.ie>" });
   });
 
   it("sends an internationalised domain as punycode", async () => {
     mocks.env.RESEND_API_KEY = "re_test";
     await sendEmail({ ...email, to: "anna@exämple.de", replyTo: "anna@exämple.de" });
-    expect(mocks.send.mock.calls[0][0]).toMatchObject({ to: "anna@xn--exmple-cua.de", replyTo: "anna@xn--exmple-cua.de" });
+    expect(at(mocks.send.mock.calls, 0)[0]).toMatchObject({ to: "anna@xn--exmple-cua.de", replyTo: "anna@xn--exmple-cua.de" });
   });
 
   it("doesn't try to send to an accented local part, which Resend rejects", async () => {
@@ -68,7 +70,7 @@ describe("sendEmail", () => {
     mocks.env.RESEND_API_KEY = "re_test";
     await sendEmail({ ...email, replyTo: "séan@example.ie" });
     expect(mocks.send).toHaveBeenCalledOnce();
-    expect(mocks.send.mock.calls[0][0].replyTo).toBeUndefined();
+    expect(at(mocks.send.mock.calls, 0)[0].replyTo).toBeUndefined();
   });
 
   it("skips the send without RESEND_API_KEY", async () => {

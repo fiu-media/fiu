@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { at } from "@/lib/at";
+
 import {
   formatConfigExport,
   formatInteractionConfigExport,
@@ -95,7 +97,7 @@ describe("importPlaygroundConfig", () => {
 
     it("names the light with a bad enum value", () => {
       const bad = structuredClone(presetConfig("light"));
-      Object.assign(bad.params.lights.soft[0], { kind: "cone" });
+      Object.assign(at(bad.params.lights.soft, 0), { kind: "cone" });
       expect(error(formatConfigExport(bad))).toContain("params.lights.soft[0].kind");
     });
 
@@ -116,7 +118,7 @@ describe("importPlaygroundConfig", () => {
 
     it("fills light flags that older snapshots omit", () => {
       const old = structuredClone(presetConfig("light"));
-      const { feather, followPose, roll, lift, scaleZ, ...rest } = old.params.lights.soft[0];
+      const { feather, followPose, roll, lift, scaleZ, ...rest } = at(old.params.lights.soft, 0);
       void [feather, followPose, roll, lift, scaleZ];
       old.params.lights.soft[0] = rest as never;
       const result = importPlaygroundConfig(current, JSON.stringify(old));

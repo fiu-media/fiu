@@ -10,6 +10,8 @@
  * 128 = no offset. The feDisplacementMap `scale` turns the offset into pixels.
  */
 
+import { at } from "@/lib/at";
+
 const IOR = 1.5;
 const cache = new Map<string, string>();
 
@@ -57,8 +59,8 @@ function bendAt(t: number) {
   const x = Math.min(Math.max(t, 0), 1) * SAMPLES;
   const i = Math.floor(x);
   const f = x - i;
-  const a = bendTable[i];
-  const b = bendTable[Math.min(i + 1, SAMPLES)];
+  const a = at(bendTable, i);
+  const b = at(bendTable, Math.min(i + 1, SAMPLES));
   // Perceptual lift so the magnification reads across the rim, not just at its lip.
   return Math.pow((a + (b - a) * f) / maxBend, 0.7);
 }

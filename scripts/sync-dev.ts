@@ -48,6 +48,7 @@ async function main() {
     mkdirSync(extracted);
     execFileSync("tar", ["-xzf", full, "-C", extracted]);
     const [folder] = readdirSync(extracted);
+    if (!folder) throw new Error("The export archive is empty");
     const data = join(extracted, folder, "data.ndjson");
     const kept = readFileSync(data, "utf8")
       .split("\n")

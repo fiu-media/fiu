@@ -5,6 +5,7 @@ import { type ReactNode, Suspense } from "react";
 
 import { GlassPillButton, GlassPillLink } from "@/components/ui/Glass";
 import { NameIndex } from "@/features/talent";
+import { at } from "@/lib/at";
 import { isLocale, localizedPath } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import banquet from "@/public/stills/banquet.jpg";
@@ -161,7 +162,7 @@ async function Grids({
           <>
             {chips}
             <div className="space-y-4">
-              <Tile sample={projects[0]} ratio="21/9" large sizes="(min-width: 1152px) 1152px, 100vw" />
+              <Tile sample={at(projects, 0)} ratio="21/9" large sizes="(min-width: 1152px) 1152px, 100vw" />
               <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {projects.slice(1).map((p) => (
                   <li key={p.title}>
@@ -263,7 +264,7 @@ async function Grids({
           <ul className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
             {people.map((p, i) => (
               <li key={p.title}>
-                <RevealTile sample={p} alt={people[(i + 3) % people.length].still} />
+                <RevealTile sample={p} alt={at(people, (i + 3) % people.length).still} />
               </li>
             ))}
           </ul>

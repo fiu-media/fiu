@@ -8,6 +8,8 @@ vi.mock("resend", () => ({
 }));
 vi.mock("@/env", () => ({ env: mocks.env }));
 
+import { at } from "@/lib/at";
+
 import { createContact, splitName } from "./contacts";
 
 beforeEach(() => {
@@ -37,7 +39,7 @@ describe("createContact", () => {
   it("adds an unsubscribed contact to the configured segment with the phone as a property", async () => {
     await createContact({ name: "Aoife Murphy", email: "aoife@example.com", phone: "+353871234567" });
     expect(mocks.create).toHaveBeenCalledOnce();
-    expect(mocks.create.mock.calls[0][0]).toEqual({
+    expect(at(mocks.create.mock.calls, 0)[0]).toEqual({
       email: "aoife@example.com",
       firstName: "Aoife",
       lastName: "Murphy",
@@ -50,17 +52,17 @@ describe("createContact", () => {
   it("adds no segment when RESEND_SEGMENT_ID is not set", async () => {
     mocks.env.RESEND_SEGMENT_ID = undefined;
     await createContact({ name: "Aoife", email: "aoife@example.com" });
-    expect(mocks.create.mock.calls[0][0].segments).toBeUndefined();
+    expect(at(mocks.create.mock.calls, 0)[0].segments).toBeUndefined();
   });
 
   it("leaves out the phone property when there is no phone", async () => {
     await createContact({ name: "Aoife", email: "aoife@example.com", phone: "" });
-    expect(mocks.create.mock.calls[0][0].properties).toBeUndefined();
+    expect(at(mocks.create.mock.calls, 0)[0].properties).toBeUndefined();
   });
 
   it("sends an internationalised domain as punycode", async () => {
     await createContact({ name: "Anna", email: "anna@exämple.de" });
-    expect(mocks.create.mock.calls[0][0].email).toBe("anna@xn--exmple-cua.de");
+    expect(at(mocks.create.mock.calls, 0)[0].email).toBe("anna@xn--exmple-cua.de");
   });
 
   it("skips an address Resend can't take", async () => {

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
+import { at } from "@/lib/at";
 import type { TALENT_PROFILE_QUERY_RESULT, TALENT_PROJECTS_QUERY_RESULT, TALENT_QUERY_RESULT } from "@/sanity.types";
 import type * as ImageModule from "@/sanity/lib/image";
 
@@ -62,7 +63,7 @@ describe("toRosterItems", () => {
   it("lists name, roles and a link to the person's page", () => {
     const [first] = toRosterItems(people, "en");
     expect(first).toMatchObject({ title: "Aoife", meta: "Director, Editor", href: "/talent/aoife" });
-    expect(first.image?.src).toBe(`img:a:${PORTRAIT_INDEX_WIDTH}`);
+    expect(first?.image?.src).toBe(`img:a:${PORTRAIT_INDEX_WIDTH}`);
   });
 
   it("copes with no roles and no portrait", () => {
@@ -70,7 +71,7 @@ describe("toRosterItems", () => {
   });
 
   it("links within the page's language", () => {
-    expect(toRosterItems(people, "ga")[0].href).toBe("/ga/talent/aoife");
+    expect(toRosterItems(people, "ga")[0]?.href).toBe("/ga/talent/aoife");
   });
 });
 
@@ -95,7 +96,9 @@ describe("toTalentProfile", () => {
   });
 
   it("maps projects as shared slide data plus the person's role", () => {
-    const [first, second] = toTalentProfile(profile(), [project(), project({ _id: "p2", roles: null })]).projects;
+    const { projects } = toTalentProfile(profile(), [project(), project({ _id: "p2", roles: null })]);
+    const first = at(projects, 0);
+    const second = at(projects, 1);
     expect(first).toMatchObject({ id: "p1", title: "Solas", meta: "Film · 2025", role: "Director" });
     expect(first.titleAttribute).toContain("id=p1");
     expect(second.role).toBeUndefined();

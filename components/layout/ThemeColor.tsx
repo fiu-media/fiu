@@ -9,9 +9,9 @@ import { useEffect } from "react";
 export function ThemeColor({ color }: { color: string }) {
   useEffect(() => {
     const metas = [...document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')];
-    const before = metas.map((meta) => meta.content);
+    const before = metas.map((meta) => [meta, meta.content] as const);
     for (const meta of metas) meta.content = color;
-    return () => metas.forEach((meta, i) => (meta.content = before[i]));
+    return () => before.forEach(([meta, content]) => (meta.content = content));
   }, [color]);
   return null;
 }

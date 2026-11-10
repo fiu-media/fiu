@@ -113,7 +113,7 @@ async function main() {
     docs.push({ _id: `role-${kebab(title)}`, _type: "role", language: "en", title, slug: slug(kebab(title)) }),
   );
 
-  const talentIds = ["talent-sample-one", "talent-sample-two"];
+  const talentIds = ["talent-sample-one", "talent-sample-two"] as const;
   talentIds.forEach((id, i) => {
     docs.push({
       _id: id,

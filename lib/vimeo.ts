@@ -14,10 +14,11 @@ export function parseVimeo(url: string | null | undefined): VimeoRef | null {
   }
   if (!/(^|\.)vimeo\.com$/.test(parsed.hostname)) return null;
   const segments = parsed.pathname.split("/").filter(Boolean);
-  const at = segments.findIndex((segment) => /^\d+$/.test(segment));
-  if (at === -1) return null;
-  const hash = parsed.searchParams.get("h") ?? segments[at + 1]?.match(/^[0-9a-f]+$/i)?.[0];
-  return { id: segments[at], hash: hash || undefined };
+  const index = segments.findIndex((segment) => /^\d+$/.test(segment));
+  const id = segments[index];
+  if (id === undefined) return null;
+  const hash = parsed.searchParams.get("h") ?? segments[index + 1]?.match(/^[0-9a-f]+$/i)?.[0];
+  return { id, hash: hash || undefined };
 }
 
 type EmbedOptions = {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useForm } from "@conform-to/react/future";
+import { type DefaultValue, useForm } from "@conform-to/react/future";
 import { coerceFormValue } from "@conform-to/zod/v4/future";
 import { type FormEvent, useActionState, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import type { z } from "zod";
@@ -9,11 +9,11 @@ import type { FormState } from "@/lib/forms/state";
 
 const noSubscription = () => () => {};
 
-type Options = {
+type Options<Schema extends z.ZodType<unknown, Record<string, unknown>>> = {
   action: (previous: FormState, formData: FormData) => Promise<FormState>;
   /** The same schema the action parses with, so the browser and the server agree. */
-  schema: z.ZodType<unknown, Record<string, unknown>>;
-  defaultValue?: Record<string, string | string[]>;
+  schema: Schema;
+  defaultValue?: DefaultValue<z.input<Schema>>;
 };
 
 /**
@@ -28,7 +28,11 @@ type Options = {
  * It also repopulates from the server's reply, and gives each submit a stable id so a retry after a failure is
  * recognised as the same request.
  */
-export function useConformForm({ action, schema, defaultValue }: Options) {
+export function useConformForm<Schema extends z.ZodType<unknown, Record<string, unknown>>>({
+  action,
+  schema,
+  defaultValue,
+}: Options<Schema>) {
   const [state, formAction, pending] = useActionState(action, null);
   // What the input handler needs from the form, which it is created before (see the effect below).
   const live = useRef<{ hasError: (name: string) => boolean; validate: (name: string) => void }>(null);
