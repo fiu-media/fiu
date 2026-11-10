@@ -34,8 +34,7 @@ describe("project page", () => {
       title: string;
       description: unknown[] | null;
       credits: { name: string }[] | null;
-      stills: { _key: string }[] | null;
-      stillsMobile: { _key: string }[] | null;
+      stills: { landscape: { _key: string }[]; portrait: { _key: string }[] };
     };
 
   it("inherits the description, credits and untranslated stills from the default language", async () => {
@@ -43,11 +42,11 @@ describe("project page", () => {
     expect(ga.title).toBe("Solas (ga)");
     expect(ga.description).toHaveLength(1);
     expect(ga.credits?.map((c) => c.name)).toEqual(["Aoife Murphy"]);
-    expect(ga.stillsMobile?.map((s) => s._key)).toEqual(["m"]);
+    expect(ga.stills.portrait.map((s) => s._key)).toEqual(["m"]);
   });
 
   it("lets a translation replace the stills with its own", async () => {
-    expect((await fetch("ga")).stills?.map((s) => s._key)).toEqual(["b"]);
-    expect((await fetch("en")).stills?.map((s) => s._key)).toEqual(["a"]);
+    expect((await fetch("ga")).stills.landscape.map((s) => s._key)).toEqual(["b"]);
+    expect((await fetch("en")).stills.landscape.map((s) => s._key)).toEqual(["a"]);
   });
 });

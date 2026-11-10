@@ -1,44 +1,41 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 import { floatingBarInset, pageGutter, pageTop } from "@/components/layout/nav/rail";
 import { FullBleedScroll } from "@/components/ui/FullBleedScroll";
 import { GlassPillLink } from "@/components/ui/Glass";
-import { PageTitle } from "@/components/ui/PageTitle";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { FullScreenSkeleton, Skeleton } from "@/components/ui/Skeleton";
-import { ProjectSlide, WORK_QUERY } from "@/content/project";
-import { SlideProgress } from "@/features/work";
+import { ProjectSlide } from "@/content/project";
+import { getSiteSettings } from "@/content/siteSettings";
+import { getWorkIndex, getWorkMeta, SlideProgress } from "@/features/work";
 import { cn } from "@/lib/cn";
-import { defaultLocale, isLocale, languageAlternates, type Locale, localizedPath } from "@/lib/i18n/config";
+import { getLocale, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { format } from "@/lib/i18n/format";
-import { toSizedImage } from "@/sanity/lib/image";
-import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
-import { getPageText } from "@/sanity/lib/pageText";
-import { projectAttribute } from "@/sanity/lib/projects";
+import { href, pageMetadata, routes } from "@/lib/routes";
 
 const SCROLL_ID = "work-scroll";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/work">): Promise<Metadata> {
-  const { lang } = await params;
-  if (!isLocale(lang)) return {};
-  const [{ work }, text] = await Promise.all([getDictionary(lang), getPageText(lang)]);
-  return { title: work.title, description: text.workIntro ?? undefined, alternates: languageAlternates(lang, "/work") };
+  const lang = await getLocale(params);
+  const { title, description } = await getWorkMeta(lang);
+  return pageMetadata(lang, routes.work(), { title, description });
 }
 
 export default async function WorkPage({ params, searchParams }: PageProps<"/[lang]/work">) {
-  const { lang } = await params;
-  if (!isLocale(lang)) notFound();
-  const [{ work, common }, text] = await Promise.all([getDictionary(lang), getPageText(lang)]);
+  const lang = await getLocale(params);
+  const [{ work, common }, { workTagline, workIntro }] = await Promise.all([
+    getDictionary(lang),
+    getSiteSettings(lang, { draft: false }),
+  ]);
   return (
     <main>
       {/* snap-start: the page snaps to its slides, and without this it would skip the title. */}
       {/* The gutter is inside the max-width box, as on the other pages, so the title lines up with theirs. */}
       <header className={cn("snap-start pb-10 md:pb-12", floatingBarInset, pageTop)}>
         <div className={cn("mx-auto max-w-6xl", pageGutter)}>
-          <PageTitle title={work.title} tagline={text.workTagline} />
-          {text.workIntro && <p className="mt-4 max-w-2xl text-lg text-fg-muted">{text.workIntro}</p>}
+          <PageHeader title={work.title} tagline={workTagline} intro={workIntro} />
           <Suspense fallback={<FiltersSkeleton />}>
             <Filters lang={lang} searchParams={searchParams} />
           </Suspense>
@@ -52,41 +49,28 @@ export default async function WorkPage({ params, searchParams }: PageProps<"/[la
   );
 }
 
-/** Both the filter pills and the slides read this; `cachedSanity` makes the second call free. */
-async function getWork(lang: Locale, searchParams: PageProps<"/[lang]/work">["searchParams"]) {
-  const [{ type: requested }, { perspective, variant }] = await Promise.all([searchParams, getDynamicFetchOptions()]);
-  const { data } = await cachedSanity({
-    query: WORK_QUERY,
-    params: { lang, fallbackLang: defaultLocale },
-    perspective,
-    variant,
-    stega: false,
-  });
-  const { types, projects } = data;
+type SearchParams = PageProps<"/[lang]/work">["searchParams"];
 
-  // Only offer types that have projects; an unknown ?type= falls back to everything.
-  const usable = types.filter((t) => projects.some((p) => p.typeSlug === t.slug));
-  const active = usable.find((t) => t.slug === requested)?.slug ?? null;
-  const visible = active ? projects.filter((p) => p.typeSlug === active) : projects;
-  return { projects, usable, active, visible };
-}
+/** `?type=` once; a repeated one (an array) matches nothing, so it shows everything. */
+const requestedType = (type: string | string[] | undefined) => (typeof type === "string" ? type : undefined);
 
-async function Filters({ lang, searchParams }: { lang: Locale; searchParams: PageProps<"/[lang]/work">["searchParams"] }) {
-  const [{ work }, { usable, active }] = await Promise.all([getDictionary(lang), getWork(lang, searchParams)]);
-  if (usable.length === 0) return null;
-  const base = localizedPath(lang, "/work");
+async function Filters({ lang, searchParams }: { lang: Locale; searchParams: SearchParams }) {
+  const [{ work }, { type }] = await Promise.all([getDictionary(lang), searchParams]);
+  const { filters } = await getWorkIndex(lang, requestedType(type));
+  if (filters.usable.length === 0) return null;
+  const base = href(lang, routes.work());
   return (
     <nav aria-label={work.filterLabel} className="mt-8">
       {/* 12px between rows, so the 44px tap areas of wrapped pills meet without overlapping. */}
       <ul className="flex flex-wrap gap-x-2 gap-y-3">
         <li>
-          <GlassPillLink href={base} size="sm" current={active === null}>
+          <GlassPillLink href={base} size="sm" current={filters.active === null}>
             {work.all}
           </GlassPillLink>
         </li>
-        {usable.map((t) => (
+        {filters.usable.map((t) => (
           <li key={t.slug}>
-            <GlassPillLink href={`${base}?type=${t.slug}`} size="sm" current={active === t.slug}>
+            <GlassPillLink href={`${base}?type=${t.slug}`} size="sm" current={filters.active === t.slug}>
               {t.title}
             </GlassPillLink>
           </li>
@@ -96,10 +80,11 @@ async function Filters({ lang, searchParams }: { lang: Locale; searchParams: Pag
   );
 }
 
-async function Projects({ lang, searchParams }: { lang: Locale; searchParams: PageProps<"/[lang]/work">["searchParams"] }) {
-  const [{ work, vimeo }, { projects, active, visible }] = await Promise.all([getDictionary(lang), getWork(lang, searchParams)]);
+async function Projects({ lang, searchParams }: { lang: Locale; searchParams: SearchParams }) {
+  const [{ work, vimeo }, { type }] = await Promise.all([getDictionary(lang), searchParams]);
+  const { filters, slides } = await getWorkIndex(lang, requestedType(type));
 
-  if (projects.length === 0) {
+  if (slides.length === 0) {
     return (
       // Under the heading, in line with it, like the other pages' empty states.
       <p className={cn("mx-auto max-w-6xl pb-32 text-fg-muted", pageGutter)}>{work.emptyAll}</p>
@@ -109,26 +94,19 @@ async function Projects({ lang, searchParams }: { lang: Locale; searchParams: Pa
   return (
     <>
       <SlideProgress
-        key={`progress-${active ?? "all"}`}
+        key={`progress-${filters.active ?? "all"}`}
         containerId={SCROLL_ID}
-        titles={visible.map((p) => p.title)}
+        titles={slides.map((slide) => slide.title)}
         label={work.progressLabel}
         goTo={work.goTo}
       />
 
-      <FullBleedScroll key={`scroll-${active ?? "all"}`} id={SCROLL_ID} label={work.title}>
-        {visible.map((project, i) => (
+      <FullBleedScroll key={`scroll-${filters.active ?? "all"}`} id={SCROLL_ID} label={work.title}>
+        {slides.map(({ id, ...slide }, i) => (
           <ProjectSlide
-            key={project._id}
-            label={format(work.slideLabel, { title: project.title, index: i + 1, total: visible.length })}
-            title={project.title}
-            href={project.slug ? localizedPath(lang, `/work/${project.slug}`) : undefined}
-            titleAttribute={projectAttribute(project._id, "title")}
-            meta={[project.type, project.year, project.client].filter(Boolean).join(" · ")}
-            image={project.cover ? toSizedImage(project.cover, 2400) : null}
-            mobileImage={project.coverMobile ? toSizedImage(project.coverMobile, 1440) : null}
-            vimeoUrl={project.vimeoUrl}
-            previewLoopUrl={project.previewLoopUrl}
+            key={id}
+            {...slide}
+            label={format(work.slideLabel, { title: slide.title, index: i + 1, total: slides.length })}
             priority={i === 0}
             dict={{ ...vimeo, view: work.view }}
           />

@@ -48,8 +48,7 @@ const project = (extra: Partial<TALENT_PROJECTS_QUERY_RESULT[number]> = {}): TAL
   client: null,
   vimeoUrl: null,
   previewLoopUrl: null,
-  cover: image("cover"),
-  coverMobile: null,
+  cover: { landscape: image("cover"), portrait: null },
   roles: ["Director"],
   ...extra,
 });

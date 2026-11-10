@@ -238,7 +238,7 @@ async function getContent(lang: Locale) {
 
   const real: FoldProject[] = workData.projects
     .map((project) => {
-      const image = project.cover ? toSizedImage(project.cover, 1600) : null;
+      const image = project.cover.landscape ? toSizedImage(project.cover.landscape, 1600) : null;
       if (!image || !project.slug) return null;
       return {
         id: project._id,

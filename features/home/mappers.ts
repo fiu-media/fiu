@@ -73,7 +73,7 @@ export const STRIP_PROJECTS = 5;
 export function toFoldProjects(projects: WORK_QUERY_RESULT["projects"], lang: Locale): FoldProject[] {
   return projects
     .flatMap((project): FoldProject[] => {
-      const image = project.cover ? toSizedImage(project.cover, 1600) : null;
+      const image = project.cover.landscape ? toSizedImage(project.cover.landscape, 1600) : null;
       if (!image || !project.slug) return [];
       return [
         {
