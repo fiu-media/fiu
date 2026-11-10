@@ -10,7 +10,7 @@ import { cn } from "@/lib/cn";
 import type { SizedImage } from "@/sanity/lib/image";
 
 /** The condensed About: the slogan, its gloss and the first paragraph of the manifesto, with the About still. */
-export type FoldAbout = {
+type FoldAbout = {
   slogan: string;
   gloss: string | null;
   /** One paragraph, already rendered. */
@@ -28,7 +28,7 @@ export type FoldProject = {
   href: string;
 };
 
-export type FoldTeam = Team;
+type FoldTeam = Team;
 
 export type FoldProps = {
   about: FoldAbout;

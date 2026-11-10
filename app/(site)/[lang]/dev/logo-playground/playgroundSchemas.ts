@@ -10,13 +10,14 @@ import {
 } from "@/features/logo";
 
 /** Playground display: live WebGL glass vs white PNG fallback. */
-export const displaySchema = z.enum(["live", "fallback"]);
+const displaySchema = z.enum(["live", "fallback"]);
 export type LogoDisplayMode = z.infer<typeof displaySchema>;
 
 /** Older snapshots may omit params; `coalesceParams` fills the gaps from the rim preset. */
-export const partialGlassParamsSchema = glassParamsSchema.partial();
+const partialGlassParamsSchema = glassParamsSchema.partial();
 export type LogoPartialGlassParams = z.infer<typeof partialGlassParamsSchema>;
 
+/** @public Only the exported type reads it; kept exported so it isn't reported as unused. */
 export const playgroundConfigSchema = z.object({
   version: z.literal(1),
   meshMode: meshModeSchema,
@@ -49,6 +50,7 @@ export const interactionImportSchema = z.object({
   params: interactionParamsSchema.partial(),
 });
 
+/** @public Only the exported type reads it; kept exported so it isn't reported as unused. */
 export const materialExportSchema = z.object({
   version: z.literal(1),
   section: z.literal("material"),
@@ -58,6 +60,7 @@ export const materialExportSchema = z.object({
 });
 export type LogoMaterialConfigExport = z.infer<typeof materialExportSchema>;
 
+/** @public Only the exported type reads it; kept exported so it isn't reported as unused. */
 export const lightingExportSchema = z.object({
   version: z.literal(1),
   section: z.literal("lighting"),
@@ -66,6 +69,7 @@ export const lightingExportSchema = z.object({
 });
 export type LogoLightingConfigExport = z.infer<typeof lightingExportSchema>;
 
+/** @public Only the exported type reads it; kept exported so it isn't reported as unused. */
 export const interactionExportSchema = z.object({
   version: z.literal(1),
   section: z.literal("interaction"),

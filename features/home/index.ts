@@ -5,5 +5,4 @@ export { HomeHero } from "./components/HomeHero";
 export { HomeScrollLock } from "./components/HomeScrollLock";
 export { fallbackHeroStills, fallbackStills } from "./fallback-stills";
 export { getHomeFold, getHomeStills } from "./loaders";
-export type { HeroStill, HeroStills } from "./mappers";
 export { pinHomeScrollScript } from "./pin";

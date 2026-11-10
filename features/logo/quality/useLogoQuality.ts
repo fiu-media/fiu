@@ -15,7 +15,7 @@ import {
 } from "../logoTier";
 
 /** A gap this long between frames is the demand loop waking from idle, not a slow frame. */
-export const IDLE_GAP_SECONDS = 0.5;
+const IDLE_GAP_SECONDS = 0.5;
 
 /**
  * Picks and keeps the quality tier. First a probe: once the shaders have compiled, time

@@ -64,7 +64,7 @@ export const vimeoUrlField = (name: string, title: string, description?: string)
       }),
   });
 
-export const altField = defineField({
+const altField = defineField({
   name: "alt",
   title: "Alt text",
   type: "string",

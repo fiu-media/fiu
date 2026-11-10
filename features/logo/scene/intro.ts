@@ -1,5 +1,5 @@
 // Intro spin, from the original Blender keyframes (24 fps): a full turn, overshoot, settle.
-export const SPIN: [seconds: number, radians: number][] = [
+const SPIN: [seconds: number, radians: number][] = [
   [0, 0],
   [71 / 24, -Math.PI * 2],
   [83 / 24, -Math.PI * 2 - 0.1],
@@ -16,8 +16,8 @@ export const HERO_SPIN_SECONDS = 1.6;
 export const SLIDE_START = 0.6;
 export const SLIDE_SECONDS = 1.8;
 /** Spring: damping ratio < 1 overshoots (0.65 ≈ 7% past the target); omega sets the speed. */
-export const SLIDE_DAMPING = 0.65;
-export const SLIDE_OMEGA = 5.5;
+const SLIDE_DAMPING = 0.65;
+const SLIDE_OMEGA = 5.5;
 export const HERO_END = Math.max(HERO_SPIN_SECONDS, SLIDE_START + SLIDE_SECONDS);
 /** Longest intro, so the demand loop stays awake for it. */
 export const INTRO_END = Math.max(SPIN_END, HERO_END);

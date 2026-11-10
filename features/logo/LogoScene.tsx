@@ -4,8 +4,6 @@ import { CanvasRoot, type CanvasRootProps } from "./CanvasRoot";
 import { LOGO_PARAM_PRESETS } from "./config/presets";
 import { preloadStill } from "./scene/stills";
 
-export type { SceneStill } from "./scene/stills";
-
 type LogoSceneProps = Pick<
   CanvasRootProps,
   | "stills"

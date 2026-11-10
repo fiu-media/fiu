@@ -11,8 +11,6 @@ import { format } from "@/lib/i18n/format";
 import { siteOrigin } from "./studio-link";
 
 export type { KitLine } from "@/emails/_layout";
-export type { ContactEmailData, QuoteEmailData };
-
 /** The data each email is built from. */
 type Data = {
   contactNotification: ContactEmailData;

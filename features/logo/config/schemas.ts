@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const LOGO_MESH_MODES = ["tubes", "extrude"] as const;
+const LOGO_MESH_MODES = ["tubes", "extrude"] as const;
 export const meshModeSchema = z.enum(LOGO_MESH_MODES);
 export type LogoMeshMode = z.infer<typeof meshModeSchema>;
 
@@ -8,7 +8,7 @@ export type LogoMeshMode = z.infer<typeof meshModeSchema>;
 export const rimLookSchema = z.enum(["light", "dark"]);
 export type LogoRimLook = z.infer<typeof rimLookSchema>;
 
-export const extrudeSchema = z.object({
+const extrudeSchema = z.object({
   depth: z.number(),
   bevelThickness: z.number(),
   bevelSize: z.number(),
@@ -16,7 +16,7 @@ export const extrudeSchema = z.object({
 export type LogoExtrudeOverride = z.infer<typeof extrudeSchema>;
 
 /** Env softbox / streak (rendered inside drei Environment). Missing flags fall back to the `soft()` defaults. */
-export const softLightSchema = z.object({
+const softLightSchema = z.object({
   id: z.string(),
   label: z.string(),
   enabled: z.boolean(),
@@ -41,7 +41,7 @@ export const softLightSchema = z.object({
 export type LogoSoftLightConfig = z.infer<typeof softLightSchema>;
 
 /** Scene point lights (specular fill outside the env map). */
-export const pointLightSchema = z.object({
+const pointLightSchema = z.object({
   id: z.string(),
   label: z.string(),
   enabled: z.boolean(),

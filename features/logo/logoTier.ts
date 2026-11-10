@@ -19,9 +19,9 @@ export type LogoDecision = LogoTier | "static";
 const TIERS: readonly LogoTier[] = ["high", "medium", "low"];
 
 /** The floor: the cheapest tier has to hold this behind the splash, or the hero shows the SVG. */
-export const MIN_LIVE_FPS = 24;
+const MIN_LIVE_FPS = 24;
 /** At or above this the probe keeps the tier; between the floor and this it drops one. */
-export const SMOOTH_FPS = 45;
+const SMOOTH_FPS = 45;
 /** After the intro: the cheapest tier staying under this for `FLOOR_SECONDS` swaps in the SVG. */
 export const MIDSESSION_FLOOR_FPS = 15;
 export const FLOOR_SECONDS = 3;
@@ -32,8 +32,8 @@ export const PROBE_FRAMES = 12;
  * The probe stops early once its frames add up to this (twice what `PROBE_FRAMES` take at the floor),
  * as long as it has `PROBE_MIN_FRAMES`: a median of five still shrugs off a late shader compile.
  */
-export const PROBE_BUDGET_MS = (2 * PROBE_FRAMES * 1000) / MIN_LIVE_FPS;
-export const PROBE_MIN_FRAMES = 5;
+const PROBE_BUDGET_MS = (2 * PROBE_FRAMES * 1000) / MIN_LIVE_FPS;
+const PROBE_MIN_FRAMES = 5;
 
 /** Whether a probe has seen enough frames to judge. */
 export function probeComplete(frameMs: readonly number[]) {

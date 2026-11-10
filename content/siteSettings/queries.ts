@@ -11,27 +11,6 @@ export const SUBMISSION_SETTINGS_QUERY = defineQuery(`
 `);
 
 /**
- * @deprecated Read `getSiteSettings` instead; kept until the pages that use this move over.
- *
- * Editor-written intro lines for the Rentals, Request a quote, Contact, Our Work and Talent pages, plus each page's Fiú line.
- */
-export const PAGE_TEXT_QUERY = defineQuery(`{
-  "cur": *[_type == "siteSettings" && language == $lang][0]{ rentalsIntro, quoteIntro, contactIntro, workIntro, talentIntro, aboutTagline, workTagline, talentTagline, rentalsTagline, contactTagline },
-  "fb": *[_type == "siteSettings" && language == $fallbackLang][0]{ rentalsIntro, quoteIntro, contactIntro, workIntro, talentIntro, aboutTagline, workTagline, talentTagline, rentalsTagline, contactTagline }
-}{
-  "rentalsIntro": coalesce(cur.rentalsIntro, fb.rentalsIntro),
-  "quoteIntro": coalesce(cur.quoteIntro, fb.quoteIntro),
-  "contactIntro": coalesce(cur.contactIntro, fb.contactIntro),
-  "workIntro": coalesce(cur.workIntro, fb.workIntro),
-  "talentIntro": coalesce(cur.talentIntro, fb.talentIntro),
-  "aboutTagline": coalesce(cur.aboutTagline, fb.aboutTagline),
-  "workTagline": coalesce(cur.workTagline, fb.workTagline),
-  "talentTagline": coalesce(cur.talentTagline, fb.talentTagline),
-  "rentalsTagline": coalesce(cur.rentalsTagline, fb.rentalsTagline),
-  "contactTagline": coalesce(cur.contactTagline, fb.contactTagline)
-}`);
-
-/**
  * The stills of the projects the home page rotates, in the editors' order. A project's stills may not be translated
  * yet, so each set falls back to the default-language document's, like on its own page.
  */

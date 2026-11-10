@@ -104,7 +104,7 @@ export const TALENT_CARD_FIELDS = `
  * An image that has a portrait (mobile) variant, as `{ landscape, portrait }`. Each falls back to the default-language
  * document's when the translation has none. Literal arguments so TypeGen can evaluate the query.
  */
-export const responsiveImage = <const F extends string, const M extends string>(field: F, mobileField: M) =>
+const responsiveImage = <const F extends string, const M extends string>(field: F, mobileField: M) =>
   `{
     "landscape": select(defined(${field}.asset) => ${field}, ${DEFAULT_COUNTERPART}.${field}){ ${IMAGE_FIELDS} },
     "portrait": select(defined(${mobileField}.asset) => ${mobileField}, ${DEFAULT_COUNTERPART}.${mobileField}){ ${IMAGE_FIELDS} }

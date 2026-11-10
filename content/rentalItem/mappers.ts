@@ -7,9 +7,9 @@ import type { QUOTE_CATALOGUE_QUERY_RESULT, RENTAL_ITEM_QUERY_RESULT, RENTALS_QU
 import { publishedId, type SizedImage, toSizedImage } from "@/sanity/lib/image";
 
 /** Image widths (px) the rental views ask for. */
-export const CARD_WIDTH = 800;
-export const DETAIL_WIDTH = 1400;
-export const BASKET_THUMB_WIDTH = 160;
+const CARD_WIDTH = 800;
+const DETAIL_WIDTH = 1400;
+const BASKET_THUMB_WIDTH = 160;
 
 /** The catalogue page: the filter's categories and one card per item. */
 export function toCatalogue({ categories, items }: RENTALS_QUERY_RESULT): {

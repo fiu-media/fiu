@@ -24,14 +24,14 @@ import {
 
 const INTERACTION_KEYS = interactionParamsSchema.keyof().options;
 
-export function cloneLights(lights: LogoLightsConfig): LogoLightsConfig {
+function cloneLights(lights: LogoLightsConfig): LogoLightsConfig {
   return {
     soft: lights.soft.map((l) => ({ ...l })),
     points: lights.points.map((l) => ({ ...l })),
   };
 }
 
-export function cloneParams(params: LogoGlassParams): LogoGlassParams {
+function cloneParams(params: LogoGlassParams): LogoGlassParams {
   return {
     ...params,
     extrude: params.extrude ? { ...params.extrude } : null,
@@ -65,7 +65,7 @@ function omitKeys<T extends Record<string, unknown>, K extends keyof T>(params: 
 }
 
 /** Material / glow / extrude — everything except lights and interaction. */
-export function pickMaterialParams(params: LogoGlassParams): LogoMaterialParams {
+function pickMaterialParams(params: LogoGlassParams): LogoMaterialParams {
   const material = omitKeys(params, ["lights", ...INTERACTION_KEYS]);
   return {
     ...material,
@@ -154,7 +154,7 @@ export function formatInteractionConfigExport(config: LogoPlaygroundConfig): str
 }
 
 /** Fill missing param keys from the rim preset (older playground snapshots). */
-export function coalesceParams(partial: LogoPartialGlassParams, rimLook: LogoRimLook = "light"): LogoGlassParams {
+function coalesceParams(partial: LogoPartialGlassParams, rimLook: LogoRimLook = "light"): LogoGlassParams {
   const base = LOGO_PARAM_PRESETS[rimLook];
   return cloneParams({
     ...base,

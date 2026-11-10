@@ -13,12 +13,14 @@ import { client } from "./client";
 
 const token = env.SANITY_API_READ_TOKEN;
 
-export const { sanityFetch, SanityLive } = defineLive({
+const { sanityFetch, SanityLive } = defineLive({
   client,
   serverToken: token,
   browserToken: token,
   strict: true,
 });
+
+export { SanityLive };
 
 /**
  * The app's one shared 'use cache' boundary. `sanityFetch` tags and sets the cache life

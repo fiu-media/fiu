@@ -8,7 +8,7 @@ import { DESKTOP } from "@/lib/media";
 import { coverPlacement, edgeForLuminance, parsePosition, stripLuminance } from "./heroEdge";
 
 /** Read by `.hero-edge` in globals.css: how dark the edge gets, 0 to 1, and how long it takes to get there. */
-export const HERO_EDGE_VAR = "--hero-edge";
+const HERO_EDGE_VAR = "--hero-edge";
 const DURATION_VAR = "--hero-edge-duration";
 /** The stills' crossfade (the hero's slides in HomeHero). */
 const CROSSFADE_MS = 1600;
