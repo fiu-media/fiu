@@ -1,4 +1,4 @@
-import type { Metadata, Viewport } from "next";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { preload } from "react-dom";
@@ -12,10 +12,11 @@ import { SiteFooter } from "@/features/site";
 import { defaultLocale, isLocale, languageAlternates, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { LANDSCAPE, PORTRAIT } from "@/lib/media";
+import { cinematicViewport } from "@/lib/theme";
 import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
 import { type HeroStills, toHeroStills } from "@/sanity/lib/stills";
 
-export const viewport: Viewport = { themeColor: "#0c0b0d" };
+export const viewport = cinematicViewport;
 
 export async function generateMetadata({ params }: PageProps<"/[lang]">): Promise<Metadata> {
   const { lang } = await params;

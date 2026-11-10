@@ -1,14 +1,9 @@
-import { useSyncExternalStore } from "react";
+import { REDUCED_MOTION } from "../media";
+import { matches, subscribeToMedia, useMediaQuery } from "./useMediaQuery";
 
-const QUERY = "(prefers-reduced-motion: reduce)";
+export const subscribeToReducedMotion = subscribeToMedia(REDUCED_MOTION);
 
-export function subscribeToReducedMotion(onChange: () => void) {
-  const query = window.matchMedia(QUERY);
-  query.addEventListener("change", onChange);
-  return () => query.removeEventListener("change", onChange);
-}
-
-export const prefersReducedMotion = () => window.matchMedia(QUERY).matches;
+export const prefersReducedMotion = () => matches(REDUCED_MOTION);
 
 /**
  * Live `prefers-reduced-motion` preference. The server snapshot (and the hydration render) assume reduced,
@@ -18,5 +13,5 @@ export const prefersReducedMotion = () => window.matchMedia(QUERY).matches;
  * change, and it returns a different value on the first client render than on the server.
  */
 export function useReducedMotion() {
-  return useSyncExternalStore(subscribeToReducedMotion, prefersReducedMotion, () => true);
+  return useMediaQuery(REDUCED_MOTION, true);
 }

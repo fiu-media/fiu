@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { pageGutter } from "@/components/layout/nav/rail";
 import { GlassPillLink } from "@/components/ui/Glass";
 import { type Team, TeamFigure } from "@/content/siteSettings";
 import { cn } from "@/lib/cn";
@@ -42,7 +43,7 @@ export type FoldProps = {
   labels: { about: string; work: string; aboutCta: string; workCta: string; view: string };
 };
 
-export const gutter = "px-5 md:px-10";
+export const gutter = pageGutter;
 
 /** A photo that fills its (relative, overflow-hidden) parent. */
 export function Photo({

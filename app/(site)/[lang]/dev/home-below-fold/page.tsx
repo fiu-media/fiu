@@ -18,7 +18,7 @@ import {
   FoldSnapSequel,
   FoldTwoDoors,
 } from "@/app/(site)/[lang]/dev/_concepts/home/BelowFoldOptions";
-import { railInset } from "@/components/layout/nav/rail";
+import { railInset, railWidth } from "@/components/layout/nav/rail";
 import { SiteNav } from "@/components/layout/nav/SiteNav";
 import { GlassPillLink } from "@/components/ui/Glass";
 import { WORK_QUERY } from "@/content/project";
@@ -152,7 +152,11 @@ async function Options({
   return (
     // The hero runs under the rail, as on Home; only the fold is set beside it.
     <div data-surface="cinematic" className="relative isolate bg-ink text-fg">
-      <SiteNav lang={lang} onImage blurRail={seam === "rail" || seam === "both"} />
+      {/* The "frosted rail" seam option: a blur over the rail's strip, under the nav (which is z-30). */}
+      {(seam === "rail" || seam === "both") && (
+        <div aria-hidden className={cn("fixed inset-y-0 left-0 z-20 hidden backdrop-blur-md md:block", railWidth)} />
+      )}
+      <SiteNav lang={lang} onImage />
 
       {/* Stand-in for Home's first screen, plus room below it for the seams that draw there. */}
       <div className={cn(tail && "overflow-hidden pb-[14dvh]")}>
