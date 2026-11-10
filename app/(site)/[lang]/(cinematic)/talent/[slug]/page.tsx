@@ -1,58 +1,27 @@
-import { ArrowDown, ArrowLeft } from "lucide-react";
+import { ArrowDown } from "lucide-react";
 import type { Metadata } from "next";
-import Image from "next/image";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PortableText } from "next-sanity";
 import { Suspense } from "react";
 
 import { floatingBarInset, pageGutter, pageTop } from "@/components/layout/nav/rail";
+import { BackLink } from "@/components/ui/BackLink";
 import { FullBleedScroll } from "@/components/ui/FullBleedScroll";
+import { SizedImg } from "@/components/ui/SizedImg";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { ProjectSlide, TALENT_PROJECTS_QUERY } from "@/content/project";
-import { TALENT_PROFILE_QUERY } from "@/content/talent";
+import { ProjectSlide } from "@/content/project";
+import { getProfileMeta, getTalentProfile } from "@/features/talent";
 import { cn } from "@/lib/cn";
-import { defaultLocale, isLocale, languageAlternates, type Locale, localizedPath } from "@/lib/i18n/config";
+import { getLocale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { format } from "@/lib/i18n/format";
-import { publishedId, toSizedImage } from "@/sanity/lib/image";
-import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
-import { talentAttribute } from "@/sanity/lib/talent";
-
-async function getProfile(lang: Locale, slug: string) {
-  const { perspective, variant } = await getDynamicFetchOptions();
-  const { data } = await cachedSanity({
-    query: TALENT_PROFILE_QUERY,
-    params: { lang, fallbackLang: defaultLocale, slug },
-    perspective,
-    variant,
-    stega: false,
-  });
-  return data;
-}
-
-async function getProjects(lang: Locale, talentId: string) {
-  const { perspective, variant } = await getDynamicFetchOptions();
-  const { data } = await cachedSanity({
-    query: TALENT_PROJECTS_QUERY,
-    params: { lang, fallbackLang: defaultLocale, talentId: publishedId(talentId) },
-    perspective,
-    variant,
-    stega: false,
-  });
-  return data;
-}
+import { href, pageMetadata, routes } from "@/lib/routes";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/talent/[slug]">): Promise<Metadata> {
-  const { lang, slug } = await params;
-  if (!isLocale(lang)) return {};
-  const profile = await getProfile(lang, slug);
-  if (!profile) return {};
-  return {
-    title: profile.name,
-    description: (profile.roles ?? []).join(", ") || undefined,
-    alternates: languageAlternates(lang, `/talent/${slug}`),
-  };
+  const [lang, { slug }] = await Promise.all([getLocale(params), params]);
+  const meta = await getProfileMeta(lang, slug);
+  if (!meta) return {};
+  return pageMetadata(lang, routes.person(slug), meta);
 }
 
 export default function TalentProfilePage({ params }: PageProps<"/[lang]/talent/[slug]">) {
@@ -60,48 +29,35 @@ export default function TalentProfilePage({ params }: PageProps<"/[lang]/talent/
   return (
     <main>
       <Suspense fallback={<ProfileSkeleton />}>
-        {params.then((p) => (
-          <Profile lang={p.lang} slug={p.slug} />
-        ))}
+        <Profile params={params} />
       </Suspense>
     </main>
   );
 }
 
-async function Profile({ lang, slug }: { lang: string; slug: string }) {
-  if (!isLocale(lang)) notFound();
-  const [{ talent, vimeo }, profile] = await Promise.all([getDictionary(lang), getProfile(lang, slug)]);
+async function Profile({ params }: Pick<PageProps<"/[lang]/talent/[slug]">, "params">) {
+  const [lang, { slug }] = await Promise.all([getLocale(params), params]);
+  const [{ talent, vimeo }, profile] = await Promise.all([getDictionary(lang), getTalentProfile(lang, slug)]);
   if (!profile) notFound();
-  const projects = await getProjects(lang, profile.talentId);
 
-  const portrait = profile.portrait ? toSizedImage(profile.portrait, 1200) : null;
-  const roles = (profile.roles ?? []).join(", ");
-  const workLabel = format(talent.projectsOf, { name: profile.name });
+  const { name, roles, portrait, bio, attrs, projects } = profile;
+  const workLabel = format(talent.projectsOf, { name });
 
   return (
     <>
       {/* snap-start: the page snaps to its slides, and without this it would skip the bio. */}
       <section className={cn("snap-start pb-16 md:pb-12", pageGutter, floatingBarInset, pageTop)}>
         <div className="mx-auto mb-6 max-w-6xl">
-          <Link href={localizedPath(lang, "/talent")} className="inline-flex items-center gap-1.5 text-sm link-quiet">
-            <ArrowLeft aria-hidden className="size-4" />
-            {talent.back}
-          </Link>
+          <BackLink href={href(lang, routes.talent())}>{talent.back}</BackLink>
         </div>
         <div className="mx-auto grid max-w-6xl items-center gap-8 md:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] md:gap-14 lg:min-h-[calc(100dvh-10rem)]">
-          <div data-sanity={talentAttribute(profile._id, "portrait")}>
+          <div data-sanity={attrs.portrait}>
             {portrait ? (
-              <Image
-                src={portrait.src}
-                width={portrait.width}
-                height={portrait.height}
-                alt={portrait.alt}
+              <SizedImg
+                image={portrait}
                 sizes="(min-width: 768px) 42vw, 100vw"
                 priority
-                placeholder={portrait.blurDataURL ? "blur" : "empty"}
-                blurDataURL={portrait.blurDataURL}
-                style={{ objectPosition: portrait.position }}
-                className="aspect-[4/5] w-full rounded-3xl object-cover"
+                className="aspect-[4/5] w-full rounded-3xl"
               />
             ) : (
               <div className="grid aspect-[4/5] w-full place-items-center rounded-3xl bg-bg-raised text-sm text-fg-muted">
@@ -113,19 +69,13 @@ async function Profile({ lang, slug }: { lang: string; slug: string }) {
           <div className="flex flex-col items-start gap-6">
             <header>
               {roles && <p className="eyebrow">{roles}</p>}
-              <h1
-                data-sanity={talentAttribute(profile._id, "name")}
-                className="mt-2 font-display text-5xl text-balance italic md:text-7xl"
-              >
-                {profile.name}
+              <h1 data-sanity={attrs.name} className="mt-2 font-display text-5xl text-balance italic md:text-7xl">
+                {name}
               </h1>
             </header>
-            {profile.bio && profile.bio.length > 0 && (
-              <div
-                data-sanity={talentAttribute(profile._id, "bio")}
-                className="max-w-prose space-y-4 text-lg leading-relaxed text-fg/90"
-              >
-                <PortableText value={profile.bio} />
+            {bio && bio.length > 0 && (
+              <div data-sanity={attrs.bio} className="max-w-prose space-y-4 text-lg leading-relaxed text-fg/90">
+                <PortableText value={bio} />
               </div>
             )}
             {projects.length > 0 && (
@@ -140,17 +90,11 @@ async function Profile({ lang, slug }: { lang: string; slug: string }) {
 
       {projects.length > 0 && (
         <FullBleedScroll id="work" label={workLabel}>
-          {projects.map((project, i) => (
+          {projects.map(({ id, ...project }, i) => (
             <ProjectSlide
-              key={project._id}
+              key={id}
+              {...project}
               label={format(talent.slideLabel, { title: project.title, index: i + 1, total: projects.length })}
-              title={project.title}
-              meta={[project.type, project.year, project.client].filter(Boolean).join(" · ")}
-              role={(project.roles ?? []).join(", ") || undefined}
-              image={project.cover ? toSizedImage(project.cover, 2400) : null}
-              mobileImage={project.coverMobile ? toSizedImage(project.coverMobile, 1440) : null}
-              vimeoUrl={project.vimeoUrl}
-              previewLoopUrl={project.previewLoopUrl}
               dict={vimeo}
             />
           ))}

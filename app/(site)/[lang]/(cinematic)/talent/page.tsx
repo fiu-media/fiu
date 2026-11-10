@@ -1,63 +1,43 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
-import { floatingBarInset, pageGutter, pageTop } from "@/components/layout/nav/rail";
-import { PageTitle } from "@/components/ui/PageTitle";
+import { floatingBarInset, pageTop } from "@/components/layout/nav/rail";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { PageShell } from "@/components/ui/PageShell";
 import { Skeleton, SkeletonGroup } from "@/components/ui/Skeleton";
-import { TALENT_QUERY } from "@/content/talent";
-import { type IndexItem, NameIndex } from "@/features/talent";
+import { getSiteSettings } from "@/content/siteSettings";
+import { getRoster, getTalentMeta, NameIndex } from "@/features/talent";
 import { cn } from "@/lib/cn";
-import { defaultLocale, isLocale, languageAlternates, type Locale, localizedPath } from "@/lib/i18n/config";
+import { getLocale, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
-import { toSizedImage } from "@/sanity/lib/image";
-import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
-import { getPageText } from "@/sanity/lib/pageText";
+import { pageMetadata, routes } from "@/lib/routes";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/talent">): Promise<Metadata> {
-  const { lang } = await params;
-  if (!isLocale(lang)) return {};
-  const [{ talent }, text] = await Promise.all([getDictionary(lang), getPageText(lang)]);
-  return { title: talent.title, description: text.talentIntro ?? undefined, alternates: languageAlternates(lang, "/talent") };
+  const lang = await getLocale(params);
+  const { title, description } = await getTalentMeta(lang);
+  return pageMetadata(lang, routes.talent(), { title, description });
 }
 
 export default async function TalentPage({ params }: PageProps<"/[lang]/talent">) {
-  const { lang } = await params;
-  if (!isLocale(lang)) notFound();
-  const [{ talent, common }, text] = await Promise.all([getDictionary(lang), getPageText(lang)]);
+  const lang = await getLocale(params);
+  const [{ talent, common }, { talentTagline, talentIntro }] = await Promise.all([
+    getDictionary(lang),
+    getSiteSettings(lang, { draft: false }),
+  ]);
   return (
-    <main className={cn("mx-auto max-w-6xl pb-32", pageGutter, floatingBarInset, pageTop)}>
-      <header className="mb-10">
-        <PageTitle title={talent.title} tagline={text.talentTagline} />
-        {text.talentIntro && <p className="mt-4 max-w-2xl text-lg text-fg-muted">{text.talentIntro}</p>}
-      </header>
+    <PageShell className={cn(floatingBarInset, pageTop)}>
+      <PageHeader title={talent.title} tagline={talentTagline} intro={talentIntro} className="mb-10" />
       {/* Reads draft mode, so it streams in behind the static heading. */}
       <Suspense fallback={<IndexSkeleton label={common.loading} />}>
         <Roster lang={lang} />
       </Suspense>
-    </main>
+    </PageShell>
   );
 }
 
 async function Roster({ lang }: { lang: Locale }) {
-  const { talent } = await getDictionary(lang);
-  const { perspective, variant } = await getDynamicFetchOptions();
-  const { data } = await cachedSanity({
-    query: TALENT_QUERY,
-    params: { lang, fallbackLang: defaultLocale },
-    perspective,
-    variant,
-    stega: false,
-  });
-  const people = data;
-  if (people.length === 0) return <p className="text-fg-muted">{talent.empty}</p>;
-
-  const items: IndexItem[] = people.map((person) => ({
-    title: person.name,
-    meta: (person.roles ?? []).join(", "),
-    href: localizedPath(lang, `/talent/${person.slug}`),
-    image: person.portrait ? toSizedImage(person.portrait, 640) : null,
-  }));
+  const [{ talent }, items] = await Promise.all([getDictionary(lang), getRoster(lang)]);
+  if (items.length === 0) return <p className="text-fg-muted">{talent.empty}</p>;
   return <NameIndex label={talent.indexLabel} items={items} ratio="4/5" previewWidth={240} />;
 }
 
