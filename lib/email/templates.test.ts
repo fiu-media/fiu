@@ -50,7 +50,7 @@ describe("email templates", () => {
 
   it("omits empty rows", async () => {
     const out = await text(build("quoteNotification", en, quote, { studioLink: "https://studio.test/" }));
-    expect(out).not.toContain(`${en.emails.labels.phone}`);
+    expect(out).not.toContain(en.emails.labels.phone);
   });
 
   it("links the visitor's email and phone with mailto: and tel:", async () => {

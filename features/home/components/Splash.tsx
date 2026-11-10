@@ -3,9 +3,9 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
+import { logo } from "@/lib/brand";
 import { cn } from "@/lib/cn";
 import { prefersReducedMotion } from "@/lib/hooks/useReducedMotion";
-import logo from "@/public/brand/fiu-logo.svg";
 
 import { nudgeHomeScroll } from "../bleed";
 import { isSplashDismissed, markSplashDismissed } from "../session";

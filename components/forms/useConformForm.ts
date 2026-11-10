@@ -2,7 +2,7 @@
 
 import { type DefaultValue, useForm } from "@conform-to/react/future";
 import { coerceFormValue } from "@conform-to/zod/v4/future";
-import { type FormEvent, useActionState, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { type SubmitEvent, useActionState, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import type { z } from "zod";
 
 import type { FormState } from "@/lib/forms/state";
@@ -85,9 +85,9 @@ export function useConformForm<Schema extends z.ZodType<unknown, Record<string, 
     formProps: {
       ...formProps,
       action: formAction,
-      onSubmit: (event: FormEvent<HTMLFormElement>) => {
+      onSubmit: (event: SubmitEvent<HTMLFormElement>) => {
         // Conform also submits hidden "intent" buttons to validate a field on blur; those aren't attempts.
-        const submitter = (event.nativeEvent as SubmitEvent).submitter;
+        const submitter = event.nativeEvent.submitter;
         if (submitter?.getAttribute("name") !== form.intentName) setSubmits((count) => count + 1);
         onSubmit(event);
       },

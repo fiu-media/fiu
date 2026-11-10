@@ -14,5 +14,7 @@ export async function getRecipient(kind: "quote" | "contact", lang: Locale): Pro
     kind === "quote"
       ? (settings?.quoteRecipient ?? settings?.contactEmail)
       : (settings?.contactEmail ?? settings?.quoteRecipient);
+  // An empty setting counts as unset.
+  // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
   return fromSettings || null;
 }

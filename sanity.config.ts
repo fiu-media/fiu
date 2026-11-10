@@ -33,7 +33,7 @@ export default defineConfig({
     structureTool({ structure }),
     presentationTool({
       ...omitUndefined({ resolve }),
-      previewUrl: { origin: previewOrigin, draftMode: { enable: "/api/draft-mode/enable" } },
+      previewUrl: { origin: previewOrigin, previewMode: { enable: "/api/draft-mode/enable" } },
     }),
     documentInternationalization({
       supportedLanguages: languages,

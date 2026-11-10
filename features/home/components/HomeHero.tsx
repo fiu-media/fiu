@@ -5,9 +5,10 @@ import Image from "next/image";
 import { Component, type ReactNode, useMemo, useRef } from "react";
 
 import { ArtDirectedImage } from "@/components/ui/ArtDirectedImage";
+import { at } from "@/lib/at";
+import { logo } from "@/lib/brand";
 import { cn } from "@/lib/cn";
 import { usePortrait } from "@/lib/hooks/usePortrait";
-import logo from "@/public/brand/fiu-logo.svg";
 
 import type { HeroStill, HeroStills } from "../mappers";
 import { splashFadeVars } from "../splash-config";
@@ -190,7 +191,7 @@ function toSlides(landscape: HeroStill[], portrait: HeroStill[]): SlidePair[] {
   const wide = landscape.length > 0 ? landscape : portrait;
   const tall = portrait.length > 0 ? portrait : landscape;
   return Array.from({ length: Math.max(wide.length, tall.length) }, (_, i) => ({
-    landscape: wide[i % wide.length]!,
-    portrait: tall[i % tall.length]!,
+    landscape: at(wide, i % wide.length),
+    portrait: at(tall, i % tall.length),
   }));
 }

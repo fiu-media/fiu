@@ -66,7 +66,7 @@ function slider(def: SliderRange, value: number, apply: (value: number, get: Get
 function valuesOf(schema: Schema): Schema {
   const values: Schema = {};
   for (const [key, item] of Object.entries(schema)) {
-    if (typeof item === "object" && item !== null && "value" in item) values[key] = item.value;
+    if (typeof item === "object" && "value" in item) values[key] = item.value as Schema[string];
   }
   return values;
 }

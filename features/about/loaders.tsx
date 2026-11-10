@@ -2,6 +2,7 @@ import { PortableText } from "next-sanity";
 
 import { ContactLinks, getSiteSettings, toTeam } from "@/content/siteSettings";
 import { fallbackStills } from "@/features/home/fallback-stills";
+import { at } from "@/lib/at";
 import type { Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { editAttr } from "@/sanity/lib/editing";
@@ -16,7 +17,7 @@ export async function getAbout(lang: Locale): Promise<AboutLayoutProps> {
   const attr = (path: string) => (_id ? editAttr("siteSettings", _id, path) : undefined);
 
   return {
-    still: (aboutStill ? toSizedImage(aboutStill, 2400) : null) ?? fallbackStills[0]!,
+    still: (aboutStill ? toSizedImage(aboutStill, 2400) : null) ?? at(fallbackStills, 0),
     slogan: slogan ?? dict.about.title,
     gloss: sloganGloss ?? null,
     manifesto: manifesto?.length ? <PortableText value={manifesto} /> : null,

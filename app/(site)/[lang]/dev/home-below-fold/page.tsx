@@ -25,10 +25,10 @@ import { WORK_QUERY } from "@/content/project";
 import { ContactLinks, getSiteSettings, toTeam } from "@/content/siteSettings";
 import { fallbackStills, HeroFade } from "@/features/home";
 import { at } from "@/lib/at";
+import { logo } from "@/lib/brand";
 import { cn } from "@/lib/cn";
 import { isLocale, type Locale, localizedPath } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
-import logo from "@/public/brand/fiu-logo.svg";
 import { fetchContent } from "@/sanity/lib/fetch";
 import { toSizedImage } from "@/sanity/lib/image";
 

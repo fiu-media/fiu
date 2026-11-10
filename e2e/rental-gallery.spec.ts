@@ -1,12 +1,13 @@
 import { expect, type Page, test } from "@playwright/test";
 
 import { rentalItems } from "./fixtures/data";
-import { clickUntil } from "./helpers";
+import { boundingBoxOf, clickUntil } from "./helpers";
 
 /** Opens the rental item that has several photos, and returns its gallery. */
 async function openGallery(page: Page) {
   await page.goto(`/rentals/${rentalItems.multi.slug}`);
   // The gallery streams in after the page loads.
+  // eslint-disable-next-line playwright/no-networkidle -- the gallery has no ready signal other than its requests settling
   await page.waitForLoadState("networkidle");
   const gallery = page.getByRole("group", { name: /^Photos of / });
   await expect(gallery.getByRole("tab", { name: /^Show photo/ })).toHaveCount(rentalItems.multi.photos.length);
@@ -52,7 +53,7 @@ test("rental gallery: buttons, keyboard, thumbnails and swipe stay in sync", asy
 
   // Dragging the main photo advances it.
   const photo = gallery.getByRole("tabpanel", { name: /^Photo 1 of / });
-  const box = (await photo.boundingBox())!;
+  const box = await boundingBoxOf(photo);
   await page.mouse.move(box.x + box.width * 0.8, box.y + box.height / 2);
   await page.mouse.down();
   await page.mouse.move(box.x + box.width * 0.2, box.y + box.height / 2, { steps: 10 });

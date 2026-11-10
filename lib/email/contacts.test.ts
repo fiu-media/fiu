@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   create: vi.fn(),
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- the assertion types the object the tests fill in later
   env: {} as { RESEND_API_KEY?: string | undefined; RESEND_SEGMENT_ID?: string | undefined },
 }));
 vi.mock("resend", () => ({

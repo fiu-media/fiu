@@ -21,7 +21,7 @@ function pageLocations(options: {
   const { titleField, fallbackTitle, page, index } = options;
   return defineLocations({
     select: { title: titleField, slug: "slug.current", language: "language" },
-    resolve: (doc) => {
+    resolve: (doc: { title?: string; slug?: string; language?: string } | null) => {
       const lang = langOf(doc);
       const locations: Location[] = [
         ...(doc?.slug ? [{ title: doc.title ?? fallbackTitle, href: href(lang, page(doc.slug)) }] : []),

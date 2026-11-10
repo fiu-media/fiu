@@ -33,6 +33,7 @@ export function proxy(request: NextRequest) {
   if (locale) return NextResponse.next();
 
   // Only page loads move; a form post to the same URL must reach its action as sent.
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- DETECT_LANGUAGE is a switch kept as a constant so it can be flipped
   if (DETECT_LANGUAGE && (request.method === "GET" || request.method === "HEAD")) {
     const wanted = wantedLocale(request);
     if (wanted !== defaultLocale) {

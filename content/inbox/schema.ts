@@ -70,9 +70,27 @@ export const quoteRequest = defineType({
       endDate: "endDate",
       items: "items",
     },
-    prepare: ({ name, production, company, status, startDate, endDate, items }) => {
+    prepare: ({
+      name,
+      production,
+      company,
+      status,
+      startDate,
+      endDate,
+      items,
+    }: {
+      name?: string;
+      production?: string;
+      company?: string;
+      status?: string;
+      startDate?: string;
+      endDate?: string;
+      items?: unknown;
+    }) => {
       const lines = Array.isArray(items) ? items.length : 0;
       return {
+        // An empty production counts as missing, so the company stands in.
+        // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
         title: [name, production || company].filter(Boolean).join(" · "),
         subtitle: [
           capitalise(status),
@@ -126,7 +144,7 @@ export const contactMessage = defineType({
       status: "status",
       message: "message",
     },
-    prepare: ({ name, enquiry, status, message }) => ({
+    prepare: ({ name, enquiry, status, message }: { name?: string; enquiry?: string; status?: string; message?: string }) => ({
       title: [name, enquiry].filter(Boolean).join(" · "),
       subtitle: [capitalise(status), excerpt(message)].filter(Boolean).join(" · "),
     }),

@@ -30,9 +30,9 @@ type Guarded<T> =
  * Zod's own wording (e.g. "Invalid input: expected string") has no place on the wire: only our error
  * codes. A problem with a field the visitor can't see becomes a problem with the whole submission.
  */
-function withCodes(error: FormError<string[]>): FormError<string[]> {
+function withCodes(error: FormError): FormError {
   const formErrors = new Set(error.formErrors?.map(toErrorCode));
-  const fieldErrors: FormError<string[]>["fieldErrors"] = {};
+  const fieldErrors: FormError["fieldErrors"] = {};
   for (const [name, codes] of Object.entries(error.fieldErrors)) {
     if (!HIDDEN_FIELDS.includes(name)) fieldErrors[name] = codes?.map(toErrorCode) ?? null;
     else if (codes?.length) formErrors.add("rejected");
@@ -51,10 +51,8 @@ export async function guardSubmission<S extends z.ZodType>(schema: S, formData: 
   const honeypot = submission.payload.website;
   // Replies echo every submitted field, honeypot included: Conform keeps a server error only while the
   // form still holds what the server saw, so leaving a field out would let the first blur wipe the error.
-  const reply = (
-    error: FormError<string[]> | null,
-    options: { reset?: boolean; hideFields?: string[] } = {},
-  ): SubmissionResult<string[]> => report(submission, { error, ...options });
+  const reply = (error: FormError | null, options: { reset?: boolean; hideFields?: string[] } = {}): SubmissionResult =>
+    report(submission, { error, ...options });
   const fail = (errors: Errors): FormState =>
     reply({ formErrors: errors.formErrors ?? null, fieldErrors: errors.fieldErrors ?? {} });
   // A filled honeypot is the one thing never echoed back.

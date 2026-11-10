@@ -1,6 +1,6 @@
 import { MeshTransmissionMaterial, useCursor } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
-import { type ComponentRef, type MutableRefObject, useEffect, useMemo, useRef, useState } from "react";
+import { type ComponentRef, type RefObject, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 
 import { RAIL_REM } from "@/components/layout/nav/rail";
@@ -38,9 +38,9 @@ export function Logo({
   onIntroEnd,
 }: {
   /** Set by `useLogoQuality` once the shaders are warm and the tier is settled; the intro waits for it. */
-  readyRef: MutableRefObject<boolean>;
+  readyRef: RefObject<boolean>;
   onIntroEnd: (() => void) | undefined;
-  tint: MutableRefObject<THREE.Color>;
+  tint: RefObject<THREE.Color>;
   onPose: (x: number, y: number) => void;
   meshMode: LogoMeshMode;
   params: LogoGlassParams;

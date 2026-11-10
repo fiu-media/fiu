@@ -9,6 +9,7 @@ import { SiteNav } from "@/components/layout/nav/SiteNav";
 import { GlassPillLink } from "@/components/ui/Glass";
 import { ContactLinks, getSiteSettings, toTeam } from "@/content/siteSettings";
 import { fallbackStills } from "@/features/home";
+import { at } from "@/lib/at";
 import { isLocale, type Locale, localizedPath } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { toSizedImage } from "@/sanity/lib/image";
@@ -63,7 +64,7 @@ async function Options({
   const option: Option = OPTIONS.find((o) => o === requested) ?? "1";
   const [dict, settings] = await Promise.all([getDictionary(lang), getSettings(lang)]);
 
-  const still = (settings.aboutStill ? toSizedImage(settings.aboutStill, 2400) : null) ?? fallbackStills[0]!;
+  const still = (settings.aboutStill ? toSizedImage(settings.aboutStill, 2400) : null) ?? at(fallbackStills, 0);
   const props: AboutTeamProps = {
     still,
     slogan: settings.slogan ?? null,

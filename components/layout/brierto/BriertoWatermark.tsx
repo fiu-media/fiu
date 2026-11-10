@@ -10,7 +10,7 @@ const TILES = Array.from({ length: 30 }, (_, index) => index);
 const MARQUEE = Array.from({ length: 16 }, (_, index) => index);
 const RING = "DESIGNED BY BRIERTO ★ DESIGNED BY BRIERTO ★ DESIGNED BY BRIERTO ★ DESIGNED BY BRIERTO ★ ";
 
-const MELODY: Array<[number, OscillatorType]> = [
+const MELODY: [number, OscillatorType][] = [
   [523.25, "square"],
   [659.25, "square"],
   [783.99, "square"],
@@ -59,12 +59,17 @@ function splashCovering() {
 }
 
 function audioContext(): AudioContext | null {
-  const Ctor = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+  const Ctor =
+    (window.AudioContext as typeof AudioContext | undefined)
+    ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
   return Ctor ? new Ctor() : null;
 }
 
+/** Speech synthesis is missing in some browsers and webviews, though the DOM types say it is always there. */
+const speech = () => window.speechSynthesis as SpeechSynthesis | undefined;
+
 function squeakyVoice(): SpeechSynthesisVoice | undefined {
-  const voices = window.speechSynthesis?.getVoices() ?? [];
+  const voices = speech()?.getVoices() ?? [];
   return (
     voices.find((voice) => /zarvox|bad news|bahh|bells|boing|junior|superstar|albert/i.test(voice.name))
     ?? voices.find((voice) => voice.lang.startsWith("en"))
@@ -237,7 +242,7 @@ function WatermarkGate() {
     };
 
     const shout = (duringGesture: boolean) => {
-      const synth = window.speechSynthesis;
+      const synth = speech();
       if (!synth || stopped || document.hidden) return;
       const utter = new SpeechSynthesisUtterance("Designed by Brierto!");
       utter.pitch = 1.9;
@@ -300,11 +305,11 @@ function WatermarkGate() {
       }
       window.clearTimeout(timer);
       window.clearTimeout(voiceTimer);
-      window.speechSynthesis?.cancel();
+      speech()?.cancel();
       void ctx?.suspend();
     };
 
-    window.speechSynthesis?.getVoices();
+    speech()?.getVoices();
     const onBoom = () => playBoom();
     const onGesture = () => {
       if (!started) {
@@ -328,7 +333,7 @@ function WatermarkGate() {
       window.removeEventListener("pointerdown", onGesture, true);
       window.removeEventListener("keydown", onGesture, true);
       document.removeEventListener("visibilitychange", onHide);
-      window.speechSynthesis?.cancel();
+      speech()?.cancel();
       void ctx?.close();
     };
   }, [enabled]);

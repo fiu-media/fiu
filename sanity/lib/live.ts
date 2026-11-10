@@ -31,11 +31,11 @@ export const cachedSanity: StrictDefinedFetchType = async (options) => {
   return sanityFetch(options);
 };
 
-export interface DynamicFetchOptions {
+export type DynamicFetchOptions = {
   perspective: LivePerspective;
   variant?: string | undefined;
   stega: boolean;
-}
+};
 
 /** Resolve draft-mode state outside 'use cache' boundaries, then pass it into cached components. */
 export async function getDynamicFetchOptions(): Promise<DynamicFetchOptions> {
@@ -45,5 +45,6 @@ export async function getDynamicFetchOptions(): Promise<DynamicFetchOptions> {
   const jar = await cookies();
   const perspective = await resolvePerspectiveFromCookies({ cookies: jar });
   const variant = await resolveVariantFromCookies({ cookies: jar });
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- the types say a perspective always resolves; "drafts" is the safe fallback if one doesn't
   return { perspective: perspective ?? "drafts", variant, stega: true };
 }

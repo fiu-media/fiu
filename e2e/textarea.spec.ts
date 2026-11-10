@@ -88,12 +88,8 @@ test.describe("textarea sizing without field-sizing", () => {
   test.beforeEach(async ({ page }) => {
     await page.addInitScript(() => {
       const supports = CSS.supports.bind(CSS);
-      CSS.supports = ((property: string, value?: string) =>
-        property === "field-sizing"
-          ? false
-          : value === undefined
-            ? supports(property)
-            : supports(property, value)) as typeof CSS.supports;
+      CSS.supports = (property: string, value?: string) =>
+        property === "field-sizing" ? false : value === undefined ? supports(property) : supports(property, value);
       document.addEventListener("DOMContentLoaded", () => {
         const style = document.createElement("style");
         style.textContent = "textarea { field-sizing: fixed !important; }";

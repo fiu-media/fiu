@@ -25,7 +25,7 @@ import {
   type SweepAxis,
   type SweepTechnique,
 } from "@/features/logo";
-import logo from "@/public/brand/fiu-logo.svg";
+import { logo } from "@/lib/brand";
 
 import { DIFF_LABELS } from "./logoControls";
 import { diffConfigs } from "./logoDiff";

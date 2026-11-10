@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 
-import type { Locale } from "./config";
 import { format } from "./format";
 
 describe("format", () => {
@@ -32,7 +31,7 @@ describe("format", () => {
     });
 
     it("picks the Irish plural form for each category", () => {
-      const render = (count: number) => format(ga, { count }, "ga" as Locale);
+      const render = (count: number) => format(ga, { count }, "ga");
       expect(render(1)).toBe("1 mhír");
       expect(render(2)).toBe("2 mhír (dhá)");
       expect(render(3)).toBe("3 mhír (beaga)");

@@ -5,6 +5,7 @@ import { CanvasRoot } from "@/features/logo/CanvasRoot";
 import type { LightSweep } from "@/features/logo/lightSweep";
 import { preloadStill, type SceneStill } from "@/features/logo/scene/stills";
 import { useSweepRig } from "@/features/logo/scene/sweepRig";
+import { at } from "@/lib/at";
 
 import { PerfSampler } from "./PerfSampler";
 import { SweepDriver } from "./SweepDriver";
@@ -33,7 +34,7 @@ export default function PlaygroundScene({
 }) {
   const rig = useSweepRig();
   // Same early start as the hero: see LogoScene.
-  preloadStill(stills[index]!.src);
+  preloadStill(at(stills, index).src);
   return (
     <CanvasRoot
       stills={stills}

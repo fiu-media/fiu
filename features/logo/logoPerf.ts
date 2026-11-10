@@ -9,7 +9,7 @@ import type { LogoGlassParams, LogoRimLook } from "./config/schemas";
 function estimateLogoCost(params: LogoGlassParams) {
   const softOn = params.lights.soft.filter((l) => l.enabled).length;
   const pointsOn = params.lights.points.filter((l) => l.enabled).length;
-  const backsideMul = params.backside === false ? 1 : 2;
+  const backsideMul = !params.backside ? 1 : 2;
   const transmission = params.samples * 4 * backsideMul;
   const soft = softOn * 2.2;
   const points = pointsOn * 1.1;

@@ -46,7 +46,8 @@ function measure(img: HTMLImageElement, position: string | undefined) {
     canvas ??= document.createElement("canvas");
     canvas.width = SAMPLE.w;
     canvas.height = SAMPLE.h;
-    const context = canvas.getContext("2d", { willReadFrequently: true })!;
+    const context = canvas.getContext("2d", { willReadFrequently: true });
+    if (!context) throw new Error("This browser has no 2D canvas");
     // Draw the whole still into the sample as it is laid out on screen, shifted so the sample covers the strip under
     // the rail on the first screen. The five-argument drawImage scales the whole image, so its pixel density can't
     // throw the crop off (a responsive image's naturalWidth is divided by it; its bitmap is not).

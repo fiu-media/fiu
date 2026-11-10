@@ -1,7 +1,7 @@
 import Link from "next/link";
 
+import { logo } from "@/lib/brand";
 import { cn } from "@/lib/cn";
-import logo from "@/public/brand/fiu-logo.svg";
 
 /** The logo as a mask, so it takes the surrounding text colour. Size it with a height class. */
 export function LogoMask({ className = "h-9 md:h-11" }: { className?: string | undefined }) {

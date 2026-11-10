@@ -52,7 +52,7 @@ async function main() {
     const data = join(extracted, folder, "data.ndjson");
     const kept = readFileSync(data, "utf8")
       .split("\n")
-      .filter((line) => line.trim() && CONTENT_TYPES.includes(JSON.parse(line)._type));
+      .filter((line) => line.trim() && CONTENT_TYPES.includes((JSON.parse(line) as { _type: string })._type));
     writeFileSync(data, `${kept.join("\n")}\n`);
 
     const filtered = join(work, "filtered.tar.gz");
@@ -69,7 +69,10 @@ async function main() {
   const sourceIds = new Set(source.map((doc) => doc._id));
   const targetById = new Map(target.map((doc) => [doc._id, doc]));
   const extra = target.filter((doc) => !sourceIds.has(doc._id));
-  const stale = source.filter((doc) => !targetById.has(doc._id) || !same(doc, targetById.get(doc._id)!));
+  const stale = source.filter((doc) => {
+    const current = targetById.get(doc._id);
+    return !current || !same(doc, current);
+  });
   if (extra.length || stale.length) {
     const tx = dev.transaction();
     for (const doc of extra) tx.delete(doc._id);
@@ -79,7 +82,7 @@ async function main() {
   console.log(`Synced ${source.length} documents to ${TARGET}; removed ${extra.length} dev-only, re-synced ${stale.length}.`);
 }
 
-main().catch((err) => {
+main().catch((err: unknown) => {
   console.error(err);
   process.exit(1);
 });

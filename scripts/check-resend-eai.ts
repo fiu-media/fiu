@@ -44,7 +44,7 @@ if (unicodeFrom !== from) {
     text: "Sent by scripts/check-resend-eai.ts.",
   });
   console.log(
-    `${"From with a Unicode domain".padEnd(34)} ${unicodeFrom.padEnd(34)} ${error ? `REJECTED  ${error.name}: ${error.message}` : `accepted  ${data?.id}`}`,
+    `${"From with a Unicode domain".padEnd(34)} ${unicodeFrom.padEnd(34)} ${error ? `REJECTED  ${error.name}: ${error.message}` : `accepted  ${data.id}`}`,
   );
 }
 
@@ -56,6 +56,6 @@ for (const [label, to] of cases) {
     text: "Sent by scripts/check-resend-eai.ts.",
   });
   console.log(
-    `${label.padEnd(34)} ${to.padEnd(34)} ${error ? `REJECTED  ${error.name}: ${error.message}` : `accepted  ${data?.id}`}`,
+    `${label.padEnd(34)} ${to.padEnd(34)} ${error ? `REJECTED  ${error.name}: ${error.message}` : `accepted  ${data.id}`}`,
   );
 }

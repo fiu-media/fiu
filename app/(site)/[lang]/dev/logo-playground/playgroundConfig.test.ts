@@ -119,7 +119,6 @@ describe("importPlaygroundConfig", () => {
     it("fills light flags that older snapshots omit", () => {
       const old = structuredClone(presetConfig("light"));
       const { feather, followPose, roll, lift, scaleZ, ...rest } = at(old.params.lights.soft, 0);
-      void [feather, followPose, roll, lift, scaleZ];
       old.params.lights.soft[0] = rest as never;
       const result = importPlaygroundConfig(current, JSON.stringify(old));
       if (!result.ok) throw new Error(result.error);

@@ -28,7 +28,8 @@ export function useVimeoPlayer(
       () => latest.current[event]?.(),
     ]);
 
-    import("@vimeo/player").then(({ default: VimeoPlayer }) => {
+    // Fire and forget: until the chunk arrives there's no player, and the page works without one.
+    void import("@vimeo/player").then(({ default: VimeoPlayer }) => {
       if (cancelled) return;
       instance = new VimeoPlayer(iframe);
       player.current = instance;

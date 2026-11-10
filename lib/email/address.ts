@@ -39,7 +39,7 @@ export function isEmailAddress(address: string): boolean {
   const host = domainToAscii(domain);
   if (!host || host.length > 253) return false;
   const labels = host.split(".");
-  return labels.length >= 2 && labels.every((label) => LABEL.test(label)) && !/^\d+$/.test(labels.at(-1)!);
+  return labels.length >= 2 && labels.every((label) => LABEL.test(label)) && !/^\d+$/.test(labels.at(-1) ?? "");
 }
 
 /**

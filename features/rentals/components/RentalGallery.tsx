@@ -76,6 +76,8 @@ function Carousel({ images, name, dict }: { images: SizedImage[]; name: string; 
       aria-label={format(dict.galleryLabel, { name })}
       className="flex flex-col gap-4"
     >
+      {/* The carousel steps with the arrow keys, so the wrapper that hears them has to take focus. */}
+      {/* eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex, jsx-a11y/no-static-element-interactions */}
       <div tabIndex={0} onKeyDown={onKeyDown} className="relative rounded-3xl">
         <div {...swipe} className="touch-pan-y overflow-hidden rounded-3xl bg-white">
           <div className="grid">

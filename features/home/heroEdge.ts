@@ -1,3 +1,5 @@
+import { at } from "@/lib/at";
+
 /**
  * How dark the desktop rail's edge has to get over the hero still on screen.
  *
@@ -66,11 +68,11 @@ export function stripLuminance(pixels: Uint8ClampedArray, width: number) {
     for (let row = top; row < Math.min(rows, top + bandRows); row++) {
       for (let col = 0; col < width; col++) {
         const i = (row * width + col) * 4;
-        values.push(relativeLuminance(pixels[i]!, pixels[i + 1]!, pixels[i + 2]!));
+        values.push(relativeLuminance(at(pixels, i), at(pixels, i + 1), at(pixels, i + 2)));
       }
     }
     values.sort((x, y) => x - y);
-    brightest = Math.max(brightest, values[Math.min(values.length - 1, Math.floor(values.length * BAND_PERCENTILE))]!);
+    brightest = Math.max(brightest, at(values, Math.min(values.length - 1, Math.floor(values.length * BAND_PERCENTILE))));
   }
   return brightest;
 }

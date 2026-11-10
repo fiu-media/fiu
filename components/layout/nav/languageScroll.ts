@@ -13,7 +13,7 @@ export function carryScroll(pathname: string, y: number) {
 /** The carried position if it was left for `pathname`; it is handed over once. */
 export function takeCarriedScroll(pathname: string): number | null {
   const found = carried;
-  if (!found || found.pathname !== pathname) return null;
+  if (found?.pathname !== pathname) return null;
   carried = null;
   return found.y;
 }

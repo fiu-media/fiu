@@ -4,10 +4,10 @@ import { notFound } from "next/navigation";
 
 import { GlassPanel, GlassPillButton } from "@/components/ui/Glass";
 import { at } from "@/lib/at";
+import { logo } from "@/lib/brand";
 import { isLocale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getNavItems, type NavItem } from "@/lib/i18n/nav";
-import logo from "@/public/brand/fiu-logo.svg";
 import banquet from "@/public/stills/banquet.jpg";
 import bouquet from "@/public/stills/bouquet.jpg";
 import citrus from "@/public/stills/citrus.jpg";

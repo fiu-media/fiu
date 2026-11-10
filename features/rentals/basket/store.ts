@@ -55,7 +55,10 @@ export const useBasketStore = create<Basket & BasketActions>()(
         });
       },
       setQty: (itemId, qty, max = MAX_QTY) => {
-        if (qty < 1) return get().remove(itemId);
+        if (qty < 1) {
+          get().remove(itemId);
+          return;
+        }
         set({ lines: get().lines.map((l) => (l.itemId === itemId ? { ...l, qty: clampQty(qty, max) } : l)) });
       },
       ensure: (itemId, qty, max = MAX_QTY) => {

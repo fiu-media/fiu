@@ -1,6 +1,6 @@
 import { Environment } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import { type MutableRefObject, type RefObject, useEffect, useMemo, useRef, useState } from "react";
+import { type RefObject, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 
 import type { LogoGlassParams } from "../config/schemas";
@@ -17,7 +17,7 @@ export function SparkLights({
   logoPose,
   lights,
 }: {
-  logoPose: MutableRefObject<{ x: number; y: number }>;
+  logoPose: RefObject<{ x: number; y: number }>;
   lights: LogoGlassParams["lights"]["points"];
 }) {
   const follow = useRef<THREE.Group>(null);
@@ -61,17 +61,12 @@ export function SparkLights({
  * Env portal frames: Infinity while the scene is moving (tint / pose), else 1 so the
  * cubemap freezes. Playground passes envAlways to keep scrubbing live.
  */
-function useEnvFrames(
-  fade: RefObject<Fade>,
-  awakeRef: MutableRefObject<boolean>,
-  sweepLive: MutableRefObject<boolean>,
-  envAlways: boolean,
-) {
+function useEnvFrames(fade: RefObject<Fade>, awakeRef: RefObject<boolean>, sweepLive: RefObject<boolean>, envAlways: boolean) {
   const [frames, setFrames] = useState<number>(Infinity);
   const liveRef = useRef(true);
   useFrame(() => {
     const f = fade.current;
-    const fading = Boolean(f?.start) && performance.now() - f.start < CROSSFADE_SECONDS * 1000;
+    const fading = Boolean(f.start) && performance.now() - f.start < CROSSFADE_SECONDS * 1000;
     const live = envAlways || awakeRef.current || sweepLive.current || fading;
     if (live === liveRef.current) return;
     liveRef.current = live;
@@ -87,7 +82,8 @@ function useFeatherMap() {
     const canvas = document.createElement("canvas");
     canvas.width = size;
     canvas.height = size;
-    const ctx = canvas.getContext("2d")!;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("This browser has no 2D canvas");
     const g = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
     g.addColorStop(0, "rgba(255,255,255,1)");
     g.addColorStop(0.45, "rgba(255,255,255,0.85)");
@@ -117,12 +113,12 @@ export function Studio({
   envAlways,
   envResolution,
 }: {
-  tint: MutableRefObject<THREE.Color>;
-  logoPose: MutableRefObject<{ x: number; y: number }>;
+  tint: RefObject<THREE.Color>;
+  logoPose: RefObject<{ x: number; y: number }>;
   params: LogoGlassParams;
   fade: RefObject<Fade>;
-  awakeRef: MutableRefObject<boolean>;
-  sweepLive: MutableRefObject<boolean>;
+  awakeRef: RefObject<boolean>;
+  sweepLive: RefObject<boolean>;
   sweepGroup: RefObject<THREE.Group | null>;
   envRotation: THREE.Euler;
   envAlways: boolean;
@@ -191,7 +187,7 @@ function SoftLight({
   roll = 0,
   feather,
 }: {
-  tint: MutableRefObject<THREE.Color>;
+  tint: RefObject<THREE.Color>;
   mixWhite: number;
   intensity: number;
   lift?: number;

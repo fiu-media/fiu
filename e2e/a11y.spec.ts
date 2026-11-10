@@ -15,6 +15,7 @@ const PAGES = ["/about", "/work", "/talent", "/contact", "/contact?type=Talent",
 async function audit(page: Page, path: string, open?: (page: Page) => Promise<void>) {
   await page.goto(path);
   // Wait for the page to settle (skeletons gone, images decoded) before measuring.
+  // eslint-disable-next-line playwright/no-networkidle -- axe needs the lazy images and fonts in before it measures
   await page.waitForLoadState("networkidle");
   await open?.(page);
   const { violations } = await new AxeBuilder({ page }).analyze();
@@ -57,6 +58,7 @@ test.describe("with a dialog open", () => {
       const dialog = page.getByRole("dialog", { name: en.nav.label });
       await clickUntil(page.getByRole("button", { name: en.nav.menu }), () => expect(dialog).toBeVisible({ timeout: 1000 }));
       // Let the content's fade-in finish, so contrast is measured on the final colours.
+      // eslint-disable-next-line playwright/no-wait-for-timeout -- there is nothing to observe: a CSS transition just has to run out
       await page.waitForTimeout(400);
     });
   });
@@ -69,6 +71,7 @@ test.describe("with a dialog open", () => {
       );
       await page.getByRole("button", { name: /^Open quote basket/ }).click();
       await expect(page.getByRole("dialog", { name: en.basket.title })).toBeVisible();
+      // eslint-disable-next-line playwright/no-wait-for-timeout -- as above, the drawer's slide-in has to finish
       await page.waitForTimeout(600);
     });
   });

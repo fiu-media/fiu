@@ -21,7 +21,7 @@ describe("edgeForLuminance", () => {
       const darkened = luminance * (1 - edge) ** 2.2;
       expect(contrastOfText(darkened)).toBeGreaterThanOrEqual(4.5);
       // Just enough: a step lighter would fail.
-      if (edge > 0) expect(contrastOfText(luminance * (1 - edge + 0.01) ** 2.2)).toBeLessThan(4.8);
+      expect(edge > 0 ? contrastOfText(luminance * (1 - edge + 0.01) ** 2.2) : 0).toBeLessThan(4.8);
       expect(edge).toBeLessThan(0.7);
     }
   });

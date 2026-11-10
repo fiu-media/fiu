@@ -6,6 +6,8 @@
  * This file is plain data with no imports from Sanity or Node, so the specs can import it too.
  */
 
+import { at } from "../../lib/at";
+
 /** Every address the e2e run submits ends in this reserved TLD, which is how cleanup finds the submissions it made. */
 export const TEST_EMAIL_DOMAIN = "example.test";
 
@@ -77,7 +79,7 @@ export const talentRoster = Array.from({ length: TALENT_COUNT }, (_, i) => {
   };
 });
 /** The profile the talent tests open. */
-export const featuredTalent = talentRoster[0]!;
+export const featuredTalent = at(talentRoster, 0);
 
 export const projectType = {
   id: `${FIXTURE_PREFIX}type-original`,

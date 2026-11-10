@@ -125,7 +125,7 @@ test.describe("quote request", () => {
     // An item that has since been unpublished: the browser can't tell, the server can.
     await page.evaluate(() => {
       const key = "fiu:quote-basket";
-      const stored = JSON.parse(localStorage.getItem(key) ?? "{}");
+      const stored = JSON.parse(localStorage.getItem(key) ?? "{}") as { state: { lines: unknown[] } };
       stored.state.lines.push({ itemId: "rental-no-longer-exists", qty: 1 });
       localStorage.setItem(key, JSON.stringify(stored));
     });

@@ -4,7 +4,16 @@ import { features } from "../lib/features";
 import { TEST_EMAIL_DOMAIN } from "./fixtures/data";
 
 /** `test` while Rentals is on, `test.skip` while it is hidden (its pages are a 404, so there is nothing to drive). */
+// `test.skip` is meant to be passed around like this.
+// eslint-disable-next-line @typescript-eslint/unbound-method
 export const rentalsTest = features.rentals ? test : test.skip;
+
+/** Where an element is on screen. Throws if it has no box (hidden or detached), which a test can't use anyway. */
+export async function boundingBoxOf(locator: Locator) {
+  const box = await locator.boundingBox();
+  if (!box) throw new Error("The element has no box on screen");
+  return box;
+}
 
 export const testEmail = () => `e2e-${crypto.randomUUID().slice(0, 8)}@${TEST_EMAIL_DOMAIN}`;
 

@@ -32,7 +32,7 @@ type Options = {
 
 /** The visitor's enquiry type as they saw it in the form, or as submitted if it isn't one we know. */
 function enquiryLabel(dict: Dictionary, type: string) {
-  return dict.contact.enquiryTypes[type as keyof typeof dict.contact.enquiryTypes] ?? type;
+  return (dict.contact.enquiryTypes as Record<string, string | undefined>)[type] ?? type;
 }
 
 /** Every email, built the same way: its kind, the dictionary it is written in, and what the visitor submitted. */
@@ -47,7 +47,7 @@ export function build<K extends EmailKind>(
   const quote = data as QuoteEmailData;
   const contact = data as ContactEmailData;
 
-  switch (kind as EmailKind) {
+  switch (kind) {
     case "quoteNotification":
       return {
         subject: format(emails.quoteNotify.subject, { name: quote.name, count: quote.kit.length }, lang),

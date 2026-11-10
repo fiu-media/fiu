@@ -40,8 +40,11 @@ export function toSizedImage(image: QueriedImage, width = 1200): SizedImage | nu
       ? { width: image.dimensions.width, height: image.dimensions.height }
       : null;
   // Cropped images have no dimensions in the catalogue lookup; fall back to a 4:3 frame.
+  // The generated types say every crop and hotspot field is present; these defaults cover data that omits one.
+  /* eslint-disable @typescript-eslint/no-unnecessary-condition */
   const cropW = crop ? 1 - (crop.left ?? 0) - (crop.right ?? 0) : 1;
   const cropH = crop ? 1 - (crop.top ?? 0) - (crop.bottom ?? 0) : 1;
+  /* eslint-enable @typescript-eslint/no-unnecessary-condition */
   const aspect = dimensions ? (dimensions.width * cropW) / (dimensions.height * cropH) : 4 / 3;
   const w = dimensions ? Math.min(width, Math.round(dimensions.width * cropW)) : width;
   return {
@@ -53,6 +56,7 @@ export function toSizedImage(image: QueriedImage, width = 1200): SizedImage | nu
     height: Math.round(w / aspect),
     alt: image.alt ?? "",
     blurDataURL: image.lqip ?? undefined,
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- as above
     position: hotspot ? `${(hotspot.x ?? 0.5) * 100}% ${(hotspot.y ?? 0.5) * 100}%` : undefined,
   };
 }

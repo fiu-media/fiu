@@ -76,6 +76,8 @@ export const project = defineType({
             rule.custom((credit) => (credit?.talent || credit?.name ? true : "Pick a talent or enter a name")),
           preview: {
             select: { role: "role.title", talent: "talent.name", name: "name" },
+            // Sanity types the selected values as `any`.
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             prepare: ({ role, talent, name }) => ({ title: role, subtitle: talent ?? name }),
           },
         }),
@@ -87,10 +89,13 @@ export const project = defineType({
   orderings: [orderRankOrdering, { title: "Year, newest first", name: "yearDesc", by: [{ field: "year", direction: "desc" }] }],
   preview: {
     select: { title: "title", type: "type.title", year: "year", media: "coverStill" },
+    // Sanity types the selected values as `any`.
+    /* eslint-disable @typescript-eslint/no-unsafe-assignment */
     prepare: ({ title, type, year, media }) => ({
       title,
       subtitle: [type, year].filter(Boolean).join(" · "),
       media,
     }),
+    /* eslint-enable @typescript-eslint/no-unsafe-assignment */
   },
 });

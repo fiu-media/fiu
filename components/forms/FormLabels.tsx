@@ -26,14 +26,20 @@ export function FormLabelsProvider({ children }: { children: ReactNode }) {
   return <FormLabelsContext value={value}>{children}</FormLabelsContext>;
 }
 
+function useRegistry() {
+  const registry = use(FormLabelsContext);
+  if (!registry) throw new Error("Form labels need a surrounding <Form>");
+  return registry;
+}
+
 /** The labels registered so far, in no particular order (see `inPageOrder`). */
 export function useFormLabels() {
-  return use(FormLabelsContext)!.labels;
+  return useRegistry().labels;
 }
 
 /** Register a field's label with the surrounding `<Form>`. Called by `<Field>`, and directly for anything else the summary should name. */
 export function useFormLabel(field: { name: string; id: string }, label: string) {
-  const { register } = use(FormLabelsContext)!;
+  const { register } = useRegistry();
   const { name, id } = field;
   useEffect(() => register({ name, label, id }), [register, name, label, id]);
 }
