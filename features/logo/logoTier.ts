@@ -86,8 +86,8 @@ export type DeviceInfo = {
   performanceCaveat: boolean;
   renderer: string | null;
   /** GB, Chromium only (rounded down to 0.25, 0.5, 1, 2, 4 or 8). */
-  deviceMemory?: number;
-  cores?: number;
+  deviceMemory?: number | undefined;
+  cores?: number | undefined;
   saveData: boolean;
 };
 

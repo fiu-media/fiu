@@ -111,6 +111,7 @@ export function usePlayback(rootRef: RefObject<HTMLElement | null>, { video }: {
     if (!el) return;
     const observer = new IntersectionObserver(
       ([entry]) => {
+        if (!entry) return;
         setOnScreen(entry.intersectionRatio >= ACTIVE_RATIO);
         away.current = entry.intersectionRatio < LEFT_RATIO;
         // The page can shift under a fullscreen video (see below); that isn't the viewer scrolling away.

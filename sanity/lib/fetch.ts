@@ -1,6 +1,7 @@
 import type { ClientParams } from "next-sanity";
 
 import { defaultLocale, type Locale } from "@/lib/i18n/config";
+import { omitUndefined } from "@/lib/omitUndefined";
 
 import { cachedSanity, getDynamicFetchOptions } from "./live";
 
@@ -29,7 +30,7 @@ export async function fetchContent<const Query extends string>(
     // The generic query has no params type to check against yet, so say it matches.
     params: { lang, fallbackLang: defaultLocale, ...params } as ClientParams<Query>,
     perspective: dynamic.perspective,
-    variant: "variant" in dynamic ? dynamic.variant : undefined,
+    ...omitUndefined({ variant: "variant" in dynamic ? dynamic.variant : undefined }),
     stega: false,
   });
   return data;

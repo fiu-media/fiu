@@ -4,7 +4,7 @@ import { Fragment } from "react";
  * A page's <h1> with an optional playful "Fiú line" underneath. The plain title carries the meaning
  * for assistive tech, so the line is hidden from it, and "Fiú" is marked Irish for anyone who sees it.
  */
-export function PageTitle({ title, tagline }: { title: string; tagline?: string | null }) {
+export function PageTitle({ title, tagline }: { title: string; tagline?: string | null | undefined }) {
   return (
     <>
       <h1 className="font-display text-5xl md:text-6xl">{title}</h1>

@@ -4,6 +4,7 @@ import { defineConfig } from "sanity";
 import { presentationTool } from "sanity/presentation";
 import { structureTool } from "sanity/structure";
 
+import { omitUndefined } from "./lib/omitUndefined";
 import { schemaTypes } from "./sanity/schema";
 import { FiuIcon } from "./sanity/studio/FiuIcon";
 import { languages, translatedTypes } from "./sanity/studio/languages";
@@ -31,7 +32,7 @@ export default defineConfig({
   plugins: [
     structureTool({ structure }),
     presentationTool({
-      resolve,
+      ...omitUndefined({ resolve }),
       previewUrl: { origin: previewOrigin, draftMode: { enable: "/api/draft-mode/enable" } },
     }),
     documentInternationalization({

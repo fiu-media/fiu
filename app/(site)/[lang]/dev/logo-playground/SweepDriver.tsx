@@ -31,6 +31,7 @@ export function SweepDriver({ sweep, rig }: { sweep: LightSweep | undefined; rig
 
   useEffect(() => {
     const observer = new IntersectionObserver(([entry]) => {
+      if (!entry) return;
       inView.current = entry.isIntersecting;
       invalidate();
     });

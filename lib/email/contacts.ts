@@ -3,6 +3,7 @@ import "server-only";
 import { Resend } from "resend";
 
 import { env } from "@/env";
+import { omitUndefined } from "@/lib/omitUndefined";
 
 import { toDeliverable } from "./address";
 
@@ -34,10 +35,12 @@ export async function createContact({ name, email, phone }: Contact) {
   }
   const { error } = await new Resend(key).contacts.create({
     email: address,
-    ...splitName(name),
+    ...omitUndefined(splitName(name)),
     unsubscribed: true,
-    segments: segment ? [{ id: segment }] : undefined,
-    properties: phone ? { phone } : undefined,
+    ...omitUndefined({
+      segments: segment ? [{ id: segment }] : undefined,
+      properties: phone ? { phone } : undefined,
+    }),
   });
   if (error) throw new Error(`Resend rejected contact ${email}: ${error.name}: ${error.message}`);
 }

@@ -14,12 +14,22 @@ export type AboutLayoutProps = {
   manifesto: ReactNode;
   contacts: ReactNode;
   /** The team photo. Only Option A shows it (beside the manifesto); the sign-off options B to F ignore it. */
-  team?: Team;
+  team?: Team | undefined;
   /** `data-sanity` values that make the parts clickable in the Presentation tool. */
-  attributes?: { still?: string; slogan?: string; manifesto?: string; team?: string };
+  attributes?:
+    | { still?: string | undefined; slogan?: string | undefined; manifesto?: string | undefined; team?: string | undefined }
+    | undefined;
 };
 
-export function Still({ still, attribute, className }: { still: SizedImage; attribute?: string; className?: string }) {
+export function Still({
+  still,
+  attribute,
+  className,
+}: {
+  still: SizedImage;
+  attribute?: string | undefined;
+  className?: string | undefined;
+}) {
   return <SizedImg image={still} sizes="100vw" priority data-sanity={attribute} className={cn("size-full", className)} />;
 }
 

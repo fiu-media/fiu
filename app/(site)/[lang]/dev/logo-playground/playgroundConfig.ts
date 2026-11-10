@@ -8,6 +8,7 @@ import {
   type LogoMeshMode,
   type LogoRimLook,
 } from "@/features/logo";
+import { omitUndefined } from "@/lib/omitUndefined";
 
 import {
   formatZodError,
@@ -158,7 +159,7 @@ function coalesceParams(partial: LogoPartialGlassParams, rimLook: LogoRimLook = 
   const base = LOGO_PARAM_PRESETS[rimLook];
   return cloneParams({
     ...base,
-    ...partial,
+    ...omitUndefined(partial),
     extrude: partial.extrude !== undefined ? partial.extrude : base.extrude,
     lights: partial.lights ?? base.lights,
   });
@@ -166,7 +167,10 @@ function coalesceParams(partial: LogoPartialGlassParams, rimLook: LogoRimLook = 
 
 function extractJsonPayload(text: string): { fence: string | null; raw: string } {
   const fenced = text.match(/```([^\n`]*)\s*([\s\S]*?)```/);
-  if (fenced) return { fence: fenced[1].trim() || null, raw: fenced[2].trim() };
+  if (fenced) {
+    const [, fence = "", raw = ""] = fenced;
+    return { fence: fence.trim() || null, raw: raw.trim() };
+  }
   return { fence: null, raw: text.trim() };
 }
 
@@ -239,7 +243,7 @@ export function importPlaygroundConfig(current: LogoPlaygroundConfig, text: stri
         rimLook,
         meshMode,
         display: "live",
-        params: cloneParams({ ...current.params, ...params }),
+        params: cloneParams({ ...current.params, ...omitUndefined(params) }),
       },
     };
   }
@@ -260,7 +264,12 @@ export function importPlaygroundConfig(current: LogoPlaygroundConfig, text: stri
     return {
       ok: true,
       kind: "interaction",
-      config: { ...current, version: 1, display: "live", params: cloneParams({ ...current.params, ...result.data.params }) },
+      config: {
+        ...current,
+        version: 1,
+        display: "live",
+        params: cloneParams({ ...current.params, ...omitUndefined(result.data.params) }),
+      },
     };
   }
 

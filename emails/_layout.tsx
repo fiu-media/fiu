@@ -1,7 +1,7 @@
 import { Body, Button, Container, Head, Heading, Html, Img, Link, Preview, Text } from "react-email";
 
 /** A row with an `href` renders its value as a link. */
-export type Row = [label: string, value: string, href?: string];
+export type Row = [label: string, value: string, href?: string | undefined];
 export type KitLine = { name: string; brand?: string | null; qty: number };
 
 export const kitLineLabel = ({ name, brand, qty }: KitLine) => `${qty} × ${brand ? `${brand} ` : ""}${name}`;

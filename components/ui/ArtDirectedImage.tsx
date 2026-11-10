@@ -7,25 +7,26 @@ import { SizedImg } from "@/components/ui/SizedImg";
 import { cn } from "@/lib/cn";
 import { usePortrait } from "@/lib/hooks/usePortrait";
 import { PORTRAIT } from "@/lib/media";
+import { omitUndefined } from "@/lib/omitUndefined";
 import type { SizedImage } from "@/sanity/lib/image";
 
 type ArtDirectedImageProps = {
   landscape: SizedImage;
   /** The image a portrait screen gets. Without it, `landscape` is used everywhere. */
-  portrait?: SizedImage | null;
-  priority?: boolean;
+  portrait?: SizedImage | null | undefined;
+  priority?: boolean | undefined;
   sizes: string;
   /** Defaults to the alt of whichever image the screen is showing. */
-  alt?: string;
+  alt?: string | undefined;
   /** `data-sanity` value that makes the image clickable in the Presentation tool. */
-  dataSanity?: string;
+  dataSanity?: string | undefined;
   /** Fill the parent instead of using the image's own size. */
-  fill?: boolean;
-  quality?: number;
-  className?: string;
-  style?: CSSProperties;
+  fill?: boolean | undefined;
+  quality?: number | undefined;
+  className?: string | undefined;
+  style?: CSSProperties | undefined;
   /** The rendered `<img>`, for callers that read its pixels or layout. */
-  imgRef?: Ref<HTMLImageElement>;
+  imgRef?: Ref<HTMLImageElement> | undefined;
 };
 
 const blur = (image: SizedImage) => (image.blurDataURL ? `url("${image.blurDataURL}")` : "none");
@@ -70,7 +71,7 @@ export function ArtDirectedImage({
       src: image.src,
       alt: image.alt,
       sizes,
-      quality,
+      ...omitUndefined({ quality }),
       ...(fill ? { fill } : { width: image.width, height: image.height }),
       ...eager,
     }).props;

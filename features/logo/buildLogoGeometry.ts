@@ -1,12 +1,18 @@
 import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
+import { at } from "@/lib/at";
+
 import type { LogoMeshMode } from "./config/schemas";
 export type { LogoMeshMode };
 
+/** Fixed-length tuples so `[0]`, `[1]` reads stay typed under noUncheckedIndexedAccess. */
+type Point = [x: number, y: number];
+type Sample = [x: number, y: number, radius: number];
+
 type LogoStroke = {
   /** Centreline samples: [x, y, radius] in logo-world units. */
-  points: number[][];
+  points: Sample[];
   closed?: boolean;
   /** End treatments — `point` already tapers to ~0 in the radius data. */
   caps?: ("flat" | "point")[];
@@ -28,15 +34,15 @@ export type LogoPaths = {
    * bevelSize), so the extruded outline lands exactly on the white.png artwork.
    */
   shapes?: {
-    outer: number[][];
-    holes: number[][][];
+    outer: Point[];
+    holes: Point[][];
     bevel?: number;
     /** Needle/sharp tips: [x, y, influence radius] — depth is tapered inside it. */
-    tips?: number[][];
+    tips?: Sample[];
     /** True (un-inset) artwork outline rings, used to measure distance to the edge near tips. */
-    outline?: number[][][];
+    outline?: Point[][];
   }[];
-  diamonds: { corners: number[][]; depth: number; bevel: number }[];
+  diamonds: { corners: Point[]; depth: number; bevel: number }[];
   /** Sheared f-tip cut: edge angle in logo plane (y-up). Flat tube caps use this. */
   tipCut?: { angle: number; side: number };
 };
@@ -44,12 +50,12 @@ export type LogoPaths = {
 const RADIAL = 12;
 const MIN_R = 0.002;
 
-function shapeFromRing(ring: number[][]) {
+function shapeFromRing(ring: Point[]) {
   const shape = new THREE.Shape();
-  const [x0, y0] = ring[0];
+  const [x0, y0] = at(ring, 0);
   shape.moveTo(x0, y0);
-  for (let i = 1; i < ring.length; i++) {
-    shape.lineTo(ring[i][0], ring[i][1]);
+  for (const [x, y] of ring.slice(1)) {
+    shape.lineTo(x, y);
   }
   shape.closePath();
   return shape;
@@ -101,16 +107,18 @@ function variableRadiusTube(stroke: LogoStroke, tipCutAngle?: number): THREE.Buf
   if (raw.length < 2) throw new Error("stroke needs ≥2 points");
 
   // Drop near-duplicates so tangents stay stable.
-  const samples: { x: number; y: number; r: number }[] = [{ x: raw[0][0], y: raw[0][1], r: Math.max(raw[0][2], MIN_R) }];
-  for (let i = 1; i < raw.length; i++) {
-    const prev = samples[samples.length - 1];
-    const dx = raw[i][0] - prev.x;
-    const dy = raw[i][1] - prev.y;
+  const [first, ...rest] = raw;
+  if (!first) throw new Error("stroke needs ≥2 points");
+  const samples: { x: number; y: number; r: number }[] = [{ x: first[0], y: first[1], r: Math.max(first[2], MIN_R) }];
+  for (const [x, y, radius] of rest) {
+    const prev = at(samples, samples.length - 1);
+    const dx = x - prev.x;
+    const dy = y - prev.y;
     if (dx * dx + dy * dy < 1e-8) {
-      prev.r = Math.max(prev.r, raw[i][2], MIN_R);
+      prev.r = Math.max(prev.r, radius, MIN_R);
       continue;
     }
-    samples.push({ x: raw[i][0], y: raw[i][1], r: Math.max(raw[i][2], MIN_R) });
+    samples.push({ x, y, r: Math.max(radius, MIN_R) });
   }
   if (samples.length < 2) throw new Error("stroke collapsed");
 
@@ -123,13 +131,19 @@ function variableRadiusTube(stroke: LogoStroke, tipCutAngle?: number): THREE.Buf
   for (let i = 0; i < n; i++) {
     let t: THREE.Vector3;
     if (closed) {
-      t = origins[(i + 1) % n].clone().sub(origins[(i - 1 + n) % n]);
+      t = at(origins, (i + 1) % n)
+        .clone()
+        .sub(at(origins, (i - 1 + n) % n));
     } else if (i === 0) {
-      t = origins[1].clone().sub(origins[0]);
+      t = at(origins, 1).clone().sub(at(origins, 0));
     } else if (i === n - 1) {
-      t = origins[n - 1].clone().sub(origins[n - 2]);
+      t = at(origins, n - 1)
+        .clone()
+        .sub(at(origins, n - 2));
     } else {
-      t = origins[i + 1].clone().sub(origins[i - 1]);
+      t = at(origins, i + 1)
+        .clone()
+        .sub(at(origins, i - 1));
     }
     if (t.lengthSq() < 1e-12) t.set(1, 0, 0);
     else t.normalize();
@@ -140,7 +154,7 @@ function variableRadiusTube(stroke: LogoStroke, tipCutAngle?: number): THREE.Buf
   const normals: THREE.Vector3[] = [];
   const binormals: THREE.Vector3[] = [];
   {
-    const t0 = tangents[0];
+    const t0 = at(tangents, 0);
     // Prefer binormal ≈ +Z so the round profile pillows toward the camera.
     const n0 = new THREE.Vector3().crossVectors(t0, new THREE.Vector3(0, 0, 1));
     if (n0.lengthSq() < 1e-8) n0.crossVectors(t0, new THREE.Vector3(0, 1, 0));
@@ -155,9 +169,9 @@ function variableRadiusTube(stroke: LogoStroke, tipCutAngle?: number): THREE.Buf
   }
   const axis = new THREE.Vector3();
   for (let i = 1; i < n; i++) {
-    const prevT = tangents[i - 1];
-    const t = tangents[i];
-    const nPrev = normals[i - 1].clone();
+    const prevT = at(tangents, i - 1);
+    const t = at(tangents, i);
+    const nPrev = at(normals, i - 1).clone();
     axis.crossVectors(prevT, t);
     const axisLen = axis.length();
     if (axisLen > 1e-8) {
@@ -175,10 +189,10 @@ function variableRadiusTube(stroke: LogoStroke, tipCutAngle?: number): THREE.Buf
   const ringIndex: number[] = [];
   for (let i = 0; i < n; i++) {
     ringIndex.push(positions.length / 3);
-    const o = origins[i];
-    const N = normals[i];
-    const B = binormals[i];
-    const r = radii[i];
+    const o = at(origins, i);
+    const N = at(normals, i);
+    const B = at(binormals, i);
+    const r = at(radii, i);
     for (let j = 0; j < RADIAL; j++) {
       const a = (j / RADIAL) * Math.PI * 2;
       const c = Math.cos(a);
@@ -188,19 +202,22 @@ function variableRadiusTube(stroke: LogoStroke, tipCutAngle?: number): THREE.Buf
   }
 
   const caps = stroke.caps ?? ["flat", "flat"];
+  const startCap = caps[0];
+  const endCap = caps[caps.length - 1];
+  const last = n - 1;
   // Oblique tip slices: ring + cap share the artwork tip-cut plane (// diamond sides).
   const startAngle = stroke.cuts?.[0] ?? tipCutAngle;
   const endAngle = stroke.cuts?.[1] ?? tipCutAngle;
-  const startCut = !closed && caps[0] === "flat" && startAngle != null ? tipCutNormal(startAngle, tangents[0]) : null;
-  const endCut = !closed && caps[caps.length - 1] === "flat" && endAngle != null ? tipCutNormal(endAngle, tangents[n - 1]) : null;
-  if (startCut) rewriteRing(positions, ringIndex[0], origins[0], radii[0], startCut, binormals[0]);
-  if (endCut) rewriteRing(positions, ringIndex[n - 1], origins[n - 1], radii[n - 1], endCut, binormals[n - 1]);
+  const startCut = !closed && startCap === "flat" && startAngle != null ? tipCutNormal(startAngle, at(tangents, 0)) : null;
+  const endCut = !closed && endCap === "flat" && endAngle != null ? tipCutNormal(endAngle, at(tangents, last)) : null;
+  if (startCut) rewriteRing(positions, at(ringIndex, 0), at(origins, 0), at(radii, 0), startCut, at(binormals, 0));
+  if (endCut) rewriteRing(positions, at(ringIndex, last), at(origins, last), at(radii, last), endCut, at(binormals, last));
 
   const indices: number[] = [];
   const rings = closed ? n : n - 1;
   for (let i = 0; i < rings; i++) {
-    const a = ringIndex[i];
-    const b = ringIndex[(i + 1) % n];
+    const a = at(ringIndex, i);
+    const b = at(ringIndex, (i + 1) % n);
     for (let j = 0; j < RADIAL; j++) {
       const j2 = (j + 1) % RADIAL;
       const a0 = a + j;
@@ -212,13 +229,17 @@ function variableRadiusTube(stroke: LogoStroke, tipCutAngle?: number): THREE.Buf
   }
 
   if (!closed) {
-    if (caps[0] === "flat") addFlatCap(positions, indices, ringIndex[0], origins[0], startCut ?? tangents[0], true);
-    else addPointCap(positions, indices, ringIndex[0], origins[0], tangents[0], true);
-    if (caps[caps.length - 1] === "flat") {
-      addFlatCap(positions, indices, ringIndex[n - 1], origins[n - 1], endCut ?? tangents[n - 1], false);
-    } else {
-      addPointCap(positions, indices, ringIndex[n - 1], origins[n - 1], tangents[n - 1], false);
-    }
+    const startRing = at(ringIndex, 0);
+    const startOrigin = at(origins, 0);
+    const startTangent = at(tangents, 0);
+    if (startCap === "flat") addFlatCap(positions, indices, startRing, startOrigin, startCut ?? startTangent, true);
+    else addPointCap(positions, indices, startRing, startOrigin, startTangent, true);
+
+    const endRing = at(ringIndex, last);
+    const endOrigin = at(origins, last);
+    const endTangent = at(tangents, last);
+    if (endCap === "flat") addFlatCap(positions, indices, endRing, endOrigin, endCut ?? endTangent, false);
+    else addPointCap(positions, indices, endRing, endOrigin, endTangent, false);
   }
 
   const geo = new THREE.BufferGeometry();
@@ -250,7 +271,7 @@ function addFlatCap(
   const rimStart = positions.length / 3;
   for (let j = 0; j < RADIAL; j++) {
     const i = (ringStart + j) * 3;
-    positions.push(positions[i] + nudge.x, positions[i + 1] + nudge.y, positions[i + 2] + nudge.z);
+    positions.push(at(positions, i) + nudge.x, at(positions, i + 1) + nudge.y, at(positions, i + 2) + nudge.z);
   }
   const center = positions.length / 3;
   positions.push(origin.x + nudge.x * 2, origin.y + nudge.y * 2, origin.z + nudge.z * 2);
@@ -331,15 +352,15 @@ function distToSegment(px: number, py: number, ax: number, ay: number, bx: numbe
  * Cap every vertex near a tip at the pillow height for its distance to the artwork edge, so
  * the top rounds over the needle the same way it does along the rest of the outline.
  */
-function taperTips(g: THREE.BufferGeometry, tips: number[][], outline: number[][][], depth: number, bevel: number) {
+function taperTips(g: THREE.BufferGeometry, tips: Sample[], outline: Point[][], depth: number, bevel: number) {
   const pos = g.getAttribute("position") as THREE.BufferAttribute;
   const edges = tips.map(([tx, ty, r]) => {
-    const near: number[][] = [];
+    const near: [ax: number, ay: number, bx: number, by: number][] = [];
     for (const ring of outline) {
       for (let i = 0; i < ring.length; i++) {
-        const a = ring[i];
-        const b = ring[(i + 1) % ring.length];
-        if (distToSegment(tx, ty, a[0], a[1], b[0], b[1]) <= r + bevel) near.push([a[0], a[1], b[0], b[1]]);
+        const [ax, ay] = at(ring, i);
+        const [bx, by] = at(ring, (i + 1) % ring.length);
+        if (distToSegment(tx, ty, ax, ay, bx, by) <= r + bevel) near.push([ax, ay, bx, by]);
       }
     }
     return near;
@@ -350,10 +371,9 @@ function taperTips(g: THREE.BufferGeometry, tips: number[][], outline: number[][
     const z = pos.getZ(v);
     if (Math.abs(z) <= depth / 2) continue;
     let w = Infinity;
-    for (let k = 0; k < tips.length; k++) {
-      const [tx, ty, r] = tips[k];
+    for (const [k, [tx, ty, r]] of tips.entries()) {
       if (Math.hypot(x - tx, y - ty) > r) continue;
-      for (const [ax, ay, bx, by] of edges[k]) w = Math.min(w, distToSegment(x, y, ax, ay, bx, by));
+      for (const [ax, ay, bx, by] of at(edges, k)) w = Math.min(w, distToSegment(x, y, ax, ay, bx, by));
     }
     if (!Number.isFinite(w)) continue;
     // Same quarter-round the bevel layers follow: height vs distance from the edge.
@@ -377,9 +397,9 @@ function buildExtrudedBody(paths: LogoPaths): THREE.BufferGeometry[] {
     const shape = shapeFromRing(s.outer);
     for (const hole of s.holes) {
       const h = new THREE.Path();
-      const [x0, y0] = hole[0];
+      const [x0, y0] = at(hole, 0);
       h.moveTo(x0, y0);
-      for (let i = 1; i < hole.length; i++) h.lineTo(hole[i][0], hole[i][1]);
+      for (const [x, y] of hole.slice(1)) h.lineTo(x, y);
       h.closePath();
       shape.holes.push(h);
     }

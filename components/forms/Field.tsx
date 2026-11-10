@@ -33,23 +33,23 @@ type Props = {
   field: FieldProps;
   label: string;
   /** Shown after the label for fields that aren't required, e.g. "optional". */
-  optionalLabel?: string;
-  as?: "input" | "textarea" | "select";
-  type?: "text" | "email" | "tel" | "date";
+  optionalLabel?: string | undefined;
+  as?: "input" | "textarea" | "select" | undefined;
+  type?: "text" | "email" | "tel" | "date" | undefined;
   /** Controlled value (with `onChange`); leave both out to let the form own the value. */
-  value?: string;
-  onChange?: (value: string) => void;
-  autoComplete?: string;
-  required?: boolean;
+  value?: string | undefined;
+  onChange?: (value: string) => void | undefined;
+  autoComplete?: string | undefined;
+  required?: boolean | undefined;
   /** A textarea starts this many lines tall, grows with what is typed, and scrolls past `maxRows`. */
-  minRows?: number;
-  maxRows?: number;
-  min?: string;
+  minRows?: number | undefined;
+  maxRows?: number | undefined;
+  min?: string | undefined;
   /** Stops typing and pasting past the limit the schema enforces. */
-  maxLength?: number;
+  maxLength?: number | undefined;
   /** An example of what to type, not a repeat of the label. Every text field has one. */
-  placeholder?: string;
-  children?: ReactNode;
+  placeholder?: string | undefined;
+  children?: ReactNode | undefined;
 };
 
 /**

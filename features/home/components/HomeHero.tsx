@@ -166,16 +166,16 @@ export function HomeHero({ landscape, portrait }: HeroStills) {
 
 /** If the 3D scene throws (model or texture failed, context lost), fall back to the SVG logo. */
 class SceneBoundary extends Component<{ onError: () => void; children: ReactNode }, { failed: boolean }> {
-  state = { failed: false };
+  override state = { failed: false };
   static getDerivedStateFromError() {
     return { failed: true };
   }
-  componentDidCatch(error: unknown) {
+  override componentDidCatch(error: unknown) {
     // The SVG fallback hides the failure visually, so leave a trace for debugging.
     console.error("[HomeHero] live logo failed, showing SVG fallback:", error);
     this.props.onError();
   }
-  render() {
+  override render() {
     return this.state.failed ? null : this.props.children;
   }
 }

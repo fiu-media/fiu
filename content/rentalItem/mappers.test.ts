@@ -38,7 +38,7 @@ describe("toCatalogue", () => {
     });
     expect(categories).toEqual([{ id: "cameras", title: "Cameras" }]);
     expect(cards[0]).toMatchObject({ id: "cam-en", slug: "alexa-mini", categoryId: "cameras", brand: "ARRI" });
-    expect(cards[0].image?.width).toBe(800);
+    expect(cards[0]?.image?.width).toBe(800);
     expect(cards[1]).toMatchObject({ id: "lamp", categoryId: null, image: null });
   });
 });
@@ -66,7 +66,7 @@ describe("toRentalItem", () => {
       specs: [{ key: "k1", term: "Sensor", detail: "S35" }],
     });
     expect(view?.images).toHaveLength(2);
-    expect(view?.images[0].width).toBe(1400);
+    expect(view?.images[0]?.width).toBe(1400);
   });
 });
 
@@ -76,8 +76,8 @@ describe("toQuoteCatalogue", () => {
   it("keys entries by the basket's id and carries the slug and a localised link", () => {
     const catalogue = toQuoteCatalogue("en", [row]);
     expect(catalogue.cam).toMatchObject({ id: "cam", slug: "alexa", href: "/rentals/alexa", max: 4 });
-    expect(catalogue.cam.image?.width).toBe(160);
-    expect(toQuoteCatalogue("ga", [row]).cam.href).toBe("/ga/rentals/alexa");
+    expect(catalogue.cam?.image?.width).toBe(160);
+    expect(toQuoteCatalogue("ga", [row]).cam?.href).toBe("/ga/rentals/alexa");
   });
 
   it("caps an item with no cap of its own at MAX_QTY and allows no image", () => {

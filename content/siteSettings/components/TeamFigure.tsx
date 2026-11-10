@@ -23,8 +23,8 @@ export function TeamFigure({
 }: {
   team: Team;
   /** `data-sanity` value that makes the photo clickable in the Presentation tool. */
-  attribute?: string;
-  className?: string;
+  attribute?: string | undefined;
+  className?: string | undefined;
 }) {
   return (
     <figure className={className}>

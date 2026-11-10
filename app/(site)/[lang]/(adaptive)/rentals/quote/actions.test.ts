@@ -14,6 +14,7 @@ vi.mock("@/lib/email/send", () => ({ sendEmail: mocks.sendEmail }));
 vi.mock("@/lib/email/settings", () => ({ getRecipient: mocks.getRecipient }));
 
 import { MAX_QTY } from "@/features/rentals/basket/quantity";
+import { at } from "@/lib/at";
 
 import { submitQuote } from "./actions";
 
@@ -58,7 +59,7 @@ describe("submitQuote", () => {
     expect(await submitQuote(idle, form())).toMatchObject({ success: true });
 
     expect(mocks.create).toHaveBeenCalledOnce();
-    expect(mocks.create.mock.calls[0][0]).toMatchObject({
+    expect(at(mocks.create.mock.calls, 0)[0]).toMatchObject({
       _id: `quoteRequest-${SUBMISSION_ID}`,
       _type: "quoteRequest",
       status: "new",
@@ -80,8 +81,8 @@ describe("submitQuote", () => {
         ]),
       }),
     );
-    expect(mocks.fetch.mock.calls[0][1]).toMatchObject({ ids: ["cam"] });
-    expect(mocks.create.mock.calls[0][0].items).toMatchObject([{ qty: 3 }]);
+    expect(at(mocks.fetch.mock.calls, 0)[1]).toMatchObject({ ids: ["cam"] });
+    expect(at(mocks.create.mock.calls, 0)[0].items).toMatchObject([{ qty: 3 }]);
   });
 
   it("returns field errors for invalid input", async () => {
@@ -146,7 +147,7 @@ describe("submitQuote", () => {
   it("stores an accented address but can only email the studio, and says so", async () => {
     const state = await submitQuote(idle, form({ email: "séan@example.ie" }));
     expect(state).toMatchObject({ success: true, confirmation: false });
-    expect(mocks.create.mock.calls[0][0]).toMatchObject({ email: "séan@example.ie" });
+    expect(at(mocks.create.mock.calls, 0)[0]).toMatchObject({ email: "séan@example.ie" });
     expect(mocks.sendEmail.mock.calls.map(([email]) => email.to)).toEqual(["studio@example.com", "séan@example.ie"]);
   });
 });

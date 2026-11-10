@@ -7,7 +7,7 @@ import { ENQUIRY_TYPES } from "../../lib/forms/enquiry-types";
 const readOnly = true;
 
 // List and header previews: enough to tell requests apart and see what's outstanding at a glance.
-const capitalise = (value?: string) => (value ? value[0].toUpperCase() + value.slice(1) : undefined);
+const capitalise = (value?: string) => (value ? value.charAt(0).toUpperCase() + value.slice(1) : undefined);
 const shortDate = (date?: string) => (date ? formatShortDate(date, "en-IE") : undefined);
 const excerpt = (text?: string, length = 70) => {
   const flat = text?.replace(/\s+/g, " ").trim();

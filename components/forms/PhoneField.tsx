@@ -35,7 +35,7 @@ export function PhoneField({
   /** The country list, named and ordered for the page's language (see `countryList`, which builds it on the server). */
   countries: CountryList;
   label: string;
-  optionalLabel?: string;
+  optionalLabel?: string | undefined;
   /** Accessible name of the country select. */
   countryLabel: string;
   autoComplete?: string;

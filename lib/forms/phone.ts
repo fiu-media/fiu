@@ -7,6 +7,8 @@ import {
   parsePhoneNumberFromString,
 } from "libphonenumber-js/min";
 
+import { at } from "@/lib/at";
+
 export const callingCode = (country: CountryCode) => getCountryCallingCode(country);
 export const digitsIn = (text: string) => text.replace(/\D/g, "").length;
 
@@ -53,7 +55,7 @@ export function caretWithDigitsAfter(shown: string, digitsAfter: number) {
   let seen = 0;
   for (let i = shown.length; i > 0; i--) {
     if (seen === digitsAfter) return i;
-    if (/\d/.test(shown[i - 1])) seen++;
+    if (/\d/.test(at(shown, i - 1))) seen++;
   }
   return seen === digitsAfter ? 0 : shown.length;
 }

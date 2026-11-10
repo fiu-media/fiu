@@ -19,6 +19,12 @@ const SPLASH_WHITE = 1.5;
 // hanging around after the backdrop had gone.
 const REVEAL_SECONDS = SPLASH_FADE_MS / 1000;
 
+/** Set a uniform by name; the material's `uniforms` record is untyped, so a lookup can miss. */
+function setUniform(uniforms: Record<string, THREE.IUniform>, name: string, value: unknown) {
+  const uniform = uniforms[name];
+  if (uniform) uniform.value = value;
+}
+
 export function Backdrop({
   stills,
   textures,
@@ -54,12 +60,12 @@ export function Backdrop({
     const u = material.current?.uniforms;
     if (!f || !u) return;
     const ready = textures[f.to] ?? textures[f.from] ?? textures.find(Boolean)!;
-    u.tFrom.value = textures[f.from] ?? ready;
-    u.tTo.value = textures[f.to] ?? ready;
-    u.fromAspect.value = stills[f.from]!.width / stills[f.from]!.height;
-    u.toAspect.value = stills[f.to]!.width / stills[f.to]!.height;
-    u.planeAspect.value = width / height;
-    u.progress.value = f.start ? Math.min((performance.now() - f.start) / (CROSSFADE_SECONDS * 1000), 1) : 1;
+    setUniform(u, "tFrom", textures[f.from] ?? ready);
+    setUniform(u, "tTo", textures[f.to] ?? ready);
+    setUniform(u, "fromAspect", stills[f.from]!.width / stills[f.from]!.height);
+    setUniform(u, "toAspect", stills[f.to]!.width / stills[f.to]!.height);
+    setUniform(u, "planeAspect", width / height);
+    setUniform(u, "progress", f.start ? Math.min((performance.now() - f.start) / (CROSSFADE_SECONDS * 1000), 1) : 1);
 
     // Playground (splashLift undefined) always sees the photo.
     let reveal = 1;
@@ -71,7 +77,7 @@ export function Backdrop({
       const k = THREE.MathUtils.clamp((performance.now() - revealStart.current) / 1000 / REVEAL_SECONDS, 0, 1);
       reveal = 1 - (1 - k) * (1 - k);
     }
-    u.reveal.value = reveal;
+    setUniform(u, "reveal", reveal);
   });
 
   return (

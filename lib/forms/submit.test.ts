@@ -12,6 +12,7 @@ vi.mock("@/sanity/lib/writeClient", () => ({ writeClient: { create: mocks.create
 vi.mock("@/lib/email/send", () => ({ sendEmail: mocks.sendEmail }));
 vi.mock("@/lib/email/settings", () => ({ getRecipient: mocks.getRecipient }));
 
+import { at } from "@/lib/at";
 import { build } from "@/lib/email/templates";
 
 import { guardSubmission, handleSubmission } from "./submit";
@@ -132,7 +133,7 @@ describe("handleSubmission", () => {
   it("stores the document under an id from its type and the submission id", async () => {
     expect(await run()).toMatchObject({ success: true, confirmation: true });
     expect(mocks.create).toHaveBeenCalledOnce();
-    expect(mocks.create.mock.calls[0][0]).toMatchObject({
+    expect(at(mocks.create.mock.calls, 0)[0]).toMatchObject({
       _id: `contactMessage-${SUBMISSION_ID}`,
       _type: "contactMessage",
       status: "new",
@@ -216,7 +217,7 @@ describe("handleSubmission", () => {
 
   it("stores an address Resend can't deliver to, and says no confirmation will arrive", async () => {
     expect(await run({ email: "séan@example.ie" })).toMatchObject({ success: true, confirmation: false });
-    expect(mocks.create.mock.calls[0][0]).toMatchObject({ email: "séan@example.ie" });
+    expect(at(mocks.create.mock.calls, 0)[0]).toMatchObject({ email: "séan@example.ie" });
   });
 
   it("still succeeds when an email can't be sent", async () => {

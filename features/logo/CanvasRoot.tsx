@@ -23,31 +23,31 @@ export type CanvasRootProps = {
   meshMode: LogoMeshMode;
   params: LogoGlassParams;
   /** Desktop: spin in the centre, then glide to the left-hand resting position. */
-  introSlide?: boolean;
+  introSlide?: boolean | undefined;
   /** Freeze the intro clock (the logo waits front-facing) until this turns false. */
-  introHold?: boolean;
+  introHold?: boolean | undefined;
   /** The hero intro already played on this page load (the scene is being mounted again): start at rest, don't replay it. */
-  introPlayed?: boolean;
+  introPlayed?: boolean | undefined;
   /** Hero intro: false while the splash holds (glass refracts white), true once it starts lifting. */
-  splashLift?: boolean;
+  splashLift?: boolean | undefined;
   /** When false the canvas ignores the pointer, so whatever is beneath it (the nav) stays clickable. */
-  interactive?: boolean;
+  interactive?: boolean | undefined;
   /** Fires once, when the hero intro (spin and glide) has played out in full. */
-  onIntroEnd?: () => void;
+  onIntroEnd?: () => void | undefined;
   /** The GL context was lost and the canvas can no longer draw; the caller should swap in a fallback. */
-  onContextLost?: () => void;
+  onContextLost?: () => void | undefined;
   /** Starting quality. Read once: antialiasing and the env map size can't change after mount. */
-  tier?: LogoTier;
+  tier?: LogoTier | undefined;
   /** Even the cheapest tier is below the floor; the caller should swap in the SVG. */
-  onTooSlow?: () => void;
+  onTooSlow?: () => void | undefined;
   /** Continuous frameloop at full quality, no adaptation (playground only). */
-  measurePerf?: boolean;
+  measurePerf?: boolean | undefined;
   /** The studio light's shared state, for a driver passed as `sweepDriver` (playground only). */
-  rig?: SweepRig;
+  rig?: SweepRig | undefined;
   /** Moves the studio light (playground only). Mounted inside the scene, just before the studio. */
-  sweepDriver?: ReactNode;
+  sweepDriver?: ReactNode | undefined;
   /** Extra canvas children, mounted after the scene (playground only). */
-  children?: ReactNode;
+  children?: ReactNode | undefined;
 };
 
 export function CanvasRoot({

@@ -14,6 +14,7 @@ vi.mock("@/lib/email/send", () => ({ sendEmail: mocks.sendEmail }));
 vi.mock("@/lib/email/contacts", () => ({ createContact: mocks.createContact }));
 vi.mock("@/lib/email/settings", () => ({ getRecipient: mocks.getRecipient }));
 
+import { at } from "@/lib/at";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 
 import { submitContact } from "./actions";
@@ -51,14 +52,14 @@ beforeEach(() => {
 describe("submitContact", () => {
   it("stores the message and notifies the studio", async () => {
     expect(await submitContact(idle, form())).toMatchObject({ success: true });
-    expect(mocks.create.mock.calls[0][0]).toMatchObject({
+    expect(at(mocks.create.mock.calls, 0)[0]).toMatchObject({
       _id: `contactMessage-${SUBMISSION_ID}`,
       _type: "contactMessage",
       enquiryType: "Talent",
       phone: "+353871234567",
     });
     expect(mocks.sendEmail).toHaveBeenCalledTimes(2);
-    expect(mocks.sendEmail.mock.calls[0][0]).toMatchObject({ to: "studio@example.com", replyTo: "aoife@example.com" });
+    expect(at(mocks.sendEmail.mock.calls, 0)[0]).toMatchObject({ to: "studio@example.com", replyTo: "aoife@example.com" });
   });
 
   it("emails the visitor a confirmation in their language, not the studio's", async () => {
@@ -88,7 +89,7 @@ describe("submitContact", () => {
 
   it("stores no phone when none is given", async () => {
     await submitContact(idle, form({ phone: "" }));
-    expect(mocks.create.mock.calls[0][0].phone).toBeUndefined();
+    expect(at(mocks.create.mock.calls, 0)[0].phone).toBeUndefined();
   });
 
   it("still succeeds, and still emails, when the Resend contact can't be created", async () => {

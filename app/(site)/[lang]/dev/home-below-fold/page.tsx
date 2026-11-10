@@ -24,6 +24,7 @@ import { GlassPillLink } from "@/components/ui/Glass";
 import { WORK_QUERY } from "@/content/project";
 import { ContactLinks, getSiteSettings, toTeam } from "@/content/siteSettings";
 import { fallbackStills, HeroFade } from "@/features/home";
+import { at } from "@/lib/at";
 import { cn } from "@/lib/cn";
 import { isLocale, type Locale, localizedPath } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
@@ -38,6 +39,9 @@ export const metadata: Metadata = {
   title: "Home below the fold",
   robots: { index: false, follow: false },
 };
+
+/** The first fallback still; the hero and the seam variants share it. */
+const heroStill = at(fallbackStills, 0);
 
 const OPTIONS = ["a", "b", "c", "d", "e", "f", "g"] as const;
 type Option = (typeof OPTIONS)[number];
@@ -169,9 +173,9 @@ async function Options({
           )}
         >
           <Image
-            src={fallbackStills[0].src}
-            width={fallbackStills[0].width}
-            height={fallbackStills[0].height}
+            src={heroStill.src}
+            width={heroStill.width}
+            height={heroStill.height}
             alt=""
             priority
             sizes="100vw"
@@ -179,7 +183,7 @@ async function Options({
           />
           {seam === "spill" && (
             <div aria-hidden className="seam-spill">
-              <div style={{ backgroundImage: `url("${fallbackStills[0].blurDataURL}")` }} />
+              <div style={{ backgroundImage: `url("${heroStill.blurDataURL}")` }} />
             </div>
           )}
           {seam === "frame" && <div aria-hidden className="absolute inset-x-0 bottom-0 h-px bg-white/12" />}
@@ -234,7 +238,7 @@ async function getContent(lang: Locale) {
     fetchContent(WORK_QUERY, lang, {}, { draft: false }),
   ]);
 
-  const still = (aboutData.aboutStill ? toSizedImage(aboutData.aboutStill, 2400) : null) ?? fallbackStills[0]!;
+  const still = (aboutData.aboutStill ? toSizedImage(aboutData.aboutStill, 2400) : null) ?? heroStill;
 
   const real: FoldProject[] = workData.projects
     .map((project) => {
@@ -253,7 +257,7 @@ async function getContent(lang: Locale) {
 
   // The options need a handful of projects to be judged fairly, so pad with samples until the real ones fill the row.
   const samples: FoldProject[] = sampleProjects.map((title, i) => {
-    const s = fallbackStills[(i + 1) % fallbackStills.length]!;
+    const s = at(fallbackStills, (i + 1) % fallbackStills.length);
     return {
       id: `sample-${title}`,
       title,

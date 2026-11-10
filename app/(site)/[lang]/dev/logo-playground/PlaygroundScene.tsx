@@ -28,7 +28,7 @@ export default function PlaygroundScene({
   meshMode: LogoMeshMode;
   params: LogoGlassParams;
   /** Slowly sweeps the studio light (the /dev/moving-light experiment). Off when undefined. */
-  sweep?: LightSweep;
+  sweep?: LightSweep | undefined;
   onPerf: (stats: LogoPerfStats) => void;
 }) {
   const rig = useSweepRig();

@@ -203,7 +203,7 @@ function SoftLight({
   /** Twist around the look-at axis (radians). */
   roll?: number;
   /** Optional radial alpha map for soft falloff. */
-  feather?: THREE.Texture;
+  feather?: THREE.Texture | undefined;
 }) {
   const mesh = useRef<THREE.Mesh>(null);
   const mat = useRef<THREE.MeshBasicMaterial>(null);
@@ -241,7 +241,7 @@ function SoftLight({
         ref={mat}
         side={THREE.DoubleSide}
         toneMapped={false}
-        map={feather}
+        {...(feather ? { map: feather } : {})}
         transparent={Boolean(feather)}
         depthWrite={false}
       />

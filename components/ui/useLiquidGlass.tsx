@@ -38,6 +38,7 @@ export function useLiquidGlass<T extends HTMLElement>(
     if (!el) return;
     setLensing(true);
     const observer = new ResizeObserver(([entry]) => {
+      if (!entry) return;
       const box = entry.borderBoxSize?.[0];
       const w = Math.round(box ? box.inlineSize : entry.contentRect.width);
       const h = Math.round(box ? box.blockSize : entry.contentRect.height);

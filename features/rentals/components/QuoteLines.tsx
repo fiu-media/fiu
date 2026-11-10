@@ -7,6 +7,7 @@ import { useEffect } from "react";
 import { useQuoteBasket } from "@/features/rentals/basket/store";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { format } from "@/lib/i18n/format";
+import { omitUndefined } from "@/lib/omitUndefined";
 
 import { itemMax, useCatalogue } from "../basket/CatalogueContext";
 import { QuantityField } from "./QuantityField";
@@ -38,7 +39,7 @@ export function QuoteLines({ dict, onNavigate }: { dict: Dictionary["basket"]; o
               {item ? (
                 <Link
                   href={item.href}
-                  onClick={onNavigate}
+                  {...omitUndefined({ onClick: onNavigate })}
                   className="block truncate font-medium underline-offset-4 hover:underline"
                 >
                   {name}

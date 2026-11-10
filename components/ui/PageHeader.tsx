@@ -8,9 +8,9 @@ export function PageHeader({
   className,
 }: {
   title: string;
-  tagline?: string | null;
-  intro?: string | null;
-  className?: string;
+  tagline?: string | null | undefined;
+  intro?: string | null | undefined;
+  className?: string | undefined;
 }) {
   return (
     <header className={className}>

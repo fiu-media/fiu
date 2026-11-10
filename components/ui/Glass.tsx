@@ -24,10 +24,10 @@ const lens: Record<Size, { bezel: number; strength: number }> = {
 };
 
 type PillStyle = {
-  size?: Size;
+  size?: Size | undefined;
   /** Sitting over photography: forces light-on-dark glass regardless of surface. */
-  onImage?: boolean;
-  className?: string;
+  onImage?: boolean | undefined;
+  className?: string | undefined;
   children?: ReactNode;
 };
 

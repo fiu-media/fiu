@@ -1,4 +1,4 @@
-export type VimeoRef = { id: string; hash?: string };
+export type VimeoRef = { id: string; hash?: string | undefined };
 
 /**
  * The video id (and the privacy hash of an unlisted video) from the Vimeo URLs editors paste:
@@ -14,17 +14,18 @@ export function parseVimeo(url: string | null | undefined): VimeoRef | null {
   }
   if (!/(^|\.)vimeo\.com$/.test(parsed.hostname)) return null;
   const segments = parsed.pathname.split("/").filter(Boolean);
-  const at = segments.findIndex((segment) => /^\d+$/.test(segment));
-  if (at === -1) return null;
-  const hash = parsed.searchParams.get("h") ?? segments[at + 1]?.match(/^[0-9a-f]+$/i)?.[0];
-  return { id: segments[at], hash: hash || undefined };
+  const index = segments.findIndex((segment) => /^\d+$/.test(segment));
+  const id = segments[index];
+  if (id === undefined) return null;
+  const hash = parsed.searchParams.get("h") ?? segments[index + 1]?.match(/^[0-9a-f]+$/i)?.[0];
+  return { id, hash: hash || undefined };
 }
 
 type EmbedOptions = {
-  autoplay?: boolean;
-  background?: boolean;
+  autoplay?: boolean | undefined;
+  background?: boolean | undefined;
   /** `false` plays full screen on iPhones, which can't put an embed full screen themselves (it is ignored elsewhere). */
-  playsinline?: boolean;
+  playsinline?: boolean | undefined;
 };
 
 /** `player.vimeo.com` embed URL. `background` is the controls-free, muted, looping preview (needs Vimeo Plus or higher). */

@@ -3,6 +3,7 @@ import Image, { type StaticImageData } from "next/image";
 import { notFound } from "next/navigation";
 
 import { GlassPanel, GlassPillButton } from "@/components/ui/Glass";
+import { at } from "@/lib/at";
 import { isLocale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getNavItems, type NavItem } from "@/lib/i18n/nav";
@@ -50,7 +51,7 @@ export default async function SpecimenPage({ params }: PageProps<"/[lang]/dev/sp
       </header>
 
       <div className="mx-auto max-w-7xl px-6 py-16">
-        <Specimen still={stills[0]} nav={getNavItems(lang, dict)} navLabel={dict.nav.label} />
+        <Specimen still={at(stills, 0)} nav={getNavItems(lang, dict)} navLabel={dict.nav.label} />
       </div>
     </main>
   );
@@ -131,7 +132,7 @@ function Specimen({ still, nav, navLabel }: { still: StaticImageData; nav: NavIt
           {projects.map((project, idx) => (
             <article key={project.title} className="group relative isolate overflow-hidden rounded-2xl p-5">
               <Image
-                src={stills[(idx + 1) % stills.length]}
+                src={at(stills, (idx + 1) % stills.length)}
                 alt=""
                 fill
                 sizes="30vw"
