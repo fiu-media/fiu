@@ -1,7 +1,7 @@
 import { evaluate, parse } from "groq-js";
 import { describe, expect, it } from "vitest";
 
-import { HOME_STILLS_QUERY } from "./queries";
+import { HOME_STILLS_QUERY, SITE_SETTINGS_QUERY } from "./queries";
 
 type Doc = Record<string, unknown>;
 
@@ -43,5 +43,71 @@ describe("home stills", () => {
     expect(projects.map((p) => p.stills?.map((s) => s._key))).toEqual([["b1", "b2"], ["a-ga1"]]);
     // The translation has no mobile stills of its own, so the default language's show.
     expect(projects[1]!.stillsMobile?.map((s) => s._key)).toEqual(["a-m"]);
+  });
+});
+
+describe("site settings", () => {
+  const image = (ref: string) => ({ alt: ref, asset: { _ref: ref } });
+  const dataset: Doc[] = [
+    {
+      _id: "settings-en",
+      _type: "siteSettings",
+      language: "en",
+      slogan: "Made in Ireland",
+      contactEmail: "hello@fiu.ie",
+      instagram: "https://www.instagram.com/fiumedia/",
+      workIntro: "Our work",
+      aboutStill: image("image-en-about"),
+      teamStill: image("image-en-team"),
+    },
+    {
+      _id: "settings-ga",
+      _type: "siteSettings",
+      language: "ga",
+      slogan: "Déanta in Éirinn",
+      // A translation with an image object but no asset (the editors cleared it) shows the default language's.
+      aboutStill: { alt: "cleared" },
+      teamStill: image("image-ga-team"),
+    },
+  ];
+  const fetch = async (lang: string) => {
+    const params = { lang, fallbackLang: "en" };
+    return (await (
+      await evaluate(parse(SITE_SETTINGS_QUERY, { params }), { dataset: dataset as never, params })
+    ).get()) as Doc & {
+      aboutStill: { alt: string } | null;
+      teamStill: { alt: string } | null;
+    };
+  };
+
+  it("reads the document in the requested language", async () => {
+    const settings = await fetch("en");
+    expect(settings).toMatchObject({ _id: "settings-en", slogan: "Made in Ireland", workIntro: "Our work" });
+    expect(settings.aboutStill?.alt).toBe("image-en-about");
+  });
+
+  it("falls back to the default language field by field", async () => {
+    const settings = await fetch("ga");
+    expect(settings).toMatchObject({
+      _id: "settings-ga",
+      slogan: "Déanta in Éirinn",
+      contactEmail: "hello@fiu.ie",
+      instagram: "https://www.instagram.com/fiumedia/",
+      workIntro: "Our work",
+    });
+    // Fields neither language sets come back null, so the loader's types hold.
+    expect(settings.talentIntro).toBeNull();
+  });
+
+  it("falls back to the default language's image only when the translation has no asset", async () => {
+    const settings = await fetch("ga");
+    expect(settings.aboutStill?.alt).toBe("image-en-about");
+    expect(settings.teamStill?.alt).toBe("image-ga-team");
+  });
+
+  it("uses the default language's document when the language has none", async () => {
+    const settings = await fetch("fr");
+    expect(settings._id).toBe("settings-en");
+    expect(settings.slogan).toBe("Made in Ireland");
   });
 });

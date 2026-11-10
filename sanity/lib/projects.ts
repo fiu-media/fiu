@@ -1,8 +1,9 @@
-import { createDataAttribute } from "next-sanity";
+import { editAttr } from "./editing";
 
-import { studioUrl } from "../studio-env";
-
-/** `data-sanity` value that makes a project field clickable in the Presentation tool. */
+/**
+ * `data-sanity` value that makes a project field clickable in the Presentation tool.
+ * @deprecated Use `editAttr("project", id, path)`.
+ */
 export function projectAttribute(documentId: string, path: string): string {
-  return createDataAttribute({ id: documentId, type: "project", path, baseUrl: studioUrl }).toString();
+  return editAttr("project", documentId, path);
 }

@@ -1,6 +1,9 @@
-import { createDataAttribute } from "next-sanity";
+import { editAttr } from "./editing";
 
-/** `data-sanity` value that makes a Site settings field clickable in the Presentation tool. */
+/**
+ * `data-sanity` value that makes a Site settings field clickable in the Presentation tool.
+ * @deprecated Use `editAttr("siteSettings", id, path)`.
+ */
 export function settingsAttribute(documentId: string, path: string): string {
-  return createDataAttribute({ id: documentId, type: "siteSettings", path, baseUrl: "/studio" }).toString();
+  return editAttr("siteSettings", documentId, path);
 }
