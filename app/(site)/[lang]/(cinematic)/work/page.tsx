@@ -81,7 +81,7 @@ async function Filters({ lang, searchParams }: { lang: Locale; searchParams: Sea
 }
 
 async function Projects({ lang, searchParams }: { lang: Locale; searchParams: SearchParams }) {
-  const [{ work, vimeo }, { type }] = await Promise.all([getDictionary(lang), searchParams]);
+  const [{ work, vimeo, slides: slideCopy }, { type }] = await Promise.all([getDictionary(lang), searchParams]);
   const { filters, slides } = await getWorkIndex(lang, requestedType(type));
 
   if (slides.length === 0) {
@@ -106,7 +106,7 @@ async function Projects({ lang, searchParams }: { lang: Locale; searchParams: Se
           <ProjectSlide
             key={id}
             {...slide}
-            label={format(work.slideLabel, { title: slide.title, index: i + 1, total: slides.length })}
+            label={format(slideCopy.label, { title: slide.title, index: i + 1, total: slides.length })}
             priority={i === 0}
             dict={{ ...vimeo, view: work.view }}
           />

@@ -76,7 +76,7 @@ async function Options({
           email: settings.contact.email ?? "hello@example.com",
           instagram: settings.contact.instagram ?? { href: "https://www.instagram.com/example/", handle: "@example" },
         }}
-        labels={{ email: dict.about.emailLabel, instagram: dict.about.instagramLabel }}
+        labels={dict.contactLinks}
       />
     ),
     // From Site settings like the live pages; the badge marks a photo that is still the code's stand-in.

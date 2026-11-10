@@ -13,7 +13,7 @@ const { contact, forms } = en;
  */
 async function openContact(page: Page) {
   await page.goto("/contact");
-  await expect(page.getByLabel(contact.email)).toBeVisible();
+  await expect(page.getByLabel(forms.fields.email)).toBeVisible();
 }
 
 const invalid = (page: Page, label: string) => page.getByLabel(label).getAttribute("aria-invalid");
@@ -21,29 +21,29 @@ const invalid = (page: Page, label: string) => page.getByLabel(label).getAttribu
 test.describe("validation timing", () => {
   test("typing in a field for the first time shows nothing, however wrong it looks so far", async ({ page }) => {
     await openContact(page);
-    const email = page.getByLabel(contact.email);
+    const email = page.getByLabel(forms.fields.email);
     await email.click();
     for (const typed of ["a", "a@", "a@b"]) {
       await email.fill(typed);
       await expect(page.getByText(forms.errors.emailInvalid)).toHaveCount(0);
-      expect(await invalid(page, contact.email)).toBeNull();
+      expect(await invalid(page, forms.fields.email)).toBeNull();
     }
   });
 
   test("leaving the field checks it and shows the error inline", async ({ page }) => {
     await openContact(page);
-    await page.getByLabel(contact.email).fill("a@b");
+    await page.getByLabel(forms.fields.email).fill("a@b");
     await page.getByLabel(contact.message).focus();
-    await expect(page.getByLabel(contact.email)).toHaveAttribute("aria-invalid", "true");
+    await expect(page.getByLabel(forms.fields.email)).toHaveAttribute("aria-invalid", "true");
     await expect(page.getByText(forms.errors.emailInvalid)).toBeVisible();
     // Only on the field that was left, and no summary: nothing has been submitted.
-    expect(await invalid(page, contact.name)).toBeNull();
+    expect(await invalid(page, forms.fields.name)).toBeNull();
     await expect(page.getByRole("alert").filter({ hasText: forms.errorSummary })).toHaveCount(0);
   });
 
   test("once a field has an error it is re-checked as you type, so the error goes the moment it is fixed", async ({ page }) => {
     await openContact(page);
-    const email = page.getByLabel(contact.email);
+    const email = page.getByLabel(forms.fields.email);
     await email.fill("a@b");
     await page.getByLabel(contact.message).focus();
     await expect(page.getByText(forms.errors.emailInvalid)).toBeVisible();
@@ -54,7 +54,7 @@ test.describe("validation timing", () => {
     await expect(page.getByText(forms.errors.emailInvalid)).toBeVisible();
     await email.pressSequentially("c");
     await expect(page.getByText(forms.errors.emailInvalid)).toHaveCount(0);
-    expect(await invalid(page, contact.email)).toBeNull();
+    expect(await invalid(page, forms.fields.email)).toBeNull();
 
     // And it goes back to being quiet while editing: break it again, nothing until it is left.
     await email.press("Backspace");
@@ -70,16 +70,16 @@ test.describe("validation timing", () => {
 
     const summary = page.getByRole("alert").filter({ hasText: forms.errorSummary });
     await expect(summary).toBeFocused();
-    for (const label of [contact.name, contact.email, contact.message]) {
+    for (const label of [forms.fields.name, forms.fields.email, contact.message]) {
       await expect(summary.getByRole("link", { name: label })).toBeVisible();
       await expect(page.getByLabel(label)).toHaveAttribute("aria-invalid", "true");
     }
 
     // Fixing a field clears its error and its line in the summary right away.
-    await page.getByLabel(contact.name).fill("E2E Tester");
-    await expect(page.getByLabel(contact.name)).not.toHaveAttribute("aria-invalid", "true");
-    await expect(summary.getByRole("link", { name: contact.name })).toHaveCount(0);
-    await expect(summary.getByRole("link", { name: contact.email })).toBeVisible();
+    await page.getByLabel(forms.fields.name).fill("E2E Tester");
+    await expect(page.getByLabel(forms.fields.name)).not.toHaveAttribute("aria-invalid", "true");
+    await expect(summary.getByRole("link", { name: forms.fields.name })).toHaveCount(0);
+    await expect(summary.getByRole("link", { name: forms.fields.email })).toBeVisible();
   });
 
   test("the summary is announced once, then stays quiet while errors clear", async ({ page }) => {
@@ -91,7 +91,7 @@ test.describe("validation timing", () => {
     await expect(summary).toHaveAttribute("aria-live", "off", { timeout: 3000 });
 
     // A new failed attempt is announced again.
-    await page.getByLabel(contact.name).fill("E2E Tester");
+    await page.getByLabel(forms.fields.name).fill("E2E Tester");
     await page.getByRole("button", { name: contact.submit }).click();
     await expect(summary).toBeFocused();
     await expect(summary).not.toHaveAttribute("aria-live", "off");

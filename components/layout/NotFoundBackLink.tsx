@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 
 import { GlassPillLink } from "@/components/ui/Glass";
 import { isLocale, type Locale } from "@/lib/i18n/config";
+import { format } from "@/lib/i18n/format";
 import type { NavItem } from "@/lib/i18n/nav";
 import { href, routes } from "@/lib/routes";
 
@@ -29,7 +30,7 @@ export function NotFoundBackLink({
 
   return (
     <GlassPillLink href={section?.href ?? href(lang, routes.home())} size="lg" onImage>
-      {section ? backTo.replace("{section}", section.label) : home}
+      {section ? format(backTo, { section: section.label }) : home}
     </GlassPillLink>
   );
 }

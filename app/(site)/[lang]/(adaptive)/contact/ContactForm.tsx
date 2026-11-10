@@ -56,26 +56,26 @@ function ContactFormFields({ lang, dict, countries }: Props) {
       </Field>
       <Field
         field={fields.name}
-        label={contact.name}
+        label={forms.fields.name}
         required
         autoComplete="name"
         maxLength={limits.name}
-        placeholder={contact.placeholders.name}
+        placeholder={forms.fields.placeholders.name}
       />
       <Field
         field={fields.email}
         type="email"
-        label={contact.email}
+        label={forms.fields.email}
         required
         autoComplete="email"
         maxLength={limits.email}
-        placeholder={contact.placeholders.email}
+        placeholder={forms.fields.placeholders.email}
       />
       <PhoneField
         field={fields.phone}
-        label={contact.phone}
-        optionalLabel={contact.optional}
-        countryLabel={contact.phoneCountry}
+        label={forms.fields.phone}
+        optionalLabel={forms.fields.optional}
+        countryLabel={forms.fields.phoneCountry}
         countries={countries}
       />
       <Field
@@ -92,7 +92,7 @@ function ContactFormFields({ lang, dict, countries }: Props) {
       />
 
       <div>
-        <SubmitButton pending={pending}>{pending ? contact.sending : contact.submit}</SubmitButton>
+        <SubmitButton pending={pending}>{pending ? forms.fields.sending : contact.submit}</SubmitButton>
       </div>
     </Form>
   );

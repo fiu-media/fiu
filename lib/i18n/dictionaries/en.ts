@@ -19,6 +19,17 @@ export const en = {
     rentals: "Rentals",
     contact: "Contact",
   },
+  home: {
+    aboutCta: "About Us",
+    workCta: "All work",
+  },
+  slides: {
+    label: "{title}, {index} of {total}",
+  },
+  contactLinks: {
+    email: "Email",
+    instagram: "Instagram",
+  },
   notFound: {
     eyebrow: "404",
     heading: "Page not found",
@@ -28,12 +39,12 @@ export const en = {
   },
   footer: {
     copyright: "Fiú Media © {year}",
-    emailLabel: "Email",
-    instagramLabel: "Instagram",
     privacy: "Privacy",
   },
   vimeo: {
-    play: "Play {title}",
+    // `play` is the visible label; `playTitle` is the accessible name, which says which film.
+    play: "Play",
+    playTitle: "Play {title}",
     stop: "Stop video",
   },
   privacy: {
@@ -195,8 +206,6 @@ export const en = {
   },
   about: {
     title: "About",
-    emailLabel: "Email",
-    instagramLabel: "Instagram",
     teamHeading: "The team",
   },
   work: {
@@ -215,7 +224,6 @@ export const en = {
     next: "Next project",
     back: "All work",
     view: "View project",
-    slideLabel: "{title}, {index} of {total}",
     progressLabel: "Projects",
     goTo: "Go to {title}",
   },
@@ -226,7 +234,6 @@ export const en = {
     showreel: "Showreel",
     projects: "Projects",
     projectsOf: "{name}'s work",
-    slideLabel: "{title}, {index} of {total}",
     noPortrait: "Portrait coming soon",
     back: "All talent",
   },
@@ -278,14 +285,9 @@ export const en = {
     startDate: "Pick-up",
     endDate: "Return",
     contactHeading: "Your details",
-    name: "Name",
-    email: "Email",
-    phone: "Phone",
-    phoneCountry: "Phone number country",
     company: "Company",
     production: "Production",
     message: "Anything else we should know?",
-    optional: "optional",
     copyLink: "Copy link",
     shareLink: "Share link",
     shareTitle: "Quote from Fiú Media",
@@ -293,14 +295,11 @@ export const en = {
     linkCopyFailed: "Couldn't copy automatically. Copy this link:",
     copyLinkHint: "The link includes the kit, dates, company and production, but not your contact details.",
     placeholders: {
-      name: "Aoife Murphy",
-      email: "name@example.com",
       company: "Murphy Pictures",
       production: "Working title of the shoot",
       message: "Location, crew size, anything that affects the kit",
     },
     submit: "Send quote request",
-    sending: "Sending…",
     successTitle: "Request sent",
     successBody: "Thanks, we've received your quote request and sent a confirmation to your email. We'll be in touch soon.",
     successBodyNoEmail:
@@ -311,27 +310,30 @@ export const en = {
     title: "Contact",
     enquiryType: "What's this about?",
     enquiryTypes: { Project: "A project", Talent: "Our talent", Rentals: "Rentals", Other: "Something else" },
-    name: "Name",
-    email: "Email",
-    phone: "Phone",
-    phoneCountry: "Phone number country",
-    optional: "optional",
     message: "Message",
     placeholders: {
-      name: "Aoife Murphy",
-      email: "name@example.com",
       message: "Tell us about your project, or what you're looking for",
     },
     submit: "Send message",
-    sending: "Sending…",
     successTitle: "Message sent",
     successBody: "Thanks for getting in touch. We've sent a copy to your email, and we'll reply as soon as we can.",
     successBodyNoEmail: "Thanks for getting in touch. We can't email a copy to that address, but we'll reply as soon as we can.",
     directHeading: "Or reach us directly",
-    emailLabel: "Email",
-    instagramLabel: "Instagram",
   },
   forms: {
+    // Labels and example text both forms (contact, quote) share.
+    fields: {
+      name: "Name",
+      email: "Email",
+      phone: "Phone",
+      phoneCountry: "Phone number country",
+      optional: "optional",
+      sending: "Sending…",
+      placeholders: {
+        name: "Aoife Murphy",
+        email: "name@example.com",
+      },
+    },
     errorSummary: "Please check the highlighted fields",
     errors: {
       required: "This field is required.",

@@ -141,7 +141,7 @@ async function Options({
           email: about.contact.email ?? "hello@example.com",
           instagram: about.contact.instagram ?? { href: "https://www.instagram.com/example/", handle: "@example" },
         }}
-        labels={{ email: dict.about.emailLabel, instagram: dict.about.instagramLabel }}
+        labels={dict.contactLinks}
       />
     ),
     projects,

@@ -42,7 +42,7 @@ export default async function ContactPage({ params }: PageProps<"/[lang]/contact
 }
 
 async function DirectContact({ lang }: { lang: Locale }) {
-  const [{ contact: labels }, { contact }] = await Promise.all([getDictionary(lang), getSiteSettings(lang)]);
+  const [{ contact: labels, contactLinks }, { contact }] = await Promise.all([getDictionary(lang), getSiteSettings(lang)]);
   if (!contact.email && !contact.instagram) return null;
 
   return (
@@ -50,11 +50,7 @@ async function DirectContact({ lang }: { lang: Locale }) {
       <h2 id="direct-contact" className="font-display text-2xl">
         {labels.directHeading}
       </h2>
-      <ContactLinks
-        contact={contact}
-        labels={{ email: labels.emailLabel, instagram: labels.instagramLabel }}
-        variant="definitions"
-      />
+      <ContactLinks contact={contact} labels={contactLinks} variant="definitions" />
     </aside>
   );
 }

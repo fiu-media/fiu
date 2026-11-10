@@ -38,20 +38,14 @@ export async function getHomeFold(lang: Locale): Promise<HomeFoldProps> {
     },
     team: toTeam(settings, dict.about.teamHeading),
     teamAttribute: _id ? editAttr("siteSettings", _id, "teamStill") : undefined,
-    contacts: (
-      <ContactLinks
-        variant="list"
-        contact={settings.contact}
-        labels={{ email: dict.about.emailLabel, instagram: dict.about.instagramLabel }}
-      />
-    ),
+    contacts: <ContactLinks variant="list" contact={settings.contact} labels={dict.contactLinks} />,
     projects: toFoldProjects(work.projects, lang),
     workHref: href(lang, routes.work()),
     labels: {
       about: dict.nav.about,
       work: dict.nav.work,
-      aboutCta: dict.nav.about,
-      workCta: dict.work.back,
+      aboutCta: dict.home.aboutCta,
+      workCta: dict.home.workCta,
       view: dict.work.view,
     },
   };

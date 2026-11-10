@@ -4,7 +4,7 @@ import { en } from "../lib/i18n/dictionaries/en";
 import { format } from "../lib/i18n/format";
 import { clickUntil, isoDateFromNow, rentalsTest } from "./helpers";
 
-const { rentals, quote } = en;
+const { rentals, forms, quote } = en;
 
 const placeholderColor = (field: Locator) => field.evaluate((el) => getComputedStyle(el, "::placeholder").color);
 const textColor = (field: Locator) => field.evaluate((el) => getComputedStyle(el).color);
@@ -29,7 +29,7 @@ test.describe("placeholders", () => {
   test("the contact form gives an example in every text field", async ({ page }) => {
     await page.goto("/contact");
     // The form streams in behind a skeleton.
-    await expect(page.getByLabel(en.contact.name)).toBeVisible();
+    await expect(page.getByLabel(forms.fields.name)).toBeVisible();
     await expectExamples(page.locator("form"));
   });
 
@@ -42,10 +42,10 @@ test.describe("placeholders", () => {
     );
     await page.goto("/rentals/quote");
     // The form appears once the basket has been read from the browser.
-    await expect(page.getByLabel(quote.name)).toBeVisible();
+    await expect(page.getByLabel(forms.fields.name)).toBeVisible();
     await expectExamples(page.locator("form"));
 
-    const name = page.getByLabel(quote.name);
+    const name = page.getByLabel(forms.fields.name);
     const reference = await placeholderColor(name);
     // The browser's own "dd/mm/yyyy" and the phone sample are the same grey as the examples above.
     const pickUp = page.getByLabel(quote.startDate);
@@ -54,7 +54,7 @@ test.describe("placeholders", () => {
 
     // Once there is a date, it is ordinary text again.
     await pickUp.fill(isoDateFromNow(14));
-    await page.getByLabel(quote.name).focus();
+    await page.getByLabel(forms.fields.name).focus();
     expect(await textColor(pickUp)).not.toBe(reference);
   });
 });
