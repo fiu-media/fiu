@@ -1,4 +1,5 @@
-import { LOGO_PARAM_PRESETS, type LogoGlassParams, type LogoRimLook } from "./logoConfig";
+import { LOGO_PARAM_PRESETS } from "./config/presets";
+import type { LogoGlassParams, LogoRimLook } from "./config/schemas";
 
 /**
  * Rough relative GPU cost for playground feedback.

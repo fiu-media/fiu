@@ -101,7 +101,7 @@ export function Reel({
             />
           </div>
           <h3 className="mt-4 font-display text-2xl md:text-3xl">{project.title}</h3>
-          <p className="mt-1 text-sm text-white/60">{project.meta}</p>
+          <p className="mt-1 text-sm text-on-image/60">{project.meta}</p>
         </Link>
       ))}
       {children}

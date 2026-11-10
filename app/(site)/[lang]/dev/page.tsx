@@ -50,7 +50,7 @@ const concepts: Concept[] = [
     href: "/dev/home-below-fold",
     title: "Home below the fold",
     kind: "Sign-off",
-    note: "Seven ways to put a condensed About and Our Work under Home's first screen (reel strip, statement + index, two doors, snap sequel, and three reel strips with the team photo, email and Instagram) on the real slogan, About still and projects. Option F (reel + team lead) is live on Home, with the hero fading into the fold. A second row of pills compares the hero-to-fold seam: fade (live), hard edge, frosted rail, fade + rail.",
+    note: "Seven ways to put a condensed About and Our Work under Home's first screen (reel strip, statement + index, two doors, snap sequel, and three reel strips with the team photo, email and Instagram) on the real slogan, About still and projects. Option F (reel + team lead) is live on Home. A second row of pills compares how the hero meets the fold: hard edge (live), fade, mirror, light spill, frame edge, lights down, frosted rail, fade + rail.",
   },
   {
     href: "/dev/not-found",

@@ -9,9 +9,7 @@ import type { ComponentType } from "react";
 import type { StructureResolver } from "sanity/structure";
 
 import { defaultLocale } from "../../lib/i18n/config";
-
-const singletons = ["siteSettings"];
-const inboxTypes = ["quoteRequest", "contactMessage"];
+import { inboxTypes, singletonTypes } from "../schema/documentTypes";
 
 /**
  * Drag-and-drop list of the default-language documents of `type`. Translations take their order
@@ -79,10 +77,10 @@ export const structure: StructureResolver = (S, context) =>
     ]);
 
 /** Singletons and site-written documents shouldn't appear in "new document" menus. */
-export const hiddenTemplates = [...singletons, ...inboxTypes];
+export const hiddenTemplates = [...singletonTypes, ...inboxTypes];
 
 /** Singletons can't be duplicated or deleted. */
 export const singletonActions = (actions: { action?: string }[], schemaType: string) =>
-  singletons.includes(schemaType)
+  singletonTypes.includes(schemaType)
     ? actions.filter(({ action }) => action && ["publish", "discardChanges", "restore"].includes(action))
     : actions;

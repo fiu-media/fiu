@@ -12,23 +12,25 @@ type Props = {
    * `definitions`: a term and its link per line, for the Contact page.
    */
   variant: "inline" | "list" | "definitions";
+  /** Classes for the `inline` links, where the footer adds its tap-target padding. */
+  linkClassName?: string;
 };
 
 /** Email and Instagram as plain links; renders nothing when the editors haven't set either. */
-export function ContactLinks({ contact: { email, instagram }, labels, variant }: Props) {
+export function ContactLinks({ contact: { email, instagram }, labels, variant, linkClassName = "link-inline" }: Props) {
   if (!email && !instagram) return null;
 
   if (variant === "inline") {
     return (
       <>
         {email && (
-          <a href={`mailto:${email}`} className="link-inline">
+          <a href={`mailto:${email}`} className={linkClassName}>
             <span className="sr-only">{labels.email}: </span>
             {email}
           </a>
         )}
         {instagram && (
-          <a href={instagram.href} target="_blank" rel="noopener noreferrer" className="link-inline">
+          <a href={instagram.href} target="_blank" rel="noopener noreferrer" className={linkClassName}>
             <span className="sr-only">{labels.instagram}: </span>
             {instagram.handle}
           </a>

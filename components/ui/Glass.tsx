@@ -31,6 +31,12 @@ type PillStyle = {
   children?: ReactNode;
 };
 
+/**
+ * The tap area: at least 44px square, centred on the pill, so a small pill is easy to hit on a phone without looking
+ * bigger. The pill's own ::before (current dot) and ::after (glint) are taken, so it is an element.
+ */
+const hitArea = <span aria-hidden className="absolute top-1/2 left-1/2 size-full min-h-11 min-w-11 -translate-1/2" />;
+
 function pillClass({ size = "md", onImage, className }: Omit<PillStyle, "children">) {
   return cn(
     "glass glass-piece glass-interactive inline-flex cursor-pointer items-center justify-center gap-2 rounded-full",
@@ -62,6 +68,7 @@ export function GlassPillLink({
       className={pillClass({ size, onImage, className })}
     >
       {glass.filter}
+      {hitArea}
       {children}
     </Link>
   );
@@ -97,6 +104,7 @@ export function GlassPillButton({
         children: (
           <>
             {glass.filter}
+            {hitArea}
             {children}
           </>
         ),

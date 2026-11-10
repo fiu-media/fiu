@@ -30,7 +30,7 @@ export function TeamPhoto({ team, sizes, className }: { team: Team; sizes: strin
         className="size-full object-cover"
       />
       {team.placeholder && (
-        <span className="absolute top-3 left-3 rounded-full bg-black/60 px-3 py-1 text-xs font-medium tracking-[0.1em] text-white uppercase">
+        <span className="absolute top-3 left-3 rounded-full bg-scrim/60 px-3 py-1 text-xs font-medium tracking-[0.1em] text-on-image uppercase">
           Placeholder
         </span>
       )}

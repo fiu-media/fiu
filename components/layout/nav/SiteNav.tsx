@@ -8,9 +8,20 @@ import { SiteNavClient } from "./SiteNavClient";
  * Site navigation: a slim rail on the left edge from `md`, a Menu button with a full-screen
  * overlay below it. Mount it inside a `[data-surface]` wrapper and give the content `railInset`.
  * `onImage` is for the cinematic surface, where the phone bar floats over photography. `blurRail` frosts the rail's strip
- * (blur and tint, no fill); only the /dev sign-off page uses it, the site ships without.
+ * (blur and tint, no fill); only the /dev sign-off page uses it, the site ships without. `overFootage` is for Home, whose
+ * hero runs under the phone bar: a scrim fades down behind the logo and the Menu button.
  */
-export async function SiteNav({ lang, onImage, blurRail }: { lang: Locale; onImage?: boolean; blurRail?: boolean }) {
+export async function SiteNav({
+  lang,
+  onImage,
+  blurRail,
+  overFootage,
+}: {
+  lang: Locale;
+  onImage?: boolean;
+  blurRail?: boolean;
+  overFootage?: boolean;
+}) {
   const dict = await getDictionary(lang);
   return (
     <SiteNavClient
@@ -20,6 +31,7 @@ export async function SiteNav({ lang, onImage, blurRail }: { lang: Locale; onIma
       labels={dict.nav}
       onImage={onImage}
       blurRail={blurRail}
+      overFootage={overFootage}
     />
   );
 }

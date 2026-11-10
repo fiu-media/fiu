@@ -6,15 +6,17 @@ import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { CopyLinkButton } from "@/components/forms/CopyLinkButton";
 import { Field } from "@/components/forms/Field";
 import { Form, SubmitButton } from "@/components/forms/Form";
+import { RegisterLabel } from "@/components/forms/FormLabels";
 import { QuoteFormSkeleton } from "@/components/forms/FormSkeleton";
+import { FormSuccess } from "@/components/forms/FormSuccess";
 import { PhoneField } from "@/components/forms/PhoneField";
+import { PrefillBoundary } from "@/components/forms/PrefillBoundary";
 import { useConformForm } from "@/components/forms/useConformForm";
-import { useFreshOnArrival } from "@/components/forms/useFreshOnArrival";
-import { GlassPanel, GlassPillLink } from "@/components/ui/Glass";
+import { GlassPillLink } from "@/components/ui/Glass";
 import { basketActions, QuoteLines, useCatalogue, useQuoteBasket } from "@/features/rentals";
 import { describeRange, isIsoDate, isValidRange, todayInDublin } from "@/lib/dates";
 import type { CountryList } from "@/lib/forms/countries";
-import { catalogueSlug, prefillKey, QUOTE_PARAMS, quoteHref, quotePrefill } from "@/lib/forms/prefill";
+import { catalogueSlug, QUOTE_PARAMS, quoteHref, quotePrefill } from "@/lib/forms/prefill";
 import { limits, quoteSchema } from "@/lib/forms/schemas";
 import { type Locale, localizedPath } from "@/lib/i18n/config";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
@@ -28,9 +30,7 @@ type Props = { lang: Locale; dict: QuoteDict; countries: CountryList };
 
 /** The form, which starts over whenever a link arrives with something to prefill (see `useFreshOnArrival`). */
 export function QuoteForm(props: Props) {
-  const params = useSearchParams();
-  const fresh = useFreshOnArrival(prefillKey(params, QUOTE_PARAMS));
-  return <QuoteFormFields key={fresh} {...props} />;
+  return <PrefillBoundary params={QUOTE_PARAMS}>{(key) => <QuoteFormFields key={key} {...props} />}</PrefillBoundary>;
 }
 
 function QuoteFormFields({ lang, dict, countries }: Props) {
@@ -88,13 +88,11 @@ function QuoteFormFields({ lang, dict, countries }: Props) {
 
   if (succeeded) {
     return (
-      <GlassPanel className="max-w-xl p-8" role="status">
-        <h2 className="font-display text-3xl">{quote.successTitle}</h2>
-        <p className="mt-3 text-fg-muted">{confirmed ? quote.successBody : quote.successBodyNoEmail}</p>
-        <GlassPillLink href={localizedPath(lang, "/rentals")} className="mt-6">
-          {quote.successAction}
-        </GlassPillLink>
-      </GlassPanel>
+      <FormSuccess
+        title={quote.successTitle}
+        body={confirmed ? quote.successBody : quote.successBodyNoEmail}
+        action={{ href: localizedPath(lang, "/rentals"), label: quote.successAction }}
+      />
     );
   }
 
@@ -110,26 +108,11 @@ function QuoteFormFields({ lang, dict, countries }: Props) {
   }
 
   return (
-    <Form
-      conform={conform}
-      lang={lang}
-      forms={forms}
-      labels={[
-        ["items", quote.itemsHeading],
-        ["name", quote.name],
-        ["email", quote.email],
-        ["phone", quote.phone],
-        ["company", quote.company],
-        ["production", quote.production],
-        ["startDate", quote.startDate],
-        ["endDate", quote.endDate],
-        ["message", quote.message],
-      ]}
-      className="max-w-2xl gap-10"
-    >
+    <Form conform={conform} lang={lang} forms={forms} className="max-w-2xl gap-10">
       <input type="hidden" name="items" value={JSON.stringify(lines)} />
 
       <section id={fields.items.id} aria-labelledby="quote-kit" className="flex flex-col gap-2">
+        <RegisterLabel field={fields.items} label={quote.itemsHeading} />
         <h2 id="quote-kit" className="font-display text-2xl">
           {quote.itemsHeading}
         </h2>

@@ -55,7 +55,7 @@ export function RentalCatalogue({
           aria-label={dict.filterLabel}
           value={[category ?? ALL]}
           onValueChange={([next]) => next !== undefined && setRequested(next === ALL ? null : next)}
-          className="mb-8 flex flex-wrap gap-2"
+          className="mb-8 flex flex-wrap gap-x-2 gap-y-3"
         >
           <Toggle value={ALL} data-filter="" render={<GlassPillButton size="sm" />}>
             {dict.allCategories}

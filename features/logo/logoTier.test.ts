@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { LOGO_PARAM_PRESETS } from "./logoConfig";
+import { LOGO_PARAM_PRESETS } from "./config/presets";
 import {
   applyLogoTier,
   type DeviceInfo,

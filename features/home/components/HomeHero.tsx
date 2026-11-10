@@ -9,6 +9,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   useSyncExternalStore,
 } from "react";
@@ -22,6 +23,7 @@ import logo from "@/public/brand/fiu-logo.svg";
 import type { HeroStill, HeroStills } from "@/sanity/lib/stills";
 
 import { SPLASH_FADE_MS, splashFadeVars } from "../splash-config";
+import { useHeroEdge } from "../useHeroEdge";
 import { HeroFade } from "./HeroFade";
 import { isSplashDismissed, Splash } from "./Splash";
 
@@ -95,6 +97,10 @@ export function HomeHero({ landscape, portrait }: HeroStills) {
   const portraitScreen = usePortrait();
   const slides = useMemo(() => toSlides(landscape, portrait), [landscape, portrait]);
   const current = index % slides.length;
+  // The desktop rail's labels sit on the still's left edge; only a bright one darkens it.
+  const images = useRef<(HTMLImageElement | null)[]>([]);
+  const showing = slides[current];
+  useHeroEdge(images, current, (portraitScreen ? showing?.portrait : showing?.landscape)?.position);
   const [failed, setFailed] = useState(false);
   /**
    * The scene ran but was too slow: it fades out over the SVG (`fading`), then unmounts. Keeps the
@@ -184,10 +190,23 @@ export function HomeHero({ landscape, portrait }: HeroStills) {
           its status bar and toolbar. Not fixed, or Safari would tint its bars from this layer instead. */}
       <div className={cn("absolute inset-0 -z-10", BLEED_CLASS)}>
         {slides.map((slide, i) => (
-          <Slide key={i} {...slide} portraitScreen={portraitScreen} shown={i === current} priority={i === 0} />
+          <Slide
+            key={i}
+            {...slide}
+            portraitScreen={portraitScreen}
+            shown={i === current}
+            priority={i === 0}
+            imgRef={(img) => {
+              images.current[i] = img;
+            }}
+          />
         ))}
-        {/* The photo dissolves into the page's ink where the fold begins, under the logo layers that follow. */}
+        {/* Mobile: the photo dissolves into the ink over the bleed below the hero, under the logo layers that follow. On
+            desktop the hero ends in a hard edge at the fold (other seams are compared on /dev/home-below-fold). */}
         <HeroFade bleed />
+        {/* Behind a bright still, the edge under the desktop rail darkens just enough for its labels (--hero-edge, see
+            useHeroEdge). Under the logo layers, so it never dims the logo. */}
+        <div aria-hidden className="hero-edge pointer-events-none absolute inset-y-0 left-0 hidden w-48 md:block" />
 
         {/* SVG logo: shown on the server render, while the live scene loads, and as the
             fallback. The live logo starts its spin from this same centred, front-facing pose,
@@ -237,8 +256,6 @@ export function HomeHero({ landscape, portrait }: HeroStills) {
               stills={sceneStills}
               index={current}
               onReady={onReady}
-              meshMode="extrude"
-              rimLook="light"
               introSlide
               introHold={!spinGo}
               introPlayed={resumed}
@@ -299,7 +316,13 @@ function Slide({
   portraitScreen,
   shown,
   priority,
-}: SlidePair & { portraitScreen: boolean; shown: boolean; priority: boolean }) {
+  imgRef,
+}: SlidePair & {
+  portraitScreen: boolean;
+  shown: boolean;
+  priority: boolean;
+  imgRef: (img: HTMLImageElement | null) => void;
+}) {
   // Not `preload`: a preload link can't say which of the two sources the screen will pick.
   const eager = priority ? ({ loading: "eager", fetchPriority: "high" } as const) : {};
   const props = (still: HeroStill) =>
@@ -320,6 +343,7 @@ function Slide({
       <source media={PORTRAIT} srcSet={tall.srcSet} sizes={tall.sizes} />
       <img
         {...wide}
+        ref={imgRef}
         alt={showing.alt}
         style={{ ...wide.style, ...vars, opacity: shown ? 1 : 0 }}
         data-sanity={showing.dataSanity}

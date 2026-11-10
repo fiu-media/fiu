@@ -5,11 +5,9 @@ import { isIsoDate, isValidRange, rentalDays, todayInDublin } from "@/lib/dates"
 import { isEmailAddress } from "@/lib/email/address";
 import { locales } from "@/lib/i18n/config";
 
-export const ENQUIRY_TYPES = ["Project", "Talent", "Rentals", "Other"] as const;
-export type EnquiryType = (typeof ENQUIRY_TYPES)[number];
+import { ENQUIRY_TYPES } from "./enquiry-types";
 
-export const isEnquiryType = (value: string | null): value is EnquiryType =>
-  (ENQUIRY_TYPES as readonly string[]).includes(value ?? "");
+export { ENQUIRY_TYPES, type EnquiryType, isEnquiryType } from "./enquiry-types";
 
 /** Longest value each text field accepts; the inputs carry the same limits, so a paste is cut off rather than rejected. */
 export const limits = { name: 120, email: 200, company: 120, production: 160, message: 4000 } as const;
