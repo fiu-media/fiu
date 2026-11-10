@@ -1,14 +1,7 @@
 import { SizedImg } from "@/components/ui/SizedImg";
 import { cn } from "@/lib/cn";
-import type { SizedImage } from "@/sanity/lib/image";
 
-export type Team = {
-  image: SizedImage;
-  /** e.g. "The team". */
-  heading: string;
-  /** Who is in the photo, where, when. Optional. */
-  caption: string | null;
-};
+import type { Team } from "../mappers";
 
 /** The team photo, filling its box. The caller sets the shape (aspect ratio, radius). */
 export function TeamPhoto({ team, sizes, className }: { team: Team; sizes: string; className?: string }) {

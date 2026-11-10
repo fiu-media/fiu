@@ -1,29 +1,20 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import { PortableText } from "next-sanity";
 import { Suspense } from "react";
 
 import { FullScreenSkeleton } from "@/components/ui/Skeleton";
-import { ABOUT_QUERY } from "@/content/siteSettings";
-import { AboutContacts, AboutLayoutA } from "@/features/about";
-import { fallbackStills } from "@/features/home";
-import { defaultLocale, isLocale, languageAlternates, type Locale } from "@/lib/i18n/config";
+import { AboutLayoutA, getAbout } from "@/features/about";
+import { getLocale, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
-import { settingsAttribute } from "@/sanity/lib/about";
-import { publishedId, toSizedImage } from "@/sanity/lib/image";
-import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
-import { toTeam } from "@/sanity/lib/team";
+import { pageMetadata, routes } from "@/lib/routes";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/about">): Promise<Metadata> {
-  const { lang } = await params;
-  if (!isLocale(lang)) return {};
+  const lang = await getLocale(params);
   const { about } = await getDictionary(lang);
-  return { title: about.title, alternates: languageAlternates(lang, "/about") };
+  return pageMetadata(lang, routes.about(), { title: about.title });
 }
 
 export default async function AboutPage({ params }: PageProps<"/[lang]/about">) {
-  const { lang } = await params;
-  if (!isLocale(lang)) notFound();
+  const lang = await getLocale(params);
   const { common } = await getDictionary(lang);
   // Draft mode makes the content dynamic, so it streams in behind a full-screen placeholder.
   return (
@@ -34,51 +25,5 @@ export default async function AboutPage({ params }: PageProps<"/[lang]/about">) 
 }
 
 async function About({ lang }: { lang: Locale }) {
-  const dict = await getDictionary(lang);
-  const { perspective, variant } = await getDynamicFetchOptions();
-  const { data } = await cachedSanity({
-    query: ABOUT_QUERY,
-    params: { lang, fallbackLang: defaultLocale },
-    perspective,
-    variant,
-    stega: false,
-  });
-  const settings = data;
-
-  const fallback = fallbackStills[0];
-  const still = (settings.still ? toSizedImage(settings.still, 2400) : null) ?? {
-    src: fallback.src,
-    width: fallback.width,
-    height: fallback.height,
-    alt: fallback.alt,
-    blurDataURL: fallback.blurDataURL,
-  };
-  const id = settings._id ? publishedId(settings._id) : null;
-
-  return (
-    <AboutLayoutA
-      still={still}
-      slogan={settings.slogan ?? dict.about.title}
-      gloss={settings.sloganGloss ?? null}
-      manifesto={settings.manifesto?.length ? <PortableText value={settings.manifesto} /> : null}
-      contacts={
-        <AboutContacts
-          email={settings.contactEmail ?? null}
-          instagram={settings.instagram ?? null}
-          labels={{ email: dict.about.emailLabel, instagram: dict.about.instagramLabel }}
-        />
-      }
-      team={toTeam(settings, dict.about.teamHeading)}
-      attributes={
-        id
-          ? {
-              still: settingsAttribute(id, "aboutStill"),
-              slogan: settingsAttribute(id, "slogan"),
-              manifesto: settingsAttribute(id, "manifesto"),
-              team: settingsAttribute(id, "teamStill"),
-            }
-          : undefined
-      }
-    />
-  );
+  return <AboutLayoutA {...await getAbout(lang)} />;
 }

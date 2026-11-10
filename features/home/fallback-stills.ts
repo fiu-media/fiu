@@ -8,7 +8,8 @@ import grapes from "@/public/stills/grapes.jpg";
 import parlor from "@/public/stills/parlor.jpg";
 import pond from "@/public/stills/pond.jpg";
 import supper from "@/public/stills/supper.jpg";
-import type { HeroStill } from "@/sanity/lib/stills";
+
+import type { HeroStill, HeroStills } from "./mappers";
 
 // lightTint: precomputed studio temperature for the glass, so the fallback needn't sample its textures.
 const bundled = [
@@ -33,3 +34,6 @@ export const fallbackStills: HeroStill[] = bundled.map(({ still: { src, width, h
   lightTint,
   alt: "",
 }));
+
+/** The hero before the CMS has stills of its own, and the first paint while they load. */
+export const fallbackHeroStills: HeroStills = { landscape: fallbackStills, portrait: fallbackStills };

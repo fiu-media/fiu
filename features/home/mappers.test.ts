@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { MAX_HERO_STILLS, toHeroStills } from "./stills";
+import { MAX_HERO_STILLS, STRIP_PROJECTS, toFoldProjects, toHeroStills } from "./mappers";
 
 const still = (key: string) => ({
   _key: key,
@@ -44,5 +44,22 @@ describe("toHeroStills", () => {
 
   it("skips projects that were deleted", () => {
     expect(toHeroStills([null, project("a", ["a1"])]).landscape).toHaveLength(1);
+  });
+});
+
+describe("toFoldProjects", () => {
+  const cover = still("cover");
+  const work = (slug: string | null, extra: Record<string, unknown> = {}) =>
+    ({ _id: `p-${slug}`, title: `Title ${slug}`, slug, type: "Film", year: 2025, client: null, cover, ...extra }) as never;
+
+  it("keeps the projects' order, links them and writes the meta line", () => {
+    const [first] = toFoldProjects([work("a"), work("b")], "ga");
+    expect(first).toMatchObject({ id: "p-a", title: "Title a", meta: "Film · 2025", href: "/ga/work/a" });
+  });
+
+  it("skips projects without a cover or a slug, and stops at the strip's length", () => {
+    const many = Array.from({ length: 8 }, (_, i) => work(`s${i}`));
+    expect(toFoldProjects([work("nocover", { cover: null }), work(null), ...many], "en")).toHaveLength(STRIP_PROJECTS);
+    expect(toFoldProjects([work("nocover", { cover: null }), work(null)], "en")).toEqual([]);
   });
 });

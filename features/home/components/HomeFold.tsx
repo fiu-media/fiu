@@ -35,7 +35,7 @@ export type FoldProps = {
   team: FoldTeam;
   /** `data-sanity` value for the team photo in the Presentation tool. */
   teamAttribute?: string;
-  /** The email and Instagram links, already rendered (see AboutContacts). */
+  /** The email and Instagram links, already rendered (see ContactLinks). */
   contacts: ReactNode;
   /** The first few projects in the editors' order. */
   projects: FoldProject[];

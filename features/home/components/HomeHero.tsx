@@ -20,8 +20,8 @@ import { usePortrait } from "@/lib/hooks/usePortrait";
 import { prefersReducedMotion, subscribeToReducedMotion } from "@/lib/hooks/useReducedMotion";
 import { PORTRAIT } from "@/lib/media";
 import logo from "@/public/brand/fiu-logo.svg";
-import type { HeroStill, HeroStills } from "@/sanity/lib/stills";
 
+import type { HeroStill, HeroStills } from "../mappers";
 import { SPLASH_FADE_MS, splashFadeVars } from "../splash-config";
 import { useHeroEdge } from "../useHeroEdge";
 import { HeroFade } from "./HeroFade";
