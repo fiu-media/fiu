@@ -1,5 +1,4 @@
-import { createDataAttribute } from "next-sanity";
-
+import { editAttr } from "./editing";
 import type { SizedImage } from "./image";
 
 export type TalentSlide = {
@@ -12,7 +11,10 @@ export type TalentSlide = {
   previewLoopUrl: string | null;
 };
 
-/** `data-sanity` value that makes a field clickable in the Presentation tool. */
+/**
+ * `data-sanity` value that makes a field clickable in the Presentation tool.
+ * @deprecated Use `editAttr("talent", id, path)`.
+ */
 export function talentAttribute(documentId: string, path: string): string {
-  return createDataAttribute({ id: documentId, type: "talent", path, baseUrl: "/studio" }).toString();
+  return editAttr("talent", documentId, path);
 }

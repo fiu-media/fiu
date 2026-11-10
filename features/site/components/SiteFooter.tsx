@@ -3,14 +3,11 @@ import { connection } from "next/server";
 import { Suspense } from "react";
 
 import { pageGutter } from "@/components/layout/nav/rail";
-import { CONTACT_SETTINGS_QUERY } from "@/content/siteSettings";
+import { ContactLinks, getSiteSettings } from "@/content/siteSettings";
 import { cn } from "@/lib/cn";
-import { emailForDisplay } from "@/lib/email/display";
-import { defaultLocale, type Locale, localizedPath } from "@/lib/i18n/config";
+import { type Locale, localizedPath } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { format } from "@/lib/i18n/format";
-import { instagramHandle } from "@/lib/instagram";
-import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
 
 /**
  * The slim footer under every page: "Fiú Media © 2026", the studio email, Instagram and Privacy. It is one quiet row, not a
@@ -51,31 +48,6 @@ async function Year({ copyright }: { copyright: string }) {
 }
 
 async function FooterLinks({ lang, labels }: { lang: Locale; labels: { email: string; instagram: string } }) {
-  const { perspective, variant } = await getDynamicFetchOptions();
-  const { data } = await cachedSanity({
-    query: CONTACT_SETTINGS_QUERY,
-    params: { lang, fallbackLang: defaultLocale },
-    perspective,
-    variant,
-    stega: false,
-  });
-  const email = data?.contactEmail ? emailForDisplay(data.contactEmail) : null;
-  const instagram = data?.instagram ?? null;
-  if (!email && !instagram) return null;
-  return (
-    <>
-      {email && (
-        <a href={`mailto:${email}`} className="link-inline">
-          <span className="sr-only">{labels.email}: </span>
-          {email}
-        </a>
-      )}
-      {instagram && (
-        <a href={instagram} target="_blank" rel="noopener noreferrer" className="link-inline">
-          <span className="sr-only">{labels.instagram}: </span>
-          {instagramHandle(instagram)}
-        </a>
-      )}
-    </>
-  );
+  const { contact } = await getSiteSettings(lang);
+  return <ContactLinks contact={contact} labels={labels} variant="inline" />;
 }

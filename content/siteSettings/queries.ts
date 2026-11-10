@@ -2,6 +2,7 @@ import { defineQuery } from "next-sanity";
 
 import { IMAGE_FIELDS } from "@/sanity/lib/groq";
 
+/** @deprecated Read `getSiteSettings` instead; kept until the pages that use this move over. */
 export const CONTACT_SETTINGS_QUERY = defineQuery(`{
   "cur": *[_type == "siteSettings" && language == $lang][0]{ contactEmail, instagram },
   "fb": *[_type == "siteSettings" && language == $fallbackLang][0]{ contactEmail, instagram }
@@ -18,7 +19,11 @@ export const SUBMISSION_SETTINGS_QUERY = defineQuery(`
   ){ contactEmail, quoteRecipient }
 `);
 
-/** Editor-written intro lines for the Rentals, Request a quote, Contact, Our Work and Talent pages, plus each page's Fiú line. */
+/**
+ * @deprecated Read `getSiteSettings` instead; kept until the pages that use this move over.
+ *
+ * Editor-written intro lines for the Rentals, Request a quote, Contact, Our Work and Talent pages, plus each page's Fiú line.
+ */
 export const PAGE_TEXT_QUERY = defineQuery(`{
   "cur": *[_type == "siteSettings" && language == $lang][0]{ rentalsIntro, quoteIntro, contactIntro, workIntro, talentIntro, aboutTagline, workTagline, talentTagline, rentalsTagline, contactTagline },
   "fb": *[_type == "siteSettings" && language == $fallbackLang][0]{ rentalsIntro, quoteIntro, contactIntro, workIntro, talentIntro, aboutTagline, workTagline, talentTagline, rentalsTagline, contactTagline }
@@ -58,7 +63,11 @@ export const HOME_STILLS_QUERY = defineQuery(`
   }
 `);
 
-/** The About page and Home's fold: slogan, gloss, manifesto, still and team photo from Site settings, each falling back to the default language's. */
+/**
+ * @deprecated Read `getSiteSettings` instead; kept until the pages that use this move over.
+ *
+ * The About page and Home's fold: slogan, gloss, manifesto, still and team photo from Site settings, each falling back to the default language's.
+ */
 export const ABOUT_QUERY = defineQuery(`{
   "cur": *[_type == "siteSettings" && language == $lang][0]{
     _id, slogan, sloganGloss, manifesto, contactEmail, instagram, teamCaption,
@@ -80,4 +89,42 @@ export const ABOUT_QUERY = defineQuery(`{
   "teamCaption": coalesce(cur.teamCaption, fb.teamCaption),
   "still": select(defined(cur.still.asset) => cur.still, fb.still),
   "team": select(defined(cur.team.asset) => cur.team, fb.team)
+}`);
+
+/** Every Site settings field the site reads; the same projection runs on the current and the default language's document. */
+const SITE_SETTINGS_FIELDS = `
+  _id, slogan, sloganGloss, manifesto, contactEmail, instagram, teamCaption,
+  rentalsIntro, quoteIntro, contactIntro, workIntro, talentIntro,
+  aboutTagline, workTagline, talentTagline, rentalsTagline, contactTagline,
+  "aboutStill": aboutStill{ ${IMAGE_FIELDS} },
+  "teamStill": teamStill{ ${IMAGE_FIELDS} }
+` as const;
+
+/**
+ * Everything the site reads from Site settings, in one query: each field falls back to the default language's, and an
+ * image falls back as a whole (a translation with no asset shows the default language's).
+ */
+export const SITE_SETTINGS_QUERY = defineQuery(`{
+  "cur": *[_type == "siteSettings" && language == $lang][0]{ ${SITE_SETTINGS_FIELDS} },
+  "fb": *[_type == "siteSettings" && language == $fallbackLang][0]{ ${SITE_SETTINGS_FIELDS} }
+}{
+  "_id": coalesce(cur._id, fb._id),
+  "slogan": coalesce(cur.slogan, fb.slogan),
+  "sloganGloss": coalesce(cur.sloganGloss, fb.sloganGloss),
+  "manifesto": coalesce(cur.manifesto, fb.manifesto),
+  "contactEmail": coalesce(cur.contactEmail, fb.contactEmail),
+  "instagram": coalesce(cur.instagram, fb.instagram),
+  "teamCaption": coalesce(cur.teamCaption, fb.teamCaption),
+  "rentalsIntro": coalesce(cur.rentalsIntro, fb.rentalsIntro),
+  "quoteIntro": coalesce(cur.quoteIntro, fb.quoteIntro),
+  "contactIntro": coalesce(cur.contactIntro, fb.contactIntro),
+  "workIntro": coalesce(cur.workIntro, fb.workIntro),
+  "talentIntro": coalesce(cur.talentIntro, fb.talentIntro),
+  "aboutTagline": coalesce(cur.aboutTagline, fb.aboutTagline),
+  "workTagline": coalesce(cur.workTagline, fb.workTagline),
+  "talentTagline": coalesce(cur.talentTagline, fb.talentTagline),
+  "rentalsTagline": coalesce(cur.rentalsTagline, fb.rentalsTagline),
+  "contactTagline": coalesce(cur.contactTagline, fb.contactTagline),
+  "aboutStill": select(defined(cur.aboutStill.asset) => cur.aboutStill, fb.aboutStill),
+  "teamStill": select(defined(cur.teamStill.asset) => cur.teamStill, fb.teamStill)
 }`);
