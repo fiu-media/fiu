@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { en } from "@/lib/i18n/dictionaries/en";
 
 import { plainTextOptions } from "./send";
-import { contactConfirmation, contactNotification, quoteConfirmation, quoteNotification } from "./templates";
+import { build } from "./templates";
 
 const hostile = `<script>alert("x")</script> & 'q'`;
 const escaped = "&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt; &amp; &#x27;q&#x27;";
@@ -27,7 +27,7 @@ const text = (email: { react: React.ReactElement }) => render(email.react, plain
 
 describe("email templates", () => {
   it("escapes visitor input in the HTML of the quote notification", async () => {
-    const out = await html(quoteNotification(en, quote, "https://studio.test/?a=1&b=2"));
+    const out = await html(build("quoteNotification", en, quote, { studioLink: "https://studio.test/?a=1&b=2" }));
     expect(out).not.toContain("<script>");
     expect(out).not.toContain("<b>Brand</b>");
     expect(out).toContain(escaped);
@@ -36,7 +36,7 @@ describe("email templates", () => {
   });
 
   it("keeps the plain-text version raw", async () => {
-    const out = await text(quoteNotification(en, quote, "https://studio.test/"));
+    const out = await text(build("quoteNotification", en, quote, { studioLink: "https://studio.test/" }));
     expect(out).toContain(hostile);
     expect(out).toContain(`2 × <b>Brand</b> ${hostile}`);
     expect(out).toContain(en.emails.quoteNotify.heading);
@@ -44,26 +44,29 @@ describe("email templates", () => {
 
   it("shows the dates as a localised range with its length in both quote emails", async () => {
     const pattern = /1\s*–\s*3 Dec 2026 · 3 days/;
-    expect(await text(quoteNotification(en, quote, "https://studio.test/"))).toMatch(pattern);
-    expect(await html(quoteConfirmation(en, quote))).toMatch(pattern);
+    expect(await text(build("quoteNotification", en, quote, { studioLink: "https://studio.test/" }))).toMatch(pattern);
+    expect(await html(build("quoteConfirmation", en, quote))).toMatch(pattern);
   });
 
   it("omits empty rows", async () => {
-    const out = await text(quoteNotification(en, quote, "https://studio.test/"));
+    const out = await text(build("quoteNotification", en, quote, { studioLink: "https://studio.test/" }));
     expect(out).not.toContain(`${en.emails.labels.phone}`);
   });
 
   it("links the visitor's email and phone with mailto: and tel:", async () => {
-    const quoteOut = await html(quoteNotification(en, { ...quote, phone: "+353 (87) 123-4567" }, "https://studio.test/"));
+    const quoteOut = await html(
+      build("quoteNotification", en, { ...quote, phone: "+353 (87) 123-4567" }, { studioLink: "https://studio.test/" }),
+    );
     expect(quoteOut).toContain('href="mailto:a@example.com"');
     expect(quoteOut).toContain('href="tel:+353871234567"');
     // Shown the Irish way, with the first group in brackets; the link stays plain digits.
     expect(quoteOut).toContain("+353 (87) 123 4567");
     const contactOut = await html(
-      contactNotification(
+      build(
+        "contactNotification",
         en,
         { name: "Aoife", email: "a@example.com", phone: "+353871234567", enquiryType: "Rentals", message: "Hi" },
-        "https://studio.test/",
+        { studioLink: "https://studio.test/" },
       ),
     );
     expect(contactOut).toContain('href="mailto:a@example.com"');
@@ -71,30 +74,32 @@ describe("email templates", () => {
   });
 
   it("does not link a phone number that has no digits", async () => {
-    const out = await html(quoteNotification(en, { ...quote, phone: "n/a" }, "https://studio.test/"));
+    const out = await html(build("quoteNotification", en, { ...quote, phone: "n/a" }, { studioLink: "https://studio.test/" }));
     expect(out).not.toContain('href="tel:');
   });
 
   it("escapes the confirmation email", async () => {
-    const out = await html(quoteConfirmation(en, quote));
+    const out = await html(build("quoteConfirmation", en, quote));
     expect(out).not.toContain("<script>");
     expect(out).toContain(escaped);
   });
 
   it("escapes the contact notification", async () => {
-    const email = contactNotification(
+    const email = build(
+      "contactNotification",
       en,
       { name: hostile, email: "a@example.com", phone: "", enquiryType: "Talent", message: hostile },
-      "https://studio.test/",
+      { studioLink: "https://studio.test/" },
     );
     const out = await html(email);
     expect(out).not.toContain("<script>");
     expect(out).toContain(escaped);
-    expect(email.subject).toContain("Talent");
+    expect(email.subject).toContain(en.contact.enquiryTypes.Talent);
   });
 
   it("escapes the contact confirmation and shows the enquiry type as the visitor saw it", async () => {
-    const email = contactConfirmation(
+    const email = build(
+      "contactConfirmation",
       { ...en, contact: { ...en.contact, enquiryTypes: { ...en.contact.enquiryTypes, Talent: "Ár dtallann" } } },
       { name: hostile, email: "a@example.com", phone: "+353871234567", enquiryType: "Talent", message: hostile },
     );
@@ -105,5 +110,13 @@ describe("email templates", () => {
     // They know their own details; the copy is of the message, not a second notification.
     expect(out).not.toContain("353");
     expect(email.subject).toBe(en.emails.contactConfirm.subject);
+  });
+
+  it("writes the contact notification subject with the enquiry type as the team's dictionary names it", () => {
+    const team = { ...en, contact: { ...en.contact, enquiryTypes: { ...en.contact.enquiryTypes, Talent: "Ár dtallann" } } };
+    const data = { name: "Aoife", email: "a@example.com", phone: "", enquiryType: "Talent", message: "Hi" };
+    expect(build("contactNotification", team, data).subject).toBe("Ár dtallann enquiry from Aoife");
+    // A type the dictionary doesn't know is shown as submitted.
+    expect(build("contactNotification", en, { ...data, enquiryType: "Mystery" }).subject).toBe("Mystery enquiry from Aoife");
   });
 });

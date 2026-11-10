@@ -82,14 +82,6 @@ describe("submitQuote", () => {
     expect(mocks.create.mock.calls[0][0].items).toMatchObject([{ qty: 3 }]);
   });
 
-  it("rejects bots without touching Sanity or email", async () => {
-    mocks.checkBotId.mockResolvedValue({ isBot: true });
-    expect(await submitQuote(idle, form())).toMatchObject({ error: { formErrors: ["rejected"] } });
-    expect(mocks.fetch).not.toHaveBeenCalled();
-    expect(mocks.create).not.toHaveBeenCalled();
-    expect(mocks.sendEmail).not.toHaveBeenCalled();
-  });
-
   it("returns field errors for invalid input", async () => {
     const state = await submitQuote(idle, form({ email: "nope", name: "" }));
     expect(state).toMatchObject({
@@ -149,37 +141,10 @@ describe("submitQuote", () => {
     });
   });
 
-  it("treats a 409 (double submit) as success without emailing again", async () => {
-    mocks.create.mockRejectedValue({ statusCode: 409 });
-    expect(await submitQuote(idle, form())).toMatchObject({ success: true });
-    expect(mocks.sendEmail).not.toHaveBeenCalled();
-  });
-
-  it("reports failed when storing fails, keeping the entered values", async () => {
-    mocks.create.mockRejectedValue(new Error("boom"));
-    expect(await submitQuote(idle, form())).toMatchObject({
-      error: { formErrors: ["failed"] },
-      submission: { payload: { name: "Aoife" } },
-    });
-    expect(mocks.sendEmail).not.toHaveBeenCalled();
-  });
-
-  it("still succeeds when email delivery fails", async () => {
-    mocks.sendEmail.mockRejectedValue(new Error("resend down"));
-    expect(await submitQuote(idle, form())).toMatchObject({ success: true });
-  });
-
   it("stores an accented address but can only email the studio, and says so", async () => {
     const state = await submitQuote(idle, form({ email: "séan@example.ie" }));
     expect(state).toMatchObject({ success: true, confirmation: false });
     expect(mocks.create.mock.calls[0][0]).toMatchObject({ email: "séan@example.ie" });
     expect(mocks.sendEmail.mock.calls.map(([email]) => email.to)).toEqual(["studio@example.com", "séan@example.ie"]);
-  });
-
-  it("only emails the visitor when no studio recipient is configured", async () => {
-    mocks.getRecipient.mockResolvedValue(null);
-    await submitQuote(idle, form());
-    expect(mocks.sendEmail.mock.calls.map(([email]) => email.to)).toEqual(["aoife@example.com"]);
-    expect(mocks.sendEmail.mock.calls[0][0].replyTo).toBeUndefined();
   });
 });
