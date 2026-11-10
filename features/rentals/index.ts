@@ -1,3 +1,8 @@
+import { features } from "@/lib/features";
+
+/** Whether Rentals is switched on; see `lib/features.ts`. */
+export const rentalsEnabled = features.rentals;
+
 export type { CatalogueItem } from "./basket/CatalogueContext";
 export { CatalogueProvider, useCatalogue } from "./basket/CatalogueContext";
 export { clampQty } from "./basket/quantity";

@@ -1,3 +1,5 @@
+import { notFound } from "next/navigation";
+
 export const locales = ["en", "ga"] as const;
 export type Locale = (typeof locales)[number];
 
@@ -11,6 +13,13 @@ export const dateLocale: Record<Locale, string> = { en: "en-IE", ga: "ga-IE" };
 export const defaultLocale: Locale = "en";
 
 export const isLocale = (value: string): value is Locale => (locales as readonly string[]).includes(value);
+
+/** The `lang` route param as a `Locale`; an unknown value is a 404. */
+export async function getLocale(params: Promise<{ lang: string }>): Promise<Locale> {
+  const { lang } = await params;
+  if (!isLocale(lang)) notFound();
+  return lang;
+}
 
 /** Public URL path for `path` in `lang`: the default locale is unprefixed, others get `/<lang>`. */
 export function localizedPath(lang: Locale, path: string): string {

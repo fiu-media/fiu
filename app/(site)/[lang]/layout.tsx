@@ -4,14 +4,15 @@ import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Manrope } from "next/font/google";
-import { notFound } from "next/navigation";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { Suspense } from "react";
 
+import { BriertoWatermark } from "@/components/layout/brierto/BriertoWatermark";
 import { InlineScript } from "@/components/layout/InlineScript";
 import { SanityChrome } from "@/components/sanity/SanityChrome";
-import { isLocale, locales } from "@/lib/i18n/config";
+import { getLocale, locales } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
+import { INK } from "@/lib/theme";
 
 // Type pairing "Expressive": Fraunces for display, Manrope for text.
 const fraunces = Fraunces({
@@ -27,8 +28,7 @@ export function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: LayoutProps<"/[lang]">): Promise<Metadata> {
-  const { lang } = await params;
-  if (!isLocale(lang)) return {};
+  const lang = await getLocale(params);
   const { site } = await getDictionary(lang);
   return {
     title: {
@@ -41,15 +41,14 @@ export async function generateMetadata({ params }: LayoutProps<"/[lang]">): Prom
 
 // Paint under the notch and home indicator (components pad themselves with env(safe-area-inset-*)),
 // and colour the browser chrome to match the always-dark site.
-export const viewport: Viewport = { viewportFit: "cover", themeColor: "#0c0b0d" };
+export const viewport: Viewport = { viewportFit: "cover", themeColor: INK };
 
 // Only Chromium renders SVG filters inside backdrop-filter, and only Chromium exposes
 // navigator.userAgentData, so it doubles as the feature flag for liquid-glass lensing.
 const glassRefractScript = `if("userAgentData"in navigator)document.documentElement.setAttribute("data-glass-refract","")`;
 
 export default async function RootLayout({ children, params }: LayoutProps<"/[lang]">) {
-  const { lang } = await params;
-  if (!isLocale(lang)) notFound();
+  const lang = await getLocale(params);
   return (
     <html lang={lang} className={`${fraunces.variable} ${manrope.variable}`} suppressHydrationWarning>
       <head>
@@ -57,6 +56,8 @@ export default async function RootLayout({ children, params }: LayoutProps<"/[la
       </head>
       <body className="min-h-dvh font-sans antialiased">
         <NuqsAdapter>{children}</NuqsAdapter>
+        {/* Reads the search params, so it sits in its own Suspense (BriertoWatermark wraps itself in one). */}
+        <BriertoWatermark />
         <Suspense>
           <SanityChrome />
         </Suspense>

@@ -7,9 +7,10 @@ import { useState } from "react";
 
 import { GlassPanel, GlassPillButton, GlassPillLink } from "@/components/ui/Glass";
 import { useQuoteBasket } from "@/features/rentals/basket/store";
-import { type Locale, localizedPath } from "@/lib/i18n/config";
+import type { Locale } from "@/lib/i18n/config";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { format } from "@/lib/i18n/format";
+import { href, routes } from "@/lib/routes";
 
 import { QuoteLines } from "./QuoteLines";
 
@@ -18,7 +19,7 @@ export function QuoteDrawer({ lang, dict }: { lang: Locale; dict: Dictionary["ba
   const [open, setOpen] = useState(false);
   const { count } = useQuoteBasket();
   const pathname = usePathname();
-  const quoteHref = localizedPath(lang, "/rentals/quote");
+  const quoteHref = href(lang, routes.quote());
 
   // The review page shows the same basket in full, and an empty basket needs no shortcut.
   if (count === 0 || pathname === quoteHref) return null;
