@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -6,58 +6,21 @@ import { PortableText } from "next-sanity";
 import { Suspense } from "react";
 
 import { pageGutter } from "@/components/layout/nav/rail";
+import { BackLink } from "@/components/ui/BackLink";
+import { DetailList } from "@/components/ui/DetailList";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { PROJECT_ORDER_QUERY, PROJECT_QUERY, ProjectSlide, ProjectStills, type Still } from "@/content/project";
+import { ProjectSlide, ProjectStills } from "@/content/project";
+import { getProject, getProjectMeta } from "@/features/work";
 import { cn } from "@/lib/cn";
-import { defaultLocale, isLocale, languageAlternates, type Locale, localizedPath } from "@/lib/i18n/config";
+import { getLocale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
-import { toSizedImage } from "@/sanity/lib/image";
-import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
-import { projectAttribute } from "@/sanity/lib/projects";
-
-async function getProject(lang: Locale, slug: string) {
-  const { perspective, variant } = await getDynamicFetchOptions();
-  const { data } = await cachedSanity({
-    query: PROJECT_QUERY,
-    params: { lang, fallbackLang: defaultLocale, slug },
-    perspective,
-    variant,
-    stega: false,
-  });
-  return data;
-}
-
-async function getOrder(lang: Locale) {
-  const { perspective, variant } = await getDynamicFetchOptions();
-  const { data } = await cachedSanity({
-    query: PROJECT_ORDER_QUERY,
-    params: { lang, fallbackLang: defaultLocale },
-    perspective,
-    variant,
-    stega: false,
-  });
-  return data;
-}
-
-/** The text of a block-content field, for the page description. */
-function plainText(blocks: { children?: { text?: string }[] }[] | null | undefined) {
-  return (blocks ?? [])
-    .map((block) => (block.children ?? []).map((child) => child.text ?? "").join(""))
-    .filter(Boolean)
-    .join(" ");
-}
+import { href, pageMetadata, routes } from "@/lib/routes";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/work/[slug]">): Promise<Metadata> {
-  const { lang, slug } = await params;
-  if (!isLocale(lang)) return {};
-  const project = await getProject(lang, slug);
-  if (!project) return {};
-  const summary = [project.type, project.year, project.client].filter(Boolean).join(" · ");
-  return {
-    title: project.title,
-    description: plainText(project.description) || summary || undefined,
-    alternates: languageAlternates(lang, `/work/${slug}`),
-  };
+  const [lang, { slug }] = await Promise.all([getLocale(params), params]);
+  const meta = await getProjectMeta(lang, slug);
+  if (!meta) return {};
+  return pageMetadata(lang, routes.project(slug), meta);
 }
 
 export default function ProjectPage({ params }: PageProps<"/[lang]/work/[slug]">) {
@@ -65,27 +28,20 @@ export default function ProjectPage({ params }: PageProps<"/[lang]/work/[slug]">
   return (
     <main>
       <Suspense fallback={<Skeleton className="h-dvh rounded-none" />}>
-        {params.then((p) => (
-          <Project lang={p.lang} slug={p.slug} />
-        ))}
+        <Project params={params} />
       </Suspense>
     </main>
   );
 }
 
-async function Project({ lang, slug }: { lang: string; slug: string }) {
-  if (!isLocale(lang)) notFound();
-  const [{ work, vimeo }, project, order] = await Promise.all([getDictionary(lang), getProject(lang, slug), getOrder(lang)]);
+async function Project({ params }: Pick<PageProps<"/[lang]/work/[slug]">, "params">) {
+  const [lang, { slug }] = await Promise.all([getLocale(params), params]);
+  const [{ work, vimeo }, project] = await Promise.all([getDictionary(lang), getProject(lang, slug)]);
   if (!project) notFound();
 
-  const credits = (project.credits ?? []).filter((credit) => credit.name);
-  const stills = toStills(project.stills);
-  const stillsMobile = toStills(project.stillsMobile);
-  const hasDescription = !!project.description && project.description.length > 0;
-
-  // Wraps round to the first project; nothing to link to when this is the only one.
-  const at = order.findIndex((p) => p.slug === slug);
-  const next = order.length > 1 && at >= 0 ? order[(at + 1) % order.length] : null;
+  const { slide, description, descriptionAttribute, credits, stills, next } = project;
+  const hasDescription = !!description && description.length > 0;
+  const hasStills = stills.landscape.length > 0 || stills.portrait.length > 0;
 
   return (
     <>
@@ -93,33 +49,21 @@ async function Project({ lang, slug }: { lang: string; slug: string }) {
         as="h1"
         // Short of a full screen, so the page content shows beneath it: this is a page to scroll, not another slide.
         className="h-[78dvh]"
-        label={project.title}
-        title={project.title}
-        titleAttribute={projectAttribute(project._id, "title")}
-        meta={[project.type, project.year, project.client].filter(Boolean).join(" · ")}
-        image={project.cover ? toSizedImage(project.cover, 2400) : null}
-        mobileImage={project.coverMobile ? toSizedImage(project.coverMobile, 1440) : null}
-        vimeoUrl={project.vimeoUrl}
-        previewLoopUrl={project.previewLoopUrl}
+        label={slide.title}
+        {...slide}
         priority
         dict={vimeo}
       />
 
       <div className={cn("mx-auto max-w-6xl space-y-16 pt-10 pb-16 md:pt-12 md:pb-24", pageGutter)}>
-        <Link href={localizedPath(lang, "/work")} className="inline-flex items-center gap-1.5 text-sm link-quiet">
-          <ArrowLeft aria-hidden className="size-4" />
-          {work.back}
-        </Link>
+        <BackLink href={href(lang, routes.work())}>{work.back}</BackLink>
 
-        {(hasDescription || credits.length > 0 || stills.length > 0 || stillsMobile.length > 0) && (
+        {(hasDescription || credits.length > 0 || hasStills) && (
           // One grid so credits can sit beside the description on wide screens and after the stills on narrow ones.
           <div className="grid gap-16 md:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
             {hasDescription && (
-              <div
-                data-sanity={projectAttribute(project._id, "description")}
-                className="max-w-prose space-y-4 text-lg leading-relaxed text-fg/90"
-              >
-                <PortableText value={project.description!} />
+              <div data-sanity={descriptionAttribute} className="max-w-prose space-y-4 text-lg leading-relaxed text-fg/90">
+                <PortableText value={description} />
               </div>
             )}
             {credits.length > 0 && (
@@ -127,40 +71,34 @@ async function Project({ lang, slug }: { lang: string; slug: string }) {
                 <h2 id="project-credits" className="mb-3 font-display text-2xl">
                   {work.credits}
                 </h2>
-                <dl className="divide-y divide-line border-y border-line">
-                  {credits.map((credit) => (
-                    <div key={credit._key} className="grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-4 py-2 text-sm">
-                      <dt className="text-fg-muted">{credit.role}</dt>
-                      <dd>
-                        {credit.talentSlug ? (
-                          <Link href={localizedPath(lang, `/talent/${credit.talentSlug}`)} className="link-quiet">
-                            {credit.name}
-                          </Link>
-                        ) : (
-                          credit.name
-                        )}
-                      </dd>
-                    </div>
-                  ))}
-                </dl>
+                <DetailList
+                  rows={credits.map((credit) => ({
+                    key: credit.key,
+                    term: credit.role,
+                    detail: credit.href ? (
+                      <Link href={credit.href} className="link-quiet">
+                        {credit.name}
+                      </Link>
+                    ) : (
+                      credit.name
+                    ),
+                  }))}
+                />
               </section>
             )}
-            {(stills.length > 0 || stillsMobile.length > 0) && (
+            {hasStills && (
               <section aria-labelledby="project-stills" className="md:col-span-full">
                 <h2 id="project-stills" className="mb-4 font-display text-2xl">
                   {work.stills}
                 </h2>
-                <ProjectStills landscape={stills} portrait={stillsMobile} dict={work} />
+                <ProjectStills landscape={stills.landscape} portrait={stills.portrait} dict={work} />
               </section>
             )}
           </div>
         )}
 
         {next && (
-          <Link
-            href={localizedPath(lang, `/work/${next.slug}`)}
-            className="group flex items-end justify-between gap-6 border-t border-line pt-8"
-          >
+          <Link href={next.href} className="group flex items-end justify-between gap-6 border-t border-line pt-8">
             <span>
               <span className="eyebrow">{work.next}</span>
               <span className="mt-1 block font-display text-3xl italic md:text-5xl">{next.title}</span>
@@ -174,12 +112,4 @@ async function Project({ lang, slug }: { lang: string; slug: string }) {
       </div>
     </>
   );
-}
-
-function toStills(stills: Parameters<typeof toSizedImage>[0][] | null | undefined): Still[] {
-  return (stills ?? []).flatMap((still) => {
-    const thumb = toSizedImage(still, 1000);
-    const full = toSizedImage(still, 2400);
-    return thumb && full ? { thumb, full } : [];
-  });
 }

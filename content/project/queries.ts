@@ -3,8 +3,8 @@ import { defineQuery } from "next-sanity";
 import {
   byRank,
   DEFAULT_COUNTERPART,
-  IMAGE_FIELDS,
   PROJECT_SLIDE_FIELDS,
+  responsiveImages,
   translatedTitle,
   withFallback,
 } from "@/sanity/lib/groq";
@@ -45,8 +45,7 @@ export const PROJECT_QUERY = defineQuery(`
       "name": coalesce(talent->name, name),
       "talentSlug": talent->slug.current
     },
-    "stills": coalesce(stills, ${DEFAULT_COUNTERPART}.stills)[defined(asset)]{ _key, ${IMAGE_FIELDS} },
-    "stillsMobile": coalesce(stillsMobile, ${DEFAULT_COUNTERPART}.stillsMobile)[defined(asset)]{ _key, ${IMAGE_FIELDS} }
+    "stills": ${responsiveImages("stills", "stillsMobile")}
   }
 `);
 

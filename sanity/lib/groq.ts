@@ -100,6 +100,23 @@ export const TALENT_CARD_FIELDS = `
   "portrait": select(defined(portrait.asset) => portrait, ${DEFAULT_COUNTERPART}.portrait){ ${IMAGE_FIELDS} }
 ` as const;
 
+/**
+ * An image that has a portrait (mobile) variant, as `{ landscape, portrait }`. Each falls back to the default-language
+ * document's when the translation has none. Literal arguments so TypeGen can evaluate the query.
+ */
+export const responsiveImage = <const F extends string, const M extends string>(field: F, mobileField: M) =>
+  `{
+    "landscape": select(defined(${field}.asset) => ${field}, ${DEFAULT_COUNTERPART}.${field}){ ${IMAGE_FIELDS} },
+    "portrait": select(defined(${mobileField}.asset) => ${mobileField}, ${DEFAULT_COUNTERPART}.${mobileField}){ ${IMAGE_FIELDS} }
+  }` as const;
+
+/** Like `responsiveImage`, for two arrays of images (stills), each falling back to the default-language document's. */
+export const responsiveImages = <const F extends string, const M extends string>(field: F, mobileField: M) =>
+  `{
+    "landscape": coalesce(${field}, ${DEFAULT_COUNTERPART}.${field})[defined(asset)]{ _key, ${IMAGE_FIELDS} },
+    "portrait": coalesce(${mobileField}, ${DEFAULT_COUNTERPART}.${mobileField})[defined(asset)]{ _key, ${IMAGE_FIELDS} }
+  }` as const;
+
 /** What a project slide needs: shared by the Our Work scroll and a talent's own scroll. */
 export const PROJECT_SLIDE_FIELDS = `
     _id,
@@ -111,6 +128,5 @@ export const PROJECT_SLIDE_FIELDS = `
     "client": coalesce(client, ${DEFAULT_COUNTERPART}.client),
     "vimeoUrl": coalesce(vimeoUrl, ${DEFAULT_COUNTERPART}.vimeoUrl),
     "previewLoopUrl": coalesce(previewLoopUrl, ${DEFAULT_COUNTERPART}.previewLoopUrl),
-    "cover": select(defined(coverStill.asset) => coverStill, ${DEFAULT_COUNTERPART}.coverStill){ ${IMAGE_FIELDS} },
-    "coverMobile": select(defined(coverStillMobile.asset) => coverStillMobile, ${DEFAULT_COUNTERPART}.coverStillMobile){ ${IMAGE_FIELDS} }
+    "cover": ${responsiveImage("coverStill", "coverStillMobile")}
 ` as const;
