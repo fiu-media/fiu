@@ -2,7 +2,7 @@ import { expect, type Locator, type Page, test } from "@playwright/test";
 
 import { en } from "../lib/i18n/dictionaries/en";
 import { rentalItems } from "./fixtures/data";
-import { isoDateFromNow } from "./helpers";
+import { isoDateFromNow, rentalsTest } from "./helpers";
 
 const { contact, quote } = en;
 
@@ -72,8 +72,8 @@ test.describe("textarea sizing", () => {
     expect(await box.evaluate((el) => getComputedStyle(el).resize)).toBe("vertical");
   });
 
-  // Rentals is hidden; see playwright.config.ts.
-  test.skip("the optional quote note starts smaller, and stops sooner", async ({ page }) => {
+  // Rentals is hidden while `features.rentals` is off (see playwright.config.ts).
+  rentalsTest("the optional quote note starts smaller, and stops sooner", async ({ page }) => {
     await page.goto(`/rentals/quote?pickup=${isoDateFromNow(14)}&return=${isoDateFromNow(16)}&item=${rentalItems.single.slug}`);
     const box = page.getByLabel(quote.message);
     await expect(box).toBeVisible();

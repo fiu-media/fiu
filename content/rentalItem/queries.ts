@@ -3,9 +3,9 @@ import { defineQuery } from "next-sanity";
 import {
   arrayOrDefault,
   byRank,
-  DEFAULT_COUNTERPART,
   RENTAL_AVAILABLE,
   RENTAL_ITEM_FIELDS,
+  RENTAL_ITEM_IDENTITY,
   RENTAL_ITEMS,
   withFallback,
 } from "@/sanity/lib/groq";
@@ -35,11 +35,7 @@ export const RENTAL_ITEM_QUERY = defineQuery(`
 /** Just enough per item to label basket lines, which only store ids and quantities. */
 export const QUOTE_CATALOGUE_QUERY = defineQuery(`
   ${RENTAL_ITEMS}${byRank("name")}{
-    _id,
-    "baseId": coalesce(${DEFAULT_COUNTERPART}._id, _id),
-    "name": coalesce(${DEFAULT_COUNTERPART}.name, name),
-    "brand": coalesce(${DEFAULT_COUNTERPART}.brand, brand),
-    "maxQuantity": coalesce(${DEFAULT_COUNTERPART}.maxQuantity, maxQuantity),
+    ${RENTAL_ITEM_IDENTITY},
     "slug": slug.current,
     "image": ${arrayOrDefault("images[defined(asset)]")}[0]{ alt, asset, crop, hotspot, "lqip": asset->metadata.lqip }
   }
@@ -51,7 +47,6 @@ export const QUOTE_CATALOGUE_QUERY = defineQuery(`
  */
 export const AVAILABLE_ITEM_IDS_QUERY = defineQuery(`
   *[_type == "rentalItem" && language == $fallbackLang && _id in $ids${RENTAL_AVAILABLE}]{
-    _id, name, brand,
-    "maxQuantity": coalesce(${DEFAULT_COUNTERPART}.maxQuantity, maxQuantity)
+    ${RENTAL_ITEM_IDENTITY}
   }
 `);

@@ -27,7 +27,7 @@ Craft and care, in an Irish voice. The brand line "Más fiú é a dhéanamh, is 
 - Visitors judge Fiú by watching films (Vimeo) and looking through stills. Each project has a type, client, year, description, credits linked to roster talent, and separate landscape (desktop) and portrait (mobile) stills.
 - Talent profiles have a name, roles, a bio, availability, a showreel, and the projects they worked on.
 - Enquiries go through the contact form (Project / Talent / Rentals / Other). Rentals uses a quote basket with hire dates and no public prices. Forms send a Resend notification to the studio and a confirmation to the visitor. Deep links can prefill parts of a form (see `lib/forms/prefill.ts`).
-- Navigation: About, Our Work, Talent, Rentals, Contact. Rentals is hidden for now (`_rentals`).
+- Navigation: About, Our Work, Talent, Rentals, Contact. Rentals is hidden for now (`features.rentals` in `lib/features.ts`).
 
 ## Capabilities and Constraints
 

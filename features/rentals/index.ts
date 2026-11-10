@@ -4,9 +4,8 @@ import { features } from "@/lib/features";
 export const rentalsEnabled = features.rentals;
 
 export type { CatalogueItem } from "./basket/CatalogueContext";
-export { CatalogueProvider, useCatalogue } from "./basket/CatalogueContext";
-export { clampQty } from "./basket/quantity";
-export { basketActions, useQuoteBasket } from "./basket/store";
+export { CatalogueProvider, itemMax, useCatalogue, useItemMax } from "./basket/CatalogueContext";
+export { useQuoteBasket } from "./basket/store";
 export { DetailAddToQuote } from "./components/DetailAddToQuote";
 export { QuoteDrawer } from "./components/QuoteDrawer";
 export { QuoteLines } from "./components/QuoteLines";

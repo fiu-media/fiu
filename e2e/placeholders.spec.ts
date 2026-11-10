@@ -2,7 +2,7 @@ import { expect, type Locator, test } from "@playwright/test";
 
 import { en } from "../lib/i18n/dictionaries/en";
 import { format } from "../lib/i18n/format";
-import { clickUntil, isoDateFromNow } from "./helpers";
+import { clickUntil, isoDateFromNow, rentalsTest } from "./helpers";
 
 const { rentals, quote } = en;
 
@@ -33,8 +33,8 @@ test.describe("placeholders", () => {
     await expectExamples(page.locator("form"));
   });
 
-  // Rentals is hidden; see playwright.config.ts.
-  test.skip("the quote form gives one too, and its dates and phone look the same", async ({ page }) => {
+  // Rentals is hidden while `features.rentals` is off (see playwright.config.ts).
+  rentalsTest("the quote form gives one too, and its dates and phone look the same", async ({ page }) => {
     await page.goto("/rentals");
     const added = page.getByRole("button", { name: format(rentals.inQuote, { qty: 1 }) }).first();
     await clickUntil(page.getByRole("button", { name: rentals.addToQuote }).first(), () =>

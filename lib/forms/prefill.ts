@@ -21,9 +21,6 @@ export const MAX_ITEM_PARAMS = 20;
 
 type Params = Pick<URLSearchParams, "get" | "getAll">;
 
-/** The slug in a catalogue entry's `/rentals/<slug>` link (localised or not). */
-const slugOf = (href: string) => href.split("/").pop() ?? "";
-
 /** Trimmed, with control characters (newlines and the like) removed and cut to `max`; `undefined` if nothing is left. */
 function cleanText(value: string | null, max: number) {
   const text = (value ?? "")
@@ -55,7 +52,7 @@ export function contactPrefill(params: Params) {
 
 export const QUOTE_PARAMS = ["pickup", "return", "company", "production", "item"] as const;
 
-type CatalogueEntry = { id: string; href: string; max: number };
+type CatalogueEntry = { id: string; slug: string; max: number };
 
 export type QuotePrefill = {
   start?: string;
@@ -83,7 +80,7 @@ export function quotePrefill(params: Params, catalogue: Record<string, Catalogue
     && (start ? isValidRange(start, requestedEnd) && rentalDays(start, requestedEnd) <= MAX_HIRE_DAYS : true);
   const end = endOk ? requestedEnd! : undefined;
 
-  const bySlug = new Map(Object.values(catalogue).map((entry) => [slugOf(entry.href), entry]));
+  const bySlug = new Map(Object.values(catalogue).map((entry) => [entry.slug, entry]));
   const items = new Map<string, QuotePrefill["items"][number]>();
   for (const raw of params.getAll("item").slice(0, MAX_ITEM_PARAMS)) {
     const [slug, quantity] = raw.split(":", 2);
@@ -132,6 +129,3 @@ export function quoteHref(
   for (const { slug, qty } of items) query.append("item", qty > 1 ? `${slug}:${qty}` : slug);
   return withQuery(href(lang, routes.quote()), query);
 }
-
-/** The slug of a catalogue entry, for building `quoteHref` items from the basket. */
-export { slugOf as catalogueSlug };

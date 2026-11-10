@@ -13,13 +13,14 @@ import { PhoneField } from "@/components/forms/PhoneField";
 import { PrefillBoundary } from "@/components/forms/PrefillBoundary";
 import { useConformForm } from "@/components/forms/useConformForm";
 import { GlassPillLink } from "@/components/ui/Glass";
-import { basketActions, QuoteLines, useCatalogue, useQuoteBasket } from "@/features/rentals";
+import { QuoteLines, useCatalogue, useQuoteBasket } from "@/features/rentals";
 import { describeRange, isIsoDate, isValidRange, todayInDublin } from "@/lib/dates";
 import type { CountryList } from "@/lib/forms/countries";
-import { catalogueSlug, QUOTE_PARAMS, quoteHref, quotePrefill } from "@/lib/forms/prefill";
+import { QUOTE_PARAMS, quoteHref, quotePrefill } from "@/lib/forms/prefill";
 import { limits, quoteSchema } from "@/lib/forms/schemas";
-import { type Locale, localizedPath } from "@/lib/i18n/config";
+import type { Locale } from "@/lib/i18n/config";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
+import { href, routes } from "@/lib/routes";
 
 import { submitQuote } from "./actions";
 
@@ -49,7 +50,7 @@ function QuoteFormFields({ lang, dict, countries }: Props) {
     },
   });
   const { fields, pending, succeeded, confirmed } = conform;
-  const { lines, startDate, endDate, setDates, ready } = useQuoteBasket();
+  const { lines, startDate, endDate, setDates, ensure, clear, ready } = useQuoteBasket();
 
   // The basket is read from the browser after mount, so a link's dates and items go in once that has happened. Before
   // paint, so the form never shows "Your quote is empty" for a link that has items. Setting rather than adding, so the
@@ -60,8 +61,8 @@ function QuoteFormFields({ lang, dict, countries }: Props) {
     applied.current = true;
     if (prefill.start) setDates({ startDate: prefill.start });
     if (prefill.end) setDates({ endDate: prefill.end });
-    for (const { itemId, qty, max } of prefill.items) basketActions.ensure(itemId, qty, max);
-  }, [ready, prefill, setDates]);
+    for (const { itemId, qty, max } of prefill.items) ensure(itemId, qty, max);
+  }, [ready, prefill, setDates, ensure]);
 
   /** A link that reopens this quote, for sending to someone else. Nothing personal goes in it. */
   const shareLink = () => {
@@ -72,16 +73,14 @@ function QuoteFormFields({ lang, dict, countries }: Props) {
       end: isIsoDate(endDate) ? endDate : undefined,
       company: text("company").trim() || undefined,
       production: text("production").trim() || undefined,
-      items: lines.flatMap(({ itemId, qty }) =>
-        catalogue[itemId] ? [{ slug: catalogueSlug(catalogue[itemId].href), qty }] : [],
-      ),
+      items: lines.flatMap(({ itemId, qty }) => (catalogue[itemId] ? [{ slug: catalogue[itemId].slug, qty }] : [])),
     });
     return `${window.location.origin}${path}`;
   };
 
   useEffect(() => {
-    if (succeeded) basketActions.clear();
-  }, [succeeded]);
+    if (succeeded) clear();
+  }, [succeeded, clear]);
 
   // The basket only exists in the browser, so until it is read the form would flash "empty".
   if (!ready) return <QuoteFormSkeleton label={dict.common.loading} />;
@@ -91,7 +90,7 @@ function QuoteFormFields({ lang, dict, countries }: Props) {
       <FormSuccess
         title={quote.successTitle}
         body={confirmed ? quote.successBody : quote.successBodyNoEmail}
-        action={{ href: localizedPath(lang, "/rentals"), label: quote.successAction }}
+        action={{ href: href(lang, routes.rentals()), label: quote.successAction }}
       />
     );
   }
@@ -100,7 +99,7 @@ function QuoteFormFields({ lang, dict, countries }: Props) {
     return (
       <div className="max-w-xl">
         <p className="text-fg-muted">{quote.emptyBasket}</p>
-        <GlassPillLink href={localizedPath(lang, "/rentals")} className="mt-4">
+        <GlassPillLink href={href(lang, routes.rentals())} className="mt-4">
           {quote.browse}
         </GlassPillLink>
       </div>
