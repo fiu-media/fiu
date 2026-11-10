@@ -1,7 +1,10 @@
 "use client";
 
 import { Check, Link, Lock, Share } from "lucide-react";
-import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useId, useRef, useState } from "react";
+
+import { useMediaQuery } from "@/lib/hooks/useMediaQuery";
+import { COARSE_POINTER } from "@/lib/media";
 
 type Props = {
   label: string;
@@ -18,13 +21,10 @@ type Props = {
 };
 
 // A touch device that can open the system share sheet (Messages, Mail, AirDrop…) offers that instead of copying.
-const subscribeToPointer = (onChange: () => void) => {
-  const query = window.matchMedia("(pointer: coarse)");
-  query.addEventListener("change", onChange);
-  return () => query.removeEventListener("change", onChange);
+const useCanShare = () => {
+  const touch = useMediaQuery(COARSE_POINTER, false);
+  return touch && typeof navigator.share === "function";
 };
-const canShare = () => typeof navigator.share === "function" && window.matchMedia("(pointer: coarse)").matches;
-const useCanShare = () => useSyncExternalStore(subscribeToPointer, canShare, () => false);
 
 /**
  * Shares a link that reopens the form as it is now: the share sheet on phones, a copy to the clipboard elsewhere. What

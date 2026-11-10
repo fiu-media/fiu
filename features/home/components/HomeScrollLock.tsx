@@ -2,6 +2,9 @@
 
 import { useEffect, useLayoutEffect } from "react";
 
+import { matches } from "@/lib/hooks/useMediaQuery";
+import { MOBILE } from "@/lib/media";
+
 import { BLEED_PX, homeIsLocked, nudgeHomeScroll } from "../bleed";
 
 /**
@@ -29,7 +32,7 @@ export function HomeScrollLock() {
     };
   }, []);
   useEffect(() => {
-    if (!window.matchMedia("(max-width: 767px)").matches) return;
+    if (!matches(MOBILE)) return;
     const pin = () => {
       if (homeIsLocked() && window.scrollY < BLEED_PX - 0.5) {
         window.scrollTo({ top: BLEED_PX, behavior: "instant" });

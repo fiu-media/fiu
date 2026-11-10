@@ -6,17 +6,19 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
 
-import { BriertoWatermark } from "@/components/layout/brierto/BriertoWatermark";
 import { GlassPillButton } from "@/components/ui/Glass";
 import { nudgeHomeScrollRepeatedly } from "@/features/home/bleed";
 import { cn } from "@/lib/cn";
+import { matches, subscribeToMedia } from "@/lib/hooks/useMediaQuery";
 import type { Locale } from "@/lib/i18n/config";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import type { NavItem } from "@/lib/i18n/nav";
+import { DESKTOP } from "@/lib/media";
 
 import { HomeLink } from "./HomeLink";
 import { LanguageScrollRestore } from "./LanguageScrollRestore";
 import { LanguageSwitcher } from "./LanguageSwitcher";
+import { railWidth } from "./rail";
 
 type NavProps = {
   lang: Locale;
@@ -24,8 +26,6 @@ type NavProps = {
   homeHref: string;
   labels: Dictionary["nav"];
   onImage?: boolean;
-  /** Frost the rail's strip with a backdrop blur. A /dev sign-off option, not used on the site. */
-  blurRail?: boolean;
   /** The phone bar floats over footage (Home's hero), so it gets a scrim behind it. */
   overFootage?: boolean;
 };
@@ -44,7 +44,7 @@ function RouteNav(props: NavProps) {
 
 const isCurrent = (pathname: string, href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
-function Nav({ lang, items, homeHref, labels, onImage, blurRail, overFootage, pathname }: NavProps & { pathname: string }) {
+function Nav({ lang, items, homeHref, labels, onImage, overFootage, pathname }: NavProps & { pathname: string }) {
   // The overlay is open for the page it was opened on, so navigating leaves it behind.
   const [openOn, setOpenOn] = useState<string | null>(null);
   const popup = useRef<HTMLDivElement>(null);
@@ -58,12 +58,7 @@ function Nav({ lang, items, homeHref, labels, onImage, blurRail, overFootage, pa
   const close = () => onOpenChange(false);
 
   // Growing to the rail layout leaves it behind too.
-  useEffect(() => {
-    const wide = window.matchMedia("(min-width: 48rem)");
-    const onChange = () => wide.matches && setOpenOn(null);
-    wide.addEventListener("change", onChange);
-    return () => wide.removeEventListener("change", onChange);
-  }, []);
+  useEffect(() => subscribeToMedia(DESKTOP)(() => matches(DESKTOP) && setOpenOn(null)), []);
 
   // Home: over the hero the rail carries the footage treatment (`rail-halo`). Below the fold it settles into the normal
   // rail item by item, each one as the photo's bottom edge passes it, and the hairline grows down from that edge, so the
@@ -99,19 +94,16 @@ function Nav({ lang, items, homeHref, labels, onImage, blurRail, overFootage, pa
 
   return (
     <>
-      <BriertoWatermark />
       <LanguageScrollRestore pathname={pathname} />
       <aside
         ref={rail}
         className={cn(
-          "fixed inset-y-0 left-0 z-30 hidden w-[calc(4rem+env(safe-area-inset-left))] flex-col items-center gap-8 border-r border-line pt-[max(1.75rem,env(safe-area-inset-top))] pb-7 pl-[env(safe-area-inset-left)] md:flex",
+          "fixed inset-y-0 left-0 z-30 hidden flex-col items-center gap-8 border-r border-line pt-[max(1.75rem,env(safe-area-inset-top))] pb-7 pl-[env(safe-area-inset-left)] md:flex",
+          railWidth,
           // Over Home's hero: a letter halo, and edge light only behind bright stills (`rail-halo` in globals.css).
           overFootage
             ? "rail-halo"
-            : onImage
-                && (blurRail
-                  ? "bg-gradient-to-r from-scrim/45 to-scrim/15 backdrop-blur-md [text-shadow:0_1px_6px_rgb(0_0_0/0.35)]"
-                  : "bg-gradient-to-r from-scrim/35 to-transparent [text-shadow:0_1px_6px_rgb(0_0_0/0.35)]"),
+            : onImage && "bg-gradient-to-r from-scrim/35 to-transparent [text-shadow:0_1px_6px_rgb(0_0_0/0.35)]",
         )}
       >
         {/* Sprocket rhythm: a faint, evenly spaced row of ticks, the only nod to film. */}

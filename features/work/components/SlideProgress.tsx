@@ -2,6 +2,7 @@
 
 import { type ReactNode, useEffect, useState } from "react";
 
+import { pageGutter, railLeft } from "@/components/layout/nav/rail";
 import { cn } from "@/lib/cn";
 import { prefersReducedMotion } from "@/lib/hooks/useReducedMotion";
 import { format } from "@/lib/i18n/format";
@@ -58,8 +59,13 @@ export function SlideProgress({
   const total = titles.length;
   return (
     <>
-      <div className="pointer-events-none fixed inset-x-0 top-0 z-20 pt-[max(1.25rem,env(safe-area-inset-top))] max-md:pt-[calc(max(1.25rem,env(safe-area-inset-top))+3.25rem)] md:left-[calc(4rem+env(safe-area-inset-left))]">
-        <div className="flex items-center gap-4 px-5 md:px-10">
+      <div
+        className={cn(
+          "pointer-events-none fixed inset-x-0 top-0 z-20 pt-[max(1.25rem,env(safe-area-inset-top))] max-md:pt-[calc(max(1.25rem,env(safe-area-inset-top))+3.25rem)]",
+          railLeft,
+        )}
+      >
+        <div className={cn("flex items-center gap-4", pageGutter)}>
           <div className="pointer-events-auto -mx-5 min-w-0 flex-1 [scrollbar-width:none] overflow-x-auto px-5 py-1 md:mx-0 md:px-0 [&::-webkit-scrollbar]:hidden">
             {children}
           </div>

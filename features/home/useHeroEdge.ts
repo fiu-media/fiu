@@ -2,6 +2,9 @@
 
 import { type RefObject, useEffect } from "react";
 
+import { matches, subscribeToMedia } from "@/lib/hooks/useMediaQuery";
+import { DESKTOP } from "@/lib/media";
+
 import { coverPlacement, edgeForLuminance, parsePosition, stripLuminance } from "./heroEdge";
 
 /** Read by `.hero-edge` in globals.css: how dark the edge gets, 0 to 1, and how long it takes to get there. */
@@ -15,8 +18,6 @@ const CROSSFADE_MS = 1600;
  */
 const RISE_MS = 250;
 const FALL_MS = 600;
-/** The rail only exists from `md`. */
-const WITH_RAIL = "(min-width: 48rem)";
 /** The rail's width, which is the strip of the still the labels sit on. */
 const RAIL_PX = 64;
 /**
@@ -72,7 +73,6 @@ function measure(img: HTMLImageElement, position: string | undefined) {
  */
 export function useHeroEdge(images: RefObject<(HTMLImageElement | null)[]>, current: number, position: string | undefined) {
   useEffect(() => {
-    const wide = window.matchMedia(WITH_RAIL);
     const root = document.documentElement;
     const img = images.current[current];
     let frame = 0;
@@ -84,7 +84,7 @@ export function useHeroEdge(images: RefObject<(HTMLImageElement | null)[]>, curr
     };
     const update = () => {
       // Only the hero on screen: Home's stand-in hero (the Suspense fallback) and the real one can briefly both exist.
-      if (!img || !wide.matches || !img.isConnected || img.getBoundingClientRect().width === 0) return;
+      if (!img || !matches(DESKTOP) || !img.isConnected || img.getBoundingClientRect().width === 0) return;
       if (!img.complete || img.naturalWidth === 0) {
         img.addEventListener("load", update, { once: true });
         return;
@@ -100,13 +100,14 @@ export function useHeroEdge(images: RefObject<(HTMLImageElement | null)[]>, curr
     };
     update();
     window.addEventListener("resize", schedule);
-    wide.addEventListener("change", schedule);
+    // The rail only exists from `md`.
+    const unsubscribe = subscribeToMedia(DESKTOP)(schedule);
     return () => {
       cancelAnimationFrame(frame);
       window.clearTimeout(fall);
       img?.removeEventListener("load", update);
       window.removeEventListener("resize", schedule);
-      wide.removeEventListener("change", schedule);
+      unsubscribe();
     };
   }, [images, current, position]);
 }

@@ -2,7 +2,7 @@ import { cn } from "@/lib/cn";
 
 /*
  * Eased over several stops rather than a straight ramp, which would show as a visible band. 0.82 / 0.5 / 0.2 of the
- * page's ink (`--ink`, #0c0b0d) at 22 / 48 / 74 %.
+ * page's ink (`--ink`) at 22 / 48 / 74 %.
  */
 
 /**
@@ -18,7 +18,7 @@ export function HeroFade({ bleed, className }: { bleed?: boolean; className?: st
     <div
       aria-hidden
       className={cn(
-        "pointer-events-none absolute inset-x-0 bottom-0 bg-[linear-gradient(to_top,rgb(12_11_13)_0%,rgb(12_11_13/0.82)_22%,rgb(12_11_13/0.5)_48%,rgb(12_11_13/0.2)_74%,rgb(12_11_13/0)_100%)]",
+        "pointer-events-none absolute inset-x-0 bottom-0 bg-[linear-gradient(to_top,var(--ink)_0%,color-mix(in_srgb,var(--ink)_82%,transparent)_22%,color-mix(in_srgb,var(--ink)_50%,transparent)_48%,color-mix(in_srgb,var(--ink)_20%,transparent)_74%,transparent_100%)]",
         bleed ? "h-48 md:hidden" : "h-[28dvh]",
         className,
       )}

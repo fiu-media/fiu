@@ -7,10 +7,12 @@ import { Fraunces, Manrope } from "next/font/google";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { Suspense } from "react";
 
+import { BriertoWatermark } from "@/components/layout/brierto/BriertoWatermark";
 import { InlineScript } from "@/components/layout/InlineScript";
 import { SanityChrome } from "@/components/sanity/SanityChrome";
 import { getLocale, locales } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
+import { INK } from "@/lib/theme";
 
 // Type pairing "Expressive": Fraunces for display, Manrope for text.
 const fraunces = Fraunces({
@@ -39,7 +41,7 @@ export async function generateMetadata({ params }: LayoutProps<"/[lang]">): Prom
 
 // Paint under the notch and home indicator (components pad themselves with env(safe-area-inset-*)),
 // and colour the browser chrome to match the always-dark site.
-export const viewport: Viewport = { viewportFit: "cover", themeColor: "#0c0b0d" };
+export const viewport: Viewport = { viewportFit: "cover", themeColor: INK };
 
 // Only Chromium renders SVG filters inside backdrop-filter, and only Chromium exposes
 // navigator.userAgentData, so it doubles as the feature flag for liquid-glass lensing.
@@ -54,6 +56,8 @@ export default async function RootLayout({ children, params }: LayoutProps<"/[la
       </head>
       <body className="min-h-dvh font-sans antialiased">
         <NuqsAdapter>{children}</NuqsAdapter>
+        {/* Reads the search params, so it sits in its own Suspense (BriertoWatermark wraps itself in one). */}
+        <BriertoWatermark />
         <Suspense>
           <SanityChrome />
         </Suspense>
