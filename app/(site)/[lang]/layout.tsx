@@ -4,13 +4,12 @@ import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Manrope } from "next/font/google";
-import { notFound } from "next/navigation";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { Suspense } from "react";
 
 import { InlineScript } from "@/components/layout/InlineScript";
 import { SanityChrome } from "@/components/sanity/SanityChrome";
-import { isLocale, locales } from "@/lib/i18n/config";
+import { getLocale, locales } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 
 // Type pairing "Expressive": Fraunces for display, Manrope for text.
@@ -27,8 +26,7 @@ export function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: LayoutProps<"/[lang]">): Promise<Metadata> {
-  const { lang } = await params;
-  if (!isLocale(lang)) return {};
+  const lang = await getLocale(params);
   const { site } = await getDictionary(lang);
   return {
     title: {
@@ -48,8 +46,7 @@ export const viewport: Viewport = { viewportFit: "cover", themeColor: "#0c0b0d" 
 const glassRefractScript = `if("userAgentData"in navigator)document.documentElement.setAttribute("data-glass-refract","")`;
 
 export default async function RootLayout({ children, params }: LayoutProps<"/[lang]">) {
-  const { lang } = await params;
-  if (!isLocale(lang)) notFound();
+  const lang = await getLocale(params);
   return (
     <html lang={lang} className={`${fraunces.variable} ${manrope.variable}`} suppressHydrationWarning>
       <head>

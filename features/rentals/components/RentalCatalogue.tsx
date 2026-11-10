@@ -6,8 +6,9 @@ import Link from "next/link";
 import { parseAsString, useQueryState } from "nuqs";
 
 import { GlassPillButton } from "@/components/ui/Glass";
-import { type Locale, localizedPath } from "@/lib/i18n/config";
+import type { Locale } from "@/lib/i18n/config";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
+import { href, routes } from "@/lib/routes";
 import type { SizedImage } from "@/sanity/lib/image";
 
 import { AddToQuote } from "./AddToQuote";
@@ -86,10 +87,10 @@ export function RentalCatalogue({
 }
 
 function ItemCard({ lang, item, dict }: { lang: Locale; item: CatalogueCard; dict: Dictionary["rentals"] }) {
-  const href = localizedPath(lang, `/rentals/${item.slug}`);
+  const itemHref = href(lang, routes.rentalItem(item.slug));
   return (
     <article className="flex h-full flex-col overflow-hidden rounded-3xl border border-line bg-bg-raised">
-      <Link href={href} tabIndex={-1} aria-hidden className="block">
+      <Link href={itemHref} tabIndex={-1} aria-hidden className="block">
         <RentalImageView
           image={item.image}
           placeholder={dict.noImage}
@@ -101,7 +102,7 @@ function ItemCard({ lang, item, dict }: { lang: Locale; item: CatalogueCard; dic
         <div>
           {item.brand && <p className="eyebrow">{item.brand}</p>}
           <h3 className="font-display text-2xl leading-tight">
-            <Link href={href} className="underline-offset-4 hover:underline">
+            <Link href={itemHref} className="underline-offset-4 hover:underline">
               {item.name}
             </Link>
           </h3>
@@ -109,7 +110,7 @@ function ItemCard({ lang, item, dict }: { lang: Locale; item: CatalogueCard; dic
         {item.summary && <p className="text-sm text-fg-muted">{item.summary}</p>}
         <div className="mt-auto flex flex-wrap items-center gap-2 pt-2">
           <AddToQuote itemId={item.id} itemName={item.name} dict={dict} size="sm" />
-          <Link href={href} className="px-2 text-sm link-quiet">
+          <Link href={itemHref} className="px-2 text-sm link-quiet">
             {dict.viewDetails}
           </Link>
         </div>

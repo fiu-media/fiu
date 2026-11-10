@@ -1,6 +1,12 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
-import { defaultLocale, isLocale, languageAlternates, locales, localizedPath, switchLocalePath } from "./config";
+import { defaultLocale, getLocale, isLocale, languageAlternates, locales, localizedPath, switchLocalePath } from "./config";
+
+vi.mock("next/navigation", () => ({
+  notFound: () => {
+    throw new Error("NEXT_NOT_FOUND");
+  },
+}));
 
 describe("isLocale", () => {
   it("recognises configured locales only", () => {
@@ -8,6 +14,16 @@ describe("isLocale", () => {
     expect(isLocale("ga")).toBe(true);
     expect(isLocale("fr")).toBe(false);
     expect(isLocale("")).toBe(false);
+  });
+});
+
+describe("getLocale", () => {
+  it("returns the locale named by the route param", async () => {
+    await expect(getLocale(Promise.resolve({ lang: "ga" }))).resolves.toBe("ga");
+  });
+
+  it("is a 404 for anything else", async () => {
+    await expect(getLocale(Promise.resolve({ lang: "fr" }))).rejects.toThrow("NEXT_NOT_FOUND");
   });
 });
 

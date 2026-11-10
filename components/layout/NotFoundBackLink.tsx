@@ -3,8 +3,9 @@
 import { usePathname } from "next/navigation";
 
 import { GlassPillLink } from "@/components/ui/Glass";
-import { isLocale, type Locale, localizedPath } from "@/lib/i18n/config";
+import { isLocale, type Locale } from "@/lib/i18n/config";
 import type { NavItem } from "@/lib/i18n/nav";
+import { href, routes } from "@/lib/routes";
 
 /**
  * The 404's way out. Under a known section (`/talent/unknown`) it goes back to that section;
@@ -24,10 +25,10 @@ export function NotFoundBackLink({
 }) {
   const segments = usePathname().split("/").filter(Boolean);
   if (segments[0] && isLocale(segments[0])) segments.shift();
-  const section = segments[0] ? sections.find((s) => s.href === localizedPath(lang, `/${segments[0]}`)) : undefined;
+  const section = segments[0] ? sections.find((s) => s.href === href(lang, `/${segments[0]}`)) : undefined;
 
   return (
-    <GlassPillLink href={section?.href ?? localizedPath(lang, "/")} size="lg" onImage>
+    <GlassPillLink href={section?.href ?? href(lang, routes.home())} size="lg" onImage>
       {section ? backTo.replace("{section}", section.label) : home}
     </GlassPillLink>
   );
