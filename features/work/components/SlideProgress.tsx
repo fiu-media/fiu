@@ -64,7 +64,7 @@ export function SlideProgress({
             {children}
           </div>
           {total > 1 && (
-            <p aria-hidden className="shrink-0 text-sm text-white tabular-nums [text-shadow:0_1px_6px_rgb(0_0_0/0.45)]">
+            <p aria-hidden className="shrink-0 text-sm text-on-image tabular-nums [text-shadow:0_1px_6px_rgb(0_0_0/0.45)]">
               {current + 1} / {total}
             </p>
           )}
@@ -86,13 +86,13 @@ export function SlideProgress({
                   <span
                     aria-hidden
                     className={cn(
-                      "h-0.5 rounded-full bg-white shadow-[0_0_6px_rgb(0_0_0/0.5)] transition-[width,opacity] duration-300 motion-reduce:transition-none",
+                      "h-0.5 rounded-full bg-on-image shadow-[0_0_6px_rgb(0_0_0/0.5)] transition-[width,opacity] duration-300 motion-reduce:transition-none",
                       i === current ? "w-6 opacity-100" : "w-3 opacity-45 group-hover:opacity-90 group-focus-visible:opacity-90",
                     )}
                   />
                   <span
                     aria-hidden
-                    className="pointer-events-none absolute right-full mr-2 text-sm whitespace-nowrap text-white opacity-0 transition-opacity [text-shadow:0_1px_6px_rgb(0_0_0/0.55)] group-hover:opacity-100 group-focus-visible:opacity-100 motion-reduce:transition-none"
+                    className="pointer-events-none absolute right-full mr-2 text-sm whitespace-nowrap text-on-image opacity-0 transition-opacity [text-shadow:0_1px_6px_rgb(0_0_0/0.55)] group-hover:opacity-100 group-focus-visible:opacity-100 motion-reduce:transition-none"
                   >
                     {title}
                   </span>

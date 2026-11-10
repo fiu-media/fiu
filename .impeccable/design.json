@@ -1,0 +1,466 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-09T23:46:36+00:00",
+  "title": "Design System: Fiú Media",
+  "extensions": {
+    "colorMeta": {
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "tonalRamp": [
+          "oklch(15% 0.004 305)",
+          "oklch(25% 0.005 305)",
+          "oklch(35% 0.006 305)",
+          "oklch(48% 0.007 305)",
+          "oklch(60% 0.007 305)",
+          "oklch(72% 0.006 305)",
+          "oklch(84% 0.005 305)",
+          "oklch(95% 0.004 305)"
+        ],
+        "lightScheme": "#f4f1ec"
+      },
+      "paper": {
+        "role": "primary",
+        "displayName": "Paper",
+        "tonalRamp": [
+          "oklch(15% 0.006 75)",
+          "oklch(25% 0.007 75)",
+          "oklch(35% 0.009 75)",
+          "oklch(48% 0.011 75)",
+          "oklch(60% 0.011 75)",
+          "oklch(72% 0.009 75)",
+          "oklch(84% 0.008 75)",
+          "oklch(95% 0.006 75)"
+        ]
+      },
+      "surface-raised": {
+        "role": "neutral",
+        "displayName": "Raised Ink",
+        "tonalRamp": [
+          "oklch(15% 0.006 300)",
+          "oklch(25% 0.007 300)",
+          "oklch(35% 0.009 300)",
+          "oklch(48% 0.011 300)",
+          "oklch(60% 0.011 300)",
+          "oklch(72% 0.009 300)",
+          "oklch(84% 0.008 300)",
+          "oklch(95% 0.006 300)"
+        ],
+        "lightScheme": "#ffffff"
+      },
+      "text": {
+        "role": "neutral",
+        "displayName": "Screen White",
+        "tonalRamp": [
+          "oklch(15% 0.005 75)",
+          "oklch(25% 0.006 75)",
+          "oklch(35% 0.007 75)",
+          "oklch(48% 0.009 75)",
+          "oklch(60% 0.009 75)",
+          "oklch(72% 0.008 75)",
+          "oklch(84% 0.006 75)",
+          "oklch(95% 0.005 75)"
+        ],
+        "lightScheme": "#151316"
+      },
+      "text-muted": {
+        "role": "neutral",
+        "displayName": "Muted Grey",
+        "tonalRamp": [
+          "oklch(15% 0.007 305)",
+          "oklch(25% 0.009 305)",
+          "oklch(35% 0.011 305)",
+          "oklch(48% 0.014 305)",
+          "oklch(60% 0.014 305)",
+          "oklch(72% 0.012 305)",
+          "oklch(84% 0.009 305)",
+          "oklch(95% 0.007 305)"
+        ],
+        "lightScheme": "#5f5a63"
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "tonalRamp": [
+          "oklch(15% 0.000 0)",
+          "oklch(25% 0.000 0)",
+          "oklch(35% 0.000 0)",
+          "oklch(48% 0.000 0)",
+          "oklch(60% 0.000 0)",
+          "oklch(72% 0.000 0)",
+          "oklch(84% 0.000 0)",
+          "oklch(95% 0.000 0)"
+        ],
+        "lightScheme": "rgb(21 19 22 / 0.12)"
+      },
+      "skeleton": {
+        "role": "neutral",
+        "displayName": "Skeleton",
+        "tonalRamp": [
+          "oklch(15% 0.006 295)",
+          "oklch(25% 0.007 295)",
+          "oklch(35% 0.009 295)",
+          "oklch(48% 0.011 295)",
+          "oklch(60% 0.011 295)",
+          "oklch(72% 0.009 295)",
+          "oklch(84% 0.008 295)",
+          "oklch(95% 0.006 295)"
+        ]
+      },
+      "signal-red": {
+        "role": "secondary",
+        "displayName": "Signal Red",
+        "tonalRamp": [
+          "oklch(15% 0.093 15)",
+          "oklch(25% 0.117 15)",
+          "oklch(35% 0.142 15)",
+          "oklch(48% 0.173 15)",
+          "oklch(60% 0.178 15)",
+          "oklch(72% 0.149 15)",
+          "oklch(84% 0.120 15)",
+          "oklch(95% 0.093 15)"
+        ],
+        "lightScheme": "#a3122a"
+      },
+      "on-signal": {
+        "role": "neutral",
+        "displayName": "Ink on Signal",
+        "tonalRamp": [
+          "oklch(15% 0.004 305)",
+          "oklch(25% 0.005 305)",
+          "oklch(35% 0.006 305)",
+          "oklch(48% 0.007 305)",
+          "oklch(60% 0.007 305)",
+          "oklch(72% 0.006 305)",
+          "oklch(84% 0.005 305)",
+          "oklch(95% 0.004 305)"
+        ]
+      },
+      "focus-blue": {
+        "role": "tertiary",
+        "displayName": "Focus Blue",
+        "tonalRamp": [
+          "oklch(15% 0.059 265)",
+          "oklch(25% 0.074 265)",
+          "oklch(35% 0.089 265)",
+          "oklch(48% 0.109 265)",
+          "oklch(60% 0.112 265)",
+          "oklch(72% 0.094 265)",
+          "oklch(84% 0.076 265)",
+          "oklch(95% 0.059 265)"
+        ],
+        "lightScheme": "#1d4ed8"
+      },
+      "glass-tint": {
+        "role": "neutral",
+        "displayName": "Glass Face",
+        "tonalRamp": [
+          "oklch(15% 0.000 0)",
+          "oklch(25% 0.000 0)",
+          "oklch(35% 0.000 0)",
+          "oklch(48% 0.000 0)",
+          "oklch(60% 0.000 0)",
+          "oklch(72% 0.000 0)",
+          "oklch(84% 0.000 0)",
+          "oklch(95% 0.000 0)"
+        ]
+      },
+      "glass-tint-strong": {
+        "role": "neutral",
+        "displayName": "Glass Face, Lit",
+        "tonalRamp": [
+          "oklch(15% 0.000 0)",
+          "oklch(25% 0.000 0)",
+          "oklch(35% 0.000 0)",
+          "oklch(48% 0.000 0)",
+          "oklch(60% 0.000 0)",
+          "oklch(72% 0.000 0)",
+          "oklch(84% 0.000 0)",
+          "oklch(95% 0.000 0)"
+        ]
+      },
+      "glass-edge": {
+        "role": "neutral",
+        "displayName": "Glass Edge",
+        "tonalRamp": [
+          "oklch(15% 0.000 0)",
+          "oklch(25% 0.000 0)",
+          "oklch(35% 0.000 0)",
+          "oklch(48% 0.000 0)",
+          "oklch(60% 0.000 0)",
+          "oklch(72% 0.000 0)",
+          "oklch(84% 0.000 0)",
+          "oklch(95% 0.000 0)"
+        ]
+      },
+      "on-image": {
+        "role": "neutral",
+        "displayName": "On Image",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(25% 0 0)",
+          "oklch(35% 0 0)",
+          "oklch(48% 0 0)",
+          "oklch(60% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(100% 0 0)"
+        ]
+      },
+      "scrim": {
+        "role": "neutral",
+        "displayName": "Scrim",
+        "tonalRamp": [
+          "oklch(0% 0 0)",
+          "oklch(15% 0 0)",
+          "oklch(25% 0 0)",
+          "oklch(35% 0 0)",
+          "oklch(48% 0 0)",
+          "oklch(60% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "The Irish slogan over the About still, italic; project slide titles share the voice."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Each page's h1, upright."
+      },
+      "tagline": {
+        "displayName": "Fiú line",
+        "purpose": "Playful italic line under a page title, muted, hidden from assistive tech."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Section headings; talent names in italic at larger sizes."
+      },
+      "body-lead": {
+        "displayName": "Lead",
+        "purpose": "Intro line under a page title, muted, max 42rem."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Controls, captions, general text."
+      },
+      "button": {
+        "displayName": "Button",
+        "purpose": "Glass pill labels."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Form labels and the rail's vertical nav labels."
+      },
+      "eyebrow": {
+        "displayName": "Eyebrow",
+        "purpose": "Small spaced uppercase above a heading."
+      },
+      "button-sm": {
+        "displayName": "Button, small",
+        "purpose": "Small glass pill labels (filters, the Menu button)."
+      }
+    },
+    "shadows": [
+      {
+        "name": "acrylic-edge",
+        "value": "inset 0 0 0 1px var(--glass-edge), inset 0 0 0 2.5px var(--glass-bevel), inset 1px 1.5px 0.5px -0.5px var(--glass-spec), inset -1px -1.5px 0.5px -0.5px var(--glass-spec-soft), 0 2px 10px -4px var(--glass-shade)",
+        "purpose": "Every glass piece and panel. The only shadow in the system."
+      },
+      {
+        "name": "on-image-text",
+        "value": "0 1px 6px rgb(0 0 0 / 0.3)",
+        "purpose": "Text shadow for glass and captions over photography."
+      }
+    ],
+    "motion": [
+      {
+        "name": "settle",
+        "value": "cubic-bezier(0.2, 0.7, 0.2, 1)",
+        "purpose": "Glass transforms: weighted, no overshoot (220ms pieces, 320ms panels)."
+      },
+      {
+        "name": "tilt",
+        "value": "rotateX(±4deg) rotateY(±6deg), perspective 600px",
+        "purpose": "Glass pieces lean toward the pointer."
+      },
+      {
+        "name": "press",
+        "value": "scale(0.97)",
+        "purpose": "Active state of glass pieces."
+      },
+      {
+        "name": "glint",
+        "value": "opacity 300ms ease",
+        "purpose": "Pointer-following specular highlight on hover."
+      },
+      {
+        "name": "menu-fade",
+        "value": "opacity 300ms",
+        "purpose": "Phone menu content in and out."
+      },
+      {
+        "name": "sine-sweep",
+        "value": "cubic-bezier(0.37, 0, 0.63, 1)",
+        "purpose": "Experimental moving-light band across glass (playground only)."
+      },
+      {
+        "name": "hero-edge",
+        "value": "--hero-edge: 250ms up, 600ms down after the 1.6s crossfade",
+        "purpose": "The rail's adaptive edge light: rises before a brighter still fades in, eases off once the crossfade is done."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Glass Pill Button",
+      "kind": "button",
+      "refersTo": "button-pill",
+      "description": "The one button: clear acrylic, tilts and glints on hover, presses to 0.97.",
+      "html": "<div class=\"ds-stage\"><button class=\"ds-glass ds-pill ds-md\">View project</button></div>",
+      "css": ".ds-stage{background:#0c0b0d;padding:24px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;}.ds-glass{position:relative;isolation:isolate;color:var(--ds-text,#f2eee8);background:rgb(255 255 255 / 0.015);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);box-shadow:inset 0 0 0 1px rgb(255 255 255 / 0.24),inset 0 0 0 2.5px rgb(255 255 255 / 0.1),inset 1px 1.5px 0.5px -0.5px rgb(255 255 255 / 0.55),inset -1px -1.5px 0.5px -0.5px rgb(255 255 255 / 0.18),0 2px 10px -4px rgb(0 0 0 / 0.14);transition:transform 220ms cubic-bezier(0.2,0.7,0.2,1),background-color 250ms ease,box-shadow 250ms ease;}.ds-glass:hover{background:rgb(255 255 255 / 0.07);box-shadow:inset 0 0 0 1px rgb(255 255 255 / 0.24),inset 0 0 0 2.5px rgb(255 255 255 / 0.2),inset 1px 1.5px 0.5px -0.5px rgb(255 255 255 / 0.55),inset -1px -1.5px 0.5px -0.5px rgb(255 255 255 / 0.18),0 2px 10px -4px rgb(0 0 0 / 0.14);}.ds-glass:active{transform:scale(0.97);}.ds-glass:focus-visible{outline:2px solid #8ab4ff;outline-offset:3px;}.ds-pill{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:9999px;cursor:pointer;font-family:Manrope,ui-sans-serif,system-ui,sans-serif;font-weight:600;letter-spacing:-0.01em;white-space:nowrap;}.ds-md{height:40px;padding:0 20px;font-size:0.9375rem;}"
+    },
+    {
+      "name": "Submit Pill (large)",
+      "kind": "button",
+      "refersTo": "button-pill-lg",
+      "description": "Form submit: the large glass pill.",
+      "html": "<div class=\"ds-stage\"><button class=\"ds-glass ds-pill ds-lg\" type=\"submit\">Send message</button></div>",
+      "css": ".ds-stage{background:#0c0b0d;padding:24px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;}.ds-glass{position:relative;isolation:isolate;color:var(--ds-text,#f2eee8);background:rgb(255 255 255 / 0.015);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);box-shadow:inset 0 0 0 1px rgb(255 255 255 / 0.24),inset 0 0 0 2.5px rgb(255 255 255 / 0.1),inset 1px 1.5px 0.5px -0.5px rgb(255 255 255 / 0.55),inset -1px -1.5px 0.5px -0.5px rgb(255 255 255 / 0.18),0 2px 10px -4px rgb(0 0 0 / 0.14);transition:transform 220ms cubic-bezier(0.2,0.7,0.2,1),background-color 250ms ease,box-shadow 250ms ease;}.ds-glass:hover{background:rgb(255 255 255 / 0.07);box-shadow:inset 0 0 0 1px rgb(255 255 255 / 0.24),inset 0 0 0 2.5px rgb(255 255 255 / 0.2),inset 1px 1.5px 0.5px -0.5px rgb(255 255 255 / 0.55),inset -1px -1.5px 0.5px -0.5px rgb(255 255 255 / 0.18),0 2px 10px -4px rgb(0 0 0 / 0.14);}.ds-glass:active{transform:scale(0.97);}.ds-glass:focus-visible{outline:2px solid #8ab4ff;outline-offset:3px;}.ds-pill{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:9999px;cursor:pointer;font-family:Manrope,ui-sans-serif,system-ui,sans-serif;font-weight:600;letter-spacing:-0.01em;white-space:nowrap;}.ds-lg{height:48px;padding:0 28px;font-size:1rem;}"
+    },
+    {
+      "name": "Play Pill on Image",
+      "kind": "button",
+      "refersTo": "button-pill",
+      "description": "Glass over footage: light-on-dark, dimmed backdrop, soft text shadow.",
+      "html": "<div class=\"ds-stage ds-photo\"><button class=\"ds-glass ds-pill ds-md ds-onimg\"><svg aria-hidden=\"true\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"currentColor\"><polygon points=\"6 3 20 12 6 21 6 3\"/></svg>Play</button></div>",
+      "css": ".ds-stage{background:#0c0b0d;padding:24px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;}.ds-glass{position:relative;isolation:isolate;color:var(--ds-text,#f2eee8);background:rgb(255 255 255 / 0.015);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);box-shadow:inset 0 0 0 1px rgb(255 255 255 / 0.24),inset 0 0 0 2.5px rgb(255 255 255 / 0.1),inset 1px 1.5px 0.5px -0.5px rgb(255 255 255 / 0.55),inset -1px -1.5px 0.5px -0.5px rgb(255 255 255 / 0.18),0 2px 10px -4px rgb(0 0 0 / 0.14);transition:transform 220ms cubic-bezier(0.2,0.7,0.2,1),background-color 250ms ease,box-shadow 250ms ease;}.ds-glass:hover{background:rgb(255 255 255 / 0.07);box-shadow:inset 0 0 0 1px rgb(255 255 255 / 0.24),inset 0 0 0 2.5px rgb(255 255 255 / 0.2),inset 1px 1.5px 0.5px -0.5px rgb(255 255 255 / 0.55),inset -1px -1.5px 0.5px -0.5px rgb(255 255 255 / 0.18),0 2px 10px -4px rgb(0 0 0 / 0.14);}.ds-glass:active{transform:scale(0.97);}.ds-glass:focus-visible{outline:2px solid #8ab4ff;outline-offset:3px;}.ds-pill{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:9999px;cursor:pointer;font-family:Manrope,ui-sans-serif,system-ui,sans-serif;font-weight:600;letter-spacing:-0.01em;white-space:nowrap;}.ds-md{height:40px;padding:0 20px;font-size:0.9375rem;}.ds-photo{background:linear-gradient(135deg,#7a3b54,#d98a4e 55%,#2b2433);min-height:120px;}.ds-onimg{color:#fff;-webkit-backdrop-filter:blur(2px) brightness(0.88);backdrop-filter:blur(2px) brightness(0.88);text-shadow:0 1px 6px rgb(0 0 0 / 0.3);}"
+    },
+    {
+      "name": "Filter Pills",
+      "kind": "chip",
+      "refersTo": "filter-pill-current",
+      "description": "Small glass pills; the current one keeps the lit face and gains a 3px dot.",
+      "html": "<div class=\"ds-stage\"><button class=\"ds-glass ds-pill ds-sm ds-current\" aria-pressed=\"true\">All</button><button class=\"ds-glass ds-pill ds-sm\" aria-pressed=\"false\">Commercial</button><button class=\"ds-glass ds-pill ds-sm\" aria-pressed=\"false\">Originals</button></div>",
+      "css": ".ds-stage{background:#0c0b0d;padding:24px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;}.ds-glass{position:relative;isolation:isolate;color:var(--ds-text,#f2eee8);background:rgb(255 255 255 / 0.015);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);box-shadow:inset 0 0 0 1px rgb(255 255 255 / 0.24),inset 0 0 0 2.5px rgb(255 255 255 / 0.1),inset 1px 1.5px 0.5px -0.5px rgb(255 255 255 / 0.55),inset -1px -1.5px 0.5px -0.5px rgb(255 255 255 / 0.18),0 2px 10px -4px rgb(0 0 0 / 0.14);transition:transform 220ms cubic-bezier(0.2,0.7,0.2,1),background-color 250ms ease,box-shadow 250ms ease;}.ds-glass:hover{background:rgb(255 255 255 / 0.07);box-shadow:inset 0 0 0 1px rgb(255 255 255 / 0.24),inset 0 0 0 2.5px rgb(255 255 255 / 0.2),inset 1px 1.5px 0.5px -0.5px rgb(255 255 255 / 0.55),inset -1px -1.5px 0.5px -0.5px rgb(255 255 255 / 0.18),0 2px 10px -4px rgb(0 0 0 / 0.14);}.ds-glass:active{transform:scale(0.97);}.ds-glass:focus-visible{outline:2px solid #8ab4ff;outline-offset:3px;}.ds-pill{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:9999px;cursor:pointer;font-family:Manrope,ui-sans-serif,system-ui,sans-serif;font-weight:600;letter-spacing:-0.01em;white-space:nowrap;}.ds-sm{height:32px;padding:0 14px;font-size:0.8125rem;}.ds-current{background:rgb(255 255 255 / 0.07);}.ds-current::before{content:\"\";position:absolute;left:50%;bottom:5px;width:3px;height:3px;margin-left:-1.5px;border-radius:9999px;background:currentColor;}"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Label above, Raised Ink fill, hairline border, 16px corners, example placeholder.",
+      "html": "<div class=\"ds-stage ds-col\"><label class=\"ds-label\" for=\"ds-name\">Name</label><input id=\"ds-name\" class=\"ds-input\" placeholder=\"Aoife Murphy\"><label class=\"ds-label\" for=\"ds-email\">Email</label><input id=\"ds-email\" class=\"ds-input ds-err\" aria-invalid=\"true\" value=\"aoife@\"><p class=\"ds-error\">Enter an email address like name@example.com.</p></div>",
+      "css": ".ds-stage{background:#0c0b0d;padding:24px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;}.ds-col{flex-direction:column;align-items:stretch;gap:6px;max-width:420px;}.ds-label{font:500 0.875rem/1.43 Manrope,ui-sans-serif,system-ui,sans-serif;color:#f2eee8;}.ds-input{font:400 1rem/1.5 Manrope,ui-sans-serif,system-ui,sans-serif;color:#f2eee8;background:#17151a;border:1px solid rgb(255 255 255 / 0.12);border-radius:16px;padding:12px 16px;margin-bottom:12px;}.ds-input::placeholder{color:rgb(163 157 168 / 0.7);}.ds-input:focus-visible{outline:2px solid #8ab4ff;outline-offset:3px;}.ds-err{border-color:#ff5a6e;margin-bottom:0;}.ds-error{margin:0;font:400 0.875rem/1.43 Manrope,ui-sans-serif,system-ui,sans-serif;color:#ff5a6e;}"
+    },
+    {
+      "name": "Side Rail",
+      "kind": "nav",
+      "refersTo": "nav-rail",
+      "description": "64px rail: vertical Manrope labels, current page white with a 1px rule, sprocket ticks. Over Home's footage the labels and language codes share 80%/100% white tones with a letter halo, and the edge darkens only behind bright stills.",
+      "html": "<div class=\"ds-rail\"><span class=\"ds-mark\">fiú</span><nav class=\"ds-railnav\"><a href=\"#\">About Us</a><a href=\"#\" aria-current=\"page\">Our Work</a><a href=\"#\">Talent</a><a href=\"#\">Contact</a></nav><span class=\"ds-lang\">EN</span></div>",
+      "css": ".ds-rail{position:relative;width:64px;height:420px;background:#0c0b0d;border-right:1px solid rgb(255 255 255 / 0.12);display:flex;flex-direction:column;align-items:center;gap:32px;padding:28px 0;}.ds-rail::after{content:\"\";position:absolute;top:0;bottom:0;right:4px;width:2px;background:repeating-linear-gradient(to bottom,#f2eee8 0 6px,transparent 6px 18px);opacity:0.1;}.ds-mark{font:italic 450 1.25rem Fraunces,ui-serif,Georgia,serif;color:#f2eee8;}.ds-railnav{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;}.ds-railnav a{position:relative;writing-mode:vertical-rl;transform:rotate(180deg);font:500 0.875rem Manrope,ui-sans-serif,system-ui,sans-serif;letter-spacing:0.025em;color:rgb(242 238 232 / 0.6);text-decoration:none;}.ds-railnav a:hover{color:#f2eee8;}.ds-railnav a:focus-visible{outline:2px solid #8ab4ff;outline-offset:3px;}.ds-railnav a[aria-current=page]{color:#f2eee8;}.ds-railnav a[aria-current=page]::after{content:\"\";position:absolute;top:0;bottom:0;left:-10px;width:1px;background:currentColor;}.ds-lang{font:500 0.75rem Manrope,ui-sans-serif,system-ui,sans-serif;color:#f2eee8;}"
+    },
+    {
+      "name": "Page Title with Fiú Line",
+      "kind": "custom",
+      "refersTo": "headline",
+      "description": "Upright Fraunces h1, italic muted tagline, muted lead intro.",
+      "html": "<div class=\"ds-stage ds-col\"><h1 class=\"ds-h1\">Our Work</h1><p class=\"ds-tag\"><span lang=\"ga\">Fiú</span> Reels</p><p class=\"ds-lead\">Original productions and commercial work, from first frame to final grade.</p></div>",
+      "css": ".ds-stage{background:#0c0b0d;padding:24px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;}.ds-col{flex-direction:column;align-items:flex-start;gap:0;}.ds-h1{margin:0;font:450 3.75rem/1 Fraunces,ui-serif,Georgia,serif;letter-spacing:-0.03em;font-variation-settings:\"SOFT\" 100,\"opsz\" 144;color:#f2eee8;}.ds-tag{margin:8px 0 0;font:italic 450 1.875rem/1.2 Fraunces,ui-serif,Georgia,serif;letter-spacing:-0.03em;font-variation-settings:\"SOFT\" 100,\"opsz\" 144;color:#a39da8;}.ds-lead{margin:16px 0 0;max-width:42rem;font:400 1.125rem/1.625 Manrope,ui-sans-serif,system-ui,sans-serif;color:#a39da8;}"
+    },
+    {
+      "name": "Talent Index Row",
+      "kind": "custom",
+      "refersTo": "title",
+      "description": "Large italic Fraunces names on hairline rules; roles right-aligned in muted grey.",
+      "html": "<div class=\"ds-stage ds-col\"><a class=\"ds-row\" href=\"#\"><span class=\"ds-name\">Aoife Murphy</span><span class=\"ds-role\">Director of Photography</span></a><a class=\"ds-row\" href=\"#\"><span class=\"ds-name\">Cian Byrne</span><span class=\"ds-role\">Director</span></a></div>",
+      "css": ".ds-stage{background:#0c0b0d;padding:24px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;}.ds-col{flex-direction:column;align-items:stretch;gap:0;}.ds-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px 0;border-top:1px solid rgb(255 255 255 / 0.12);text-decoration:none;color:#f2eee8;}.ds-row:last-child{border-bottom:1px solid rgb(255 255 255 / 0.12);}.ds-row:focus-visible{outline:2px solid #8ab4ff;outline-offset:3px;}.ds-name{font:italic 450 2.5rem/1.1 Fraunces,ui-serif,Georgia,serif;letter-spacing:-0.03em;font-variation-settings:\"SOFT\" 100,\"opsz\" 144;}.ds-role{font:400 0.875rem Manrope,ui-sans-serif,system-ui,sans-serif;color:#a39da8;}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Screening Room",
+    "overview": "**Creative North Star: \"The Screening Room\"**\n\nThe site is a dark room built for watching. Films and stills run edge to edge and supply all the colour. The interface is the house lighting: low, warm and steady, with just enough light to find your seat. Every page is dark whatever the visitor's OS setting, and the browser chrome is tinted to match (`#0c0b0d`). The chrome steps back so the footage can lead, and the care shows in small finished details: a three-pixel dot under the current filter, a glint that follows the pointer across a pill, a caption that sits exactly in line with the logo.\n\nThe mood is cinematic, quiet and warm. Warmth comes from the type, not from colour. Fraunces is set soft (SOFT 100, optical size 144), and its italic carries the brand's voice: the Irish slogan, the playful \"Fiú line\" under each page title, project titles and talent names. Manrope does the work around it, upright and plain. The one material is clear acrylic, matching the live glass logo. It has no tint and no frost, and you see it only through a thin grey edge, a faint bevel and a moving glint.\n\nConfirmed rejections: old-fashioned ornament in the UI (swashes, diamond markers, leaning shapes, italic nav); frosted or tinted glassmorphism; the agency-template look (gradient blobs, bento grids, big stat counters); bright colour accents in the chrome.",
+    "keyCharacteristics": [
+      "Always dark. Near-black Ink page with warm off-white type.",
+      "Footage runs full-bleed, one project per screen, with scroll-snap.",
+      "Clear-acrylic glass is the only material, and the only thing that rises off the page.",
+      "Fraunces italic for the brand voice; upright Manrope for anything you operate.",
+      "A 64px left rail on desktop. On phones, a floating bar with the logo and a glass menu button.",
+      "Motion settles like a weighted object, with no bounce, and all of it turns off under reduced motion."
+    ],
+    "rules": [
+      {
+        "name": "The Footage Is the Colour Rule",
+        "body": "Colour on screen comes from the films and stills. The chrome stays Ink, white and grey. Signal Red marks an error or a count and nothing else: no red links, no red buttons, no red decoration.",
+        "section": "colors"
+      },
+      {
+        "name": "The Scrim Rule",
+        "body": "Nothing light sits on footage without a Scrim under it, and the Scrim is light falling off, never a band: soft gradients that fade to nothing, no hard edges, no opaque strips. Text over imagery must hold 4.5:1 against the brightest frame it can land on, and icons 3:1; the scrim, not a text shadow, is what guarantees it. Where the footage is usually dark enough on its own, the Scrim can be adaptive: measured per still and applied only to the frames that need it (the rail over Home's hero, see Navigation).",
+        "section": "colors"
+      },
+      {
+        "name": "The Light-Dark Rule",
+        "body": "Every colour token is declared with `light-dark()` and re-declared on each `[data-surface]` element, so a surface can be pinned to light without any JS. New colours follow the same pattern; never hard-code a dark-only value on an adaptive surface.",
+        "section": "colors"
+      },
+      {
+        "name": "The Upright Chrome Rule",
+        "body": "Italic Fraunces is for content: the slogan, taglines, project titles, talent names. Anything you operate (nav, pills, labels, fields, footer) is upright Manrope. The one exception is the full-screen phone menu, whose links are upright Fraunces at 3rem.",
+        "section": "typography"
+      },
+      {
+        "name": "The Irish Stays Irish Rule",
+        "body": "The slogan is set in Irish in every language, with an optional gloss below it in Manrope. Never translate it in the display line.",
+        "section": "typography"
+      },
+      {
+        "name": "The One Lift Rule",
+        "body": "Only glass lifts. If something needs to stand off the page and it isn't a glass pill, button or panel, it doesn't stand off the page.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Clear Acrylic Rule",
+        "body": "Glass has no colour. The face tint stays at or under 7% white, even on hover. Small pieces blur 2px at most. Panels that carry text (drawers, forms) may frost to 12px with a 30% tint, because they have to stay readable. Under `prefers-reduced-transparency` glass becomes a 92% opaque surface.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** let footage fill the frame: full-bleed, no corners, one project per screen.",
+      "**Do** build every raised control from the glass classes (`.glass`, `.glass-piece`, `.glass-interactive`) so edge, bevel, glint, tilt and press stay consistent.",
+      "**Do** mark the current page or filter with the brighter bevel and the 3px dot, and nothing more.",
+      "**Do** set brand voice (slogan, taglines, titles, names) in soft italic Fraunces, and everything you operate in upright Manrope.",
+      "**Do** use `light-dark()` tokens and `data-surface` for every colour, so a surface can be pinned light.",
+      "**Do** honour `prefers-reduced-motion` (no tilt, no drift, no pulse) and `prefers-reduced-transparency` (opaque glass).",
+      "**Do** pad every screen edge with `env(safe-area-inset-*)`.",
+      "**Do** put a Scrim under anything light that sits on footage, and use `on-image` / `scrim` rather than literal white and black there.",
+      "**Do** give every control a tap area of at least 44px, even when it looks smaller."
+    ],
+    "donts": [
+      "**Don't** add ornament to the chrome: no swashes, diamond markers, leaning shapes or italic nav.",
+      "**Don't** tint or frost glass: no coloured glass, no heavy blur on pills, and nothing above 7% white on the face.",
+      "**Don't** reach for the agency-template look: no gradient blobs, bento grids or big stat counters.",
+      "**Don't** add bright colour to the UI. Signal Red is for errors and counts only.",
+      "**Don't** put drop shadows on cards, images or text blocks; only glass lifts.",
+      "**Don't** put projects or talent in card grids; they are slides and a name index.",
+      "**Don't** translate the slogan in its display line."
+    ]
+  }
+}

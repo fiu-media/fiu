@@ -1,12 +1,14 @@
 import { defineArrayMember, defineField, defineType } from "sanity";
 
+import { formatShortDate } from "../../lib/dates";
+import { ENQUIRY_TYPES } from "../../lib/forms/enquiry-types";
+
 // Written by the site's server actions (see #10). Editors can only change `status`.
 const readOnly = true;
 
 // List and header previews: enough to tell requests apart and see what's outstanding at a glance.
 const capitalise = (value?: string) => (value ? value[0].toUpperCase() + value.slice(1) : undefined);
-const shortDate = (date?: string) =>
-  date ? new Date(`${date}T00:00:00`).toLocaleDateString("en-IE", { day: "numeric", month: "short" }) : undefined;
+const shortDate = (date?: string) => (date ? formatShortDate(date, "en-IE") : undefined);
 const excerpt = (text?: string, length = 70) => {
   const flat = text?.replace(/\s+/g, " ").trim();
   return flat && flat.length > length ? `${flat.slice(0, length).trimEnd()}…` : flat;
@@ -111,7 +113,7 @@ export const contactMessage = defineType({
       name: "enquiryType",
       type: "string",
       readOnly,
-      options: { list: ["Project", "Talent", "Rentals", "Other"] },
+      options: { list: [...ENQUIRY_TYPES] },
     }),
     defineField({ name: "message", type: "text", readOnly }),
     defineField({ name: "createdAt", type: "datetime", readOnly }),

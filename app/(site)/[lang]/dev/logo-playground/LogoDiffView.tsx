@@ -3,14 +3,7 @@
 import { ArrowRight } from "lucide-react";
 import { useMemo } from "react";
 
-import {
-  type ConfigDiff,
-  DIFF_GROUP_LABELS,
-  DIFF_GROUP_ORDER,
-  type DiffEntry,
-  type DiffGroup,
-  type DiffValue,
-} from "@/features/logo";
+import { type ConfigDiff, DIFF_GROUP_LABELS, DIFF_GROUP_ORDER, type DiffEntry, type DiffGroup, type DiffValue } from "./logoDiff";
 
 function formatNumber(n: number): string {
   if (Number.isInteger(n)) return String(n);

@@ -306,7 +306,7 @@ export function ProjectSlide({
           // Keeps the white logo, filter pills and counter legible over bright covers.
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-x-0 top-0 h-44 bg-gradient-to-b from-black/45 to-transparent"
+            className="pointer-events-none absolute inset-x-0 top-0 h-44 bg-gradient-to-b from-scrim/45 to-transparent"
           />
         )}
 
@@ -330,14 +330,14 @@ export function ProjectSlide({
             allowFullScreen
             style={VIMEO_FRAME_STYLE}
             className={cn(
-              "absolute inset-0 size-full border-0 bg-black transition-opacity duration-500 motion-reduce:transition-none",
+              "absolute inset-0 size-full border-0 bg-scrim transition-opacity duration-500 motion-reduce:transition-none",
               revealed ? "opacity-100" : "opacity-0",
             )}
           />
         ) : (
           <div
             className={cn(
-              "absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 bg-gradient-to-t from-black/75 via-black/30 to-transparent px-5 pt-32 pb-[max(1.5rem,env(safe-area-inset-bottom))] md:px-10 md:pb-10",
+              "absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 bg-gradient-to-t from-scrim/75 via-scrim/30 to-transparent px-5 pt-32 pb-[max(1.5rem,env(safe-area-inset-bottom))] md:px-10 md:pb-10",
               href && "max-sm:flex-col max-sm:items-start",
             )}
           >
@@ -351,8 +351,8 @@ export function ProjectSlide({
                   title
                 )}
               </Heading>
-              <p className="mt-1 text-sm text-white/80 md:text-base">{meta}</p>
-              {role && <p className="mt-1 text-sm text-white/65">{role}</p>}
+              <p className="mt-1 text-sm text-on-image/80 md:text-base">{meta}</p>
+              {role && <p className="mt-1 text-sm text-on-image/65">{role}</p>}
             </div>
             <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 md:gap-3">
               {href && dict.view && (
@@ -378,8 +378,8 @@ export function ProjectSlide({
         )}
 
         {playing && !revealed && (
-          <div aria-hidden className="pointer-events-none absolute inset-0 grid place-items-center bg-black/30">
-            <div className="size-10 animate-spin rounded-full border-2 border-white/25 border-t-white motion-reduce:animate-none" />
+          <div aria-hidden className="pointer-events-none absolute inset-0 grid place-items-center bg-scrim/30">
+            <div className="size-10 animate-spin rounded-full border-2 border-on-image/25 border-t-on-image motion-reduce:animate-none" />
           </div>
         )}
       </div>

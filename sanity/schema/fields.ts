@@ -1,6 +1,7 @@
 import { defineArrayMember, defineField, type SanityDocument } from "sanity";
 
 import { defaultLocale } from "../../lib/i18n/config";
+import { apiVersion } from "../studio-env";
 
 /**
  * `readOnly` for language-neutral fields (slugs, stock, availability, facts about a project or
@@ -39,7 +40,7 @@ export const slugField = (source: string) =>
         const { document, getClient } = context;
         if (!document?.language) return context.defaultIsUnique(slug, context);
         const id = document._id.replace(/^drafts\./, "");
-        return getClient({ apiVersion: "2025-02-19" }).fetch<boolean>(
+        return getClient({ apiVersion }).fetch<boolean>(
           `!defined(*[_type == $type && language == $language && slug.current == $slug && !(_id in [$id, "drafts." + $id])][0]._id)`,
           { type: document._type, language: document.language, slug, id },
         );

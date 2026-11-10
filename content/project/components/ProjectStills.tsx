@@ -141,19 +141,19 @@ function Lightbox({
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Backdrop className="fixed inset-0 z-50 bg-black/95 transition-opacity duration-300 data-ending-style:opacity-0 data-starting-style:opacity-0 motion-reduce:transition-none" />
+        <Dialog.Backdrop className="fixed inset-0 z-50 bg-scrim/95 transition-opacity duration-300 data-ending-style:opacity-0 data-starting-style:opacity-0 motion-reduce:transition-none" />
         <Dialog.Popup
           onKeyDown={onKeyDown}
-          className="fixed inset-0 z-50 flex flex-col text-white transition-opacity duration-300 outline-none data-ending-style:opacity-0 data-starting-style:opacity-0 motion-reduce:transition-none"
+          className="fixed inset-0 z-50 flex flex-col text-on-image transition-opacity duration-300 outline-none data-ending-style:opacity-0 data-starting-style:opacity-0 motion-reduce:transition-none"
         >
           <Dialog.Title className="sr-only">{dict.stills}</Dialog.Title>
           <div className="flex items-center justify-between px-4 pt-[max(1rem,env(safe-area-inset-top))] md:px-6">
-            <p aria-live="polite" className="text-sm text-white/80 tabular-nums">
+            <p aria-live="polite" className="text-sm text-on-image/80 tabular-nums">
               {format(dict.stillCounter, { n: index + 1, total: stills.length })}
             </p>
             <Dialog.Close
               aria-label={dict.closeStill}
-              className="grid size-11 cursor-pointer place-items-center rounded-full bg-white/10 hover:bg-white/20"
+              className="grid size-11 cursor-pointer place-items-center rounded-full bg-on-image/10 hover:bg-on-image/20"
             >
               <X aria-hidden className="size-5" />
             </Dialog.Close>

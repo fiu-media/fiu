@@ -12,21 +12,10 @@
 import { createReadStream } from "node:fs";
 import { basename, join } from "node:path";
 
-import { createClient } from "@sanity/client";
+import { toolingClient } from "../sanity/tooling-client";
 
-function env(name: string) {
-  const value = process.env[name];
-  if (!value) throw new Error(`Missing ${name} (set it in .env.local)`);
-  return value;
-}
-
-const client = createClient({
-  projectId: env("NEXT_PUBLIC_SANITY_PROJECT_ID"),
-  dataset: env("NEXT_PUBLIC_SANITY_DATASET"),
-  token: env("SANITY_API_WRITE_TOKEN"),
-  apiVersion: "2026-10-01",
-  useCdn: false,
-});
+// `published` is the client's default perspective; keep it, so what counts as already existing is unchanged.
+const client = toolingClient({ token: "write", perspective: "published" });
 
 // Stills from public/stills, shared out among the sample projects. The mockup's gear photos are
 // retailer/stock images, so rental items deliberately get no images until Fiú shoots its own.

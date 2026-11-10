@@ -71,7 +71,7 @@ test.describe("copy link", () => {
     await page.goto(`/rentals/quote?pickup=${isoDateFromNow(14)}&return=${isoDateFromNow(16)}&item=${slug}`);
     await expect(page.getByRole("button", { name: quote.copyLink })).toBeVisible();
     await page.waitForLoadState("networkidle");
-    const { violations } = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
+    const { violations } = await new AxeBuilder({ page }).analyze();
     expect(violations.map((v) => `${v.id}: ${v.help}`)).toEqual([]);
   });
 

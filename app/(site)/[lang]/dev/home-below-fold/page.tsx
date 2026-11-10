@@ -1,3 +1,5 @@
+import "./seams.css";
+
 import { ArrowDown } from "lucide-react";
 import type { Metadata } from "next";
 import Image from "next/image";
@@ -23,6 +25,7 @@ import { WORK_QUERY } from "@/content/project";
 import { ABOUT_QUERY } from "@/content/siteSettings";
 import { AboutContacts } from "@/features/about";
 import { fallbackStills, HeroFade } from "@/features/home";
+import { cn } from "@/lib/cn";
 import { defaultLocale, isLocale, type Locale, localizedPath } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import logo from "@/public/brand/fiu-logo.svg";
@@ -59,11 +62,24 @@ const folds = {
   g: FoldReelClosing,
 } satisfies Record<Option, (props: FoldProps) => React.ReactNode>;
 
-// How the hero meets the fold, as seen from the side rail. Home ships "fade" (the photo dissolving into ink); the others
-// are kept for comparison: the photo ending in a hard edge, a frosted rail strip, and the fade with the frosted rail.
-const SEAMS = ["fade", "none", "rail", "both"] as const;
+// How the hero meets the fold. Home ships "none" (a hard edge at the fold, so the first screen is the still alone); the
+// others are kept for comparison. Fade dissolves the foot of the first screen into ink. Mirror, Light spill and Frame edge
+// leave the first screen whole and add 14dvh below it: a reflection of the still, its colours spilt as soft light, or a
+// hairline at the cut. Lights down dims the still as it scrolls away. Frosted rail and Fade + rail are the older rail looks.
+const SEAMS = ["none", "fade", "mirror", "spill", "frame", "lights", "rail", "both"] as const;
 type Seam = (typeof SEAMS)[number];
-const seamName: Record<Seam, string> = { fade: "Fade", none: "Hard edge", rail: "Frosted rail", both: "Fade + rail" };
+const seamName: Record<Seam, string> = {
+  none: "Hard edge",
+  fade: "Fade",
+  mirror: "Mirror",
+  spill: "Light spill",
+  frame: "Frame edge",
+  lights: "Lights down",
+  rail: "Frosted rail",
+  both: "Fade + rail",
+};
+/** These seams draw below the first screen, so it is followed by 14dvh of room for them. */
+const tailSeams: readonly Seam[] = ["mirror", "spill"];
 
 // Sample copy for what the editors haven't written yet (and for an empty dataset).
 const sampleSlogan = "Telling a new generation of stories.";
@@ -103,7 +119,8 @@ async function Options({
   if (!isLocale(lang)) notFound();
   const { option: requested, seam: requestedSeam } = await searchParams;
   const option: Option = OPTIONS.find((o) => o === requested) ?? "a";
-  const seam: Seam = SEAMS.find((s) => s === requestedSeam) ?? "fade";
+  const seam: Seam = SEAMS.find((s) => s === requestedSeam) ?? "none";
+  const tail = tailSeams.includes(seam);
   const href = (o: Option, s: Seam) => `${localizedPath(lang, "/dev/home-below-fold")}?option=${o}&seam=${s}`;
   const [dict, { about, projects }] = await Promise.all([getDictionary(lang), getContent(lang)]);
 
@@ -137,22 +154,36 @@ async function Options({
     <div data-surface="cinematic" className="relative isolate bg-ink text-fg">
       <SiteNav lang={lang} onImage blurRail={seam === "rail" || seam === "both"} />
 
-      {/* Stand-in for Home's first screen. */}
-      <header className="relative isolate grid h-dvh snap-start place-items-center overflow-hidden">
-        <Image
-          src={fallbackStills[0].src}
-          width={fallbackStills[0].width}
-          height={fallbackStills[0].height}
-          alt=""
-          priority
-          sizes="100vw"
-          className="absolute inset-0 -z-10 size-full object-cover"
-        />
-        <Image src={logo} alt="" priority className="h-auto w-[80vw] max-w-[640px] md:w-[42vw] md:max-w-none" />
-        {/* Under the logo, above the photo: in the real hero it sits between the stills and the logo layers. */}
-        {(seam === "fade" || seam === "both") && <HeroFade className="-z-10" />}
-        <ArrowDown aria-hidden className="absolute bottom-[max(2rem,env(safe-area-inset-bottom))] size-5 text-white/70" />
-      </header>
+      {/* Stand-in for Home's first screen, plus room below it for the seams that draw there. */}
+      <div className={cn(tail && "overflow-hidden pb-[14dvh]")}>
+        <header
+          className={cn(
+            "relative isolate grid h-dvh snap-start place-items-center",
+            !tail && "overflow-hidden",
+            seam === "lights" && "seam-lights",
+          )}
+        >
+          <Image
+            src={fallbackStills[0].src}
+            width={fallbackStills[0].width}
+            height={fallbackStills[0].height}
+            alt=""
+            priority
+            sizes="100vw"
+            className={cn("absolute inset-0 -z-10 size-full object-cover", seam === "mirror" && "seam-mirror")}
+          />
+          {seam === "spill" && (
+            <div aria-hidden className="seam-spill">
+              <div style={{ backgroundImage: `url("${fallbackStills[0].blurDataURL}")` }} />
+            </div>
+          )}
+          {seam === "frame" && <div aria-hidden className="absolute inset-x-0 bottom-0 h-px bg-white/12" />}
+          <Image src={logo} alt="" priority className="h-auto w-[80vw] max-w-[640px] md:w-[42vw] md:max-w-none" />
+          {/* Under the logo, above the photo: in the real hero it sits between the stills and the logo layers. */}
+          {(seam === "fade" || seam === "both") && <HeroFade className="-z-10" />}
+          <ArrowDown aria-hidden className="absolute bottom-[max(2rem,env(safe-area-inset-bottom))] size-5 text-white/70" />
+        </header>
+      </div>
 
       <main className={railInset}>
         <Fold {...props} />

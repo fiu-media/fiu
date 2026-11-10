@@ -17,7 +17,7 @@ async function audit(page: Page, path: string, open?: (page: Page) => Promise<vo
   // Wait for the page to settle (skeletons gone, images decoded) before measuring.
   await page.waitForLoadState("networkidle");
   await open?.(page);
-  const { violations } = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
+  const { violations } = await new AxeBuilder({ page }).analyze();
   expect(
     violations.map((v) => `${v.id} (${v.impact}): ${v.help}\n${v.nodes.map((n) => `  ${n.target.join(" ")}`).join("\n")}`),
     `Accessibility violations on ${path}`,

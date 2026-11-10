@@ -5,7 +5,7 @@ import { cn } from "@/lib/cn";
 // `light` sits over a dark backdrop (the stills lightbox); `dark` sits over a bright photo (the rental gallery).
 const tones = {
   light: {
-    base: "bg-white/10 hover:bg-white/20 max-md:bg-black/40",
+    base: "bg-on-image/10 hover:bg-on-image/20 max-md:bg-scrim/40",
     left: "left-2 md:left-6",
     right: "right-2 md:right-6",
   },

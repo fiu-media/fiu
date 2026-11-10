@@ -5,6 +5,7 @@ import { createContext, type CSSProperties, type ReactNode, use, useRef } from "
 import { cn } from "@/lib/cn";
 import { type FormErrorCode, toErrorCode } from "@/lib/forms/state";
 
+import { useFormLabel } from "./FormLabels";
 import { useAutoGrow } from "./useAutoGrow";
 
 export type ErrorMessages = Record<FormErrorCode, string>;
@@ -73,6 +74,8 @@ export function FieldFrame({
 }: Pick<Props, "field" | "label" | "optionalLabel" | "required" | "children">) {
   const messages = use(FormMessages)!;
   const error = errorMessage(messages, field.errors);
+  // The error summary names the field by this label, so it is written once, here.
+  useFormLabel(field, label);
   return (
     <div className="flex min-w-0 flex-col gap-1.5">
       <label htmlFor={field.id} className="text-sm font-medium">

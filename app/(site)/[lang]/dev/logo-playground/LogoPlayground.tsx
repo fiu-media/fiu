@@ -16,35 +16,36 @@ import {
 import { GlassPillButton } from "@/components/ui/Glass";
 import {
   costVsPreset,
-  diffConfigs,
-  formatConfigExport,
-  formatInteractionConfigExport,
-  formatLightingConfigExport,
-  formatMaterialConfigExport,
-  importPlaygroundConfig,
-  type LogoDisplayMode,
   type LogoGlassParams,
-  type LogoImportKind,
   type LogoMeshMode,
   type LogoPerfStats,
-  type LogoPlaygroundConfig,
   type LogoPointLightConfig,
   type LogoRimLook,
   type LogoSoftLightConfig,
-  presetConfig,
-  resetInteractionParams,
-  resetLightingParams,
-  resetMaterialParams,
   type SweepAxis,
   type SweepTechnique,
 } from "@/features/logo";
 import logo from "@/public/brand/fiu-logo.svg";
 
 import { DIFF_LABELS } from "./logoControls";
+import { diffConfigs } from "./logoDiff";
 import { LogoDiffView } from "./LogoDiffView";
+import {
+  formatConfigExport,
+  formatInteractionConfigExport,
+  formatLightingConfigExport,
+  formatMaterialConfigExport,
+  importPlaygroundConfig,
+  type LogoImportKind,
+  presetConfig,
+  resetInteractionParams,
+  resetLightingParams,
+  resetMaterialParams,
+} from "./playgroundConfig";
+import type { LogoDisplayMode, LogoPlaygroundConfig } from "./playgroundSchemas";
 import { type SweepMode, useSweepState } from "./useSweepState";
 
-const LogoScene = dynamic(() => import("@/features/logo/LogoScene"), { ssr: false });
+const PlaygroundScene = dynamic(() => import("./PlaygroundScene"), { ssr: false });
 // Leva reads Math.random while creating its store, so it renders on the client only.
 const LevaParams = dynamic(() => import("./LevaParams").then((m) => m.LevaParams), { ssr: false });
 
@@ -341,14 +342,12 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
       {showLive && (
         <SceneBoundary key={`${config.meshMode}-${config.display}`} onError={onFail}>
           <div aria-hidden className="absolute inset-0 transition-opacity duration-500" style={{ opacity: sceneReady ? 1 : 0 }}>
-            <LogoScene
+            <PlaygroundScene
               stills={sceneStills}
               index={index}
               onReady={onReady}
               meshMode={config.meshMode}
-              rimLook={config.rimLook}
               params={config.params}
-              measurePerf
               sweep={sweep.sweep}
               onPerf={setPerf}
             />
