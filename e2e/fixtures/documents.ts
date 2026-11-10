@@ -1,3 +1,4 @@
+import { features } from "../../lib/features";
 import { featuredTalent, type PhotoKey, project, projectType, rentalCategories, rentalItems, role, talentRoster } from "./data";
 
 type Doc = { _id: string; _type: string; [field: string]: unknown };
@@ -20,27 +21,30 @@ export function fixtureDocuments(assets: Record<PhotoKey, string>): Doc[] {
 
   const docs: Doc[] = [];
 
-  for (const category of Object.values(rentalCategories)) {
-    docs.push({ _id: category.id, _type: "rentalCategory", language: "en", title: category.title, slug: slug(category.slug) });
-  }
+  // Rentals is hidden (404s) while the flag is off, so nothing needs its content.
+  if (features.rentals) {
+    for (const category of Object.values(rentalCategories)) {
+      docs.push({ _id: category.id, _type: "rentalCategory", language: "en", title: category.title, slug: slug(category.slug) });
+    }
 
-  for (const item of Object.values(rentalItems)) {
-    docs.push({
-      _id: item.id,
-      _type: "rentalItem",
-      language: "en",
-      name: item.name,
-      slug: slug(item.slug),
-      category: ref(item.category.id),
-      brand: "E2E",
-      images: item.photos.map(arrayImage),
-      summary: `A test item with ${item.maxQuantity} in stock.`,
-      keyFeatures: ["Made for the test suite"],
-      specs: [{ _type: "spec", _key: "spec-1", key: "Stock", value: String(item.maxQuantity) }],
-      includedInKit: ["A case"],
-      maxQuantity: item.maxQuantity,
-      available: true,
-    });
+    for (const item of Object.values(rentalItems)) {
+      docs.push({
+        _id: item.id,
+        _type: "rentalItem",
+        language: "en",
+        name: item.name,
+        slug: slug(item.slug),
+        category: ref(item.category.id),
+        brand: "E2E",
+        images: item.photos.map(arrayImage),
+        summary: `A test item with ${item.maxQuantity} in stock.`,
+        keyFeatures: ["Made for the test suite"],
+        specs: [{ _type: "spec", _key: "spec-1", key: "Stock", value: String(item.maxQuantity) }],
+        includedInKit: ["A case"],
+        maxQuantity: item.maxQuantity,
+        available: true,
+      });
+    }
   }
 
   docs.push({ _id: role.id, _type: "role", language: "en", title: role.title, slug: slug(role.slug) });

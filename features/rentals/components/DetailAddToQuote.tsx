@@ -5,7 +5,7 @@ import { useId, useState } from "react";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { format } from "@/lib/i18n/format";
 
-import { useCatalogue } from "../basket/CatalogueContext";
+import { useItemMax } from "../basket/CatalogueContext";
 import { AddToQuote } from "./AddToQuote";
 import { QuantityField } from "./QuantityField";
 
@@ -24,7 +24,7 @@ export function DetailAddToQuote({
 }) {
   const id = useId();
   const [qty, setQty] = useState(1);
-  const max = useCatalogue()[itemId]?.max ?? maxQuantity ?? 99;
+  const max = useItemMax(itemId, maxQuantity ?? undefined);
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-wrap items-center gap-3">

@@ -1,6 +1,7 @@
 import { isPossiblePhoneNumber, parsePhoneNumberFromString } from "libphonenumber-js/min";
 import { z } from "zod";
 
+import { MAX_QTY } from "@/features/rentals/basket/quantity";
 import { isIsoDate, isValidRange, rentalDays, todayInDublin } from "@/lib/dates";
 import { isEmailAddress } from "@/lib/email/address";
 import { locales } from "@/lib/i18n/config";
@@ -46,7 +47,7 @@ const phone = z
 const isoDate = z.iso.date({ error: missing("dateInvalid") });
 
 const lines = z
-  .array(z.object({ itemId: z.string().min(1).max(200), qty: z.number().int().min(1).max(99) }))
+  .array(z.object({ itemId: z.string().min(1).max(200), qty: z.number().int().min(1).max(MAX_QTY) }))
   .min(1, "empty")
   .max(100);
 

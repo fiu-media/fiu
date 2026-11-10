@@ -7,7 +7,7 @@ import { useQuoteBasket } from "@/features/rentals/basket/store";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { format } from "@/lib/i18n/format";
 
-import { useCatalogue } from "../basket/CatalogueContext";
+import { useItemMax } from "../basket/CatalogueContext";
 
 export function AddToQuote({
   itemId,
@@ -23,7 +23,7 @@ export function AddToQuote({
   quantity?: number;
 }) {
   const { lines, add } = useQuoteBasket();
-  const max = useCatalogue()[itemId]?.max ?? 99;
+  const max = useItemMax(itemId);
   const inQuote = lines.find((l) => l.itemId === itemId)?.qty ?? 0;
   const atMax = inQuote >= max;
   return (

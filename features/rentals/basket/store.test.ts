@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { basketSchema, clampQty } from "./store";
+import { clampQty } from "./quantity";
+import { basketSchema } from "./store";
 
 const empty = { lines: [], startDate: "", endDate: "" };
 
@@ -82,10 +83,10 @@ describe("basket store", () => {
   afterEach(() => vi.unstubAllGlobals());
 
   it("adds lines, merges repeats and caps at the item max and 99", async () => {
-    const { basketActions, useBasketStore } = await load();
-    basketActions.add("a", 2, 5);
-    basketActions.add("a", 10, 5);
-    basketActions.add("b", 500);
+    const { useBasketStore } = await load();
+    useBasketStore.getState().add("a", 2, 5);
+    useBasketStore.getState().add("a", 10, 5);
+    useBasketStore.getState().add("b", 500);
     expect(useBasketStore.getState().lines).toEqual([
       { itemId: "a", qty: 5 },
       { itemId: "b", qty: 99 },
@@ -93,30 +94,30 @@ describe("basket store", () => {
   });
 
   it("clamps setQty, removes below 1, and sets dates", async () => {
-    const { basketActions, useBasketStore } = await load();
-    basketActions.add("a");
-    basketActions.setQty("a", 7, 3);
+    const { useBasketStore } = await load();
+    useBasketStore.getState().add("a");
+    useBasketStore.getState().setQty("a", 7, 3);
     expect(useBasketStore.getState().lines).toEqual([{ itemId: "a", qty: 3 }]);
-    basketActions.setQty("a", 0);
+    useBasketStore.getState().setQty("a", 0);
     expect(useBasketStore.getState().lines).toEqual([]);
-    basketActions.setDates({ startDate: "2026-12-01" });
-    basketActions.setDates({ endDate: "2026-12-03" });
+    useBasketStore.getState().setDates({ startDate: "2026-12-01" });
+    useBasketStore.getState().setDates({ endDate: "2026-12-03" });
     expect(useBasketStore.getState()).toMatchObject({ startDate: "2026-12-01", endDate: "2026-12-03" });
   });
 
   it("ensures an item is in at exactly that quantity, so doing it twice changes nothing", async () => {
-    const { basketActions, useBasketStore } = await load();
-    basketActions.add("other", 4);
-    basketActions.ensure("a", 2, 5);
-    basketActions.ensure("a", 2, 5);
+    const { useBasketStore } = await load();
+    useBasketStore.getState().add("other", 4);
+    useBasketStore.getState().ensure("a", 2, 5);
+    useBasketStore.getState().ensure("a", 2, 5);
     expect(useBasketStore.getState().lines).toEqual([
       { itemId: "other", qty: 4 },
       { itemId: "a", qty: 2 },
     ]);
     // Sets rather than adds, in either direction, and still respects the cap; other lines are left alone.
-    basketActions.ensure("a", 9, 5);
+    useBasketStore.getState().ensure("a", 9, 5);
     expect(useBasketStore.getState().lines[1]).toEqual({ itemId: "a", qty: 5 });
-    basketActions.ensure("a", 1, 5);
+    useBasketStore.getState().ensure("a", 1, 5);
     expect(useBasketStore.getState().lines).toEqual([
       { itemId: "other", qty: 4 },
       { itemId: "a", qty: 1 },
@@ -124,10 +125,10 @@ describe("basket store", () => {
   });
 
   it("persists changes and clears", async () => {
-    const { basketActions, useBasketStore } = await load();
-    basketActions.add("a");
+    const { useBasketStore } = await load();
+    useBasketStore.getState().add("a");
     expect(JSON.parse(data.get(KEY)!).state.lines).toEqual([{ itemId: "a", qty: 1 }]);
-    basketActions.clear();
+    useBasketStore.getState().clear();
     expect(useBasketStore.getState()).toMatchObject(empty);
     expect(JSON.parse(data.get(KEY)!).state).toEqual(empty);
   });
@@ -170,9 +171,9 @@ describe("basket store", () => {
       },
       addEventListener: () => {},
     });
-    const { basketActions, startBasketSync, useBasketStore } = await load();
+    const { startBasketSync, useBasketStore } = await load();
     startBasketSync();
-    basketActions.add("a", 2);
+    useBasketStore.getState().add("a", 2);
     expect(useBasketStore.persist.hasHydrated()).toBe(true);
     expect(useBasketStore.getState().lines).toEqual([{ itemId: "a", qty: 2 }]);
   });

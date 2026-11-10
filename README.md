@@ -72,7 +72,7 @@ The notification emails are React Email components in `emails/`, rendered by `li
 
 ## Deep links into the forms
 
-> **Rentals is hidden for now.** Its routes live in the private folder `app/(site)/[lang]/(adaptive)/_rentals`, so `/rentals*` returns a 404 and the nav has no Rentals link. Everything else (components, Sanity schema, quote actions, emails, form helpers) is still in place. To bring it back, follow the note at the top of `_rentals/layout.tsx`.
+> **Rentals is hidden for now.** The `features.rentals` flag in `lib/features.ts` is off, so `rentals/layout.tsx` returns a 404 for every `/rentals*` URL, and the nav and BotID leave Rentals out. Everything else (components, Sanity schema, quote actions, emails, form helpers) is still in place. To bring it back, set the flag to `true`; the Rentals e2e specs and fixtures follow it.
 
 Links can open the contact and quote forms prefilled. The parameters, how each is validated, and why name, email, phone and message are never read from a URL (they would end up in logs, analytics and Referer headers) are documented in [`lib/forms/prefill.ts`](lib/forms/prefill.ts), which also has the link builders (`contactHref`, `quoteHref`). Use those rather than assembling a query string by hand. The quote form has a "Copy link to this quote" button that builds such a link from the visitor's kit, dates, company and production.
 

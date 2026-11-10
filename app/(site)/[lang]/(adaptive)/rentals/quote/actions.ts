@@ -1,6 +1,7 @@
 "use server";
 
 import { AVAILABLE_ITEM_IDS_QUERY } from "@/content/rentalItem";
+import { MAX_QTY } from "@/features/rentals/basket/quantity";
 import { build, type KitLine } from "@/lib/email/templates";
 import { quoteSchema } from "@/lib/forms/schemas";
 import type { FormState } from "@/lib/forms/state";
@@ -25,10 +26,10 @@ export async function submitQuote(_previous: FormState, formData: FormData): Pro
         // The basket lives in the visitor's browser, so treat it as untrusted: merge duplicates and
         // only accept items that are currently published and available.
         const qtyById = new Map<string, number>();
-        for (const { itemId, qty } of data.items) qtyById.set(itemId, Math.min(99, (qtyById.get(itemId) ?? 0) + qty));
+        for (const { itemId, qty } of data.items) qtyById.set(itemId, Math.min(MAX_QTY, (qtyById.get(itemId) ?? 0) + qty));
         const found = await availableItems([...qtyById.keys()]);
         if (found.length !== qtyById.size) return { formErrors: ["unavailable"] };
-        if (found.some((item) => qtyById.get(item._id)! > (item.maxQuantity ?? 99))) return { formErrors: ["overLimit"] };
+        if (found.some((item) => qtyById.get(item._id)! > (item.maxQuantity ?? MAX_QTY))) return { formErrors: ["overLimit"] };
 
         const kit = found.map((item) => ({ name: item.name, brand: item.brand, qty: qtyById.get(item._id)! }));
         return { extra: { found, qtyById, kit } };

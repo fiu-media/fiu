@@ -2,6 +2,8 @@ import { existsSync } from "node:fs";
 
 import { defineConfig, devices } from "@playwright/test";
 
+import { features } from "./lib/features";
+
 // Locally the Sanity project, dataset and tokens come from .env.local; CI sets them directly.
 if (existsSync(".env.local")) process.loadEnvFile(".env.local");
 
@@ -12,14 +14,16 @@ const baseURL = `http://localhost:${port}`;
 // e2e/fixtures): the server command seeds it, builds the site and starts it, and the teardown removes it. See README.
 export default defineConfig({
   testDir: "e2e",
-  // Rentals is hidden (see app/(site)/[lang]/(adaptive)/_rentals), so these have no pages to drive. Remove with it.
-  testIgnore: [
-    "**/rental-gallery.spec.ts",
-    "**/rentals-filter.spec.ts",
-    "**/quote.spec.ts",
-    "**/quote-drawer.spec.ts",
-    "**/prefill.spec.ts",
-  ],
+  // While Rentals is hidden (`features.rentals`, lib/features.ts) its pages are a 404, so these have nothing to drive.
+  testIgnore: features.rentals
+    ? []
+    : [
+        "**/rental-gallery.spec.ts",
+        "**/rentals-filter.spec.ts",
+        "**/quote.spec.ts",
+        "**/quote-drawer.spec.ts",
+        "**/prefill.spec.ts",
+      ],
   globalTeardown: "./e2e/global-teardown.ts",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,

@@ -1,63 +1,25 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import Image, { getImageProps } from "next/image";
-import {
-  Component,
-  type CSSProperties,
-  type ReactNode,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  useSyncExternalStore,
-} from "react";
+import Image from "next/image";
+import { Component, type ReactNode, useMemo, useRef } from "react";
 
-import { decideLogoTier, type LogoDecision, type LogoTier, rememberTooSlow } from "@/features/logo";
+import { ArtDirectedImage } from "@/components/ui/ArtDirectedImage";
 import { cn } from "@/lib/cn";
 import { usePortrait } from "@/lib/hooks/usePortrait";
-import { prefersReducedMotion, subscribeToReducedMotion } from "@/lib/hooks/useReducedMotion";
-import { PORTRAIT } from "@/lib/media";
 import logo from "@/public/brand/fiu-logo.svg";
 
 import type { HeroStill, HeroStills } from "../mappers";
-import { SPLASH_FADE_MS, splashFadeVars } from "../splash-config";
+import { splashFadeVars } from "../splash-config";
 import { useHeroEdge } from "../useHeroEdge";
+import { useHeroIntro, useStillRotation } from "../useHeroIntro";
 import { HeroFade } from "./HeroFade";
-import { isSplashDismissed, Splash } from "./Splash";
+import { Splash } from "./Splash";
 
 const LogoScene = dynamic(() => import("@/features/logo/LogoScene"), { ssr: false });
 
-const ROTATE_SECONDS = 6;
-/** Keep the splash up at least this long so a fast load doesn't flash it. */
-const SPLASH_MIN_MS = 800;
-/** Never hold the splash longer than this, even if the live scene never reports ready. */
-const SPLASH_MAX_MS = 4000;
-/**
- * The splash fades as one (backdrop + SVG logo) over SPLASH_FADE_MS while the glass logo fades in
- * on top over the same time. The spin starts partway through that fade, so the two read as one
- * gesture. It can't start at 0: the spin front-loads its speed, and the glass would visibly turn
- * away from the SVG it is cross-fading with.
- */
-const SPIN_DELAY_MS = SPLASH_FADE_MS * 0.35;
-/**
- * Static mode has no scene to report the end of the intro, so the stills start rotating this long
- * after the splash lifts (the logo's 300 ms delay + 1 s slide, plus margin).
- */
-const INTRO_SETTLE_MS = 2000;
-/**
- * Live mode: the scene reports the end of its intro (`onIntroEnd`), which on a slow device runs
- * well past INTRO_SETTLE_MS, since its clock is frame-capped. Swapping the layout/stacking or
- * starting still rotation mid-spin costs a layer re-composite and extra WebGL work on the frames
- * that matter most. This is only a backstop for a scene that stops drawing.
- */
-const INTRO_BACKSTOP_MS = 12000;
-
 /** Mobile only: matches the padding around Home's <main> and HomeScrollLock's BLEED_PX. Symmetric, so the logo stays centred. */
 const BLEED_CLASS = "max-md:-inset-y-48";
-/** A scene that turns out too slow fades out over the SVG's own fade-in (`duration-700` below), then unmounts. */
-const SLOW_FADE_MS = 700;
 /**
  * The hidden canvas is never fully transparent: at 0 the browser stops compositing it, and then
  * the scene's quality probe (which runs while it is hidden) misses that cost and reads a slow
@@ -66,112 +28,35 @@ const SLOW_FADE_MS = 700;
 const HIDDEN_SCENE_OPACITY = 0.001;
 
 /**
- * Once per page load, like the splash: the intro has played out. The page tree is mounted again when the language is
- * switched, and the logo must come back at rest then, not spin in from the middle again.
- */
-let introPlayed = false;
-
-type Mode = "pending" | "live" | "static";
-/** splash up, then the logo spinning, then settled (stills rotate, scene interactive). */
-type Stage = "splash" | "spin" | "settled";
-
-/**
- * "pending" on the server and during hydration, then the glass logo's starting tier, or "static"
- * (the SVG) for reduced motion and devices below the floor. See `logoTier.ts`.
- */
-function useLiveSupport(): "pending" | LogoDecision {
-  return useSyncExternalStore(
-    subscribeToReducedMotion,
-    () => (prefersReducedMotion() ? "static" : decideLogoTier()),
-    () => "pending",
-  );
-}
-
-/**
  * Home hero (Canva mockup 1): rotating full-bleed stills with the glass logo.
  *
  * Mesh / rim playground controls live at `/dev/logo-playground`.
  */
 export function HomeHero({ landscape, portrait }: HeroStills) {
-  const [index, setIndex] = useState(0);
   const portraitScreen = usePortrait();
   const slides = useMemo(() => toSlides(landscape, portrait), [landscape, portrait]);
+  const {
+    mode,
+    sceneTier,
+    splashDone,
+    spinGo,
+    introDone,
+    logoAtLeft,
+    snapToLeft,
+    resumed,
+    sceneReady,
+    slow,
+    onReady,
+    onIntroEnd,
+    onFail,
+    onTooSlow,
+  } = useHeroIntro();
+  const index = useStillRotation(slides.length, introDone);
   const current = index % slides.length;
   // The desktop rail's labels sit on the still's left edge; only a bright one darkens it.
   const images = useRef<(HTMLImageElement | null)[]>([]);
   const showing = slides[current];
   useHeroEdge(images, current, (portraitScreen ? showing?.portrait : showing?.landscape)?.position);
-  const [failed, setFailed] = useState(false);
-  /**
-   * The scene ran but was too slow: it fades out over the SVG (`fading`), then unmounts. Keeps the
-   * scene's tier, since the device's own decision turns to "static" at once.
-   */
-  const [slow, setSlow] = useState<{ fading: boolean; settled: boolean; tier: LogoTier } | null>(null);
-  const [sceneReady, setSceneReady] = useState(false);
-  const support = useLiveSupport();
-  const tier: LogoTier | null = support === "pending" || support === "static" ? null : support;
-  const mode: Mode = failed || slow ? "static" : support === "pending" ? "pending" : tier ? "live" : "static";
-  const sceneTier = failed ? null : slow ? (slow.fading ? slow.tier : null) : tier;
-
-  // The intro is one schedule: the splash lifts, the glass logo starts to spin partway through the fade, and the
-  // intro settles. Held in "splash" until the gates below open, and skipped when the splash was already dismissed.
-  const [minElapsed, setMinElapsed] = useState(isSplashDismissed);
-  const [timedOut, setTimedOut] = useState(isSplashDismissed);
-  const [stage, setStage] = useState<Stage>(isSplashDismissed() ? "settled" : "splash");
-  // A hero mounted after the intro already played shows the SVG at rest (left) until the glass logo takes over in place.
-  const [resumed] = useState(() => introPlayed);
-  const splashDone = timedOut || (minElapsed && (mode === "live" ? sceneReady : mode === "static"));
-  const spinGo = stage !== "splash";
-  const introDone = stage === "settled";
-  // The static SVG logo starts centred under the splash, then glides left on desktop. Taking over from a
-  // settled glass logo, it is already there.
-  const logoAtLeft = (mode === "static" || resumed) && splashDone;
-  const snapToLeft = Boolean(slow?.settled) || resumed;
-
-  useEffect(() => {
-    const timers = [
-      window.setTimeout(() => setMinElapsed(true), SPLASH_MIN_MS),
-      window.setTimeout(() => setTimedOut(true), SPLASH_MAX_MS),
-    ];
-    return () => timers.forEach(window.clearTimeout);
-  }, []);
-
-  useEffect(() => {
-    if (!splashDone) return;
-    // A scene that ends its intro first settles the stage itself (onIntroEnd), so these never move it backwards.
-    const timers = [
-      window.setTimeout(() => setStage((s) => (s === "splash" ? "spin" : s)), SPIN_DELAY_MS),
-      window.setTimeout(() => setStage("settled"), mode === "live" ? INTRO_BACKSTOP_MS : INTRO_SETTLE_MS),
-    ];
-    return () => timers.forEach(window.clearTimeout);
-  }, [splashDone, mode]);
-
-  // Held until the intro is over so a still crossfade (and its extra rendering) never lands
-  // mid-spin.
-  useEffect(() => {
-    if (introDone) introPlayed = true;
-  }, [introDone]);
-
-  useEffect(() => {
-    if (!introDone) return;
-    const id = window.setInterval(() => setIndex((i) => (i + 1) % slides.length), ROTATE_SECONDS * 1000);
-    return () => window.clearInterval(id);
-  }, [introDone, slides.length]);
-
-  const onReady = useCallback(() => setSceneReady(true), []);
-  const onIntroEnd = useCallback(() => setStage("settled"), []);
-  const onFail = useCallback(() => setFailed(true), []);
-  const onTooSlow = useCallback(() => {
-    if (!tier) return;
-    rememberTooSlow();
-    setSlow({ fading: true, settled: introDone, tier });
-  }, [introDone, tier]);
-
-  useEffect(() => {
-    if (!slow?.fading) return;
-    const id = window.setTimeout(() => setSlow((s) => s && { ...s, fading: false }), SLOW_FADE_MS);
-    return () => window.clearTimeout(id);
-  }, [slow?.fading]);
   // The scene is client-only, so it can read the orientation up front and draw the set the screen shows.
   const sceneStills = useMemo(
     () =>
@@ -189,13 +74,18 @@ export function HomeHero({ landscape, portrait }: HeroStills) {
       {/* On mobile the photo is 12rem taller than the page above and below (BLEED_CLASS): real pixels for Safari to show behind
           its status bar and toolbar. Not fixed, or Safari would tint its bars from this layer instead. */}
       <div className={cn("absolute inset-0 -z-10", BLEED_CLASS)}>
-        {slides.map((slide, i) => (
-          <Slide
+        {slides.map(({ landscape, portrait }, i) => (
+          <ArtDirectedImage
             key={i}
-            {...slide}
-            portraitScreen={portraitScreen}
-            shown={i === current}
+            landscape={landscape}
+            portrait={portrait}
+            fill
+            quality={90}
+            sizes="100vw"
             priority={i === 0}
+            dataSanity={(portraitScreen ? portrait : landscape).dataSanity}
+            style={{ opacity: i === current ? 1 : 0 }}
+            className="transition-opacity duration-[1600ms] ease-in-out"
             imgRef={(img) => {
               images.current[i] = img;
             }}
@@ -303,52 +193,4 @@ function toSlides(landscape: HeroStill[], portrait: HeroStill[]): SlidePair[] {
     landscape: wide[i % wide.length]!,
     portrait: tall[i % tall.length]!,
   }));
-}
-
-/**
- * One slide of the hero. A `<picture>` lets the browser fetch only the still that fits the screen's orientation
- * (same as a project's cover); the hotspot and blur placeholder follow it through CSS variables, and the alt text
- * and Presentation link follow it once the client knows the orientation (the server assumes landscape).
- */
-function Slide({
-  landscape,
-  portrait,
-  portraitScreen,
-  shown,
-  priority,
-  imgRef,
-}: SlidePair & {
-  portraitScreen: boolean;
-  shown: boolean;
-  priority: boolean;
-  imgRef: (img: HTMLImageElement | null) => void;
-}) {
-  // Not `preload`: a preload link can't say which of the two sources the screen will pick.
-  const eager = priority ? ({ loading: "eager", fetchPriority: "high" } as const) : {};
-  const props = (still: HeroStill) =>
-    getImageProps({ src: still.src, alt: still.alt, fill: true, quality: 90, sizes: "100vw", ...eager }).props;
-  const wide = props(landscape);
-  const tall = props(portrait);
-  const blur = (still: HeroStill) => (still.blurDataURL ? `url("${still.blurDataURL}")` : "none");
-  const vars = {
-    "--still-position": landscape.position ?? "50% 50%",
-    "--still-position-portrait": portrait.position ?? "50% 50%",
-    "--still-blur": blur(landscape),
-    "--still-blur-portrait": blur(portrait),
-  } as CSSProperties;
-  const showing = portraitScreen ? portrait : landscape;
-
-  return (
-    <picture>
-      <source media={PORTRAIT} srcSet={tall.srcSet} sizes={tall.sizes} />
-      <img
-        {...wide}
-        ref={imgRef}
-        alt={showing.alt}
-        style={{ ...wide.style, ...vars, opacity: shown ? 1 : 0 }}
-        data-sanity={showing.dataSanity}
-        className="[background-image:var(--still-blur)] bg-cover bg-center object-cover [object-position:var(--still-position)] transition-opacity duration-[1600ms] ease-in-out portrait:[background-image:var(--still-blur-portrait)] portrait:[object-position:var(--still-position-portrait)]"
-      />
-    </picture>
-  );
 }

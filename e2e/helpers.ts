@@ -1,6 +1,10 @@
-import { expect, type Locator } from "@playwright/test";
+import { expect, type Locator, test } from "@playwright/test";
 
+import { features } from "../lib/features";
 import { TEST_EMAIL_DOMAIN } from "./fixtures/data";
+
+/** `test` while Rentals is on, `test.skip` while it is hidden (its pages are a 404, so there is nothing to drive). */
+export const rentalsTest = features.rentals ? test : test.skip;
 
 export const testEmail = () => `e2e-${crypto.randomUUID().slice(0, 8)}@${TEST_EMAIL_DOMAIN}`;
 

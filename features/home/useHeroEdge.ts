@@ -10,7 +10,7 @@ import { coverPlacement, edgeForLuminance, parsePosition, stripLuminance } from 
 /** Read by `.hero-edge` in globals.css: how dark the edge gets, 0 to 1, and how long it takes to get there. */
 export const HERO_EDGE_VAR = "--hero-edge";
 const DURATION_VAR = "--hero-edge-duration";
-/** The stills' crossfade (HomeHero's Slide). */
+/** The stills' crossfade (the hero's slides in HomeHero). */
 const CROSSFADE_MS = 1600;
 /**
  * Never lag a crossfade: when the next still needs more darkening, reach it before that still has faded in; when it

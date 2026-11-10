@@ -15,8 +15,8 @@ const TODAY = "2026-11-03";
 const q = (query: string) => new URLSearchParams(query);
 
 const catalogue = {
-  "rental-cam": { id: "rental-cam", href: "/rentals/cam", max: 5 },
-  "rental-light": { id: "rental-light", href: "/ga/rentals/light", max: 99 },
+  "rental-cam": { id: "rental-cam", slug: "cam", max: 5 },
+  "rental-light": { id: "rental-light", slug: "light", max: 99 },
 };
 
 describe("contactPrefill", () => {

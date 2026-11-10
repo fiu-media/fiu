@@ -9,8 +9,6 @@ import { safeStorage } from "@/lib/safe-storage";
 
 import { clampQty, MAX_QTY } from "./quantity";
 
-export { clampQty };
-
 const STORAGE_KEY = "fiu:quote-basket";
 
 const lineSchema = z.object({ itemId: z.string(), qty: z.number().int().min(1).max(MAX_QTY) });
@@ -82,15 +80,6 @@ export const useBasketStore = create<Basket & BasketActions>()(
     },
   ),
 );
-
-export const basketActions: BasketActions = {
-  add: (...args) => useBasketStore.getState().add(...args),
-  setQty: (...args) => useBasketStore.getState().setQty(...args),
-  ensure: (...args) => useBasketStore.getState().ensure(...args),
-  remove: (...args) => useBasketStore.getState().remove(...args),
-  setDates: (...args) => useBasketStore.getState().setDates(...args),
-  clear: () => useBasketStore.getState().clear(),
-};
 
 let started = false;
 
