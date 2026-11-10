@@ -1,7 +1,6 @@
 import { useTexture } from "@react-three/drei";
-import { useFrame, useThree } from "@react-three/fiber";
+import { useFrame } from "@react-three/fiber";
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import * as THREE from "three";
 
 import { at } from "@/lib/at";
 
@@ -17,6 +16,7 @@ import { CROSSFADE_SECONDS, type Fade } from "./shared";
 import { configureStill, NEUTRAL_TINT, resolveStillTint, type SceneStill } from "./stills";
 import { SparkLights, Studio } from "./Studio";
 import { type SweepRig, useSweepRig } from "./sweepRig";
+import { useRestStills } from "./useRestStills";
 
 export function Scene({
   stills,
@@ -56,7 +56,6 @@ export function Scene({
   introPlayed: boolean;
   splashLift: boolean | undefined;
 }) {
-  const gl = useThree((s) => s.gl);
   const [tier, setTier] = useState(startTier);
   const readyRef = useRef(false);
   const tieredParams = useMemo(() => (adaptiveQuality ? applyLogoTier(params, tier) : params), [adaptiveQuality, params, tier]);
@@ -85,42 +84,9 @@ export function Scene({
     setIntroOver(true);
     onIntroEnd?.();
   }, [onIntroEnd]);
-  const [rest, setRest] = useState<Record<string, THREE.Texture>>({});
   const loadRest = introOver || at(stills, index).src !== firstSrc;
   const restKey = stills.map((s) => s.src).join("|");
-  useEffect(() => {
-    if (!loadRest) return;
-    let cancelled = false;
-    const loader = new THREE.TextureLoader();
-    // Fire and forget: the stills past the first load in the background, and a failed one is skipped below.
-    void (async () => {
-      for (const src of restKey.split("|")) {
-        if (src === firstSrc) continue;
-        try {
-          const t = configureStill(await loader.loadAsync(src));
-          // `cancelled` is set by the cleanup below while this awaits, which the types can't see.
-          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-          if (cancelled) {
-            t.dispose();
-            return;
-          }
-          // Upload now, at idle, rather than inside the first crossfade that samples it.
-          gl.initTexture(t);
-          setRest((prev) => ({ ...prev, [src]: t }));
-        } catch (error) {
-          // A still that fails to load just keeps the previous one behind the glass.
-          console.warn("[LogoScene] still failed to load:", src, error);
-        }
-        await new Promise((resolve) => setTimeout(resolve, 60));
-        // `cancelled` is set by the cleanup below while this awaits, which the types can't see.
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-        if (cancelled) return;
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [loadRest, restKey, firstSrc, gl]);
+  const rest = useRestStills(restKey, firstSrc, loadRest);
 
   const textures = useMemo(() => stills.map((s) => (s.src === firstSrc ? first : rest[s.src])), [stills, firstSrc, first, rest]);
   const { keepAwake, awakeRef } = useKeepAwake();

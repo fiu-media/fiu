@@ -2,10 +2,9 @@
 
 import { useEffect, useLayoutEffect } from "react";
 
+import { BLEED_PX, homeIsLocked, nudgeHomeScroll } from "@/lib/homeScroll";
 import { matches } from "@/lib/hooks/useMediaQuery";
 import { MOBILE } from "@/lib/media";
-
-import { BLEED_PX, homeIsLocked, nudgeHomeScroll } from "../bleed";
 
 /**
  * Keeps Home's scroll from going above the hero (mobile only).

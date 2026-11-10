@@ -1,13 +1,8 @@
+import { BLEED_PX } from "@/lib/bleedPx";
 import { MOBILE } from "@/lib/media";
 
-// Apart from bleed.ts because the Home page (a Server Component) imports the script, and bleed.ts reaches the
-// client-only media hooks.
-
-/**
- * Matches the `max-md:py-48` bleed around Home's hero (12rem) and HomeHero's `max-md:-inset-y-48`: taller than the biggest
- * browser toolbar (Comet's is about 155pt).
- */
-export const BLEED_PX = 192;
+// Apart from lib/homeScroll.ts because the Home page (a Server Component) imports the script, and homeScroll.ts reaches
+// the client-only media hooks.
 
 /**
  * Puts the scroll at the hero (the bottom of the top bleed) while the HTML is still parsing, so the first paint is already

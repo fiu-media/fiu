@@ -1,7 +1,7 @@
 import { matches } from "@/lib/hooks/useMediaQuery";
 import { MOBILE } from "@/lib/media";
 
-import { BLEED_PX } from "./pin";
+import { BLEED_PX } from "./bleedPx";
 
 export { BLEED_PX };
 

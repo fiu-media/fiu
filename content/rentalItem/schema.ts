@@ -1,7 +1,7 @@
 import { orderRankField, orderRankOrdering } from "@sanity/orderable-document-list";
 import { defineArrayMember, defineField, defineType } from "sanity";
 
-import { MAX_QTY } from "../../features/rentals/basket/quantity";
+import { MAX_QTY } from "../../lib/forms/quantity";
 import {
   defaultLanguageReference,
   imageArrayMember,

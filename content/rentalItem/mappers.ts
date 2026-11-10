@@ -1,10 +1,10 @@
-import type { CatalogueItem } from "@/features/rentals/basket/CatalogueContext";
-import { MAX_QTY } from "@/features/rentals/basket/quantity";
-import type { CatalogueCard } from "@/features/rentals/components/RentalCatalogue";
+import { MAX_QTY } from "@/lib/forms/quantity";
 import type { Locale } from "@/lib/i18n/config";
 import { href, routes } from "@/lib/routes";
 import type { QUOTE_CATALOGUE_QUERY_RESULT, RENTAL_ITEM_QUERY_RESULT, RENTALS_QUERY_RESULT } from "@/sanity.types";
 import { publishedId, type SizedImage, toSizedImage } from "@/sanity/lib/image";
+
+import type { CatalogueCard, CatalogueItem } from "./types";
 
 /** Image widths (px) the rental views ask for. */
 const CARD_WIDTH = 800;

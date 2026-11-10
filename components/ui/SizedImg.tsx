@@ -3,7 +3,7 @@ import type { ComponentProps } from "react";
 
 import { cn } from "@/lib/cn";
 import { type AllowUndefined, omitUndefined } from "@/lib/omitUndefined";
-import type { SizedImage } from "@/sanity/lib/image";
+import type { SizedImage } from "@/lib/sizedImage";
 
 type SizedImgProps = AllowUndefined<
   Omit<ComponentProps<typeof Image>, "src" | "width" | "height" | "alt" | "placeholder" | "blurDataURL">

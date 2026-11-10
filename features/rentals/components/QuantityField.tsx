@@ -3,7 +3,7 @@
 import { NumberField } from "@base-ui/react/number-field";
 import { Minus, Plus } from "lucide-react";
 
-import { clampQty } from "@/features/rentals/basket/quantity";
+import { clampQty } from "@/lib/forms/quantity";
 
 const stepClass =
   "grid size-8 cursor-pointer place-items-center rounded-full border border-line text-base hover:bg-line data-disabled:cursor-not-allowed data-disabled:opacity-40 data-disabled:hover:bg-transparent";

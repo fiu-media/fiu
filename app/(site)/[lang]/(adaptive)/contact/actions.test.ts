@@ -12,7 +12,7 @@ vi.mock("botid/server", () => ({ checkBotId: mocks.checkBotId }));
 vi.mock("@/sanity/lib/writeClient", () => ({ writeClient: { create: mocks.create } }));
 vi.mock("@/lib/email/send", () => ({ sendEmail: mocks.sendEmail }));
 vi.mock("@/lib/email/contacts", () => ({ createContact: mocks.createContact }));
-vi.mock("@/lib/email/settings", () => ({ getRecipient: mocks.getRecipient }));
+vi.mock("@/content/siteSettings", () => ({ getRecipient: mocks.getRecipient }));
 
 import { at } from "@/lib/at";
 import { getDictionary } from "@/lib/i18n/dictionaries";

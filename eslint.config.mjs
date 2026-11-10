@@ -1,7 +1,10 @@
+import { readdirSync } from "node:fs";
+
 import vitest from "@vitest/eslint-plugin";
 import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
+import { createTypeScriptImportResolver } from "eslint-import-resolver-typescript";
 import importX from "eslint-plugin-import-x";
 import jsxA11y from "eslint-plugin-jsx-a11y";
 import playwright from "eslint-plugin-playwright";
@@ -11,6 +14,28 @@ import tseslint from "typescript-eslint";
 // Every `@next/next/*` rule the Next presets turn on.
 const nextRules = [...new Set([...nextVitals, ...nextTs].flatMap((c) => Object.keys(c.rules ?? {})))].filter((r) =>
   r.startsWith("@next/next/"),
+);
+
+// The folders inside `content/` and `features/`: one block of boundary rules is built for each, so a new module is covered
+// without touching this file.
+const subfolders = (dir) =>
+  readdirSync(new URL(dir, import.meta.url), { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? [e.name] : []));
+const contentTypes = subfolders("./content");
+const featureAreas = subfolders("./features");
+
+// What each layer may not import (the table in the README's "Folder structure"). `no-restricted-imports` replaces, never
+// merges, when two blocks match one file, so every block lists its layer's whole deny list. Patterns follow gitignore
+// rules: `a/**` matches what is inside `a` but not `a` itself (the module's `index.ts` import stays allowed), and `!` re-allows.
+// Only the `@/` form is checked between modules; a relative `../../features/x` slips past (the schema layer is checked both ways).
+const restrict = ({ paths = [], patterns = [] }) => ({
+  "no-restricted-imports": ["error", { paths, patterns }],
+});
+const deny = (message, ...group) => ({ group, message });
+const noApp = deny("Nothing outside app/ imports from app/.", "@/app/**");
+const noSchemaCode = deny(
+  "The Studio's schema and tooling code is not part of the site.",
+  "@/sanity/schema/**",
+  "@/sanity/studio/**",
 );
 
 const eslintConfig = defineConfig([
@@ -125,6 +150,216 @@ const eslintConfig = defineConfig([
       // Production code logs only through warn/error.
       "no-console": ["error", { allow: ["warn", "error"] }],
     },
+  },
+  {
+    // Layers, lowest first. A layer may import itself and anything below it; see the README for the table.
+    files: ["components/ui/**"],
+    rules: restrict({
+      patterns: [
+        deny(
+          "components/ui is the design system: it knows only lib/ and itself.",
+          "@/content/**",
+          "@/features/**",
+          "@/sanity/**",
+        ),
+        deny(
+          "components/ui is the design system: it knows only lib/ and itself.",
+          "@/components/layout/**",
+          "@/components/forms/**",
+          "@/components/sanity/**",
+        ),
+        deny("components/ui stays flat; reach for lib/ instead.", "../*"),
+        noApp,
+      ],
+    }),
+  },
+  {
+    files: ["components/layout/**", "components/forms/**"],
+    rules: restrict({
+      patterns: [
+        deny(
+          "Components know lib/ and components/ui, not content modules, features or Sanity.",
+          "@/content/**",
+          "@/features/**",
+          "@/sanity/**",
+        ),
+        noApp,
+      ],
+    }),
+  },
+  {
+    files: ["components/sanity/**"],
+    rules: restrict({
+      patterns: [
+        deny(
+          "Components know lib/, components/ui and sanity/lib, not content modules or features.",
+          "@/content/**",
+          "@/features/**",
+        ),
+        noApp,
+        noSchemaCode,
+      ],
+    }),
+  },
+  {
+    files: ["lib/**"],
+    rules: restrict({
+      patterns: [
+        deny(
+          "lib/ is below components, content and features: pass what it needs in, or move the shared piece down into lib/.",
+          "@/components/**",
+          "@/content/**",
+          "@/features/**",
+        ),
+        noApp,
+        noSchemaCode,
+      ],
+    }),
+  },
+  ...contentTypes.map((type) => ({
+    files: [`content/${type}/**`],
+    rules: restrict({
+      patterns: [
+        deny("A content module may use lib/, components/ and sanity/lib, never a feature.", "@/features/**"),
+        deny(
+          `Import another content module through its index.ts (@/content/<type>), not its internals.`,
+          "@/content/*/**",
+          `!@/content/${type}/**`,
+        ),
+        noApp,
+        noSchemaCode,
+      ],
+    }),
+  })),
+  ...featureAreas.map((area) => ({
+    files: [`features/${area}/**`],
+    rules: restrict({
+      patterns: [
+        deny(
+          "Import another feature through its index.ts (@/features/<area>), not its internals.",
+          "@/features/*/**",
+          `!@/features/${area}/**`,
+        ),
+        deny("Import a content module through its index.ts (@/content/<type>), not its internals.", "@/content/*/**"),
+        noApp,
+        noSchemaCode,
+      ],
+    }),
+  })),
+  {
+    // Everything the Studio, `sanity extract` and React Email load without Next's `@/` alias or any server-only code.
+    files: ["content/*/schema.ts", "sanity/schema/**", "sanity/studio/**", "emails/**"],
+    rules: restrict({
+      paths: [
+        { name: "next", message: "This code runs outside Next." },
+        { name: "react-dom", message: "This code runs outside Next." },
+        { name: "server-only", message: "This code runs outside Next." },
+      ],
+      patterns: [
+        deny("This code runs outside Next, which is what resolves `@/`: import with a relative path.", "@/**"),
+        deny("This code runs outside Next.", "next/*"),
+        deny(
+          "Schemas and emails import only sanity/schema/fields.ts and lib/ constants.",
+          "**/features/**",
+          "**/components/**",
+          "**/app/**",
+          "**/sanity/lib/**",
+        ),
+      ],
+    }),
+  },
+  {
+    // Pages, layouts and actions compose features and content modules. `loaders` is the one server-only file a page may
+    // import from a feature directly: the index also feeds client components, which must not pull in the fetch code.
+    files: ["app/**"],
+    ignores: ["app/**/dev/**"],
+    rules: restrict({
+      patterns: [
+        deny(
+          "Pages read content through a feature's or content module's loaders, not through Sanity directly.",
+          "@/sanity/lib/live",
+          "@/sanity/lib/fetch",
+        ),
+        deny(
+          "Import a feature through its index.ts (@/features/<area>) or its loaders, not its internals.",
+          "@/features/*/**",
+          "!@/features/*/loaders",
+        ),
+        deny("Import a content module through its index.ts (@/content/<type>), not its internals.", "@/content/*/**"),
+        deny("/dev is for sign-off and playgrounds; production code does not depend on it.", "@/app/**/dev/**", "**/dev/**"),
+        noSchemaCode,
+      ],
+    }),
+  },
+  // `app/**/dev/**` may import anything, so it has no block.
+  {
+    // Sanity is read through `fetchContent` (sanity/lib/fetch.ts), which owns perspectives, variants and the cache boundary.
+    files: ["**/*.{ts,tsx,mts}"],
+    ignores: ["sanity/lib/**"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        ...["cachedSanity", "getDynamicFetchOptions", "sanityFetch"].flatMap((name) => [
+          {
+            selector: `CallExpression[callee.name='${name}']`,
+            message: `Read content through a loader (fetchContent), not ${name}.`,
+          },
+          {
+            selector: `ImportSpecifier[imported.name='${name}']`,
+            message: `Read content through a loader (fetchContent), not ${name}.`,
+          },
+        ]),
+      ],
+    },
+  },
+  {
+    // `sanityFetch` is created and wrapped in live.ts (as `cachedSanity`); nothing else in sanity/lib calls it.
+    files: ["sanity/lib/**"],
+    ignores: ["sanity/lib/live.ts"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "CallExpression[callee.name='sanityFetch']",
+          message: "Only live.ts calls sanityFetch, through cachedSanity.",
+        },
+        {
+          selector: "ImportSpecifier[imported.name='sanityFetch']",
+          message: "Only live.ts calls sanityFetch, through cachedSanity.",
+        },
+      ],
+    },
+  },
+  {
+    // `no-cycle` finds nothing, and says nothing, unless it can resolve `@/` and `.ts` (the TypeScript resolver) and parse
+    // the files it follows into (the parser mapping).
+    files: ["{app,components,content,features,lib,sanity,emails}/**/*.{ts,tsx}"],
+    settings: {
+      "import-x/resolver-next": [createTypeScriptImportResolver({ project: "./tsconfig.json" })],
+      "import-x/extensions": [".ts", ".tsx", ".js"],
+      "import-x/parsers": { "@typescript-eslint/parser": [".ts", ".tsx"] },
+    },
+    rules: {
+      "import-x/no-cycle": ["error", { maxDepth: 6, ignoreExternal: true }],
+    },
+  },
+  {
+    // A file this long is doing several jobs. The exceptions are data and generated-style code that has no seams to split on.
+    files: ["**/*.{js,mjs,ts,tsx,mts}"],
+    rules: {
+      "max-lines": ["error", { max: 400, skipBlankLines: true, skipComments: true }],
+      "max-lines-per-function": ["error", { max: 150, skipBlankLines: true, skipComments: true }],
+      complexity: ["error", 20],
+    },
+  },
+  {
+    files: ["features/logo/scene/shaders.ts", "features/logo/buildLogoGeometry.ts", "lib/i18n/dictionaries/*"],
+    rules: { "max-lines": "off" },
+  },
+  {
+    // Tests list their cases inside one `describe`, and /dev holds throwaway playgrounds and sign-off options.
+    files: ["**/*.test.ts", "e2e/**", "app/**/dev/**"],
+    rules: { "max-lines": "off", "max-lines-per-function": "off", complexity: "off" },
   },
   {
     // Command-line tooling is meant to print.

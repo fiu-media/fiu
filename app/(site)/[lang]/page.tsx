@@ -3,7 +3,6 @@ import { Suspense } from "react";
 import { preload } from "react-dom";
 
 import { InlineScript } from "@/components/layout/InlineScript";
-import { railInset } from "@/components/layout/nav/rail";
 import { SiteNav } from "@/components/layout/nav/SiteNav";
 import {
   fallbackHeroStills,
@@ -18,6 +17,7 @@ import { SiteFooter } from "@/features/site";
 import { getLocale, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { LANDSCAPE, PORTRAIT } from "@/lib/media";
+import { railInset } from "@/lib/rail";
 import { pageMetadata, routes } from "@/lib/routes";
 import { cinematicViewport } from "@/lib/theme";
 

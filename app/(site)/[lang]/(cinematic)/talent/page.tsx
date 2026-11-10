@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
-import { floatingBarInset, pageTop } from "@/components/layout/nav/rail";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { PageShell } from "@/components/ui/PageShell";
 import { Skeleton, SkeletonGroup } from "@/components/ui/Skeleton";
@@ -10,6 +9,7 @@ import { getRoster, getTalentMeta, NameIndex } from "@/features/talent";
 import { cn } from "@/lib/cn";
 import { getLocale, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
+import { floatingBarInset, pageTop } from "@/lib/rail";
 import { pageMetadata, routes } from "@/lib/routes";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/talent">): Promise<Metadata> {

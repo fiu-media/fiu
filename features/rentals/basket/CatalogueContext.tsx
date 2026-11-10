@@ -2,21 +2,8 @@
 
 import { createContext, type ReactNode, useContext } from "react";
 
-import type { SizedImage } from "@/sanity/lib/image";
-
-import { MAX_QTY } from "./quantity";
-
-export type CatalogueItem = {
-  id: string;
-  name: string;
-  brand: string | null;
-  slug: string;
-  /** The item's page, in the language the catalogue was built for. */
-  href: string;
-  /** Most of this item one quote can ask for (set per item in Sanity). */
-  max: number;
-  image: SizedImage | null;
-};
+import type { CatalogueItem } from "@/content/rentalItem";
+import { MAX_QTY } from "@/lib/forms/quantity";
 
 const CatalogueContext = createContext<Record<string, CatalogueItem>>({});
 

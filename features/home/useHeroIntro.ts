@@ -2,7 +2,16 @@
 
 import { useCallback, useEffect, useReducer, useState, useSyncExternalStore } from "react";
 
-import { decideLogoTier, rememberTooSlow } from "@/features/logo";
+import {
+  decideLogoTier,
+  INTRO_BACKSTOP_MS,
+  INTRO_SETTLE_MS,
+  rememberTooSlow,
+  SLOW_FADE_MS,
+  SPIN_DELAY_MS,
+  SPLASH_MAX_MS,
+  SPLASH_MIN_MS,
+} from "@/features/logo";
 import { prefersReducedMotion, subscribeToReducedMotion } from "@/lib/hooks/useReducedMotion";
 
 import {
@@ -18,7 +27,6 @@ import {
   type Support,
 } from "./intro";
 import { markIntroPlayed } from "./session";
-import { INTRO_BACKSTOP_MS, INTRO_SETTLE_MS, SLOW_FADE_MS, SPIN_DELAY_MS, SPLASH_MAX_MS, SPLASH_MIN_MS } from "./splash-config";
 
 /**
  * "pending" on the server and during hydration, then the glass logo's starting tier, or "static"

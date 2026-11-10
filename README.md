@@ -47,7 +47,30 @@ Code is grouped by product area, not by kind. The rule for where something goes:
 | `sanity/schema/`, `sanity/studio/`                          | The Studio's schema index and shared fields, and its structure, languages, icon and Presentation resolver.                                          |
 | `app/(site)/[lang]/dev/_concepts/`                          | Design sign-off options that only the `/dev` pages use. They stay out of production modules.                                                        |
 
-Every content module and feature area has an `index.ts` that re-exports what other modules and `app/` import; import through it, and use relative or direct imports inside a module. A content module's index does not re-export `schema.ts`: only the Studio imports schemas, through `sanity/schema/index.ts`. Where an index import would create a cycle, or would pull a heavy module into the main bundle (the lazy `features/logo/LogoScene`), import the file directly.
+Every content module and feature area has an `index.ts` that re-exports what other modules and `app/` import; import through it, and use relative or direct imports inside a module. A content module's index does not re-export `schema.ts`: only the Studio imports schemas, through `sanity/schema/index.ts`. Where an index import would create a cycle, or would pull a heavy module into the main bundle (the lazy `features/logo/LogoScene`), import the file directly (a dynamic `import()` like the lazy scene's isn't checked by the lint rules). A feature's `loaders.ts` stays out of its index when client components import that index (`features/rentals`); `app/` may import such a `loaders` file directly.
+
+### Dependency rules
+
+`eslint.config.mjs` enforces these on every `npm run lint` (and so in CI and the pre-commit hook). A layer may import itself and anything it is allowed to import in the table; the lint message names the rule that was broken.
+
+| From                                                              | May import                                                                                    | May not import                                               |
+| ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `components/ui`                                                   | `lib`, `components/ui`                                                                        | `content`, `features`, `sanity`, `app`                       |
+| other `components/*`                                              | `lib`, `components/ui` (and `sanity/lib`, in `components/sanity` only)                        | `content`, `features`, `app`                                 |
+| `lib`                                                             | `lib`, `sanity/lib` (server modules)                                                          | `components`, `content`, `features`, `app`                   |
+| `content/<type>`                                                  | `lib`, `components`, `sanity/lib`, `content/<other>` (its `index.ts`)                         | `features`, `app`, other types' internals                    |
+| `content/*/schema.ts`, `sanity/schema`, `sanity/studio`, `emails` | relative imports of `sanity/schema/fields.ts` and `lib` constants                             | the `@/` alias, `next`, `react-dom`, `server-only`, app code |
+| `features/<area>`                                                 | `lib`, `components`, `sanity/lib`, `content/<type>` and `features/<other>` (their `index.ts`) | other areas' internals, `app`                                |
+| `app` (not `/dev`)                                                | `features/*` (`index.ts` or `loaders`), `content/*` (`index.ts`), `components`, `lib`         | `sanity/lib/live`, `sanity/lib/fetch`, `app/**/dev/**`       |
+| `app/**/dev/**`                                                   | anything                                                                                      |                                                              |
+
+Also enforced:
+
+- **Reading content.** Pages and components never call Sanity themselves: they go through a loader, which uses `fetchContent` (`sanity/lib/fetch.ts`). `cachedSanity`, `getDynamicFetchOptions` and `sanityFetch` can't be used outside `sanity/lib` (`sanityFetch` only in `sanity/lib/live.ts`).
+- **No import cycles** (`import-x/no-cycle`) in the source folders.
+- **Size.** A file may have at most 400 lines (not counting blank lines and comments), a function 150, and a function's cyclomatic complexity may be at most 20. Tests, `e2e/` and `app/**/dev/**` are exempt from all three; the dictionaries, `features/logo/buildLogoGeometry.ts` and `features/logo/scene/shaders.ts` from the file limit.
+
+The rules check the `@/` form of an import; a relative `../../features/x` between modules isn't caught, so don't write one. When a rule gets in the way of something legitimate, move the shared piece down a layer first (that is almost always the right fix). If it truly is a one-off, use `// eslint-disable-next-line no-restricted-imports -- <why>`.
 
 ## Sanity types
 

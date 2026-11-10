@@ -1,10 +1,10 @@
 import { notFound } from "next/navigation";
 
-import { railInset } from "@/components/layout/nav/rail";
 import { SiteNav } from "@/components/layout/nav/SiteNav";
 import { SiteFooter } from "@/features/site";
 import { cn } from "@/lib/cn";
 import { isLocale } from "@/lib/i18n/config";
+import { railInset } from "@/lib/rail";
 import { cinematicViewport } from "@/lib/theme";
 
 export const viewport = cinematicViewport;

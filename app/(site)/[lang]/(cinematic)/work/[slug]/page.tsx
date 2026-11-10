@@ -5,7 +5,6 @@ import { notFound } from "next/navigation";
 import { PortableText } from "next-sanity";
 import { Suspense } from "react";
 
-import { pageGutter } from "@/components/layout/nav/rail";
 import { BackLink } from "@/components/ui/BackLink";
 import { DetailList } from "@/components/ui/DetailList";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -14,6 +13,7 @@ import { getProject, getProjectMeta } from "@/features/work";
 import { cn } from "@/lib/cn";
 import { getLocale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
+import { pageGutter } from "@/lib/rail";
 import { href, pageMetadata, routes } from "@/lib/routes";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/work/[slug]">): Promise<Metadata> {

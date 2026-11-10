@@ -2,10 +2,10 @@
 
 import { type ReactNode, useEffect, useState } from "react";
 
-import { pageGutter, railLeft } from "@/components/layout/nav/rail";
 import { cn } from "@/lib/cn";
 import { prefersReducedMotion } from "@/lib/hooks/useReducedMotion";
 import { format } from "@/lib/i18n/format";
+import { pageGutter, railLeft } from "@/lib/rail";
 
 /** Past this many projects the ticks would overflow the screen, so only the counter is shown. */
 const MAX_TICKS = 24;

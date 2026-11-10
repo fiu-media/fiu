@@ -1,0 +1,38 @@
+import type { SizedImage } from "@/lib/sizedImage";
+import banquet from "@/public/stills/banquet.jpg";
+import bouquet from "@/public/stills/bouquet.jpg";
+import citrus from "@/public/stills/citrus.jpg";
+import conservatory from "@/public/stills/conservatory.jpg";
+import fur from "@/public/stills/fur.jpg";
+import glow from "@/public/stills/glow.jpg";
+import grapes from "@/public/stills/grapes.jpg";
+import parlor from "@/public/stills/parlor.jpg";
+import pond from "@/public/stills/pond.jpg";
+import supper from "@/public/stills/supper.jpg";
+
+// lightTint: precomputed studio temperature for the glass, so the fallback needn't sample its textures.
+const bundled = [
+  { still: conservatory, lightTint: "#a0957b" },
+  { still: banquet, lightTint: "#866249" },
+  { still: supper, lightTint: "#916d54" },
+  { still: glow, lightTint: "#956444" },
+  { still: citrus, lightTint: "#968a77" },
+  { still: bouquet, lightTint: "#977980" },
+  { still: grapes, lightTint: "#a39f82" },
+  { still: pond, lightTint: "#746e67" },
+  { still: fur, lightTint: "#8c5648" },
+  { still: parlor, lightTint: "#716755" },
+];
+
+/** A bundled still, with the studio temperature of its light already worked out. */
+export type FallbackStill = SizedImage & { lightTint: string };
+
+/** Stills that ship with the site: the home hero shows them until the CMS has its own, and About and the team photo borrow them. */
+export const fallbackStills: FallbackStill[] = bundled.map(({ still: { src, width, height, blurDataURL }, lightTint }) => ({
+  src,
+  width,
+  height,
+  blurDataURL,
+  lightTint,
+  alt: "",
+}));

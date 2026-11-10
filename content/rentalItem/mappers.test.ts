@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { MAX_QTY } from "@/features/rentals/basket/quantity";
+import { MAX_QTY } from "@/lib/forms/quantity";
 
 import { toCatalogue, toQuoteCatalogue, toRentalItem } from "./mappers";
 

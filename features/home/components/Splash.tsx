@@ -3,13 +3,13 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
+import { SPLASH_FADE_MS, splashFadeVars } from "@/features/logo";
 import { logo } from "@/lib/brand";
 import { cn } from "@/lib/cn";
+import { nudgeHomeScroll } from "@/lib/homeScroll";
 import { prefersReducedMotion } from "@/lib/hooks/useReducedMotion";
 
-import { nudgeHomeScroll } from "../bleed";
 import { isSplashDismissed, markSplashDismissed } from "../session";
-import { SPLASH_FADE_MS, splashFadeVars } from "../splash-config";
 
 // The whole splash (backdrop and logo) fades as one, over SPLASH_FADE_MS (shared with the glass
 // logo's fade-in in HomeHero and the shader reveal in LogoScene).

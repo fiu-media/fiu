@@ -96,20 +96,16 @@ function rewriteRing(
   }
 }
 
-/**
- * Round variable-radius tube along a 2D centreline (z = 0).
- * Local depth follows width the way liquid-glass does — fat belly, needle tips.
- * Flat caps are sheared to `tipCutAngle` so their silhouette matches the artwork cut
- * (and the diamond short edges).
- */
-function variableRadiusTube(stroke: LogoStroke, tipCutAngle?: number): THREE.BufferGeometry {
+type TubeSample = { x: number; y: number; r: number };
+
+/** The stroke's finite points as centreline samples, near-duplicates merged so tangents stay stable. */
+function strokeSamples(stroke: LogoStroke): TubeSample[] {
   const raw = stroke.points.filter((p) => Number.isFinite(p[0]) && Number.isFinite(p[1]));
   if (raw.length < 2) throw new Error("stroke needs ≥2 points");
 
-  // Drop near-duplicates so tangents stay stable.
   const [first, ...rest] = raw;
   if (!first) throw new Error("stroke needs ≥2 points");
-  const samples: { x: number; y: number; r: number }[] = [{ x: first[0], y: first[1], r: Math.max(first[2], MIN_R) }];
+  const samples: TubeSample[] = [{ x: first[0], y: first[1], r: Math.max(first[2], MIN_R) }];
   for (const [x, y, radius] of rest) {
     const prev = at(samples, samples.length - 1);
     const dx = x - prev.x;
@@ -121,54 +117,42 @@ function variableRadiusTube(stroke: LogoStroke, tipCutAngle?: number): THREE.Buf
     samples.push({ x, y, r: Math.max(radius, MIN_R) });
   }
   if (samples.length < 2) throw new Error("stroke collapsed");
+  return samples;
+}
 
-  const closed = Boolean(stroke.closed);
-  const n = samples.length;
-  const origins: THREE.Vector3[] = samples.map((s) => new THREE.Vector3(s.x, s.y, 0));
-  const radii = samples.map((s) => s.r);
-
-  const tangents: THREE.Vector3[] = [];
-  for (let i = 0; i < n; i++) {
-    let t: THREE.Vector3;
-    if (closed) {
-      t = at(origins, (i + 1) % n)
-        .clone()
-        .sub(at(origins, (i - 1 + n) % n));
-    } else if (i === 0) {
-      t = at(origins, 1).clone().sub(at(origins, 0));
-    } else if (i === n - 1) {
-      t = at(origins, n - 1)
-        .clone()
-        .sub(at(origins, n - 2));
-    } else {
-      t = at(origins, i + 1)
-        .clone()
-        .sub(at(origins, i - 1));
-    }
+/** Unit direction of the centreline at each point: the chord between its neighbours (one-sided at open ends). */
+function centrelineTangents(origins: THREE.Vector3[], closed: boolean): THREE.Vector3[] {
+  const n = origins.length;
+  return origins.map((_, i) => {
+    // Open ends have no neighbour on one side, so the chord starts or ends at the point itself.
+    const ahead = at(origins, closed ? (i + 1) % n : Math.min(i + 1, n - 1));
+    const behind = at(origins, closed ? (i - 1 + n) % n : Math.max(i - 1, 0));
+    const t = ahead.clone().sub(behind);
     if (t.lengthSq() < 1e-12) t.set(1, 0, 0);
     else t.normalize();
-    tangents.push(t);
-  }
+    return t;
+  });
+}
 
-  // Parallel-transport frames — avoids Frenet twist on planar paths.
+/** Parallel-transport frames — avoids Frenet twist on planar paths. */
+function transportFrames(tangents: THREE.Vector3[]) {
   const normals: THREE.Vector3[] = [];
   const binormals: THREE.Vector3[] = [];
-  {
-    const t0 = at(tangents, 0);
-    // Prefer binormal ≈ +Z so the round profile pillows toward the camera.
-    const n0 = new THREE.Vector3().crossVectors(t0, new THREE.Vector3(0, 0, 1));
-    if (n0.lengthSq() < 1e-8) n0.crossVectors(t0, new THREE.Vector3(0, 1, 0));
-    n0.normalize();
-    const b0 = new THREE.Vector3().crossVectors(t0, n0).normalize();
-    if (b0.z < 0) {
-      n0.negate();
-      b0.negate();
-    }
-    normals.push(n0);
-    binormals.push(b0);
+  const t0 = at(tangents, 0);
+  // Prefer binormal ≈ +Z so the round profile pillows toward the camera.
+  const n0 = new THREE.Vector3().crossVectors(t0, new THREE.Vector3(0, 0, 1));
+  if (n0.lengthSq() < 1e-8) n0.crossVectors(t0, new THREE.Vector3(0, 1, 0));
+  n0.normalize();
+  const b0 = new THREE.Vector3().crossVectors(t0, n0).normalize();
+  if (b0.z < 0) {
+    n0.negate();
+    b0.negate();
   }
+  normals.push(n0);
+  binormals.push(b0);
+
   const axis = new THREE.Vector3();
-  for (let i = 1; i < n; i++) {
+  for (let i = 1; i < tangents.length; i++) {
     const prevT = at(tangents, i - 1);
     const t = at(tangents, i);
     const nPrev = at(normals, i - 1).clone();
@@ -184,10 +168,14 @@ function variableRadiusTube(stroke: LogoStroke, tipCutAngle?: number): THREE.Buf
     normals.push(nn);
     binormals.push(b);
   }
+  return { normals, binormals };
+}
 
+/** The tube's vertices, one ring of `RADIAL` around each centreline point, and where each ring starts. */
+function tubeRings(origins: THREE.Vector3[], normals: THREE.Vector3[], binormals: THREE.Vector3[], radii: number[]) {
   const positions: number[] = [];
   const ringIndex: number[] = [];
-  for (let i = 0; i < n; i++) {
+  for (let i = 0; i < origins.length; i++) {
     ringIndex.push(positions.length / 3);
     const o = at(origins, i);
     const N = at(normals, i);
@@ -200,19 +188,12 @@ function variableRadiusTube(stroke: LogoStroke, tipCutAngle?: number): THREE.Buf
       positions.push(o.x + (N.x * c + B.x * s) * r, o.y + (N.y * c + B.y * s) * r, o.z + (N.z * c + B.z * s) * r);
     }
   }
+  return { positions, ringIndex };
+}
 
-  const caps = stroke.caps ?? ["flat", "flat"];
-  const startCap = caps[0];
-  const endCap = caps[caps.length - 1];
-  const last = n - 1;
-  // Oblique tip slices: ring + cap share the artwork tip-cut plane (// diamond sides).
-  const startAngle = stroke.cuts?.[0] ?? tipCutAngle;
-  const endAngle = stroke.cuts?.[1] ?? tipCutAngle;
-  const startCut = !closed && startCap === "flat" && startAngle != null ? tipCutNormal(startAngle, at(tangents, 0)) : null;
-  const endCut = !closed && endCap === "flat" && endAngle != null ? tipCutNormal(endAngle, at(tangents, last)) : null;
-  if (startCut) rewriteRing(positions, at(ringIndex, 0), at(origins, 0), at(radii, 0), startCut, at(binormals, 0));
-  if (endCut) rewriteRing(positions, at(ringIndex, last), at(origins, last), at(radii, last), endCut, at(binormals, last));
-
+/** Triangles joining each ring of the tube to the next (the last to the first when `closed`). */
+function wallIndices(ringIndex: number[], closed: boolean): number[] {
+  const n = ringIndex.length;
   const indices: number[] = [];
   const rings = closed ? n : n - 1;
   for (let i = 0; i < rings; i++) {
@@ -227,6 +208,39 @@ function variableRadiusTube(stroke: LogoStroke, tipCutAngle?: number): THREE.Buf
       indices.push(a0, b0, a1, a1, b0, b1);
     }
   }
+  return indices;
+}
+
+/**
+ * Round variable-radius tube along a 2D centreline (z = 0).
+ * Local depth follows width the way liquid-glass does — fat belly, needle tips.
+ * Flat caps are sheared to `tipCutAngle` so their silhouette matches the artwork cut
+ * (and the diamond short edges).
+ */
+function variableRadiusTube(stroke: LogoStroke, tipCutAngle?: number): THREE.BufferGeometry {
+  const samples = strokeSamples(stroke);
+  const closed = Boolean(stroke.closed);
+  const n = samples.length;
+  const origins: THREE.Vector3[] = samples.map((s) => new THREE.Vector3(s.x, s.y, 0));
+  const radii = samples.map((s) => s.r);
+  const tangents = centrelineTangents(origins, closed);
+  const { normals, binormals } = transportFrames(tangents);
+
+  const { positions, ringIndex } = tubeRings(origins, normals, binormals, radii);
+
+  const caps = stroke.caps ?? ["flat", "flat"];
+  const startCap = caps[0];
+  const endCap = caps[caps.length - 1];
+  const last = n - 1;
+  // Oblique tip slices: ring + cap share the artwork tip-cut plane (// diamond sides).
+  const startAngle = stroke.cuts?.[0] ?? tipCutAngle;
+  const endAngle = stroke.cuts?.[1] ?? tipCutAngle;
+  const startCut = !closed && startCap === "flat" && startAngle != null ? tipCutNormal(startAngle, at(tangents, 0)) : null;
+  const endCut = !closed && endCap === "flat" && endAngle != null ? tipCutNormal(endAngle, at(tangents, last)) : null;
+  if (startCut) rewriteRing(positions, at(ringIndex, 0), at(origins, 0), at(radii, 0), startCut, at(binormals, 0));
+  if (endCut) rewriteRing(positions, at(ringIndex, last), at(origins, last), at(radii, last), endCut, at(binormals, last));
+
+  const indices = wallIndices(ringIndex, closed);
 
   if (!closed) {
     const startRing = at(ringIndex, 0);

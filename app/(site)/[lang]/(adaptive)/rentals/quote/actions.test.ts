@@ -11,10 +11,10 @@ const mocks = vi.hoisted(() => ({
 vi.mock("botid/server", () => ({ checkBotId: mocks.checkBotId }));
 vi.mock("@/sanity/lib/writeClient", () => ({ writeClient: { fetch: mocks.fetch, create: mocks.create } }));
 vi.mock("@/lib/email/send", () => ({ sendEmail: mocks.sendEmail }));
-vi.mock("@/lib/email/settings", () => ({ getRecipient: mocks.getRecipient }));
+vi.mock("@/content/siteSettings", () => ({ getRecipient: mocks.getRecipient }));
 
-import { MAX_QTY } from "@/features/rentals/basket/quantity";
 import { at } from "@/lib/at";
+import { MAX_QTY } from "@/lib/forms/quantity";
 
 import { submitQuote } from "./actions";
 

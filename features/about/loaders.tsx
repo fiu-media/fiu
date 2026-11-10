@@ -1,7 +1,6 @@
 import { PortableText } from "next-sanity";
 
-import { ContactLinks, getSiteSettings, toTeam } from "@/content/siteSettings";
-import { fallbackStills } from "@/features/home/fallback-stills";
+import { ContactLinks, fallbackStills, getSiteSettings, toTeam } from "@/content/siteSettings";
 import { at } from "@/lib/at";
 import type { Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";

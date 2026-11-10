@@ -8,7 +8,7 @@ import { cn } from "@/lib/cn";
 import { usePortrait } from "@/lib/hooks/usePortrait";
 import { PORTRAIT } from "@/lib/media";
 import { omitUndefined } from "@/lib/omitUndefined";
-import type { SizedImage } from "@/sanity/lib/image";
+import type { SizedImage } from "@/lib/sizedImage";
 
 type ArtDirectedImageProps = {
   landscape: SizedImage;

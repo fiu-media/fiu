@@ -129,46 +129,16 @@ export function ProjectSlide({
             )}
           />
         ) : (
-          <div
-            className={cn(
-              "absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 bg-gradient-to-t from-scrim/75 via-scrim/30 to-transparent px-5 pt-32 pb-[max(1.5rem,env(safe-area-inset-bottom))] md:px-10 md:pb-10",
-              href && "max-sm:flex-col max-sm:items-start",
-            )}
-          >
-            <div className="min-w-0">
-              <Heading data-sanity={titleAttribute} className="font-display text-4xl text-balance italic md:text-7xl">
-                {href ? (
-                  <Link href={href} className="hover:underline focus-visible:underline">
-                    {title}
-                  </Link>
-                ) : (
-                  title
-                )}
-              </Heading>
-              <p className="mt-1 text-sm text-on-image/80 md:text-base">{meta}</p>
-              {role && <p className="mt-1 text-sm text-on-image/65">{role}</p>}
-            </div>
-            <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 md:gap-3">
-              {href && dict.view && (
-                <GlassPillLink href={href} size="lg" onImage aria-label={`${dict.view}: ${title}`}>
-                  {dict.view}
-                </GlassPillLink>
-              )}
-              {video && (
-                <GlassPillButton
-                  data-play
-                  size="lg"
-                  onImage
-                  onClick={play}
-                  aria-label={format(dict.playTitle, { title })}
-                  className="shrink-0"
-                >
-                  <Play aria-hidden fill="currentColor" className="size-4" />
-                  <span className="max-sm:sr-only">{dict.play}</span>
-                </GlassPillButton>
-              )}
-            </div>
-          </div>
+          <SlideCaption
+            Heading={Heading}
+            title={title}
+            titleAttribute={titleAttribute}
+            meta={meta}
+            role={role}
+            href={href}
+            dict={dict}
+            onPlay={video ? play : undefined}
+          />
         )}
 
         {playing && !revealed && (
@@ -178,5 +148,57 @@ export function ProjectSlide({
         )}
       </div>
     </FullBleedSlide>
+  );
+}
+
+type SlideCaptionProps = Pick<ProjectSlideProps, "title" | "meta" | "titleAttribute" | "role" | "href" | "dict"> & {
+  Heading: "h1" | "h2";
+  /** Set when the project has a video; the Play pill appears with it. */
+  onPlay: (() => void) | undefined;
+};
+
+/** The title, meta line and role over the cover, with the "view" and Play pills beside them. */
+function SlideCaption({ Heading, title, titleAttribute, meta, role, href, dict, onPlay }: SlideCaptionProps) {
+  return (
+    <div
+      className={cn(
+        "absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 bg-gradient-to-t from-scrim/75 via-scrim/30 to-transparent px-5 pt-32 pb-[max(1.5rem,env(safe-area-inset-bottom))] md:px-10 md:pb-10",
+        href && "max-sm:flex-col max-sm:items-start",
+      )}
+    >
+      <div className="min-w-0">
+        <Heading data-sanity={titleAttribute} className="font-display text-4xl text-balance italic md:text-7xl">
+          {href ? (
+            <Link href={href} className="hover:underline focus-visible:underline">
+              {title}
+            </Link>
+          ) : (
+            title
+          )}
+        </Heading>
+        <p className="mt-1 text-sm text-on-image/80 md:text-base">{meta}</p>
+        {role && <p className="mt-1 text-sm text-on-image/65">{role}</p>}
+      </div>
+      <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 md:gap-3">
+        {href && dict.view && (
+          <GlassPillLink href={href} size="lg" onImage aria-label={`${dict.view}: ${title}`}>
+            {dict.view}
+          </GlassPillLink>
+        )}
+        {onPlay && (
+          <GlassPillButton
+            data-play
+            size="lg"
+            onImage
+            onClick={onPlay}
+            aria-label={format(dict.playTitle, { title })}
+            className="shrink-0"
+          >
+            <Play aria-hidden fill="currentColor" className="size-4" />
+            <span className="max-sm:sr-only">{dict.play}</span>
+          </GlassPillButton>
+        )}
+      </div>
+    </div>
   );
 }

@@ -2,11 +2,11 @@ import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { pageGutter } from "@/components/layout/nav/rail";
 import { GlassPillLink } from "@/components/ui/Glass";
 import { SizedImg } from "@/components/ui/SizedImg";
 import { type Team, TeamFigure } from "@/content/siteSettings";
 import { cn } from "@/lib/cn";
+import { pageGutter } from "@/lib/rail";
 import type { SizedImage } from "@/sanity/lib/image";
 
 /** The condensed About: the slogan, its gloss and the first paragraph of the manifesto, with the About still. */
