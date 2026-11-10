@@ -1,43 +1,34 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { siInstagram } from "simple-icons";
 
 import { FormSkeleton } from "@/components/forms/FormSkeleton";
-import { pageGutter } from "@/components/layout/nav/rail";
-import { BrandIcon } from "@/components/ui/BrandIcon";
-import { PageTitle } from "@/components/ui/PageTitle";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { PageShell } from "@/components/ui/PageShell";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { CONTACT_SETTINGS_QUERY } from "@/content/siteSettings";
-import { cn } from "@/lib/cn";
-import { emailForDisplay } from "@/lib/email/display";
+import { ContactLinks, getSiteSettings } from "@/content/siteSettings";
 import { countryList } from "@/lib/forms/countries";
-import { defaultLocale, isLocale, languageAlternates, type Locale } from "@/lib/i18n/config";
+import { getLocale, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
-import { instagramHandle } from "@/lib/instagram";
-import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
-import { getPageText } from "@/sanity/lib/pageText";
+import { pageMetadata, routes } from "@/lib/routes";
 
 import { ContactForm } from "./ContactForm";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/contact">): Promise<Metadata> {
-  const { lang } = await params;
-  if (!isLocale(lang)) return {};
-  const [{ contact }, text] = await Promise.all([getDictionary(lang), getPageText(lang)]);
-  return { title: contact.title, description: text.contactIntro ?? undefined, alternates: languageAlternates(lang, "/contact") };
+  const lang = await getLocale(params);
+  const [{ contact }, { contactIntro }] = await Promise.all([getDictionary(lang), getSiteSettings(lang, { draft: false })]);
+  return pageMetadata(lang, routes.contact(), { title: contact.title, description: contactIntro ?? undefined });
 }
 
 export default async function ContactPage({ params }: PageProps<"/[lang]/contact">) {
-  const { lang } = await params;
-  if (!isLocale(lang)) notFound();
-  const [{ contact, forms, common }, text] = await Promise.all([getDictionary(lang), getPageText(lang)]);
+  const lang = await getLocale(params);
+  const [{ contact, forms, common }, { contactTagline, contactIntro }] = await Promise.all([
+    getDictionary(lang),
+    getSiteSettings(lang, { draft: false }),
+  ]);
   return (
-    <main className={cn("mx-auto grid max-w-6xl gap-12 pb-32 lg:grid-cols-[3fr_2fr]", pageGutter)}>
+    <PageShell className="grid gap-12 lg:grid-cols-[3fr_2fr]">
       <div>
-        <header className="mb-10">
-          <PageTitle title={contact.title} tagline={text.contactTagline} />
-          {text.contactIntro && <p className="mt-4 max-w-2xl text-lg text-fg-muted">{text.contactIntro}</p>}
-        </header>
+        <PageHeader title={contact.title} tagline={contactTagline} intro={contactIntro} className="mb-10" />
         {/* ContactForm reads the ?type= query, which needs a boundary to keep the page static. */}
         <Suspense fallback={<FormSkeleton label={common.loading} fields={3} />}>
           <ContactForm lang={lang} dict={{ contact, forms }} countries={countryList(lang)} />
@@ -46,57 +37,24 @@ export default async function ContactPage({ params }: PageProps<"/[lang]/contact
       <Suspense fallback={<DirectContactSkeleton />}>
         <DirectContact lang={lang} />
       </Suspense>
-    </main>
+    </PageShell>
   );
 }
 
 async function DirectContact({ lang }: { lang: Locale }) {
-  const { contact } = await getDictionary(lang);
-  const { perspective, variant } = await getDynamicFetchOptions();
-  const { data } = await cachedSanity({
-    query: CONTACT_SETTINGS_QUERY,
-    params: { lang, fallbackLang: defaultLocale },
-    perspective,
-    variant,
-    stega: false,
-  });
-  const settings = data;
-  if (!settings?.contactEmail && !settings?.instagram) return null;
-  const email = settings.contactEmail ? emailForDisplay(settings.contactEmail) : null;
+  const [{ contact: labels }, { contact }] = await Promise.all([getDictionary(lang), getSiteSettings(lang)]);
+  if (!contact.email && !contact.instagram) return null;
 
   return (
     <aside aria-labelledby="direct-contact" className="lg:pt-28">
       <h2 id="direct-contact" className="font-display text-2xl">
-        {contact.directHeading}
+        {labels.directHeading}
       </h2>
-      <dl className="mt-4 space-y-4">
-        {email && (
-          <div>
-            <dt className="text-sm text-fg-muted">{contact.emailLabel}</dt>
-            <dd>
-              <a href={`mailto:${email}`} className="link-inline">
-                {email}
-              </a>
-            </dd>
-          </div>
-        )}
-        {settings.instagram && (
-          <div>
-            <dt className="text-sm text-fg-muted">{contact.instagramLabel}</dt>
-            <dd>
-              <a
-                href={settings.instagram}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 link-inline"
-              >
-                <BrandIcon icon={siInstagram} />
-                {instagramHandle(settings.instagram)}
-              </a>
-            </dd>
-          </div>
-        )}
-      </dl>
+      <ContactLinks
+        contact={contact}
+        labels={{ email: labels.emailLabel, instagram: labels.instagramLabel }}
+        variant="definitions"
+      />
     </aside>
   );
 }

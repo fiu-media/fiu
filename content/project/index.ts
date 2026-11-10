@@ -1,7 +1,7 @@
 export { ProjectSlide } from "./components/ProjectSlide";
 export type { Still } from "./components/ProjectStills";
 export { ProjectStills } from "./components/ProjectStills";
-export type { ProjectSlideSource } from "./mappers";
+export type { ProjectSlideData, ProjectSlideSource } from "./mappers";
 export {
   COVER_MOBILE_WIDTH,
   COVER_WIDTH,

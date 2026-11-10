@@ -2,15 +2,6 @@ import { defineQuery } from "next-sanity";
 
 import { IMAGE_FIELDS } from "@/sanity/lib/groq";
 
-/** @deprecated Read `getSiteSettings` instead; kept until the pages that use this move over. */
-export const CONTACT_SETTINGS_QUERY = defineQuery(`{
-  "cur": *[_type == "siteSettings" && language == $lang][0]{ contactEmail, instagram },
-  "fb": *[_type == "siteSettings" && language == $fallbackLang][0]{ contactEmail, instagram }
-}{
-  "contactEmail": coalesce(cur.contactEmail, fb.contactEmail),
-  "instagram": coalesce(cur.instagram, fb.instagram)
-}`);
-
 /** Recipient addresses for form notifications, falling back to the default language's settings. */
 export const SUBMISSION_SETTINGS_QUERY = defineQuery(`
   coalesce(
