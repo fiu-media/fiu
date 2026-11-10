@@ -8,6 +8,7 @@ import { prefersReducedMotion } from "@/lib/hooks/useReducedMotion";
 import logo from "@/public/brand/fiu-logo.svg";
 
 import { nudgeHomeScroll } from "../bleed";
+import { isSplashDismissed, markSplashDismissed } from "../session";
 import { SPLASH_FADE_MS, splashFadeVars } from "../splash-config";
 
 // The whole splash (backdrop and logo) fades as one, over SPLASH_FADE_MS (shared with the glass
@@ -15,14 +16,6 @@ import { SPLASH_FADE_MS, splashFadeVars } from "../splash-config";
 // will-change promotes the layer before the fade starts, so the first frame of it isn't a hitch.
 const FADE_CLASSES =
   "will-change-[opacity] motion-safe:transition-opacity motion-safe:duration-(--splash-fade) motion-safe:ease-out";
-
-// Once per page load: if the hero remounts (Suspense swap, client navigation back to `/`),
-// the splash must not replay.
-let dismissed = false;
-
-export function isSplashDismissed() {
-  return dismissed;
-}
 
 /**
  * Cover shown while the home hero loads. It is server-rendered, so it is on screen before any
@@ -34,7 +27,7 @@ export function isSplashDismissed() {
  * from ink to the photo with the splash.
  */
 export function Splash({ done }: { done: boolean }) {
-  const [gone, setGone] = useState(dismissed);
+  const [gone, setGone] = useState(isSplashDismissed);
 
   useEffect(() => {
     if (!done) return;
@@ -42,7 +35,7 @@ export function Splash({ done }: { done: boolean }) {
     const reduced = prefersReducedMotion();
     const id = window.setTimeout(
       () => {
-        dismissed = true;
+        markSplashDismissed();
         setGone(true);
       },
       reduced ? 0 : SPLASH_FADE_MS,
