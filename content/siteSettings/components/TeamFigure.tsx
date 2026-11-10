@@ -1,5 +1,4 @@
-import Image from "next/image";
-
+import { SizedImg } from "@/components/ui/SizedImg";
 import { cn } from "@/lib/cn";
 import type { SizedImage } from "@/sanity/lib/image";
 
@@ -9,31 +8,13 @@ export type Team = {
   heading: string;
   /** Who is in the photo, where, when. Optional. */
   caption: string | null;
-  /** Marks the photo as a stand-in on a sign-off page; leave out on the real pages. */
-  placeholder?: boolean;
 };
 
 /** The team photo, filling its box. The caller sets the shape (aspect ratio, radius). */
 export function TeamPhoto({ team, sizes, className }: { team: Team; sizes: string; className?: string }) {
-  const { image } = team;
   return (
     <div className={cn("relative overflow-hidden", className)}>
-      <Image
-        src={image.src}
-        width={image.width}
-        height={image.height}
-        alt={image.alt}
-        sizes={sizes}
-        placeholder={image.blurDataURL ? "blur" : "empty"}
-        blurDataURL={image.blurDataURL}
-        style={{ objectPosition: image.position }}
-        className="size-full object-cover"
-      />
-      {team.placeholder && (
-        <span className="absolute top-3 left-3 rounded-full bg-scrim/60 px-3 py-1 text-xs font-medium tracking-[0.1em] text-on-image uppercase">
-          Placeholder
-        </span>
-      )}
+      <SizedImg image={team.image} sizes={sizes} className="size-full" />
     </div>
   );
 }

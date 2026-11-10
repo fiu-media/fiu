@@ -1,11 +1,12 @@
 "use client";
 
 import { LazyMotion, m, useSpring } from "motion/react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRef, useState } from "react";
 
+import { SizedImg } from "@/components/ui/SizedImg";
 import { useReducedMotion } from "@/lib/hooks/useReducedMotion";
+import type { SizedImage } from "@/sanity/lib/image";
 
 export type IndexItem = {
   title: string;
@@ -13,7 +14,7 @@ export type IndexItem = {
   meta: string;
   href: string;
   /** Optional: a row without an image still lists and links. */
-  image?: { src: string; width: number; height: number; blurDataURL?: string; position?: string } | null;
+  image?: SizedImage | null;
 };
 
 const loadMotionFeatures = () => import("./motion-features").then((module) => module.default);
@@ -85,16 +86,11 @@ export function NameIndex({
             }}
           >
             {item.image && (
-              <Image
-                src={item.image.src}
-                width={item.image.width}
-                height={item.image.height}
+              <SizedImg
+                image={item.image}
                 alt=""
                 sizes="48px"
-                placeholder={item.image.blurDataURL ? "blur" : "empty"}
-                blurDataURL={item.image.blurDataURL}
-                style={{ objectPosition: item.image.position }}
-                className="hidden size-12 shrink-0 rounded-lg object-cover max-md:block pointer-coarse:block"
+                className="hidden size-12 shrink-0 rounded-lg max-md:block pointer-coarse:block"
               />
             )}
             {/* `truncate` clips overflow, and the display italic's descenders (g, y) hang below a one-em line box.
@@ -117,16 +113,14 @@ export function NameIndex({
         >
           {items.map((item, i) =>
             item.image ? (
-              <Image
+              <SizedImg
                 key={item.href}
-                src={item.image.src}
+                image={item.image}
                 alt=""
                 fill
                 sizes={`${previewWidth}px`}
-                placeholder={item.image.blurDataURL ? "blur" : "empty"}
-                blurDataURL={item.image.blurDataURL}
-                className="object-cover transition-opacity duration-200 motion-reduce:transition-none"
-                style={{ opacity: i === active ? 1 : 0, objectPosition: item.image.position }}
+                className="transition-opacity duration-200 motion-reduce:transition-none"
+                style={{ opacity: i === active ? 1 : 0 }}
               />
             ) : null,
           )}

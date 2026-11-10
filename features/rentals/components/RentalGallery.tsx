@@ -2,10 +2,12 @@
 
 import { Tabs } from "@base-ui/react/tabs";
 import useEmblaCarousel from "embla-carousel-react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { type KeyboardEvent, type PointerEvent, useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
+import { StepButton } from "@/components/ui/StepButton";
 import { cn } from "@/lib/cn";
+import { useStepper } from "@/lib/hooks/useStepper";
+import { useSwipe } from "@/lib/hooks/useSwipe";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { format } from "@/lib/i18n/format";
 import type { SizedImage } from "@/sanity/lib/image";
@@ -43,7 +45,6 @@ function Carousel({ images, name, dict }: { images: SizedImage[]; name: string; 
   const [index, setIndex] = useState(0);
   // Which ends of the thumbnail strip have more to scroll to (the strip has no scrollbar, so we fade them instead).
   const [more, setMore] = useState({ start: false, end: false });
-  const swipeFrom = useRef<number | null>(null);
 
   useEffect(() => {
     if (!strip) return;
@@ -63,33 +64,8 @@ function Carousel({ images, name, dict }: { images: SizedImage[]; name: string; 
     strip?.scrollTo(index);
   }, [strip, index]);
 
-  function select(next: number) {
-    setIndex((next + images.length) % images.length);
-  }
-
-  function onPointerUp(event: PointerEvent) {
-    if (swipeFrom.current === null) return;
-    const distance = event.clientX - swipeFrom.current;
-    swipeFrom.current = null;
-    if (Math.abs(distance) >= SWIPE_DISTANCE) select(index + (distance < 0 ? 1 : -1));
-  }
-
-  // The thumbnails handle their own keys; this is the large view's.
-  function onKeyDown(event: KeyboardEvent) {
-    const target =
-      event.key === "ArrowRight"
-        ? index + 1
-        : event.key === "ArrowLeft"
-          ? index - 1
-          : event.key === "Home"
-            ? 0
-            : event.key === "End"
-              ? images.length - 1
-              : null;
-    if (target === null) return;
-    event.preventDefault();
-    select(target);
-  }
+  const { select, onKeyDown } = useStepper(images.length, index, setIndex);
+  const swipe = useSwipe((direction) => select(index + direction), SWIPE_DISTANCE);
 
   return (
     <Tabs.Root
@@ -101,17 +77,7 @@ function Carousel({ images, name, dict }: { images: SizedImage[]; name: string; 
       className="flex flex-col gap-4"
     >
       <div tabIndex={0} onKeyDown={onKeyDown} className="relative rounded-3xl">
-        <div
-          onPointerDown={(event) => {
-            swipeFrom.current = event.clientX;
-          }}
-          onPointerUp={onPointerUp}
-          onPointerCancel={() => {
-            swipeFrom.current = null;
-          }}
-          onDragStart={(event) => event.preventDefault()}
-          className="touch-pan-y overflow-hidden rounded-3xl bg-white"
-        >
+        <div {...swipe} className="touch-pan-y overflow-hidden rounded-3xl bg-white">
           <div className="grid">
             {/* Every panel stays laid out (Base UI's `hidden` is overridden) so they can cross-fade; the hidden ones are
                 inert, which keeps them out of the accessibility tree and the tab order. */}
@@ -143,8 +109,8 @@ function Carousel({ images, name, dict }: { images: SizedImage[]; name: string; 
             ))}
           </div>
         </div>
-        <StepButton label={dict.previousImage} side="left" onClick={() => select(index - 1)} />
-        <StepButton label={dict.nextImage} side="right" onClick={() => select(index + 1)} />
+        <StepButton tone="dark" label={dict.previousImage} side="left" onClick={() => select(index - 1)} />
+        <StepButton tone="dark" label={dict.nextImage} side="right" onClick={() => select(index + 1)} />
       </div>
       <div
         ref={stripViewport}
@@ -182,20 +148,4 @@ function isNear(i: number, current: number, total: number) {
 /** Fades the strip's edges where more thumbnails are hidden. */
 function stripFade({ start, end }: { start: boolean; end: boolean }) {
   return `linear-gradient(to right, ${start ? "transparent" : "#000"} 0, #000 32px, #000 calc(100% - 32px), ${end ? "transparent" : "#000"} 100%)`;
-}
-
-function StepButton({ label, side, onClick }: { label: string; side: "left" | "right"; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={label}
-      className={cn(
-        "absolute top-1/2 grid size-11 -translate-y-1/2 cursor-pointer place-items-center rounded-full bg-ink/70 text-paper transition-colors hover:bg-ink",
-        side === "left" ? "left-3" : "right-3",
-      )}
-    >
-      {side === "left" ? <ChevronLeft aria-hidden className="size-5" /> : <ChevronRight aria-hidden className="size-5" />}
-    </button>
-  );
 }

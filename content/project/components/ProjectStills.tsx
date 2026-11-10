@@ -1,11 +1,15 @@
 "use client";
 
 import { Dialog } from "@base-ui/react/dialog";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { X } from "lucide-react";
 import Image from "next/image";
-import { type KeyboardEvent, type PointerEvent, useRef, useState } from "react";
+import { useState } from "react";
 
+import { SizedImg } from "@/components/ui/SizedImg";
+import { StepButton } from "@/components/ui/StepButton";
 import { cn } from "@/lib/cn";
+import { useStepper } from "@/lib/hooks/useStepper";
+import { useSwipe } from "@/lib/hooks/useSwipe";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { format } from "@/lib/i18n/format";
 import type { SizedImage } from "@/sanity/lib/image";
@@ -96,16 +100,12 @@ function Grid({
             aria-label={format(dict.openStill, { n: i + 1, total: stills.length })}
             className={cn("group relative block w-full cursor-zoom-in overflow-hidden rounded-2xl bg-bg-raised", frame)}
           >
-            <Image
-              src={thumb.src}
-              alt={thumb.alt}
+            <SizedImg
+              image={thumb}
               fill
               sizes={sizes}
               loading="lazy"
-              placeholder={thumb.blurDataURL ? "blur" : "empty"}
-              blurDataURL={thumb.blurDataURL}
-              style={{ objectPosition: thumb.position }}
-              className="object-cover transition-transform duration-500 ease-[cubic-bezier(0.2,0.7,0.2,1)] group-hover:scale-[1.03] motion-reduce:transition-none"
+              className="transition-transform duration-500 ease-[cubic-bezier(0.2,0.7,0.2,1)] group-hover:scale-[1.03] motion-reduce:transition-none"
             />
           </button>
         </li>
@@ -129,36 +129,11 @@ function Lightbox({
   onIndex: (index: number) => void;
   dict: Dict;
 }) {
-  const swipeFrom = useRef<number | null>(null);
   const many = stills.length > 1;
+  const { select, onKeyDown } = useStepper(stills.length, index, onIndex);
+  const swipe = useSwipe((direction) => many && select(index + direction), SWIPE_DISTANCE);
   const current = stills[index];
   if (!current) return null;
-
-  const select = (next: number) => onIndex((next + stills.length) % stills.length);
-
-  function onKeyDown(event: KeyboardEvent) {
-    if (!many) return;
-    const target =
-      event.key === "ArrowRight"
-        ? index + 1
-        : event.key === "ArrowLeft"
-          ? index - 1
-          : event.key === "Home"
-            ? 0
-            : event.key === "End"
-              ? stills.length - 1
-              : null;
-    if (target === null) return;
-    event.preventDefault();
-    select(target);
-  }
-
-  function onPointerUp(event: PointerEvent) {
-    if (swipeFrom.current === null) return;
-    const distance = event.clientX - swipeFrom.current;
-    swipeFrom.current = null;
-    if (many && Math.abs(distance) >= SWIPE_DISTANCE) select(index + (distance < 0 ? 1 : -1));
-  }
 
   // The neighbours load while this one is looked at, so stepping doesn't wait.
   const neighbours = many ? [stills[(index + 1) % stills.length]!, stills[(index - 1 + stills.length) % stills.length]!] : [];
@@ -184,33 +159,12 @@ function Lightbox({
             </Dialog.Close>
           </div>
 
-          <div
-            onPointerDown={(event) => {
-              swipeFrom.current = event.clientX;
-            }}
-            onPointerUp={onPointerUp}
-            onPointerCancel={() => {
-              swipeFrom.current = null;
-            }}
-            onDragStart={(event) => event.preventDefault()}
-            className="relative min-h-0 flex-1 touch-pan-y px-4 py-4 select-none md:px-20"
-          >
-            <Image
-              key={current.full.src}
-              src={current.full.src}
-              width={current.full.width}
-              height={current.full.height}
-              alt={current.full.alt}
-              sizes="100vw"
-              priority
-              placeholder={current.full.blurDataURL ? "blur" : "empty"}
-              blurDataURL={current.full.blurDataURL}
-              className="size-full object-contain"
-            />
+          <div {...swipe} className="relative min-h-0 flex-1 touch-pan-y px-4 py-4 select-none md:px-20">
+            <SizedImg key={current.full.src} image={current.full} fit="contain" sizes="100vw" priority className="size-full" />
             {many && (
               <>
-                <StepButton label={dict.previousStill} side="left" onClick={() => select(index - 1)} />
-                <StepButton label={dict.nextStill} side="right" onClick={() => select(index + 1)} />
+                <StepButton tone="light" label={dict.previousStill} side="left" onClick={() => select(index - 1)} />
+                <StepButton tone="light" label={dict.nextStill} side="right" onClick={() => select(index + 1)} />
               </>
             )}
           </div>
@@ -232,21 +186,5 @@ function Lightbox({
         </Dialog.Popup>
       </Dialog.Portal>
     </Dialog.Root>
-  );
-}
-
-function StepButton({ label, side, onClick }: { label: string; side: "left" | "right"; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={label}
-      className={cn(
-        "absolute top-1/2 grid size-11 -translate-y-1/2 cursor-pointer place-items-center rounded-full bg-on-image/10 hover:bg-on-image/20 max-md:bg-scrim/40",
-        side === "left" ? "left-2 md:left-6" : "right-2 md:right-6",
-      )}
-    >
-      {side === "left" ? <ChevronLeft aria-hidden className="size-5" /> : <ChevronRight aria-hidden className="size-5" />}
-    </button>
   );
 }

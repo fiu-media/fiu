@@ -2,12 +2,17 @@ import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { pageGutter } from "@/components/layout/nav/rail";
 import { FullBleedScroll, FullBleedSlide } from "@/components/ui/FullBleedScroll";
 import { GlassPillLink } from "@/components/ui/Glass";
-import { TeamPhoto } from "@/content/siteSettings";
-import { type FoldProject, type FoldProps, gutter, HomeFold, Photo, Reel } from "@/features/home";
+import { type FoldProject, type FoldProps as LiveFoldProps, HomeFold, Photo, Reel } from "@/features/home";
 import { cn } from "@/lib/cn";
-export type { FoldProject, FoldProps };
+
+import { type DevTeam, PlaceholderTeamPhoto } from "../PlaceholderTeamPhoto";
+
+/** The live fold props, except the team may carry the stand-in flag. */
+export type FoldProps = Omit<LiveFoldProps, "team"> & { team: DevTeam };
+export type { FoldProject };
 
 function Eyebrow({ children }: { children: ReactNode }) {
   return <p className="text-xs font-medium tracking-[0.14em] text-white/60 uppercase">{children}</p>;
@@ -29,7 +34,7 @@ function ArrowLabel({ children }: { children: ReactNode }) {
 /** The About lead of the reel options: the slogan, then the gloss and one paragraph, with an optional "About us" pill. */
 function ReelLead({ about, labels, cta = true }: Pick<FoldProps, "about" | "labels"> & { cta?: boolean }) {
   return (
-    <div className={cn("mx-auto grid max-w-6xl gap-8 md:grid-cols-[minmax(0,6fr)_minmax(0,5fr)] md:gap-16", gutter)}>
+    <div className={cn("mx-auto grid max-w-6xl gap-8 md:grid-cols-[minmax(0,6fr)_minmax(0,5fr)] md:gap-16", pageGutter)}>
       <h2 className="font-display text-4xl leading-[1.05] text-balance italic md:text-6xl">{about.slogan}</h2>
       <div className="flex flex-col items-start gap-6">
         <div className="space-y-4 text-base leading-relaxed text-white/80 md:text-lg">
@@ -70,7 +75,7 @@ export function FoldReelTeamCard({ about, team, contacts, projects, workHref, la
       <ReelLead about={about} labels={labels} />
       <Reel projects={projects} workHref={workHref} labels={labels} className="mt-16 md:mt-24">
         <Link href={about.href} className="group w-[78vw] shrink-0 snap-start md:w-[30rem]">
-          <TeamPhoto
+          <PlaceholderTeamPhoto
             team={team}
             sizes="(min-width: 768px) 30rem, 78vw"
             className="aspect-[4/5] rounded-2xl md:aspect-[4/3] [&_img]:transition-transform [&_img]:duration-700 [&_img]:ease-out group-hover:[&_img]:scale-[1.03]"
@@ -79,7 +84,7 @@ export function FoldReelTeamCard({ about, team, contacts, projects, workHref, la
           {team.caption && <p className="mt-1 text-sm text-white/60">{team.caption}</p>}
         </Link>
       </Reel>
-      <div className={cn("mx-auto mt-10 max-w-6xl border-t border-line pt-8 md:mt-14", gutter)}>{contacts}</div>
+      <div className={cn("mx-auto mt-10 max-w-6xl border-t border-line pt-8 md:mt-14", pageGutter)}>{contacts}</div>
     </section>
   );
 }
@@ -102,10 +107,10 @@ export function FoldReelClosing({ about, team, contacts, projects, workHref, lab
       <div
         className={cn(
           "mx-auto mt-16 grid max-w-6xl items-center gap-8 border-t border-line py-16 md:mt-24 md:grid-cols-[minmax(0,6fr)_minmax(0,5fr)] md:gap-16 md:py-24",
-          gutter,
+          pageGutter,
         )}
       >
-        <TeamPhoto team={team} sizes="(min-width: 768px) 50vw, 100vw" className="aspect-[3/2] rounded-3xl" />
+        <PlaceholderTeamPhoto team={team} sizes="(min-width: 768px) 50vw, 100vw" className="aspect-[3/2] rounded-3xl" />
         <div className="flex flex-col items-start gap-6">
           <p className="text-xs font-medium tracking-[0.14em] text-white/60 uppercase">{team.heading}</p>
           {team.caption && <p className="text-base text-white/70">{team.caption}</p>}
@@ -126,7 +131,7 @@ export function FoldReelClosing({ about, team, contacts, projects, workHref, lab
  */
 export function FoldIndex({ about, projects, workHref, labels }: FoldProps) {
   return (
-    <section className={cn("bg-ink py-20 text-white md:py-32", gutter)}>
+    <section className={cn("bg-ink py-20 text-white md:py-32", pageGutter)}>
       <div className="mx-auto grid max-w-6xl gap-14 md:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] md:gap-20">
         <div className="flex flex-col items-start gap-6 md:sticky md:top-24 md:self-start">
           <h2 className="font-display text-4xl leading-[1.05] text-balance italic md:text-6xl">{about.slogan}</h2>
