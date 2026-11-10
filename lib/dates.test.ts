@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import { describeRange, formatDateRange, formatShortDate, isValidRange, rentalDays, todayInDublin } from "./dates";
+import {
+  describeRange,
+  formatDateRange,
+  formatLongDate,
+  formatShortDate,
+  isValidRange,
+  rentalDays,
+  todayInDublin,
+} from "./dates";
 import { en } from "./i18n/dictionaries/en";
 
 describe("todayInDublin", () => {
@@ -92,6 +100,18 @@ describe("formatShortDate", () => {
   it("falls back to the raw value for non-dates", () => {
     expect(formatShortDate("x", "en-IE")).toBe("x");
     expect(formatShortDate("2026-02-30", "en-IE")).toBe("2026-02-30");
+  });
+});
+
+describe("formatLongDate", () => {
+  it("shows the full date in each locale", () => {
+    expect(formatLongDate("2026-11-08", "en-IE")).toBe("8 November 2026");
+    expect(formatLongDate("2026-11-08", "ga-IE")).toBe("8 Samhain 2026");
+  });
+
+  it("falls back to the raw value for non-dates", () => {
+    expect(formatLongDate("x", "en-IE")).toBe("x");
+    expect(formatLongDate("2026-02-30", "en-IE")).toBe("2026-02-30");
   });
 });
 
