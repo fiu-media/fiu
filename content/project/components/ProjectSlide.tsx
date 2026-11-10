@@ -14,19 +14,10 @@ import { useReducedMotion } from "@/lib/hooks/useReducedMotion";
 import { format } from "@/lib/i18n/format";
 import { PORTRAIT } from "@/lib/media";
 import { parseVimeo, vimeoEmbedUrl } from "@/lib/vimeo";
+import type { SizedImage } from "@/sanity/lib/image";
 
 import { useVimeoPlayer } from "../video/useVimeoPlayer";
 import { runVimeoShortcut } from "../video/vimeoShortcuts";
-
-export type SlideImage = {
-  src: string;
-  width: number;
-  height: number;
-  alt: string;
-  blurDataURL?: string;
-  /** CSS object-position from the editor's hotspot. */
-  position?: string;
-};
 
 export type ProjectSlideProps = {
   /** Accessible name for the slide, e.g. "Solas, 2 of 5". */
@@ -44,9 +35,9 @@ export type ProjectSlideProps = {
   as?: "h1" | "h2";
   /** Overrides the slide's size (the project page's hero is shorter than a screen). */
   className?: string;
-  image: SlideImage | null;
+  image: SizedImage | null;
   /** Portrait cover for portrait screens (phones). Without one, `image` is cropped to fit. */
-  mobileImage?: SlideImage | null;
+  mobileImage?: SizedImage | null;
   vimeoUrl?: string | null;
   /** Short silent loop shown while the slide is on screen (a Vimeo background embed, which needs Vimeo Plus). */
   previewLoopUrl?: string | null;
@@ -401,7 +392,7 @@ export function ProjectSlide({
  * that fits the screen's orientation; the hotspot and blur placeholder follow it through CSS variables,
  * and the alt text follows it once the client knows the orientation (the server assumes landscape).
  */
-function Cover({ image, mobileImage, priority }: { image: SlideImage; mobileImage?: SlideImage | null; priority?: boolean }) {
+function Cover({ image, mobileImage, priority }: { image: SizedImage; mobileImage?: SizedImage | null; priority?: boolean }) {
   const portrait = usePortrait();
 
   if (!mobileImage) {
@@ -423,11 +414,11 @@ function Cover({ image, mobileImage, priority }: { image: SlideImage; mobileImag
 
   // Not `preload`: a preload link can't say which of the two sources the screen will pick.
   const eager = priority ? ({ loading: "eager", fetchPriority: "high" } as const) : {};
-  const props = (still: SlideImage) =>
+  const props = (still: SizedImage) =>
     getImageProps({ src: still.src, width: still.width, height: still.height, alt: still.alt, sizes: "100vw", ...eager }).props;
   const desktop = props(image);
   const mobile = props(mobileImage);
-  const blur = (still: SlideImage) => (still.blurDataURL ? `url("${still.blurDataURL}")` : "none");
+  const blur = (still: SizedImage) => (still.blurDataURL ? `url("${still.blurDataURL}")` : "none");
   const vars = {
     "--cover-position": image.position ?? "50% 50%",
     "--cover-position-mobile": mobileImage.position ?? "50% 50%",

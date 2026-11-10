@@ -1,5 +1,4 @@
-import Image from "next/image";
-
+import { SizedImg } from "@/components/ui/SizedImg";
 import { cn } from "@/lib/cn";
 import type { SizedImage } from "@/sanity/lib/image";
 
@@ -28,17 +27,13 @@ export function RentalImageView({
     );
   }
   return (
-    <Image
-      src={image.src}
-      width={image.width}
-      height={image.height}
-      alt={image.alt}
+    <SizedImg
+      image={image}
+      fit="contain"
       sizes={sizes}
       priority={priority}
       loading={loading}
-      placeholder={image.blurDataURL ? "blur" : "empty"}
-      blurDataURL={image.blurDataURL}
-      className={cn("bg-white object-contain", className)}
+      className={cn("bg-white", className)}
     />
   );
 }

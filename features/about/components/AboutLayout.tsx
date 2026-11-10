@@ -1,7 +1,7 @@
 import { ArrowDown } from "lucide-react";
-import Image from "next/image";
 import type { ReactNode } from "react";
 
+import { SizedImg } from "@/components/ui/SizedImg";
 import { type Team, TeamFigure } from "@/content/siteSettings";
 import { SheetFade } from "@/features/home/components/HeroFade";
 import { cn } from "@/lib/cn";
@@ -20,21 +20,7 @@ export type AboutLayoutProps = {
 };
 
 export function Still({ still, attribute, className }: { still: SizedImage; attribute?: string; className?: string }) {
-  return (
-    <Image
-      src={still.src}
-      width={still.width}
-      height={still.height}
-      alt={still.alt}
-      sizes="100vw"
-      priority
-      placeholder={still.blurDataURL ? "blur" : "empty"}
-      blurDataURL={still.blurDataURL}
-      data-sanity={attribute}
-      style={{ objectPosition: still.position }}
-      className={cn("size-full object-cover", className)}
-    />
-  );
+  return <SizedImg image={still} sizes="100vw" priority data-sanity={attribute} className={cn("size-full", className)} />;
 }
 
 /** The first screen of Option A: the still with the slogan large over it. */

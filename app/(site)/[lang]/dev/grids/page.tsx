@@ -147,7 +147,7 @@ async function Grids({
             {chips}
             <NameIndex
               label="Index"
-              items={projects.map((p) => ({ title: p.title, meta: p.meta, href: "#", image: p.still }))}
+              items={projects.map((p) => ({ title: p.title, meta: p.meta, href: "#", image: { ...p.still, alt: "" } }))}
               ratio="16/9"
               previewWidth={320}
             />
@@ -237,7 +237,7 @@ async function Grids({
         content: (
           <NameIndex
             label="Index"
-            items={people.map((p) => ({ title: p.title, meta: p.meta, href: "#", image: p.still }))}
+            items={people.map((p) => ({ title: p.title, meta: p.meta, href: "#", image: { ...p.still, alt: "" } }))}
             ratio="4/5"
             previewWidth={220}
           />

@@ -1,9 +1,10 @@
 import { ArrowRight } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { pageGutter } from "@/components/layout/nav/rail";
 import { GlassPillLink } from "@/components/ui/Glass";
+import { SizedImg } from "@/components/ui/SizedImg";
 import { type Team, TeamFigure } from "@/content/siteSettings";
 import { cn } from "@/lib/cn";
 import type { SizedImage } from "@/sanity/lib/image";
@@ -42,8 +43,6 @@ export type FoldProps = {
   labels: { about: string; work: string; aboutCta: string; workCta: string; view: string };
 };
 
-export const gutter = "px-5 md:px-10";
-
 /** A photo that fills its (relative, overflow-hidden) parent. */
 export function Photo({
   image,
@@ -56,20 +55,7 @@ export function Photo({
   className?: string;
   priority?: boolean;
 }) {
-  return (
-    <Image
-      src={image.src}
-      width={image.width}
-      height={image.height}
-      alt={image.alt}
-      sizes={sizes}
-      priority={priority}
-      placeholder={image.blurDataURL ? "blur" : "empty"}
-      blurDataURL={image.blurDataURL}
-      style={{ objectPosition: image.position }}
-      className={cn("size-full object-cover", className)}
-    />
-  );
+  return <SizedImg image={image} sizes={sizes} priority={priority} className={cn("size-full", className)} />;
 }
 
 /** The row of project covers you swipe or scroll sideways. `children` sit between the last cover and "All work". */
@@ -87,7 +73,7 @@ export function Reel({
       aria-label={labels.work}
       className={cn(
         "flex snap-x snap-mandatory scroll-px-5 [scrollbar-width:none] gap-4 overflow-x-auto pb-4 md:scroll-px-10 md:gap-6 [&::-webkit-scrollbar]:hidden",
-        gutter,
+        pageGutter,
         className,
       )}
     >
@@ -127,7 +113,10 @@ export function HomeFold({ about, team, teamAttribute, contacts, projects, workH
   return (
     <section aria-label={labels.about} className="bg-ink py-20 text-fg md:py-28">
       <div
-        className={cn("mx-auto grid max-w-6xl items-center gap-12 md:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] md:gap-20", gutter)}
+        className={cn(
+          "mx-auto grid max-w-6xl items-center gap-12 md:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] md:gap-20",
+          pageGutter,
+        )}
       >
         <TeamFigure team={team} attribute={teamAttribute} />
         <div className="flex flex-col items-start gap-6">
