@@ -11,7 +11,8 @@
  */
 import { clampQty } from "@/features/rentals/basket/quantity";
 import { isIsoDate, isValidRange, rentalDays } from "@/lib/dates";
-import { type Locale, localizedPath } from "@/lib/i18n/config";
+import type { Locale } from "@/lib/i18n/config";
+import { href, routes } from "@/lib/routes";
 
 import { ENQUIRY_TYPES, type EnquiryType, isEnquiryType, limits, MAX_HIRE_DAYS, MAX_LEAD_DAYS } from "./schemas";
 
@@ -109,7 +110,7 @@ const withQuery = (path: string, query: URLSearchParams) => (query.size > 0 ? `$
 export function contactHref(lang: Locale, { type }: { type?: EnquiryType } = {}) {
   const query = new URLSearchParams();
   if (type) query.set("type", type);
-  return withQuery(localizedPath(lang, "/contact"), query);
+  return withQuery(href(lang, routes.contact()), query);
 }
 
 /** A link to the quote form. Items are catalogue slugs with a quantity; a quantity of 1 is left implied. */
@@ -129,7 +130,7 @@ export function quoteHref(
   if (company) query.set("company", company);
   if (production) query.set("production", production);
   for (const { slug, qty } of items) query.append("item", qty > 1 ? `${slug}:${qty}` : slug);
-  return withQuery(localizedPath(lang, "/rentals/quote"), query);
+  return withQuery(href(lang, routes.quote()), query);
 }
 
 /** The slug of a catalogue entry, for building `quoteHref` items from the basket. */

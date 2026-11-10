@@ -3,8 +3,9 @@ import { PortableText } from "next-sanity";
 import { WORK_QUERY } from "@/content/project";
 import { ABOUT_QUERY } from "@/content/siteSettings";
 import { AboutContacts } from "@/features/about";
-import { defaultLocale, type Locale, localizedPath } from "@/lib/i18n/config";
+import { defaultLocale, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
+import { href, routes } from "@/lib/routes";
 import { settingsAttribute } from "@/sanity/lib/about";
 import { publishedId, toSizedImage } from "@/sanity/lib/image";
 import { cachedSanity, getDynamicFetchOptions } from "@/sanity/lib/live";
@@ -37,7 +38,7 @@ export async function HomeFoldContent({ lang }: { lang: Locale }) {
           title: project.title,
           meta: [project.type, project.year, project.client].filter(Boolean).join(" · "),
           image,
-          href: localizedPath(lang, `/work/${project.slug}`),
+          href: href(lang, routes.project(project.slug)),
         },
       ];
     })
@@ -52,7 +53,7 @@ export async function HomeFoldContent({ lang }: { lang: Locale }) {
         gloss: about.sloganGloss ?? null,
         // Only the first paragraph: this is the condensed About.
         summary: about.manifesto?.length ? <PortableText value={about.manifesto.slice(0, 1)} /> : null,
-        href: localizedPath(lang, "/about"),
+        href: href(lang, routes.about()),
       }}
       team={toTeam(about, dict.about.teamHeading)}
       teamAttribute={id ? settingsAttribute(id, "teamStill") : undefined}
@@ -64,7 +65,7 @@ export async function HomeFoldContent({ lang }: { lang: Locale }) {
         />
       }
       projects={projects}
-      workHref={localizedPath(lang, "/work")}
+      workHref={href(lang, routes.work())}
       labels={{
         about: dict.nav.about,
         work: dict.nav.work,
