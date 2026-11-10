@@ -48,6 +48,7 @@ function Nav({ lang, items, homeHref, labels, onImage, blurRail, overFootage, pa
   // The overlay is open for the page it was opened on, so navigating leaves it behind.
   const [openOn, setOpenOn] = useState<string | null>(null);
   const popup = useRef<HTMLDivElement>(null);
+  const rail = useRef<HTMLElement>(null);
   // On Home the photo is what Safari should tint its bars from again once the opaque menu is gone, but it only samples
   // when the page scrolls, so nudge right away.
   const onOpenChange = (next: boolean) => {
@@ -64,11 +65,44 @@ function Nav({ lang, items, homeHref, labels, onImage, blurRail, overFootage, pa
     return () => wide.removeEventListener("change", onChange);
   }, []);
 
+  // Home: over the hero the rail carries the footage treatment (`rail-halo`). Below the fold it settles into the normal
+  // rail item by item, each one as the photo's bottom edge passes it, and the hairline grows down from that edge, so the
+  // change follows the edge the eye is already watching instead of flipping the whole rail at once.
+  useEffect(() => {
+    const aside = rail.current;
+    const hero = document.querySelector<HTMLElement>("[data-hero]");
+    if (!overFootage || !aside || !hero) return;
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const fold = hero.getBoundingClientRect().bottom;
+      aside.style.setProperty("--fold-y", `${Math.min(Math.max(fold, 0), window.innerHeight)}px`);
+      for (const link of aside.querySelectorAll("a")) {
+        const box = link.getBoundingClientRect();
+        link.toggleAttribute("data-settled", box.top + box.height / 2 > fold);
+      }
+    };
+    const schedule = () => {
+      frame ||= requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+      aside.style.removeProperty("--fold-y");
+      for (const link of aside.querySelectorAll("[data-settled]")) link.removeAttribute("data-settled");
+    };
+  }, [overFootage]);
+
   return (
     <>
       <BriertoWatermark />
       <LanguageScrollRestore pathname={pathname} />
       <aside
+        ref={rail}
         className={cn(
           "fixed inset-y-0 left-0 z-30 hidden w-[calc(4rem+env(safe-area-inset-left))] flex-col items-center gap-8 border-r border-line pt-[max(1.75rem,env(safe-area-inset-top))] pb-7 pl-[env(safe-area-inset-left)] md:flex",
           // Over Home's hero: a letter halo, and edge light only behind bright stills (`rail-halo` in globals.css).
@@ -92,7 +126,7 @@ function Nav({ lang, items, homeHref, labels, onImage, blurRail, overFootage, pa
               key={item.href}
               href={item.href}
               aria-current={isCurrent(pathname, item.href) ? "page" : undefined}
-              className="relative rotate-180 rounded-sm text-sm font-medium tracking-wide text-fg/60 [writing-mode:vertical-rl] hover:text-fg aria-[current=page]:text-fg aria-[current=page]:after:absolute aria-[current=page]:after:inset-y-0 aria-[current=page]:after:-left-2.5 aria-[current=page]:after:w-px aria-[current=page]:after:bg-current"
+              className="relative rotate-180 rounded-sm text-sm font-medium tracking-wide text-fg-quiet [writing-mode:vertical-rl] hover:text-fg aria-[current=page]:text-fg aria-[current=page]:after:absolute aria-[current=page]:after:inset-y-0 aria-[current=page]:after:-left-2.5 aria-[current=page]:after:w-px aria-[current=page]:after:bg-current"
             >
               {item.label}
             </Link>

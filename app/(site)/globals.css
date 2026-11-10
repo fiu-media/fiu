@@ -50,6 +50,9 @@
     --bg-raised: light-dark(#ffffff, #17151a);
     --fg: light-dark(#151316, #f2eee8);
     --fg-muted: light-dark(#5f5a63, #a39da8);
+    /* The rail's quiet links: nav labels and the language not in use. The page's text, see-through, at the least that
+       still holds 4.5:1 (dark 50%: 4.76:1 on ink; light 62%: about 4.9:1 on paper). */
+    --fg-quiet: light-dark(rgb(21 19 22 / 0.62), rgb(242 238 232 / 0.5));
     --line: light-dark(rgb(21 19 22 / 0.12), rgb(255 255 255 / 0.12));
     --skeleton: light-dark(rgb(21 19 22 / 0.1), #24222a);
     --accent: light-dark(#a3122a, #ff5a6e);
@@ -87,6 +90,7 @@ html:has([data-snap="mandatory"]:not([style*="display: none"] *)) {
   --color-bg-raised: var(--bg-raised);
   --color-fg: var(--fg);
   --color-fg-muted: var(--fg-muted);
+  --color-fg-quiet: var(--fg-quiet);
   --color-line: var(--line);
   --color-skeleton: var(--skeleton);
   --color-accent: var(--accent);
@@ -460,36 +464,56 @@ body {
 }
 
 /*
- * Halo: the desktop rail where Home's hero runs under it. No hairline, full-white labels and a tight shadow hugging each
- * letter (and the logo and language mark). Unlayered, so it beats the rail's utilities. The logo's shadow is on its link,
- * not the logo: the logo is a CSS mask, which would clip a filter on itself.
+ * Halo: the desktop rail where Home's hero runs under it. Over the photo: no hairline, labels and language codes at 80%
+ * white (what --hero-edge is sized for, TEXT_ALPHA in features/home/heroEdge.ts), full white for the current language
+ * and on hover, and a tight shadow hugging each letter. Below the fold each item settles into the normal rail as the
+ * photo's bottom edge passes it (SiteNavClient marks it `data-settled`), easing over 300ms, and the hairline grows down
+ * from that edge (--fold-y). Unlayered, so it beats the rail's utilities; a settled item falls back to them. The logo's
+ * shadow is on its link, not the logo: the logo is a CSS mask, which would clip a filter on itself.
  */
 .rail-halo {
   border-right-color: transparent;
+}
+.rail-halo::after {
+  content: "";
+  position: absolute;
+  top: var(--fold-y, 100%);
+  bottom: 0;
+  right: -1px;
+  width: 1px;
+  background: var(--line);
+  pointer-events: none;
+}
+.rail-halo a {
+  transition:
+    color 300ms ease,
+    text-shadow 300ms ease,
+    filter 300ms ease;
+}
+.rail-halo a:not([data-settled]) {
   text-shadow:
     0 0 1px rgb(0 0 0 / 0.63),
     0 0 4px rgb(0 0 0 / 0.53),
     0 0 10px rgb(0 0 0 / 0.39),
     0 0 18px rgb(0 0 0 / 0.25);
 }
-/* One set of tones for the labels and the language codes over footage: 80% white at rest (what --hero-edge is sized
-   for, TEXT_ALPHA in features/home/heroEdge.ts), full white for the current language and on hover. */
-.rail-halo nav a,
-.rail-halo .rail-lang a {
+.rail-halo nav a:not([data-settled]),
+.rail-halo .rail-lang a:not([data-settled]) {
   color: color-mix(in srgb, var(--color-on-image) 80%, transparent);
 }
-.rail-halo nav a:hover,
-.rail-halo .rail-lang a:hover,
-.rail-halo .rail-lang a[aria-current="true"] {
+.rail-halo nav a:not([data-settled]):hover,
+.rail-halo .rail-lang a:not([data-settled]):hover,
+.rail-halo .rail-lang a:not([data-settled])[aria-current="true"] {
   color: var(--color-on-image);
 }
-.rail-halo nav a:hover {
-  text-decoration-line: underline;
-  text-underline-offset: 5px;
-}
-.rail-halo > a,
-.rail-halo .rail-lang {
+.rail-halo > a:not([data-settled]),
+.rail-halo .rail-lang a:not([data-settled]) {
   filter: drop-shadow(0 0 1px rgb(0 0 0 / 0.56)) drop-shadow(0 0 8px rgb(0 0 0 / 0.35));
+}
+@media (prefers-reduced-motion: reduce) {
+  .rail-halo a {
+    transition: none;
+  }
 }
 
 /*
