@@ -27,11 +27,14 @@ export async function submitQuote(_previous: FormState, formData: FormData): Pro
         // only accept items that are currently published and available.
         const qtyById = new Map<string, number>();
         for (const { itemId, qty } of data.items) qtyById.set(itemId, Math.min(MAX_QTY, (qtyById.get(itemId) ?? 0) + qty));
+        // Every id looked up below came from the map, so the fallback is never used.
+        const qtyOf = (id: string) => qtyById.get(id) ?? 0;
         const found = await availableItems([...qtyById.keys()]);
         if (found.length !== qtyById.size) return { formErrors: ["unavailable"] };
-        if (found.some((item) => qtyById.get(item._id)! > (item.maxQuantity ?? MAX_QTY))) return { formErrors: ["overLimit"] };
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- maxQuantity is required by validation in the Studio, but stored data isn't guaranteed to follow it
+        if (found.some((item) => qtyOf(item._id) > (item.maxQuantity ?? MAX_QTY))) return { formErrors: ["overLimit"] };
 
-        const kit = found.map((item) => ({ name: item.name, brand: item.brand, qty: qtyById.get(item._id)! }));
+        const kit = found.map((item) => ({ name: item.name, brand: item.brand, qty: qtyOf(item._id) }));
         return { extra: { found, qtyById, kit } };
       },
       toDocument: (data, { found, qtyById }) => ({

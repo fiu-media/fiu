@@ -51,7 +51,9 @@ export function useHeroIntro() {
       window.setTimeout(() => dispatch({ type: "minElapsed" }), SPLASH_MIN_MS),
       window.setTimeout(() => dispatch({ type: "timedOut" }), SPLASH_MAX_MS),
     ];
-    return () => timers.forEach(window.clearTimeout);
+    return () => {
+      for (const timer of timers) window.clearTimeout(timer);
+    };
   }, []);
 
   useEffect(() => {
@@ -61,7 +63,9 @@ export function useHeroIntro() {
       window.setTimeout(() => dispatch({ type: "spinDue" }), SPIN_DELAY_MS),
       window.setTimeout(() => dispatch({ type: "settled" }), mode === "live" ? INTRO_BACKSTOP_MS : INTRO_SETTLE_MS),
     ];
-    return () => timers.forEach(window.clearTimeout);
+    return () => {
+      for (const timer of timers) window.clearTimeout(timer);
+    };
   }, [splashDone, mode]);
 
   useEffect(() => {

@@ -8,6 +8,7 @@ import { GlassPillLink } from "@/components/ui/Glass";
 import { ContactLinks, getSiteSettings } from "@/content/siteSettings";
 import { AboutLayoutA } from "@/features/about";
 import { fallbackStills } from "@/features/home";
+import { at } from "@/lib/at";
 import { isLocale, type Locale, localizedPath } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { toSizedImage } from "@/sanity/lib/image";
@@ -74,7 +75,7 @@ async function Options({
   const option: Option = OPTIONS.find((o) => o === requested) ?? "a";
   const [dict, settings] = await Promise.all([getDictionary(lang), getSettings(lang)]);
 
-  const still = (settings.aboutStill ? toSizedImage(settings.aboutStill, 2400) : null) ?? fallbackStills[0]!;
+  const still = (settings.aboutStill ? toSizedImage(settings.aboutStill, 2400) : null) ?? at(fallbackStills, 0);
   const Layout = layouts[option];
   const props = {
     still,

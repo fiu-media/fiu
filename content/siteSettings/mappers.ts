@@ -1,4 +1,5 @@
 import { fallbackStills } from "@/features/home/fallback-stills";
+import { at } from "@/lib/at";
 import { type SizedImage, toSizedImage } from "@/sanity/lib/image";
 
 import type { SiteSettings } from "./loaders";
@@ -12,7 +13,7 @@ export type Team = {
 };
 
 /** Shown until the editors upload a team photo (Site settings → About), the way About falls back to a project still. */
-const standIn = fallbackStills[2 % fallbackStills.length]!;
+const standIn = at(fallbackStills, 2 % fallbackStills.length);
 
 /**
  * The team photo for About and Home: the editors' photo and caption, or a stand-in still.

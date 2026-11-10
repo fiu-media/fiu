@@ -7,6 +7,7 @@ import { useState } from "react";
 
 import { SizedImg } from "@/components/ui/SizedImg";
 import { StepButton } from "@/components/ui/StepButton";
+import { at } from "@/lib/at";
 import { cn } from "@/lib/cn";
 import { useStepper } from "@/lib/hooks/useStepper";
 import { useSwipe } from "@/lib/hooks/useSwipe";
@@ -136,7 +137,9 @@ function Lightbox({
   if (!current) return null;
 
   // The neighbours load while this one is looked at, so stepping doesn't wait.
-  const neighbours = many ? [stills[(index + 1) % stills.length]!, stills[(index - 1 + stills.length) % stills.length]!] : [];
+  const neighbours = many
+    ? [at(stills, (index + 1) % stills.length), at(stills, (index - 1 + stills.length) % stills.length)]
+    : [];
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>

@@ -46,10 +46,13 @@ export const talent = defineType({
   preview: {
     // Roles are references; previews can only dereference a fixed number of array entries.
     select: { title: "name", role0: "roles.0.title", role1: "roles.1.title", role2: "roles.2.title", media: "portrait" },
+    // Sanity types the selected values as `any`.
+    /* eslint-disable @typescript-eslint/no-unsafe-assignment */
     prepare: ({ title, role0, role1, role2, media }) => ({
       title,
       subtitle: [role0, role1, role2].filter(Boolean).join(", "),
       media,
     }),
+    /* eslint-enable @typescript-eslint/no-unsafe-assignment */
   },
 });

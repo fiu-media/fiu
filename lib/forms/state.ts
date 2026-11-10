@@ -26,7 +26,7 @@ export type FormErrorCode = (typeof FORM_ERROR_CODES)[number];
  * submitted values so the form repopulates), flagged `success` once the request went through (`confirmation: false` when the visitor's address can't be emailed), or
  * `null` before the first submit.
  */
-export type FormState = (SubmissionResult<string[]> & { success?: boolean; confirmation?: boolean }) | null;
+export type FormState = (SubmissionResult & { success?: boolean; confirmation?: boolean }) | null;
 
 const codes: readonly string[] = FORM_ERROR_CODES;
 

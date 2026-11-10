@@ -1,5 +1,7 @@
 import { crc32, deflateSync } from "node:zlib";
 
+import { at } from "../../lib/at";
+
 const SIGNATURE = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 
 function chunk(type: string, data: Buffer) {
@@ -16,12 +18,7 @@ function chunk(type: string, data: Buffer) {
  * makes the bytes (and so Sanity's content hash) different on every run: an upload is never matched to an asset
  * the dataset already had, so cleanup can delete it without touching anyone else's.
  */
-export function solidPng(
-  width: number,
-  height: number,
-  [r, g, b]: readonly [number, number, number] | readonly number[],
-  tag: string,
-) {
+export function solidPng(width: number, height: number, rgb: readonly number[], tag: string) {
   const header = Buffer.alloc(13);
   header.writeUInt32BE(width, 0);
   header.writeUInt32BE(height, 4);
@@ -32,9 +29,9 @@ export function solidPng(
   // Each row is a filter byte (0: none) followed by its pixels.
   const row = Buffer.alloc(1 + width * 3);
   for (let x = 0; x < width; x++) {
-    row[1 + x * 3] = r!;
-    row[2 + x * 3] = g!;
-    row[3 + x * 3] = b!;
+    row[1 + x * 3] = at(rgb, 0);
+    row[2 + x * 3] = at(rgb, 1);
+    row[3 + x * 3] = at(rgb, 2);
   }
   const pixels = Buffer.concat(Array.from({ length: height }, () => row));
 

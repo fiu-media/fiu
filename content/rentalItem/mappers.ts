@@ -24,6 +24,7 @@ export function toCatalogue({ categories, items }: RENTALS_QUERY_RESULT): {
       slug: item.slug,
       brand: item.brand,
       summary: item.summary,
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- a category reference can dangle; the generated type doesn't say so
       categoryId: item.category?.slug ?? null,
       image: item.images?.[0] ? toSizedImage(item.images[0], CARD_WIDTH) : null,
     })),
@@ -53,6 +54,7 @@ export function toRentalItem(item: RENTAL_ITEM_QUERY_RESULT): RentalItemView | n
     name: item.name,
     brand: item.brand,
     summary: item.summary,
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- a category reference can dangle; the generated type doesn't say so
     categoryTitle: item.category?.title ?? null,
     maxQuantity: item.maxQuantity,
     images: (item.images ?? []).flatMap((image) => toSizedImage(image, DETAIL_WIDTH) ?? []),
@@ -73,6 +75,7 @@ export function toQuoteCatalogue(lang: Locale, items: QUOTE_CATALOGUE_QUERY_RESU
       slug: item.slug,
       href: href(lang, routes.rentalItem(item.slug)),
       // An item with no cap of its own can still only be asked for up to `MAX_QTY`.
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- maxQuantity is required by validation in the Studio, but stored data isn't guaranteed to follow it
       max: item.maxQuantity ?? MAX_QTY,
       // The lookup has no dimensions, so the image gets the default 4:3 frame.
       image: item.image ? toSizedImage({ ...item.image, dimensions: null }, BASKET_THUMB_WIDTH) : null,

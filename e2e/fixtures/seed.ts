@@ -39,7 +39,7 @@ async function main() {
   console.log(`[e2e] Created ${docs.length} fixture document(s) and ${uploaded.length} image(s) in "${dataset}".`);
 }
 
-main().catch((error) => {
+main().catch((error: unknown) => {
   console.error(error);
   process.exit(1);
 });

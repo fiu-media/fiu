@@ -4,15 +4,15 @@ import { runVimeoShortcut } from "./vimeoShortcuts";
 
 function fakePlayer(state: { paused?: boolean; time?: number; volume?: number; muted?: boolean } = {}) {
   return {
-    getPaused: vi.fn(async () => state.paused ?? false),
-    play: vi.fn(async () => {}),
-    pause: vi.fn(async () => {}),
-    getCurrentTime: vi.fn(async () => state.time ?? 10),
-    setCurrentTime: vi.fn(async (seconds: number) => seconds),
-    getVolume: vi.fn(async () => state.volume ?? 0.5),
-    setVolume: vi.fn(async (volume: number) => volume),
-    getMuted: vi.fn(async () => state.muted ?? false),
-    setMuted: vi.fn(async (muted: boolean) => muted),
+    getPaused: vi.fn(() => Promise.resolve(state.paused ?? false)),
+    play: vi.fn(() => Promise.resolve()),
+    pause: vi.fn(() => Promise.resolve()),
+    getCurrentTime: vi.fn(() => Promise.resolve(state.time ?? 10)),
+    setCurrentTime: vi.fn((seconds: number) => Promise.resolve(seconds)),
+    getVolume: vi.fn(() => Promise.resolve(state.volume ?? 0.5)),
+    setVolume: vi.fn((volume: number) => Promise.resolve(volume)),
+    getMuted: vi.fn(() => Promise.resolve(state.muted ?? false)),
+    setMuted: vi.fn((muted: boolean) => Promise.resolve(muted)),
   };
 }
 
@@ -76,7 +76,8 @@ describe("runVimeoShortcut", () => {
   it("swallows player errors", async () => {
     const player = fakePlayer();
     player.getPaused.mockRejectedValue(new Error("gone"));
-    runVimeoShortcut(" ", player, () => {});
+    expect(() => runVimeoShortcut(" ", player, () => {})).not.toThrow();
     await settle();
+    expect(player.getPaused).toHaveBeenCalled();
   });
 });

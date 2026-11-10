@@ -1,8 +1,12 @@
+import vitest from "@vitest/eslint-plugin";
 import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 import importX from "eslint-plugin-import-x";
+import jsxA11y from "eslint-plugin-jsx-a11y";
+import playwright from "eslint-plugin-playwright";
 import simpleImportSort from "eslint-plugin-simple-import-sort";
+import tseslint from "typescript-eslint";
 
 // Every `@next/next/*` rule the Next presets turn on.
 const nextRules = [...new Set([...nextVitals, ...nextTs].flatMap((c) => Object.keys(c.rules ?? {})))].filter((r) =>
@@ -24,6 +28,79 @@ const eslintConfig = defineConfig([
     // Vendored Draco decoder (copied from three/examples for self-hosting).
     "public/draco/**",
   ]),
+  {
+    // Type-aware rules need the TS project, so they only run on TS files. Config files and scripts outside it are plain JS.
+    files: ["**/*.{ts,tsx,mts}"],
+    extends: [tseslint.configs.strictTypeChecked, tseslint.configs.stylisticTypeChecked],
+    languageOptions: { parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname } },
+    rules: {
+      "@typescript-eslint/no-floating-promises": "error",
+      // JSX handlers like `onClick={async () => ...}` are fine; React ignores the returned promise.
+      "@typescript-eslint/no-misused-promises": ["error", { checksVoidReturn: { attributes: false } }],
+      "@typescript-eslint/switch-exhaustiveness-check": "error",
+      "@typescript-eslint/no-unnecessary-condition": "error",
+      "@typescript-eslint/prefer-nullish-coalescing": "error",
+      "@typescript-eslint/no-non-null-assertion": "error",
+      // The codebase declares object shapes with `type`, not `interface`.
+      "@typescript-eslint/consistent-type-definitions": ["error", "type"],
+      // `onClick={() => setOpen(true)}` is idiomatic in JSX; only flag void values used inside larger expressions.
+      "@typescript-eslint/no-confusing-void-expression": ["error", { ignoreArrowShorthand: true }],
+      // An empty arrow function is the idiomatic no-op (`.catch(() => {})`, `mockImplementation(() => {})`).
+      "@typescript-eslint/no-empty-function": ["error", { allow: ["arrowFunctions"] }],
+      // Destructuring a key out just to leave it off the rest object is a normal way to omit it.
+      "@typescript-eslint/no-unused-vars": ["error", { ignoreRestSiblings: true }],
+      // Numbers in template literals (`${width}px`) are safe and everywhere in the styling code.
+      "@typescript-eslint/restrict-template-expressions": ["error", { allowNumber: true }],
+    },
+  },
+  {
+    // Next registers `jsx-a11y` with a handful of rules; this turns on the rest of the strict set.
+    files: ["**/*.{jsx,tsx}"],
+    rules: {
+      ...jsxA11y.flatConfigs.strict.rules,
+      // A scrollable region has to be focusable so keyboard users can scroll it; `role="region"` names it.
+      "jsx-a11y/no-noninteractive-tabindex": ["error", { roles: ["tabpanel", "region"] }],
+      // The label text often sits a level deeper than the default depth of 2 (label > span > span).
+      "jsx-a11y/label-has-associated-control": ["error", { depth: 3 }],
+    },
+  },
+  {
+    // The /dev concept pages mock up links and buttons with `href="#"`.
+    files: ["app/**/dev/**"],
+    rules: { "jsx-a11y/anchor-is-valid": "off" },
+  },
+  {
+    // Mock call records (`mock.calls[0][0]`) are `any`, and a `!` that turns out wrong just fails the test.
+    files: ["**/*.test.ts"],
+    rules: {
+      "@typescript-eslint/no-unsafe-member-access": "off",
+      "@typescript-eslint/no-unsafe-assignment": "off",
+      "@typescript-eslint/no-unsafe-argument": "off",
+      "@typescript-eslint/no-unsafe-return": "off",
+      "@typescript-eslint/no-unsafe-call": "off",
+      "@typescript-eslint/no-non-null-assertion": "off",
+    },
+  },
+  {
+    files: ["**/*.test.ts"],
+    ...vitest.configs.recommended,
+    rules: {
+      ...vitest.configs.recommended.rules,
+      // `expect(value, "message")` is how a loop says which case failed.
+      "vitest/valid-expect": ["error", { maxArgs: 2 }],
+    },
+  },
+  {
+    files: ["e2e/**"],
+    ...playwright.configs["flat/recommended"],
+    rules: {
+      ...playwright.configs["flat/recommended"].rules,
+      // Our shared helpers (`expectExamples`, ...) hold assertions and are only ever called from inside tests.
+      "playwright/no-standalone-expect": "off",
+      // `audit()` in a11y.spec.ts runs the axe check, so a test that only calls it still asserts.
+      "playwright/expect-expect": ["error", { assertFunctionNames: ["audit"] }],
+    },
+  },
   {
     // A disable comment that no longer silences anything is dead weight; fail on it.
     linterOptions: { reportUnusedDisableDirectives: "error" },

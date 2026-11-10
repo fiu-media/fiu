@@ -19,9 +19,9 @@ async function expectExamples(form: Locator) {
     const label = await field.evaluate((el) => (el as HTMLInputElement).labels?.[0]?.textContent ?? "");
     // Plumbing that carries a value (the phone's hidden control) has no label and nothing to type into.
     if (!label) continue;
-    const placeholder = await field.getAttribute("placeholder");
-    expect(placeholder, `a field labelled "${label}"`).toBeTruthy();
-    expect(label, `placeholder "${placeholder}"`).not.toContain(placeholder!);
+    await expect(field, `a field labelled "${label}"`).toHaveAttribute("placeholder", /./);
+    const placeholder = (await field.getAttribute("placeholder")) ?? "";
+    expect(label, `placeholder "${placeholder}"`).not.toContain(placeholder);
   }
 }
 

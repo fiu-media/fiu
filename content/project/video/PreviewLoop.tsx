@@ -17,6 +17,8 @@ export function PreviewLoop({ src }: { src: string }) {
   const [ready, setReady] = useState(false);
   useVimeoPlayer(frame, { play: () => setReady(true), bufferend: () => setReady(true) });
   return (
+    // Decorative: aria-hidden and out of the tab order, so an accessible name would never be announced.
+    // eslint-disable-next-line jsx-a11y/iframe-has-title
     <iframe
       ref={setFrame}
       src={src}

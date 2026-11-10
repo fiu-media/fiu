@@ -24,7 +24,11 @@ export function countryList(lang: Locale): CountryList {
     .map((code) => ({ code, name: names.of(code) ?? code }))
     .sort((a, b) => sortKey(a.name).localeCompare(sortKey(b.name), tag));
   return {
-    pinned: PINNED.map((code) => named.find((c) => c.code === code)!),
+    pinned: PINNED.map((code) => {
+      const country = named.find((c) => c.code === code);
+      if (!country) throw new Error(`Pinned country ${code} is not in the list`);
+      return country;
+    }),
     all: named.filter((c) => !PINNED.includes(c.code)),
   };
 }

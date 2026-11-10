@@ -54,9 +54,9 @@ export function SweepDriver({ sweep, rig }: { sweep: LightSweep | undefined; rig
 
   useFrame(() => {
     const s = sweepRef.current;
-    const running = Boolean(s) && s!.pausedAt === null && !reduced.current && inView.current && !document.hidden;
+    const running = s?.pausedAt === null && !reduced.current && inView.current && !document.hidden;
     const o = s && !reduced.current ? sweepAt(s, performance.now()) : { x: 0, y: 0 };
-    liveRef.current = running && s!.technique === "move";
+    liveRef.current = running && s.technique === "move";
 
     const g = groupRef.current;
     if (g) g.position.set(s?.technique === "move" ? o.x * MOVE_RANGE : 0, s?.technique === "move" ? o.y * MOVE_RANGE : 0, 0);

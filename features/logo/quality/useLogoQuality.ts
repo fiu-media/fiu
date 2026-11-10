@@ -1,5 +1,5 @@
 import { useFrame, useThree } from "@react-three/fiber";
-import { type MutableRefObject, useCallback, useEffect, useRef } from "react";
+import { type RefObject, useCallback, useEffect, useRef } from "react";
 
 import {
   FLOOR_SECONDS,
@@ -41,7 +41,7 @@ export function useLogoQuality({
   startTier: LogoTier;
   tier: LogoTier;
   setTier: (tier: LogoTier) => void;
-  readyRef: MutableRefObject<boolean>;
+  readyRef: RefObject<boolean>;
   onReady: () => void;
   onTooSlow: (() => void) | undefined;
 }) {
@@ -49,6 +49,8 @@ export function useLogoQuality({
   const setDpr = useThree((s) => s.setDpr);
   const gl = useThree((s) => s.gl);
   const probe = useRef({
+    // Without the assertion the ref would be typed `string`.
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
     phase: "warmup" as "warmup" | "measure" | "done",
     frames: 0,
     ms: [] as number[],
@@ -104,12 +106,18 @@ export function useLogoQuality({
     const q = pacing.current;
     // Placed before this frame renders, so it covers everything up to the previous frame.
     const sync = ctx.fenceSync(ctx.SYNC_GPU_COMMANDS_COMPLETE, 0);
-    if (!sync) return invalidate();
+    if (!sync) {
+      invalidate();
+      return;
+    }
     ctx.flush();
     q.fences.push(sync);
     // The fence placed a frame ago: once it has signalled, only one frame is still in flight.
-    const behind = q.fences.length > 1 ? q.fences.shift()! : null;
-    if (!behind) return invalidate();
+    const behind = q.fences.length > 1 ? (q.fences.shift() ?? null) : null;
+    if (!behind) {
+      invalidate();
+      return;
+    }
     q.waiting = behind;
     // A sync's status only updates between tasks, so a GPU that's behind is polled from timers.
     const check = () => {
@@ -147,7 +155,10 @@ export function useLogoQuality({
     if (!probeComplete(p.ms)) return;
     const { next, reprobe } = probeVerdict(p.ms, tier);
     log(`probe at ${tier}: ${medianFps(p.ms).toFixed(0)} fps over ${p.ms.length} frames → ${next}`);
-    if (next === "static") return giveUp(`at ${tier}`);
+    if (next === "static") {
+      giveUp(`at ${tier}`);
+      return;
+    }
     p.measured = !reprobe;
     p.phase = "warmup";
     p.frames = next === tier ? PROBE_WARMUP_FRAMES - 1 : 0;
@@ -158,7 +169,10 @@ export function useLogoQuality({
     const p = probe.current;
     if (p.phase !== "done") {
       probeFrame(delta);
-      if (!stillProbing()) return releaseFences();
+      if (!stillProbing()) {
+        releaseFences();
+        return;
+      }
       if (adaptive) nextProbeFrame();
       else invalidate();
       return;
@@ -175,7 +189,10 @@ export function useLogoQuality({
     // crawling intro also drags on), afterwards once there's no cheaper tier left to try.
     if (!introOver || tier === "low") {
       r.crawl = fps < MIDSESSION_FLOOR_FPS ? r.crawl + delta : 0;
-      if (r.crawl > FLOOR_SECONDS) return giveUp(introOver ? "mid-session" : "during the intro");
+      if (r.crawl > FLOOR_SECONDS) {
+        giveUp(introOver ? "mid-session" : "during the intro");
+        return;
+      }
     }
     if (!introOver) return;
     if (fps < 30) {

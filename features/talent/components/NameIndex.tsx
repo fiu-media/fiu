@@ -56,6 +56,9 @@ export function NameIndex({
   }
 
   return (
+    // The list only listens for the pointer leaving and focus moving out, to clear the highlight; the links inside are
+    // the interactive parts.
+    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
     <ul
       ref={box}
       aria-label={label}

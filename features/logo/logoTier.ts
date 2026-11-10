@@ -2,6 +2,7 @@ import { z } from "zod";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { createStore } from "zustand/vanilla";
 
+import { at } from "@/lib/at";
 import { safeStorage } from "@/lib/safe-storage";
 
 import type { LogoGlassParams } from "./config/schemas";
@@ -77,7 +78,7 @@ export function lowerTier(tier: LogoTier): LogoTier | null {
 
 export function higherTier(tier: LogoTier, ceiling: LogoTier): LogoTier | null {
   const i = TIERS.indexOf(tier);
-  return i > TIERS.indexOf(ceiling) ? TIERS[i - 1]! : null;
+  return i > TIERS.indexOf(ceiling) ? at(TIERS, i - 1) : null;
 }
 
 export type DeviceInfo = {
@@ -108,7 +109,7 @@ export function tierFromDevice(info: DeviceInfo): LogoDecision {
 export function medianFps(frameMs: readonly number[]): number {
   const sorted = [...frameMs].sort((a, b) => a - b);
   const mid = sorted.length >> 1;
-  const ms = sorted.length % 2 ? sorted[mid]! : (sorted[mid - 1]! + sorted[mid]!) / 2;
+  const ms = sorted.length % 2 ? at(sorted, mid) : (at(sorted, mid - 1) + at(sorted, mid)) / 2;
   return ms > 0 ? 1000 / ms : Infinity;
 }
 

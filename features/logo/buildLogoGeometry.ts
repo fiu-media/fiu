@@ -435,6 +435,8 @@ export function buildLogoGeometry(paths: LogoPaths, mode: LogoMeshMode = "extrud
 
   const merged = mergeGeometries(parts, false);
   for (const g of parts) g.dispose();
+  // `mergeGeometries` returns null when the parts can't be merged, though its types say it never does.
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   if (!merged) throw new Error("Failed to merge logo geometries");
   merged.computeVertexNormals();
   merged.computeBoundingBox();

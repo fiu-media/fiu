@@ -1,3 +1,4 @@
+import { at } from "@/lib/at";
 import { selectFilter } from "@/lib/filter";
 import type { Locale } from "@/lib/i18n/config";
 import { href, routes } from "@/lib/routes";
@@ -99,9 +100,9 @@ export function toWorkIndex(data: WORK_QUERY_RESULT, lang: Locale, requestedType
 
 /** The project after `slug` in the editors' order, wrapping round to the first; `null` when it is the only one. */
 export function nextProject(order: PROJECT_ORDER_QUERY_RESULT, slug: string, lang: Locale) {
-  const at = order.findIndex((project) => project.slug === slug);
-  if (order.length < 2 || at < 0) return null;
-  const next = order[(at + 1) % order.length]!;
+  const position = order.findIndex((project) => project.slug === slug);
+  if (order.length < 2 || position < 0) return null;
+  const next = at(order, (position + 1) % order.length);
   return { title: next.title, href: href(lang, routes.project(next.slug)) };
 }
 

@@ -61,6 +61,8 @@ function fence(lang: string, value: unknown): string {
 
 function omitKeys<T extends Record<string, unknown>, K extends keyof T>(params: T, keys: readonly K[]): Omit<T, K> {
   const next = { ...params };
+  // The keys are typed as keys of `params`, so each one exists to delete.
+  // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
   for (const key of keys) delete next[key];
   return next;
 }
@@ -166,7 +168,7 @@ function coalesceParams(partial: LogoPartialGlassParams, rimLook: LogoRimLook = 
 }
 
 function extractJsonPayload(text: string): { fence: string | null; raw: string } {
-  const fenced = text.match(/```([^\n`]*)\s*([\s\S]*?)```/);
+  const fenced = /```([^\n`]*)\s*([\s\S]*?)```/.exec(text);
   if (fenced) {
     const [, fence = "", raw = ""] = fenced;
     return { fence: fence.trim() || null, raw: raw.trim() };

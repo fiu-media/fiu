@@ -33,13 +33,13 @@ export type CanvasRootProps = {
   /** When false the canvas ignores the pointer, so whatever is beneath it (the nav) stays clickable. */
   interactive?: boolean | undefined;
   /** Fires once, when the hero intro (spin and glide) has played out in full. */
-  onIntroEnd?: () => void | undefined;
+  onIntroEnd?: (() => void) | undefined;
   /** The GL context was lost and the canvas can no longer draw; the caller should swap in a fallback. */
-  onContextLost?: () => void | undefined;
+  onContextLost?: (() => void) | undefined;
   /** Starting quality. Read once: antialiasing and the env map size can't change after mount. */
   tier?: LogoTier | undefined;
   /** Even the cheapest tier is below the floor; the caller should swap in the SVG. */
-  onTooSlow?: () => void | undefined;
+  onTooSlow?: (() => void) | undefined;
   /** Continuous frameloop at full quality, no adaptation (playground only). */
   measurePerf?: boolean | undefined;
   /** The studio light's shared state, for a driver passed as `sweepDriver` (playground only). */

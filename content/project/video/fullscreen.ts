@@ -1,6 +1,7 @@
 import type Player from "@vimeo/player";
 
-type LockableOrientation = ScreenOrientation & { lock?: (orientation: "landscape") => Promise<void> };
+// Orientation locking is missing on desktop and iOS, though the DOM types say `lock` and `unlock` are always there.
+type LockableOrientation = Partial<Pick<ScreenOrientation, "lock" | "unlock">>;
 
 /** The fullscreen element, including Safari's prefixed API. */
 export function fullscreenElement(): Element | null {

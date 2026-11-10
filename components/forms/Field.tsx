@@ -13,6 +13,12 @@ export type ErrorMessages = Record<FormErrorCode, string>;
 /** Localised copy for the error codes in a form, provided once by `<Form>`. */
 export const FormMessages = createContext<ErrorMessages | null>(null);
 
+function useFormMessages() {
+  const messages = use(FormMessages);
+  if (!messages) throw new Error("A form field needs a surrounding <Form>");
+  return messages;
+}
+
 /** The first localised message for a Conform field's error codes. */
 export function errorMessage(messages: ErrorMessages, errors?: string[]) {
   return errors?.[0] === undefined ? undefined : messages[toErrorCode(errors[0])];
@@ -38,7 +44,7 @@ type Props = {
   type?: "text" | "email" | "tel" | "date" | undefined;
   /** Controlled value (with `onChange`); leave both out to let the form own the value. */
   value?: string | undefined;
-  onChange?: (value: string) => void | undefined;
+  onChange?: ((value: string) => void) | undefined;
   autoComplete?: string | undefined;
   required?: boolean | undefined;
   /** A textarea starts this many lines tall, grows with what is typed, and scrolls past `maxRows`. */
@@ -72,7 +78,7 @@ export function FieldFrame({
   required,
   children,
 }: Pick<Props, "field" | "label" | "optionalLabel" | "required" | "children">) {
-  const messages = use(FormMessages)!;
+  const messages = useFormMessages();
   const error = errorMessage(messages, field.errors);
   // The error summary names the field by this label, so it is written once, here.
   useFormLabel(field, label);
@@ -109,7 +115,7 @@ export function Field({
   placeholder,
   children,
 }: Props) {
-  const messages = use(FormMessages)!;
+  const messages = useFormMessages();
   const error = errorMessage(messages, field.errors);
   // A date needs about 11 characters, so on a phone two fit side by side if the padding is trimmed.
   const className = cn(

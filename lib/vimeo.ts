@@ -18,6 +18,8 @@ export function parseVimeo(url: string | null | undefined): VimeoRef | null {
   const id = segments[index];
   if (id === undefined) return null;
   const hash = parsed.searchParams.get("h") ?? segments[index + 1]?.match(/^[0-9a-f]+$/i)?.[0];
+  // An empty hash is no hash.
+  // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
   return { id, hash: hash || undefined };
 }
 

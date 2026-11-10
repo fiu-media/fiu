@@ -79,6 +79,8 @@ export function usePlayback(rootRef: RefObject<HTMLElement | null>, { video }: {
     setRevealed(false);
     setPlayFullscreenNatively(false);
     setTapInPlayer(false);
+    // iPhone Safari has no Fullscreen API, though the DOM types say it does.
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (fullscreenElement() === rootRef.current) void document.exitFullscreen?.().catch(() => {});
     unlockOrientation();
     // The player is gone; put keyboard focus back where it came from.
@@ -163,8 +165,11 @@ export function usePlayback(rootRef: RefObject<HTMLElement | null>, { video }: {
     };
 
     const toggleFullscreen = () => {
+      // iPhone Safari has no Fullscreen API, though the DOM types say it does.
+      /* eslint-disable @typescript-eslint/no-unnecessary-condition */
       if (fullscreenElement()) void document.exitFullscreen?.().catch(() => {});
       else void playerFrame.requestFullscreen?.().catch(() => {});
+      /* eslint-enable @typescript-eslint/no-unnecessary-condition */
     };
 
     const onKeyDown = (event: KeyboardEvent) => {

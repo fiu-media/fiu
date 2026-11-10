@@ -3,6 +3,8 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 
+import { at } from "@/lib/at";
+
 import type { LogoMeshMode } from "../buildLogoGeometry";
 import type { LogoGlassParams } from "../config/schemas";
 import { applyLogoTier, type LogoTier, TIER_SETTINGS } from "../logoTier";
@@ -61,7 +63,7 @@ export function Scene({
   // Only the still on screen at mount gates the first paint (useTexture suspends until it has
   // loaded, so .image is available on first paint here). Decoding and uploading all of them
   // up front cost ~600 ms of the splash for stills nobody sees for another six seconds.
-  const [firstSrc] = useState(() => stills[index]!.src);
+  const [firstSrc] = useState(() => at(stills, index).src);
   const [first] = useTexture([firstSrc], (loaded) => {
     for (const t of loaded) configureStill(t);
   });
@@ -84,18 +86,24 @@ export function Scene({
     onIntroEnd?.();
   }, [onIntroEnd]);
   const [rest, setRest] = useState<Record<string, THREE.Texture>>({});
-  const loadRest = introOver || stills[index]!.src !== firstSrc;
+  const loadRest = introOver || at(stills, index).src !== firstSrc;
   const restKey = stills.map((s) => s.src).join("|");
   useEffect(() => {
     if (!loadRest) return;
     let cancelled = false;
     const loader = new THREE.TextureLoader();
-    (async () => {
+    // Fire and forget: the stills past the first load in the background, and a failed one is skipped below.
+    void (async () => {
       for (const src of restKey.split("|")) {
         if (src === firstSrc) continue;
         try {
           const t = configureStill(await loader.loadAsync(src));
-          if (cancelled) return t.dispose();
+          // `cancelled` is set by the cleanup below while this awaits, which the types can't see.
+          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+          if (cancelled) {
+            t.dispose();
+            return;
+          }
           // Upload now, at idle, rather than inside the first crossfade that samples it.
           gl.initTexture(t);
           setRest((prev) => ({ ...prev, [src]: t }));
@@ -104,6 +112,8 @@ export function Scene({
           console.warn("[LogoScene] still failed to load:", src, error);
         }
         await new Promise((resolve) => setTimeout(resolve, 60));
+        // `cancelled` is set by the cleanup below while this awaits, which the types can't see.
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         if (cancelled) return;
       }
     })();
@@ -148,7 +158,7 @@ export function Scene({
     const f = fade.current;
     const progress = f.start ? Math.min((performance.now() - f.start) / (CROSSFADE_SECONDS * 1000), 1) : 1;
     const k = progress * progress * (3 - 2 * progress);
-    tint.current.lerpColors(tints[f.from]!, tints[f.to]!, k);
+    tint.current.lerpColors(at(tints, f.from), at(tints, f.to), k);
   });
 
   return (

@@ -76,7 +76,8 @@ export function displacementMap({ width, height: h, radius, bezel }: LensOptions
   const canvas = document.createElement("canvas");
   canvas.width = w;
   canvas.height = hh;
-  const ctx = canvas.getContext("2d")!;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("This browser has no 2D canvas");
   const img = ctx.createImageData(w, hh);
   const data = img.data;
   const halfW = w / 2;

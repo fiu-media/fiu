@@ -1,5 +1,7 @@
 "use client";
 
+import { at } from "@/lib/at";
+
 import { CanvasRoot, type CanvasRootProps } from "./CanvasRoot";
 import { LOGO_PARAM_PRESETS } from "./config/presets";
 import { preloadStill } from "./scene/stills";
@@ -39,6 +41,6 @@ export default function LogoScene(props: LogoSceneProps) {
   // Start loading the first still before the canvas mounts. If it has resolved by the time Scene
   // first renders, useTexture reads it from cache and never suspends. A suspend would cost
   // React's 300 ms Suspense reveal throttle, even with the image already in the HTTP cache.
-  preloadStill(props.stills[props.index]!.src);
+  preloadStill(at(props.stills, props.index).src);
   return <CanvasRoot {...props} meshMode="extrude" params={LOGO_PARAM_PRESETS.light} />;
 }

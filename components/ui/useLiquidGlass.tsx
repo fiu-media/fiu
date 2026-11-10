@@ -39,10 +39,11 @@ export function useLiquidGlass<T extends HTMLElement>(
     setLensing(true);
     const observer = new ResizeObserver(([entry]) => {
       if (!entry) return;
-      const box = entry.borderBoxSize?.[0];
+      // Older Safari has no `borderBoxSize`, though the DOM types say it is always there.
+      const box = (entry.borderBoxSize as ResizeObserverEntry["borderBoxSize"] | undefined)?.[0];
       const w = Math.round(box ? box.inlineSize : entry.contentRect.width);
       const h = Math.round(box ? box.blockSize : entry.contentRect.height);
-      setSize((prev) => (prev && prev.w === w && prev.h === h ? prev : { w, h }));
+      setSize((prev) => (prev?.w === w && prev.h === h ? prev : { w, h }));
     });
     observer.observe(el);
     return () => observer.disconnect();

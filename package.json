@@ -13,6 +13,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "knip": "knip",
+    "prelint": "npm run typegen && next typegen",
     "lint": "eslint . --max-warnings=0",
     "prepare": "husky",
     "seed": "tsx --env-file=.env.local scripts/seed.ts",
@@ -35,6 +36,11 @@
       "eslint --max-warnings=0 --no-warn-ignored"
     ],
     "*.{css,json,md,yml}": "prettier --write"
+  },
+  "overrides": {
+    "eslint-plugin-jsx-a11y": {
+      "eslint": "$eslint"
+    }
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
@@ -89,9 +95,12 @@
     "@types/three": "^0.187.0",
     "@typescript-eslint/utils": "^8.72.1",
     "@typescript/native": "npm:typescript@^7.0.2",
+    "@vitest/eslint-plugin": "^1.6.28",
     "eslint": "^10",
     "eslint-config-next": "16.4.5",
     "eslint-plugin-import-x": "^4.18.0",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-playwright": "^2.12.2",
     "eslint-plugin-simple-import-sort": "^14.0.0",
     "groq-js": "^2.0.1",
     "husky": "^9.1.7",
@@ -104,6 +113,7 @@
     "tsx": "^4.23.15",
     "turbo": "^2.11.10",
     "typescript": "npm:@typescript/typescript6@^6.0.2",
+    "typescript-eslint": "^8.72.2",
     "vitest": "^5.1.0"
   },
   "packageManager": "npm@11.19.1"

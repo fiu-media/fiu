@@ -1,4 +1,5 @@
 import { projectMeta } from "@/content/project";
+import { at } from "@/lib/at";
 import type { Locale } from "@/lib/i18n/config";
 import { href, routes } from "@/lib/routes";
 import type { HOME_STILLS_QUERY_RESULT, WORK_QUERY_RESULT } from "@/sanity.types";
@@ -60,7 +61,7 @@ function takeTurns(lists: HeroStill[][]): HeroStill[] {
   const out: HeroStill[] = [];
   for (let i = 0; out.length < MAX_HERO_STILLS && lists.some((l) => i < l.length); i++) {
     for (const list of lists) {
-      if (i < list.length && out.length < MAX_HERO_STILLS) out.push(list[i]!);
+      if (i < list.length && out.length < MAX_HERO_STILLS) out.push(at(list, i));
     }
   }
   return out;

@@ -59,6 +59,8 @@ function sameValue(a: unknown, b: unknown): boolean {
 function toDiffValue(value: unknown): DiffValue {
   if (value === undefined || value === null) return null;
   if (typeof value === "number" || typeof value === "boolean" || typeof value === "string") return value;
+  // Not a primitive, so it only needs a readable stand-in in the diff list.
+  // eslint-disable-next-line @typescript-eslint/no-base-to-string
   return String(value);
 }
 
@@ -75,8 +77,8 @@ function unionById<T extends { id: string }>(base: T[], next: T[]) {
   const nextById = new Map(next.map((l) => [l.id, l]));
   const baseIds = new Set(base.map((l) => l.id));
   return [
-    ...base.map((l) => ({ id: l.id, before: l as T | undefined, after: nextById.get(l.id) })),
-    ...next.filter((l) => !baseIds.has(l.id)).map((l) => ({ id: l.id, before: undefined, after: l as T | undefined })),
+    ...base.map((l) => ({ id: l.id, before: l, after: nextById.get(l.id) })),
+    ...next.filter((l) => !baseIds.has(l.id)).map((l) => ({ id: l.id, before: undefined, after: l })),
   ];
 }
 
@@ -170,7 +172,7 @@ export function diffConfigs(
     for (const { id, before, after } of pairs) {
       const prefix = `params.lights.${kind}.${id}`;
       if (!before || !after) {
-        const present = before ?? after!;
+        const present = before ?? after;
         entries.push({
           group: "lighting",
           subject: present.label,

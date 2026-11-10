@@ -78,7 +78,7 @@ export function quotePrefill(params: Params, catalogue: Record<string, Catalogue
     isIsoDate(requestedEnd)
     && requestedEnd >= today
     && (start ? isValidRange(start, requestedEnd) && rentalDays(start, requestedEnd) <= MAX_HIRE_DAYS : true);
-  const end = endOk ? requestedEnd! : undefined;
+  const end = endOk ? requestedEnd : undefined;
 
   const bySlug = new Map(Object.values(catalogue).map((entry) => [entry.slug, entry]));
   const items = new Map<string, QuotePrefill["items"][number]>();

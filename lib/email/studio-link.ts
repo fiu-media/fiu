@@ -9,9 +9,10 @@ import { studioUrl } from "@/sanity/studio-env";
  * last resort is the live site, in punycode (fiú.ie) because mail clients and Resend speak ASCII.
  */
 export function siteOrigin() {
-  const origin =
-    env.NEXT_PUBLIC_SITE_URL
-    || (env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${env.VERCEL_PROJECT_PRODUCTION_URL}` : "https://xn--fi-ska.ie");
+  const fallback = env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${env.VERCEL_PROJECT_PRODUCTION_URL}` : "https://xn--fi-ska.ie";
+  // An empty NEXT_PUBLIC_SITE_URL counts as unset.
+  // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+  const origin = env.NEXT_PUBLIC_SITE_URL || fallback;
   return origin.replace(/\/$/, "");
 }
 

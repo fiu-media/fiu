@@ -3,6 +3,7 @@ import { type RefObject, useRef, useState } from "react";
 import * as THREE from "three";
 
 import { SPLASH_FADE_MS } from "@/features/home/splash-config";
+import { at } from "@/lib/at";
 
 import { backdropFragment, backdropVertex } from "./shaders";
 import { BACKDROP_Z, CROSSFADE_SECONDS, type Fade } from "./shared";
@@ -58,12 +59,13 @@ export function Backdrop({
   useFrame(() => {
     const f = fade.current;
     const u = material.current?.uniforms;
-    if (!f || !u) return;
-    const ready = textures[f.to] ?? textures[f.from] ?? textures.find(Boolean)!;
+    if (!u) return;
+    const ready = textures[f.to] ?? textures[f.from] ?? textures.find(Boolean);
+    if (!ready) return;
     setUniform(u, "tFrom", textures[f.from] ?? ready);
     setUniform(u, "tTo", textures[f.to] ?? ready);
-    setUniform(u, "fromAspect", stills[f.from]!.width / stills[f.from]!.height);
-    setUniform(u, "toAspect", stills[f.to]!.width / stills[f.to]!.height);
+    setUniform(u, "fromAspect", at(stills, f.from).width / at(stills, f.from).height);
+    setUniform(u, "toAspect", at(stills, f.to).width / at(stills, f.to).height);
     setUniform(u, "planeAspect", width / height);
     setUniform(u, "progress", f.start ? Math.min((performance.now() - f.start) / (CROSSFADE_SECONDS * 1000), 1) : 1);
 

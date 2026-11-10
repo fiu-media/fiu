@@ -18,7 +18,10 @@ const clamp = (value: number, min: number, max: number) => Math.min(max, Math.ma
  * which a round trip through the player's postMessage API would not preserve.
  */
 export function runVimeoShortcut(key: string, player: ShortcutPlayer, toggleFullscreen: () => void): boolean {
-  const run = (action: () => Promise<unknown>) => action().catch(() => {});
+  // A player that's gone or not ready rejects; there's nothing useful to do about it, so the key press is a no-op.
+  const run = (action: () => Promise<unknown>) => {
+    action().catch(() => {});
+  };
 
   switch (key) {
     case " ":
