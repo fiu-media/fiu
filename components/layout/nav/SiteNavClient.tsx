@@ -26,6 +26,8 @@ type NavProps = {
   onImage?: boolean;
   /** Frost the rail's strip with a backdrop blur. A /dev sign-off option, not used on the site. */
   blurRail?: boolean;
+  /** The phone bar floats over footage (Home's hero), so it gets a scrim behind it. */
+  overFootage?: boolean;
 };
 
 export function SiteNavClient(props: NavProps) {
@@ -42,10 +44,11 @@ function RouteNav(props: NavProps) {
 
 const isCurrent = (pathname: string, href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
-function Nav({ lang, items, homeHref, labels, onImage, blurRail, pathname }: NavProps & { pathname: string }) {
+function Nav({ lang, items, homeHref, labels, onImage, blurRail, overFootage, pathname }: NavProps & { pathname: string }) {
   // The overlay is open for the page it was opened on, so navigating leaves it behind.
   const [openOn, setOpenOn] = useState<string | null>(null);
   const popup = useRef<HTMLDivElement>(null);
+  const rail = useRef<HTMLElement>(null);
   // On Home the photo is what Safari should tint its bars from again once the opaque menu is gone, but it only samples
   // when the page scrolls, so nudge right away.
   const onOpenChange = (next: boolean) => {
@@ -62,17 +65,53 @@ function Nav({ lang, items, homeHref, labels, onImage, blurRail, pathname }: Nav
     return () => wide.removeEventListener("change", onChange);
   }, []);
 
+  // Home: over the hero the rail carries the footage treatment (`rail-halo`). Below the fold it settles into the normal
+  // rail item by item, each one as the photo's bottom edge passes it, and the hairline grows down from that edge, so the
+  // change follows the edge the eye is already watching instead of flipping the whole rail at once.
+  useEffect(() => {
+    const aside = rail.current;
+    const hero = document.querySelector<HTMLElement>("[data-hero]");
+    if (!overFootage || !aside || !hero) return;
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const fold = hero.getBoundingClientRect().bottom;
+      aside.style.setProperty("--fold-y", `${Math.min(Math.max(fold, 0), window.innerHeight)}px`);
+      for (const link of aside.querySelectorAll("a")) {
+        const box = link.getBoundingClientRect();
+        link.toggleAttribute("data-settled", box.top + box.height / 2 > fold);
+      }
+    };
+    const schedule = () => {
+      frame ||= requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+      aside.style.removeProperty("--fold-y");
+      for (const link of aside.querySelectorAll("[data-settled]")) link.removeAttribute("data-settled");
+    };
+  }, [overFootage]);
+
   return (
     <>
       <BriertoWatermark />
       <LanguageScrollRestore pathname={pathname} />
       <aside
+        ref={rail}
         className={cn(
           "fixed inset-y-0 left-0 z-30 hidden w-[calc(4rem+env(safe-area-inset-left))] flex-col items-center gap-8 border-r border-line pt-[max(1.75rem,env(safe-area-inset-top))] pb-7 pl-[env(safe-area-inset-left)] md:flex",
-          onImage
-            && (blurRail
-              ? "bg-gradient-to-r from-black/45 to-black/15 backdrop-blur-md [text-shadow:0_1px_6px_rgb(0_0_0/0.35)]"
-              : "bg-gradient-to-r from-black/35 to-transparent [text-shadow:0_1px_6px_rgb(0_0_0/0.35)]"),
+          // Over Home's hero: a letter halo, and edge light only behind bright stills (`rail-halo` in globals.css).
+          overFootage
+            ? "rail-halo"
+            : onImage
+                && (blurRail
+                  ? "bg-gradient-to-r from-scrim/45 to-scrim/15 backdrop-blur-md [text-shadow:0_1px_6px_rgb(0_0_0/0.35)]"
+                  : "bg-gradient-to-r from-scrim/35 to-transparent [text-shadow:0_1px_6px_rgb(0_0_0/0.35)]"),
         )}
       >
         {/* Sprocket rhythm: a faint, evenly spaced row of ticks, the only nod to film. */}
@@ -87,13 +126,15 @@ function Nav({ lang, items, homeHref, labels, onImage, blurRail, pathname }: Nav
               key={item.href}
               href={item.href}
               aria-current={isCurrent(pathname, item.href) ? "page" : undefined}
-              className="relative rotate-180 rounded-sm text-sm font-medium tracking-wide text-fg/60 [writing-mode:vertical-rl] hover:text-fg aria-[current=page]:text-fg aria-[current=page]:after:absolute aria-[current=page]:after:inset-y-0 aria-[current=page]:after:-left-2.5 aria-[current=page]:after:w-px aria-[current=page]:after:bg-current"
+              className="relative rotate-180 rounded-sm text-sm font-medium tracking-wide text-fg-quiet [writing-mode:vertical-rl] hover:text-fg aria-[current=page]:text-fg aria-[current=page]:after:absolute aria-[current=page]:after:inset-y-0 aria-[current=page]:after:-left-2.5 aria-[current=page]:after:w-px aria-[current=page]:after:bg-current"
             >
               {item.label}
             </Link>
           ))}
         </nav>
-        <LanguageSwitcher variant="rail" lang={lang} pathname={pathname} label={labels.language} />
+        <div className="rail-lang">
+          <LanguageSwitcher variant="rail" lang={lang} pathname={pathname} label={labels.language} />
+        </div>
       </aside>
 
       {/* On cinematic pages the bar floats over the content; on adaptive pages it takes its own row. */}
@@ -101,6 +142,9 @@ function Nav({ lang, items, homeHref, labels, onImage, blurRail, pathname }: Nav
         className={cn(
           "z-30 flex items-center justify-between px-[max(1.25rem,env(safe-area-inset-left))] pt-[max(1.25rem,env(safe-area-inset-top))] pr-[max(1.25rem,env(safe-area-inset-right))] pb-4 md:hidden",
           onImage ? "absolute inset-x-0 top-0" : "relative",
+          // Over footage, a soft scrim behind the logo and the Menu button keeps them legible against a bright sky.
+          overFootage
+            && "before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:-z-10 before:h-40 before:bg-gradient-to-b before:from-scrim/50 before:to-transparent",
         )}
       >
         <HomeLink href={homeHref} label={labels.home} className="h-9" />

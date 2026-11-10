@@ -7,6 +7,7 @@ colors:
   surface-raised: "#17151a"
   text: "#f2eee8"
   text-muted: "#a39da8"
+  text-quiet: "rgb(242 238 232 / 0.5)"
   line: "rgb(255 255 255 / 0.12)"
   skeleton: "#24222a"
   signal-red: "#ff5a6e"
@@ -15,6 +16,8 @@ colors:
   glass-tint: "rgb(255 255 255 / 0.015)"
   glass-tint-strong: "rgb(255 255 255 / 0.07)"
   glass-edge: "rgb(255 255 255 / 0.24)"
+  on-image: "#ffffff"
+  scrim: "#000000"
 typography:
   display:
     fontFamily: "Fraunces, ui-serif, Georgia, serif"
@@ -59,6 +62,11 @@ typography:
     fontSize: "0.9375rem"
     fontWeight: 600
     letterSpacing: "-0.01em"
+  button-sm:
+    fontFamily: "Manrope, ui-sans-serif, system-ui, sans-serif"
+    fontSize: "0.8125rem"
+    fontWeight: 600
+    letterSpacing: "-0.01em"
   label:
     fontFamily: "Manrope, ui-sans-serif, system-ui, sans-serif"
     fontSize: "0.875rem"
@@ -94,6 +102,7 @@ components:
   button-pill-sm:
     backgroundColor: "{colors.glass-tint}"
     textColor: "{colors.text}"
+    typography: "{typography.button-sm}"
     rounded: "{rounded.pill}"
     height: "32px"
     padding: "0 14px"
@@ -171,11 +180,15 @@ The chrome uses near-black, warm off-white and greys only. The one colour accent
 - **Muted Grey** (`text-muted`): intros, taglines, footer, optional-field hints, the rail's inactive labels (at 60% white), placeholders at 70%.
 - **Hairline** (`line`): 12% white rules. Control borders, the rail's edge, rows in the talent index.
 - **Skeleton** (`skeleton`): loading blocks, pulsing only when motion is allowed.
+- **On Image** (`on-image`): type and marks over footage: slide titles and captions (80% for meta lines, 65% for roles), the About slogan, the lightbox, progress ticks. Over footage the scheme never applies, so this is always white.
+- **Scrim** (`scrim`): the black that darkens footage under anything placed on it: caption gradients (75% at the foot), the top-of-frame fade on slides (45%), the phone bar's fade (50%), lightbox and drawer backdrops.
 - **Focus Blue** (`focus-blue`): the 2px focus ring, offset 3px, on every focusable element. Composite fields (phone, combobox) ring the whole field instead of the inner input.
 
 ### Named Rules
 
 **The Footage Is the Colour Rule.** Colour on screen comes from the films and stills. The chrome stays Ink, white and grey. Signal Red marks an error or a count and nothing else: no red links, no red buttons, no red decoration.
+
+**The Scrim Rule.** Nothing light sits on footage without a Scrim under it, and the Scrim is light falling off, never a band: soft gradients that fade to nothing, no hard edges, no opaque strips. Text over imagery must hold 4.5:1 against the brightest frame it can land on, and icons 3:1; the scrim, not a text shadow, is what guarantees it. Where the footage is usually dark enough on its own, the Scrim can be adaptive: measured per still and applied only to the frames that need it (the rail over Home's hero, see Navigation).
 
 **The Light-Dark Rule.** Every colour token is declared with `light-dark()` and re-declared on each `[data-surface]` element, so a surface can be pinned to light without any JS. New colours follow the same pattern; never hard-code a dark-only value on an adaptive surface.
 
@@ -194,7 +207,7 @@ The chrome uses near-black, warm off-white and greys only. The one colour accent
 - **Title** (`title`; 1.5rem to 3rem): section headings such as "Or reach us directly" and "The team". Talent names in the index are italic, 1.875rem to 3.75rem.
 - **Body lead** (`body-lead`; 1.125rem, line-height 1.625, Muted Grey): the intro line under a page title, max 42rem. Manifesto and project descriptions step up to 1.25rem to 1.5rem, max `65ch`.
 - **Body** (`body`): form controls, captions and general text.
-- **Button** (`button`; 600, 0.8125rem / 0.9375rem / 1rem by pill size): every glass pill.
+- **Button** (`button`, `button-sm`; 600, 0.9375rem, or 0.8125rem on small pills and 1rem on large ones): every glass pill.
 - **Label** (`label`; 0.875rem, 500): form labels and the rail's vertical nav labels.
 - **Eyebrow** (`eyebrow`; 0.75rem, 500, 0.14em tracking, uppercase, Muted Grey): small spaced capitals above a heading, such as roles or "404".
 
@@ -210,7 +223,7 @@ On desktop (from `md`, 768px) a 64px rail is fixed down the left edge. It holds 
 
 On phones the rail becomes a top bar: the logo on the left, a 40px glass Menu button on the right. On cinematic pages the bar floats over the footage; on adaptive pages it takes its own row. The menu opens as a full-screen, opaque Ink overlay with large Fraunces links.
 
-Cinematic pages (Home, About, Work, Talent) are built from full-bleed slides that snap one per screen (`scroll-snap-type: y mandatory`). Captions sit at the bottom left, in line with the page gutter, over a gradient that darkens the frame toward the corner. Phones get portrait stills cut separately from the landscape set, not a crop of it. Adaptive pages (Contact, Privacy, later Rentals) sit in the same 1152px container. Contact splits into a 3:2 grid from `lg` (1024px): the form on the left, direct contact details on the right.
+On Home the first screen is the still alone, fitted to the viewport, with no fade: on desktop the hero ends in a hard edge at the fold, and phones dissolve into Ink over the 12rem bleed below it. Other seams (fade, mirror, light spill, frame edge, lights down) are kept for comparison on /dev/home-below-fold. Cinematic pages (Home, About, Work, Talent) are built from full-bleed slides that snap one per screen (`scroll-snap-type: y mandatory`). Captions sit at the bottom left, in line with the page gutter, over a Scrim gradient that darkens the frame toward the foot. Phones get portrait stills cut separately from the landscape set, not a crop of it. Adaptive pages (Contact, Privacy, later Rentals) sit in the same 1152px container. Contact splits into a 3:2 grid from `lg` (1024px): the form on the left, direct contact details on the right.
 
 All edge padding respects `env(safe-area-inset-*)`, so nothing sits under a notch or the home indicator. The footer is one quiet row (copyright, email, Instagram, Privacy) and snaps into view at the end of a slide sequence.
 
@@ -240,6 +253,7 @@ The shapes are soft and rounded, but never bubbly. Pills are fully round. Form c
 Quiet acrylic, tactile under the hand.
 
 - **Shape:** fully round, in three sizes: small (32px tall, 14px side padding), medium (40px, 20px), large (48px, 28px).
+- **Tap area:** every pill carries an invisible tap area of at least 44px square, centred on it, so small pills are easy to hit without looking bigger. Rows of wrapped pills are 12px apart so those areas meet without overlapping.
 - **Rest:** clear face (`glass-tint`), acrylic edge, Screen White label in 600 Manrope.
 - **Hover:** the face lifts to `glass-tint-strong` and the bevel brightens. A 90px radial glint follows the pointer (`plus-lighter`, 14% white). The piece tilts toward the pointer by up to 4° vertically and 6° horizontally.
 - **Press:** scales to 0.97. Everything settles on `cubic-bezier(0.2, 0.7, 0.2, 1)` over 220 to 320ms, with no overshoot.
@@ -271,8 +285,8 @@ Quiet acrylic, tactile under the hand.
 
 ### Navigation
 
-- **Desktop rail:** 64px, Ink, Hairline right edge, sprocket ticks at 10% opacity. Labels are 0.875rem 500 Manrope set vertically at 60% white, full white on hover. The current page goes full white with a 1px vertical rule beside it. On cinematic pages the rail fades from 35% black, so it reads over footage.
-- **Phone bar:** logo (36px tall) left, small glass Menu pill (40px square) right.
+- **Desktop rail:** 64px, Ink, Hairline right edge, sprocket ticks at 10% opacity. Labels are 0.875rem 500 Manrope set vertically in `fg-quiet` (the page's text at 50%, 4.76:1 on Ink; 62% in the light scheme), the same tone as the language not in use, and full white on hover. The current page goes full white with a 1px vertical rule beside it. Where footage runs under it (Home's hero), the rail has no backdrop, so the footage keeps its light: the hairline drops away, and the labels and the language codes share one set of tones, 80% white at rest and full white for the current language and on hover, with a tight halo hugging each letter (`text-shadow` at 63%, 53%, 39% and 25% black, 1px to 18px; a matching `drop-shadow` on the logo and language codes). Under them, an adaptive edge light: the hero reads the strip of each still under the rail (in word-sized bands, so a bright patch behind one label counts) and sets `--hero-edge` to just the darkening that keeps 80% white at 4.5:1, 0 on most stills and at most about 0.62 for a white frame, fading to nothing 12rem in. It rises before a brighter still fades in and only eases off once a crossfade has finished, so it never lags. It sits in the photo layer, under the logo, so the logo is never dimmed. Below the fold the rail settles back into the normal rail item by item, each label, the logo and the language codes switching (300ms) as the photo's bottom edge passes them, while the hairline grows down from that edge, so the change follows the edge the eye is already watching.
+- **Phone bar:** logo (36px tall) left, small glass Menu pill (40px square, 44px tap area) right. On Home, where the hero runs under the bar, a 160px Scrim fades down from 50% black behind them.
 - **Phone menu:** a full-screen opaque Ink overlay (opaque so Safari tints its bars correctly). Links are upright Fraunces at 3rem, 60% white, full white when current. Content fades over 300ms. Focus is trapped, Esc closes the menu, and focus goes back to the Menu button.
 - **Language switcher:** "EN" / "GA" at the foot of the rail, and inside the phone menu.
 
@@ -295,6 +309,8 @@ A full-screen still or silent preview loop. The italic Fraunces title and a meta
 - **Do** use `light-dark()` tokens and `data-surface` for every colour, so a surface can be pinned light.
 - **Do** honour `prefers-reduced-motion` (no tilt, no drift, no pulse) and `prefers-reduced-transparency` (opaque glass).
 - **Do** pad every screen edge with `env(safe-area-inset-*)`.
+- **Do** put a Scrim under anything light that sits on footage, and use `on-image` / `scrim` rather than literal white and black there.
+- **Do** give every control a tap area of at least 44px, even when it looks smaller.
 
 ### Don't:
 

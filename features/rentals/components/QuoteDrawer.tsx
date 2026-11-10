@@ -40,7 +40,7 @@ export function QuoteDrawer({ lang, dict }: { lang: Locale; dict: Dictionary["ba
       </div>
 
       <Drawer.Portal>
-        <Drawer.Backdrop className="fixed inset-0 z-50 min-h-dvh bg-black opacity-[calc(0.4*(1-var(--drawer-swipe-progress)))] transition-opacity duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-ending-style:opacity-0 data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] data-starting-style:opacity-0 data-swiping:duration-0 supports-[-webkit-touch-callout:none]:absolute" />
+        <Drawer.Backdrop className="fixed inset-0 z-50 min-h-dvh bg-scrim opacity-[calc(0.4*(1-var(--drawer-swipe-progress)))] transition-opacity duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-ending-style:opacity-0 data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] data-starting-style:opacity-0 data-swiping:duration-0 supports-[-webkit-touch-callout:none]:absolute" />
         <Drawer.Viewport className="pointer-events-none fixed inset-0 z-50 flex justify-end">
           {/* Moved with transform only: an ancestor with opacity below 1 would become the panel's backdrop root, and
               its blur and lens would have nothing behind them to bend. */}

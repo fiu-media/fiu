@@ -50,15 +50,15 @@ export function AboutHeroSection({
         <Still still={still} attribute={attributes?.still} />
       </div>
 
-      <section className="relative -mt-[100dvh] flex h-dvh flex-col justify-end bg-gradient-to-t from-black/75 via-black/20 to-black/35 px-5 pb-[max(2.5rem,env(safe-area-inset-bottom))] md:px-10 md:pb-14">
+      <section className="relative -mt-[100dvh] flex h-dvh flex-col justify-end bg-gradient-to-t from-scrim/75 via-scrim/20 to-scrim/35 px-5 pb-[max(2.5rem,env(safe-area-inset-bottom))] md:px-10 md:pb-14">
         <h1
           data-sanity={attributes?.slogan}
           className="max-w-5xl font-display text-5xl leading-[1.02] text-balance italic md:text-8xl"
         >
           {slogan}
         </h1>
-        {gloss && <p className="mt-4 max-w-xl text-base text-white/80 md:text-lg">{gloss}</p>}
-        <ArrowDown aria-hidden className="mt-8 size-5 text-white/60" />
+        {gloss && <p className="mt-4 max-w-xl text-base text-on-image/80 md:text-lg">{gloss}</p>}
+        <ArrowDown aria-hidden className="mt-8 size-5 text-on-image/60" />
       </section>
     </>
   );
@@ -81,7 +81,7 @@ export function AboutLayoutA({ still, slogan, gloss, manifesto, contacts, team, 
     </>
   );
   return (
-    <main className="relative text-white">
+    <main className="relative text-on-image">
       <AboutHeroSection still={still} slogan={slogan} gloss={gloss} attributes={attributes} />
 
       {/* Plain dark from here, so the surface's colours rather than the white kept for text over the photo. */}

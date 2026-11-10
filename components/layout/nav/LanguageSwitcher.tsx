@@ -57,7 +57,7 @@ export function LanguageSwitcher({
               rememberLanguage(locale);
               carryScroll(switchLocalePath(pathname, locale), window.scrollY);
             }}
-            className="rounded-sm font-medium tracking-[0.14em] text-fg/50 hover:text-fg aria-[current=true]:text-fg"
+            className="rounded-sm font-medium tracking-[0.14em] text-fg-quiet hover:text-fg aria-[current=true]:text-fg"
           >
             {locale.toUpperCase()}
             <span className="sr-only">, {localeNames[locale]}</span>

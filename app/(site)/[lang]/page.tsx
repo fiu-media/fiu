@@ -34,14 +34,14 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
             the hero (HomeScrollLock), so Safari has real pixels to show behind its status bar and toolbar. Off from md
             up, the hero is a plain h-dvh screen. */}
         <div data-home-bleed className="max-md:py-48">
-          <div className="relative isolate h-dvh bg-ink select-none md:overflow-hidden">
+          <div data-hero className="relative isolate h-dvh bg-ink select-none md:overflow-hidden">
             {/* The hero is imagery only: select-none stops a select-all or long-press copying the stills' alt texts as one string. */}
             <h1 className="sr-only">{dict.site.name}</h1>
             {/* Reads draft mode, so it streams; the fallback stills keep the first paint identical. */}
             <Suspense fallback={<HomeHero {...fallbackHeroStills} />}>
               <CmsHero lang={lang} />
             </Suspense>
-            <SiteNav lang={lang} onImage />
+            <SiteNav lang={lang} onImage overFootage />
           </div>
         </div>
         {/* Under the fold: the team, the slogan and the work. Beside the rail like every other page. */}

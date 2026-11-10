@@ -11,7 +11,7 @@ import { cn } from "@/lib/cn";
  *
  * `bleed`: the box this is placed in already runs 12rem past the hero on phones (Home's photo layer, see
  * HomeScrollLock). The fade is then drawn over that bleed only, so the hero itself, and the colour Safari samples behind
- * its toolbar at rest, stay as they are.
+ * its toolbar at rest, stay as they are. Phones only: on desktop Home fades in a mirrored tail below the first screen.
  */
 export function HeroFade({ bleed, className }: { bleed?: boolean; className?: string }) {
   return (
@@ -19,7 +19,7 @@ export function HeroFade({ bleed, className }: { bleed?: boolean; className?: st
       aria-hidden
       className={cn(
         "pointer-events-none absolute inset-x-0 bottom-0 bg-[linear-gradient(to_top,rgb(12_11_13)_0%,rgb(12_11_13/0.82)_22%,rgb(12_11_13/0.5)_48%,rgb(12_11_13/0.2)_74%,rgb(12_11_13/0)_100%)]",
-        bleed ? "max-md:h-48 md:h-[28dvh]" : "h-[28dvh]",
+        bleed ? "h-48 md:hidden" : "h-[28dvh]",
         className,
       )}
     />
