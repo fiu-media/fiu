@@ -1,7 +1,7 @@
 "use client";
 
 import { getImageProps } from "next/image";
-import type { CSSProperties } from "react";
+import type { CSSProperties, Ref } from "react";
 
 import { SizedImg } from "@/components/ui/SizedImg";
 import { cn } from "@/lib/cn";
@@ -24,6 +24,8 @@ type ArtDirectedImageProps = {
   quality?: number;
   className?: string;
   style?: CSSProperties;
+  /** The rendered `<img>`, for callers that read its pixels or layout. */
+  imgRef?: Ref<HTMLImageElement>;
 };
 
 const blur = (image: SizedImage) => (image.blurDataURL ? `url("${image.blurDataURL}")` : "none");
@@ -40,6 +42,7 @@ export function ArtDirectedImage({
   quality,
   className,
   style,
+  imgRef,
 }: ArtDirectedImageProps) {
   const portraitScreen = usePortrait();
 
@@ -55,6 +58,7 @@ export function ArtDirectedImage({
         data-sanity={dataSanity}
         style={style}
         className={className}
+        ref={imgRef}
       />
     );
   }
@@ -86,6 +90,7 @@ export function ArtDirectedImage({
       {}
       <img
         {...wide}
+        ref={imgRef}
         alt={alt ?? (portraitScreen ? portrait.alt : landscape.alt)}
         style={{ ...wide.style, ...vars, ...style }}
         data-sanity={dataSanity}
