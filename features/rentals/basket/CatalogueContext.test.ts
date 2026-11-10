@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { type CatalogueItem, itemMax } from "./CatalogueContext";
-import { MAX_QTY } from "./quantity";
+import type { CatalogueItem } from "@/content/rentalItem";
+import { MAX_QTY } from "@/lib/forms/quantity";
+
+import { itemMax } from "./CatalogueContext";
 
 const cam: CatalogueItem = { id: "cam", name: "Alexa", brand: null, slug: "alexa", href: "/rentals/alexa", max: 4, image: null };
 

@@ -10,7 +10,6 @@ const mocks = vi.hoisted(() => ({
 vi.mock("botid/server", () => ({ checkBotId: mocks.checkBotId }));
 vi.mock("@/sanity/lib/writeClient", () => ({ writeClient: { create: mocks.create } }));
 vi.mock("@/lib/email/send", () => ({ sendEmail: mocks.sendEmail }));
-vi.mock("@/lib/email/settings", () => ({ getRecipient: mocks.getRecipient }));
 
 import { at } from "@/lib/at";
 import { build } from "@/lib/email/templates";
@@ -107,6 +106,7 @@ describe("handleSubmission", () => {
         schema: messageSchema,
         docType: "contactMessage",
         recipient: "contact",
+        getRecipient: mocks.getRecipient,
         toDocument: ({ name, email, message }) => ({ name, email, message }),
         emails: ({ data, dict, teamDict, studioLink }) => ({
           notification: build("contactNotification", teamDict, { ...data, phone: "", enquiryType: "Talent" }, { studioLink }),

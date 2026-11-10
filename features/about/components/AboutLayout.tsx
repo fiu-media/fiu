@@ -1,9 +1,9 @@
 import { ArrowDown } from "lucide-react";
 import type { ReactNode } from "react";
 
+import { SheetFade } from "@/components/ui/HeroFade";
 import { SizedImg } from "@/components/ui/SizedImg";
 import { type Team, TeamFigure } from "@/content/siteSettings";
-import { SheetFade } from "@/features/home/components/HeroFade";
 import { cn } from "@/lib/cn";
 import type { SizedImage } from "@/sanity/lib/image";
 

@@ -2,15 +2,14 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
-import { railInset } from "@/components/layout/nav/rail";
 import { SiteNav } from "@/components/layout/nav/SiteNav";
 import { GlassPillLink } from "@/components/ui/Glass";
-import { ContactLinks, getSiteSettings } from "@/content/siteSettings";
+import { ContactLinks, fallbackStills, getSiteSettings } from "@/content/siteSettings";
 import { AboutLayoutA } from "@/features/about";
-import { fallbackStills } from "@/features/home";
 import { at } from "@/lib/at";
 import { isLocale, type Locale, localizedPath } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
+import { railInset } from "@/lib/rail";
 import { toSizedImage } from "@/sanity/lib/image";
 
 import { AboutLayoutB, AboutLayoutC, AboutLayoutD, AboutLayoutE, AboutLayoutF } from "../_concepts/about/AboutLayoutOptions";

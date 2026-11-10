@@ -118,96 +118,9 @@ function QuoteFormFields({ lang, dict, countries }: Props) {
         <QuoteLines dict={dict.basket} />
       </section>
 
-      <section aria-labelledby="quote-dates" className="flex flex-col gap-4">
-        <h2 id="quote-dates" className="font-display text-2xl">
-          {quote.datesHeading}
-        </h2>
-        <div className="grid grid-cols-2 gap-3 sm:gap-4">
-          <Field
-            field={fields.startDate}
-            type="date"
-            label={quote.startDate}
-            required
-            autoComplete="off"
-            min={todayInDublin()}
-            value={startDate}
-            onChange={(v) => setDates({ startDate: v })}
-          />
-          <Field
-            field={fields.endDate}
-            type="date"
-            label={quote.endDate}
-            required
-            autoComplete="off"
-            min={startDate || undefined}
-            value={endDate}
-            onChange={(v) => setDates({ endDate: v })}
-          />
-        </div>
-        <p aria-live="polite" className="min-h-6 text-fg-muted">
-          {isValidRange(startDate, endDate) ? describeRange(dict.dates, lang, startDate, endDate) : null}
-        </p>
-      </section>
+      <DatesSection fields={fields} lang={lang} dict={dict} startDate={startDate} endDate={endDate} setDates={setDates} />
 
-      <section aria-labelledby="quote-contact" className="flex flex-col gap-4">
-        <h2 id="quote-contact" className="font-display text-2xl">
-          {quote.contactHeading}
-        </h2>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field
-            field={fields.name}
-            label={forms.fields.name}
-            required
-            autoComplete="name"
-            maxLength={limits.name}
-            placeholder={forms.fields.placeholders.name}
-          />
-          <Field
-            field={fields.email}
-            type="email"
-            label={forms.fields.email}
-            required
-            autoComplete="email"
-            maxLength={limits.email}
-            placeholder={forms.fields.placeholders.email}
-          />
-          <PhoneField
-            field={fields.phone}
-            label={forms.fields.phone}
-            optionalLabel={forms.fields.optional}
-            countryLabel={forms.fields.phoneCountry}
-            countries={countries}
-          />
-          <Field
-            field={fields.company}
-            label={quote.company}
-            optionalLabel={forms.fields.optional}
-            autoComplete="organization"
-            maxLength={limits.company}
-            placeholder={quote.placeholders.company}
-          />
-        </div>
-        <Field
-          field={fields.production}
-          label={quote.production}
-          optionalLabel={forms.fields.optional}
-          autoComplete="off"
-          maxLength={limits.production}
-          placeholder={quote.placeholders.production}
-        />
-        <Field
-          field={fields.message}
-          as="textarea"
-          // An optional note after the form's real fields: starts small.
-          minRows={3}
-          maxRows={10}
-          label={quote.message}
-          optionalLabel={forms.fields.optional}
-          autoComplete="off"
-          maxLength={limits.message}
-          placeholder={quote.placeholders.message}
-        />
-      </section>
+      <ContactSection fields={fields} dict={dict} countries={countries} />
 
       <div className="flex flex-col gap-6">
         <div>
@@ -227,5 +140,124 @@ function QuoteFormFields({ lang, dict, countries }: Props) {
         </div>
       </div>
     </Form>
+  );
+}
+
+type QuoteFields = ReturnType<typeof useConformForm<typeof quoteSchema>>["fields"];
+
+/** When the kit is needed. The dates live in the basket, not the form's own state, so the inputs are controlled. */
+function DatesSection({
+  fields,
+  lang,
+  dict,
+  startDate,
+  endDate,
+  setDates,
+}: {
+  fields: QuoteFields;
+  lang: Locale;
+  dict: QuoteDict;
+  startDate: string;
+  endDate: string;
+  setDates: ReturnType<typeof useQuoteBasket>["setDates"];
+}) {
+  const { quote } = dict;
+  return (
+    <section aria-labelledby="quote-dates" className="flex flex-col gap-4">
+      <h2 id="quote-dates" className="font-display text-2xl">
+        {quote.datesHeading}
+      </h2>
+      <div className="grid grid-cols-2 gap-3 sm:gap-4">
+        <Field
+          field={fields.startDate}
+          type="date"
+          label={quote.startDate}
+          required
+          autoComplete="off"
+          min={todayInDublin()}
+          value={startDate}
+          onChange={(v) => setDates({ startDate: v })}
+        />
+        <Field
+          field={fields.endDate}
+          type="date"
+          label={quote.endDate}
+          required
+          autoComplete="off"
+          min={startDate || undefined}
+          value={endDate}
+          onChange={(v) => setDates({ endDate: v })}
+        />
+      </div>
+      <p aria-live="polite" className="min-h-6 text-fg-muted">
+        {isValidRange(startDate, endDate) ? describeRange(dict.dates, lang, startDate, endDate) : null}
+      </p>
+    </section>
+  );
+}
+
+/** Who is asking, and anything else the studio should know. */
+function ContactSection({ fields, dict, countries }: { fields: QuoteFields; dict: QuoteDict; countries: CountryList }) {
+  const { quote, forms } = dict;
+  return (
+    <section aria-labelledby="quote-contact" className="flex flex-col gap-4">
+      <h2 id="quote-contact" className="font-display text-2xl">
+        {quote.contactHeading}
+      </h2>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field
+          field={fields.name}
+          label={forms.fields.name}
+          required
+          autoComplete="name"
+          maxLength={limits.name}
+          placeholder={forms.fields.placeholders.name}
+        />
+        <Field
+          field={fields.email}
+          type="email"
+          label={forms.fields.email}
+          required
+          autoComplete="email"
+          maxLength={limits.email}
+          placeholder={forms.fields.placeholders.email}
+        />
+        <PhoneField
+          field={fields.phone}
+          label={forms.fields.phone}
+          optionalLabel={forms.fields.optional}
+          countryLabel={forms.fields.phoneCountry}
+          countries={countries}
+        />
+        <Field
+          field={fields.company}
+          label={quote.company}
+          optionalLabel={forms.fields.optional}
+          autoComplete="organization"
+          maxLength={limits.company}
+          placeholder={quote.placeholders.company}
+        />
+      </div>
+      <Field
+        field={fields.production}
+        label={quote.production}
+        optionalLabel={forms.fields.optional}
+        autoComplete="off"
+        maxLength={limits.production}
+        placeholder={quote.placeholders.production}
+      />
+      <Field
+        field={fields.message}
+        as="textarea"
+        // An optional note after the form's real fields: starts small.
+        minRows={3}
+        maxRows={10}
+        label={quote.message}
+        optionalLabel={forms.fields.optional}
+        autoComplete="off"
+        maxLength={limits.message}
+        placeholder={quote.placeholders.message}
+      />
+    </section>
   );
 }

@@ -7,18 +7,18 @@ import { usePathname } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
 
 import { GlassPillButton } from "@/components/ui/Glass";
-import { nudgeHomeScrollRepeatedly } from "@/features/home/bleed";
 import { cn } from "@/lib/cn";
+import { nudgeHomeScrollRepeatedly } from "@/lib/homeScroll";
 import { matches, subscribeToMedia } from "@/lib/hooks/useMediaQuery";
 import type { Locale } from "@/lib/i18n/config";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import type { NavItem } from "@/lib/i18n/nav";
 import { DESKTOP } from "@/lib/media";
+import { railWidth } from "@/lib/rail";
 
 import { HomeLink } from "./HomeLink";
 import { LanguageScrollRestore } from "./LanguageScrollRestore";
 import { LanguageSwitcher } from "./LanguageSwitcher";
-import { railWidth } from "./rail";
 
 type NavProps = {
   lang: Locale;

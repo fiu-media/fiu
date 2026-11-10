@@ -7,7 +7,6 @@ import type { z } from "zod";
 
 import { env } from "@/env";
 import { toDeliverable } from "@/lib/email/address";
-import { getRecipient } from "@/lib/email/settings";
 import { studioEditUrl } from "@/lib/email/studio-link";
 import type { Built } from "@/lib/email/templates";
 import { defaultLocale, type Locale } from "@/lib/i18n/config";
@@ -103,6 +102,8 @@ type SubmissionConfig<S extends z.ZodType<Submitted>, X> = {
   docType: "contactMessage" | "quoteRequest";
   /** Whose address in Site settings gets the notification; also the prefix of what is logged. */
   recipient: "contact" | "quote";
+  /** Looks that address up (content/siteSettings has it); passed in so this module stays below `content` in the layering. */
+  getRecipient: (kind: "contact" | "quote", lang: Locale) => Promise<string | null>;
   /** Checks that need the outside world (the quote's availability and limits). Fail with form errors, or carry on with `extra`. */
   validate?: (data: z.output<S>) => Promise<{ formErrors: FormErrorCode[] } | { extra: X }>;
   /** The submission's own fields; the id, type, status and time are added here. */
@@ -121,7 +122,7 @@ export async function handleSubmission<S extends z.ZodType<Submitted>, X = undef
   config: SubmissionConfig<S, X>,
   formData: FormData,
 ): Promise<FormState> {
-  const { schema, docType, recipient, validate, toDocument, emails, after } = config;
+  const { schema, docType, recipient, getRecipient, validate, toDocument, emails, after } = config;
   const guarded = await guardSubmission(schema, formData);
   if (!guarded.ok) return guarded.result;
   const { data, fail, succeed } = guarded;

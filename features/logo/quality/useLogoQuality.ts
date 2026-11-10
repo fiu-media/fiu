@@ -13,6 +13,7 @@ import {
   probeVerdict,
   TIER_SETTINGS,
 } from "../logoTier";
+import { holdForGpu, type Pacing, releasePacing } from "./gpuPacing";
 
 /** A gap this long between frames is the demand loop waking from idle, not a slow frame. */
 const IDLE_GAP_SECONDS = 0.5;
@@ -58,7 +59,7 @@ export function useLogoQuality({
     measured: false,
   });
   const run = useRef({ slow: 0, fast: 0, crawl: 0, cooldown: 0, gaveUp: false });
-  const pacing = useRef({ fences: [] as WebGLSync[], waiting: null as WebGLSync | null, timer: 0 });
+  const pacing = useRef<Pacing>({ fences: [], waiting: null, timer: 0 });
 
   // The canvas was created at the starting tier's pixel ratio; follow later steps.
   const dprTier = useRef(startTier);
@@ -68,14 +69,7 @@ export function useLogoQuality({
     setDpr(TIER_SETTINGS[tier].dpr);
   }, [tier, setDpr]);
 
-  const releaseFences = useCallback(() => {
-    const ctx = gl.getContext() as WebGL2RenderingContext;
-    const q = pacing.current;
-    window.clearTimeout(q.timer);
-    for (const sync of q.waiting ? [q.waiting, ...q.fences] : q.fences) ctx.deleteSync(sync);
-    q.fences = [];
-    q.waiting = null;
-  }, [gl]);
+  const releaseFences = useCallback(() => releasePacing(gl, pacing.current), [gl]);
   useEffect(() => releaseFences, [releaseFences]);
 
   const log = (message: string) => {
@@ -95,42 +89,7 @@ export function useLogoQuality({
     onTooSlow?.();
   };
 
-  /**
-   * Asks for the next probe frame, holding it back while the GPU is more than a frame behind, so
-   * frame times include the GPU's work. Browsers normally hold rAF back like this for a slow GPU,
-   * but not all do (headless Chromium doesn't): frames then queue up faster than they're drawn, the
-   * probe reads them as fast, and the stall lands later, on screen.
-   */
-  const nextProbeFrame = () => {
-    const ctx = gl.getContext() as WebGL2RenderingContext;
-    const q = pacing.current;
-    // Placed before this frame renders, so it covers everything up to the previous frame.
-    const sync = ctx.fenceSync(ctx.SYNC_GPU_COMMANDS_COMPLETE, 0);
-    if (!sync) {
-      invalidate();
-      return;
-    }
-    ctx.flush();
-    q.fences.push(sync);
-    // The fence placed a frame ago: once it has signalled, only one frame is still in flight.
-    const behind = q.fences.length > 1 ? (q.fences.shift() ?? null) : null;
-    if (!behind) {
-      invalidate();
-      return;
-    }
-    q.waiting = behind;
-    // A sync's status only updates between tasks, so a GPU that's behind is polled from timers.
-    const check = () => {
-      if (ctx.getSyncParameter(behind, ctx.SYNC_STATUS) !== ctx.SIGNALED) {
-        q.timer = window.setTimeout(check, 1);
-        return;
-      }
-      ctx.deleteSync(behind);
-      q.waiting = null;
-      invalidate();
-    };
-    check();
-  };
+  const nextProbeFrame = () => holdForGpu(gl, pacing.current, invalidate);
 
   // A function so TypeScript doesn't keep its narrowing from before `probeFrame` ran.
   const stillProbing = () => probe.current.phase !== "done";

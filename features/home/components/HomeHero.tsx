@@ -5,16 +5,16 @@ import Image from "next/image";
 import { Component, type ReactNode, useMemo, useRef } from "react";
 
 import { ArtDirectedImage } from "@/components/ui/ArtDirectedImage";
+import { HeroFade } from "@/components/ui/HeroFade";
+import { splashFadeVars } from "@/features/logo";
 import { at } from "@/lib/at";
 import { logo } from "@/lib/brand";
 import { cn } from "@/lib/cn";
 import { usePortrait } from "@/lib/hooks/usePortrait";
 
 import type { HeroStill, HeroStills } from "../mappers";
-import { splashFadeVars } from "../splash-config";
 import { useHeroEdge } from "../useHeroEdge";
 import { useHeroIntro, useStillRotation } from "../useHeroIntro";
-import { HeroFade } from "./HeroFade";
 import { Splash } from "./Splash";
 
 const LogoScene = dynamic(() => import("@/features/logo/LogoScene"), { ssr: false });
@@ -99,30 +99,12 @@ export function HomeHero({ landscape, portrait }: HeroStills) {
             useHeroEdge). Under the logo layers, so it never dims the logo. */}
         <div aria-hidden className="hero-edge pointer-events-none absolute inset-y-0 left-0 hidden w-48 md:block" />
 
-        {/* SVG logo: shown on the server render, while the live scene loads, and as the
-            fallback. The live logo starts its spin from this same centred, front-facing pose,
-            then glides to the left on desktop, to a 42vw logo that starts 2vw clear of the side rail
-            (-27vw + 4rem = from 50vw to rail + 2vw + half of 42vw). */}
-        <div
-          className={cn(
-            "pointer-events-none absolute inset-0 grid place-items-center",
-            splashDone && (mode !== "live" || resumed) && "motion-safe:transition-opacity motion-safe:duration-700",
-          )}
-          style={{ opacity: mode === "live" && sceneReady ? 0 : 1 }}
-        >
-          <Image
-            src={logo}
-            alt=""
-            priority
-            sizes="(min-width: 768px) 42vw, 80vw"
-            className={cn(
-              "h-auto w-[80vw] max-w-[640px] md:w-[42vw] md:max-w-none",
-              !snapToLeft
-                && "motion-safe:transition-transform motion-safe:delay-300 motion-safe:duration-1000 motion-safe:ease-in-out",
-              logoAtLeft ? "md:-translate-x-[calc(27vw-4rem-env(safe-area-inset-left))]" : "md:translate-x-0",
-            )}
-          />
-        </div>
+        <SvgLogo
+          fading={mode === "live" && sceneReady}
+          fadeEased={splashDone && (mode !== "live" || resumed)}
+          snapToLeft={snapToLeft}
+          atLeft={logoAtLeft}
+        />
       </div>
 
       {sceneTier && (
@@ -162,6 +144,48 @@ export function HomeHero({ landscape, portrait }: HeroStills) {
         </SceneBoundary>
       )}
     </>
+  );
+}
+
+/**
+ * The SVG logo: shown on the server render, while the live scene loads, and as the fallback. The live logo starts its
+ * spin from this same centred, front-facing pose, then glides to the left on desktop, to a 42vw logo that starts 2vw
+ * clear of the side rail (-27vw + 4rem = from 50vw to rail + 2vw + half of 42vw).
+ */
+function SvgLogo({
+  fading,
+  fadeEased,
+  snapToLeft,
+  atLeft,
+}: {
+  /** The live scene has taken over, so this one is hidden. */
+  fading: boolean;
+  /** Fade it rather than cut, once the splash has gone. */
+  fadeEased: boolean;
+  snapToLeft: boolean;
+  atLeft: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        "pointer-events-none absolute inset-0 grid place-items-center",
+        fadeEased && "motion-safe:transition-opacity motion-safe:duration-700",
+      )}
+      style={{ opacity: fading ? 0 : 1 }}
+    >
+      <Image
+        src={logo}
+        alt=""
+        priority
+        sizes="(min-width: 768px) 42vw, 80vw"
+        className={cn(
+          "h-auto w-[80vw] max-w-[640px] md:w-[42vw] md:max-w-none",
+          !snapToLeft
+            && "motion-safe:transition-transform motion-safe:delay-300 motion-safe:duration-1000 motion-safe:ease-in-out",
+          atLeft ? "md:-translate-x-[calc(27vw-4rem-env(safe-area-inset-left))]" : "md:translate-x-0",
+        )}
+      />
+    </div>
   );
 }
 

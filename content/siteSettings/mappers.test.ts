@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { fallbackStills } from "@/features/home/fallback-stills";
-
+import { fallbackStills } from "./fallbackStills";
 import { toTeam } from "./mappers";
 
 const photo = {

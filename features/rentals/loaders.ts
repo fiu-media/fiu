@@ -1,5 +1,11 @@
-import { QUOTE_CATALOGUE_QUERY, RENTAL_ITEM_QUERY, RENTALS_QUERY } from "@/content/rentalItem";
-import { toCatalogue, toQuoteCatalogue, toRentalItem } from "@/content/rentalItem/mappers";
+import {
+  QUOTE_CATALOGUE_QUERY,
+  RENTAL_ITEM_QUERY,
+  RENTALS_QUERY,
+  toCatalogue,
+  toQuoteCatalogue,
+  toRentalItem,
+} from "@/content/rentalItem";
 import type { Locale } from "@/lib/i18n/config";
 import { fetchContent } from "@/sanity/lib/fetch";
 

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
-import { floatingBarInset, pageGutter, pageTop } from "@/components/layout/nav/rail";
 import { FullBleedScroll } from "@/components/ui/FullBleedScroll";
 import { GlassPillLink } from "@/components/ui/Glass";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -13,6 +12,7 @@ import { cn } from "@/lib/cn";
 import { getLocale, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { format } from "@/lib/i18n/format";
+import { floatingBarInset, pageGutter, pageTop } from "@/lib/rail";
 import { href, pageMetadata, routes } from "@/lib/routes";
 
 const SCROLL_ID = "work-scroll";

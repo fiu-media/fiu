@@ -4,14 +4,13 @@ import { PortableText } from "next-sanity";
 import { Suspense } from "react";
 
 import { type AboutTeamProps, TeamBand, TeamBeside, TeamScreen } from "@/app/(site)/[lang]/dev/_concepts/about/AboutTeamOptions";
-import { railInset } from "@/components/layout/nav/rail";
 import { SiteNav } from "@/components/layout/nav/SiteNav";
 import { GlassPillLink } from "@/components/ui/Glass";
-import { ContactLinks, getSiteSettings, toTeam } from "@/content/siteSettings";
-import { fallbackStills } from "@/features/home";
+import { ContactLinks, fallbackStills, getSiteSettings, toTeam } from "@/content/siteSettings";
 import { at } from "@/lib/at";
 import { isLocale, type Locale, localizedPath } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
+import { railInset } from "@/lib/rail";
 import { toSizedImage } from "@/sanity/lib/image";
 
 // Sign-off page for where the team photo goes on About: three placements on the About layout (option A). Option 2 is live

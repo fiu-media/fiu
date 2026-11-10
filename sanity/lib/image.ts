@@ -1,8 +1,11 @@
 import { createImageUrlBuilder, type SanityImageSource } from "@sanity/image-url";
 
+import type { SizedImage } from "@/lib/sizedImage";
 import type { SanityImageAssetReference, SanityImageCrop, SanityImageDimensions, SanityImageHotspot } from "@/sanity.types";
 
 import { dataset, projectId } from "../env";
+
+export type { SizedImage };
 
 const builder = createImageUrlBuilder({ projectId, dataset });
 
@@ -20,16 +23,22 @@ export type QueriedImage = {
   dimensions?: SanityImageDimensions | null;
 };
 
-/** A queried Sanity image as a sized, cropped `next/image` source: talent portraits, project covers, rental photos. */
-export type SizedImage = {
-  src: string;
-  width: number;
-  height: number;
-  alt: string;
-  blurDataURL?: string | undefined;
-  /** CSS object-position from the editor's hotspot (for cropped uses like portraits; rentals show whole). */
-  position?: string | undefined;
-};
+/** The share of the image's width and height the editor's crop leaves (1 and 1 without a crop). */
+function keptByCrop(crop: SanityImageCrop | null) {
+  // The generated types say every crop field is present; these defaults cover data that omits one.
+  /* eslint-disable @typescript-eslint/no-unnecessary-condition */
+  return {
+    width: crop ? 1 - (crop.left ?? 0) - (crop.right ?? 0) : 1,
+    height: crop ? 1 - (crop.top ?? 0) - (crop.bottom ?? 0) : 1,
+  };
+  /* eslint-enable @typescript-eslint/no-unnecessary-condition */
+}
+
+/** The hotspot as a CSS `object-position`, or undefined when the editor set none. */
+function hotspotPosition(hotspot: SanityImageHotspot | null) {
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- as above
+  return hotspot ? `${(hotspot.x ?? 0.5) * 100}% ${(hotspot.y ?? 0.5) * 100}%` : undefined;
+}
 
 /** A queried Sanity image as a sized, cropped `next/image` source (null without dimensions). */
 export function toSizedImage(image: QueriedImage, width = 1200): SizedImage | null {
@@ -40,13 +49,9 @@ export function toSizedImage(image: QueriedImage, width = 1200): SizedImage | nu
       ? { width: image.dimensions.width, height: image.dimensions.height }
       : null;
   // Cropped images have no dimensions in the catalogue lookup; fall back to a 4:3 frame.
-  // The generated types say every crop and hotspot field is present; these defaults cover data that omits one.
-  /* eslint-disable @typescript-eslint/no-unnecessary-condition */
-  const cropW = crop ? 1 - (crop.left ?? 0) - (crop.right ?? 0) : 1;
-  const cropH = crop ? 1 - (crop.top ?? 0) - (crop.bottom ?? 0) : 1;
-  /* eslint-enable @typescript-eslint/no-unnecessary-condition */
-  const aspect = dimensions ? (dimensions.width * cropW) / (dimensions.height * cropH) : 4 / 3;
-  const w = dimensions ? Math.min(width, Math.round(dimensions.width * cropW)) : width;
+  const kept = keptByCrop(crop);
+  const aspect = dimensions ? (dimensions.width * kept.width) / (dimensions.height * kept.height) : 4 / 3;
+  const w = dimensions ? Math.min(width, Math.round(dimensions.width * kept.width)) : width;
   return {
     src: urlFor({ asset, crop: crop ?? undefined, hotspot: hotspot ?? undefined })
       .width(w)
@@ -56,8 +61,7 @@ export function toSizedImage(image: QueriedImage, width = 1200): SizedImage | nu
     height: Math.round(w / aspect),
     alt: image.alt ?? "",
     blurDataURL: image.lqip ?? undefined,
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- as above
-    position: hotspot ? `${(hotspot.x ?? 0.5) * 100}% ${(hotspot.y ?? 0.5) * 100}%` : undefined,
+    position: hotspotPosition(hotspot),
   };
 }
 

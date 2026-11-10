@@ -5,9 +5,8 @@ import { z } from "zod";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
+import { clampQty, MAX_QTY } from "@/lib/forms/quantity";
 import { safeStorage } from "@/lib/safe-storage";
-
-import { clampQty, MAX_QTY } from "./quantity";
 
 const STORAGE_KEY = "fiu:quote-basket";
 

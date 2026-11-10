@@ -1,8 +1,9 @@
 "use server";
 
 import { AVAILABLE_ITEM_IDS_QUERY } from "@/content/rentalItem";
-import { MAX_QTY } from "@/features/rentals/basket/quantity";
+import { getRecipient } from "@/content/siteSettings";
 import { build, type KitLine } from "@/lib/email/templates";
+import { MAX_QTY } from "@/lib/forms/quantity";
 import { quoteSchema } from "@/lib/forms/schemas";
 import type { FormState } from "@/lib/forms/state";
 import { handleSubmission } from "@/lib/forms/submit";
@@ -22,6 +23,7 @@ export async function submitQuote(_previous: FormState, formData: FormData): Pro
       schema: quoteSchema,
       docType: "quoteRequest",
       recipient: "quote",
+      getRecipient,
       validate: async (data) => {
         // The basket lives in the visitor's browser, so treat it as untrusted: merge duplicates and
         // only accept items that are currently published and available.

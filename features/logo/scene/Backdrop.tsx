@@ -2,9 +2,9 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { type RefObject, useRef, useState } from "react";
 import * as THREE from "three";
 
-import { SPLASH_FADE_MS } from "@/features/home/splash-config";
 import { at } from "@/lib/at";
 
+import { SPLASH_FADE_MS } from "../splashConfig";
 import { backdropFragment, backdropVertex } from "./shaders";
 import { BACKDROP_Z, CROSSFADE_SECONDS, type Fade } from "./shared";
 import type { SceneStill } from "./stills";

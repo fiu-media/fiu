@@ -6,24 +6,14 @@ import Link from "next/link";
 import { parseAsString, useQueryState } from "nuqs";
 
 import { GlassPillButton } from "@/components/ui/Glass";
+import type { CatalogueCard } from "@/content/rentalItem";
 import { selectFilter } from "@/lib/filter";
 import type { Locale } from "@/lib/i18n/config";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { href, routes } from "@/lib/routes";
-import type { SizedImage } from "@/sanity/lib/image";
 
 import { AddToQuote } from "./AddToQuote";
 import { RentalImageView } from "./RentalImageView";
-
-export type CatalogueCard = {
-  id: string;
-  name: string;
-  slug: string;
-  brand: string | null;
-  summary: string | null;
-  categoryId: string | null;
-  image: SizedImage | null;
-};
 
 /** The "All" pill's value: Sanity ids can't contain `*`, so no category can claim it. */
 const ALL = "*";

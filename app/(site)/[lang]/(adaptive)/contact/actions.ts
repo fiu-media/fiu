@@ -1,5 +1,6 @@
 "use server";
 
+import { getRecipient } from "@/content/siteSettings";
 import { build } from "@/lib/email/templates";
 import { saveContact } from "@/lib/forms/notify";
 import { contactSchema } from "@/lib/forms/schemas";
@@ -12,6 +13,7 @@ export async function submitContact(_previous: FormState, formData: FormData): P
       schema: contactSchema,
       docType: "contactMessage",
       recipient: "contact",
+      getRecipient,
       toDocument: (data) => ({
         name: data.name,
         email: data.email,

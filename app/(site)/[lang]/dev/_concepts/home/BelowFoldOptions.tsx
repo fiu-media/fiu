@@ -2,11 +2,11 @@ import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { pageGutter } from "@/components/layout/nav/rail";
 import { FullBleedScroll, FullBleedSlide } from "@/components/ui/FullBleedScroll";
 import { GlassPillLink } from "@/components/ui/Glass";
 import { type FoldProject, type FoldProps as LiveFoldProps, HomeFold, Photo, Reel } from "@/features/home";
 import { cn } from "@/lib/cn";
+import { pageGutter } from "@/lib/rail";
 
 import { type DevTeam, PlaceholderTeamPhoto } from "../PlaceholderTeamPhoto";
 

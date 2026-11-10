@@ -9,8 +9,8 @@
  * A value that doesn't pass the same rules the form enforces (a date in the past, an unknown item, a
  * number that isn't a number) is dropped rather than shown as an error the visitor didn't cause.
  */
-import { clampQty } from "@/features/rentals/basket/quantity";
 import { isIsoDate, isValidRange, rentalDays } from "@/lib/dates";
+import { clampQty } from "@/lib/forms/quantity";
 import type { Locale } from "@/lib/i18n/config";
 import { href, routes } from "@/lib/routes";
 

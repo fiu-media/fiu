@@ -23,3 +23,13 @@ export type { LogoPerfStats } from "./logoPerf";
 export { costVsPreset } from "./logoPerf";
 export type { LogoDecision, LogoTier } from "./logoTier";
 export { decideLogoTier, rememberTooSlow } from "./logoTier";
+export {
+  INTRO_BACKSTOP_MS,
+  INTRO_SETTLE_MS,
+  SLOW_FADE_MS,
+  SPIN_DELAY_MS,
+  SPLASH_FADE_MS,
+  SPLASH_MAX_MS,
+  SPLASH_MIN_MS,
+  splashFadeVars,
+} from "./splashConfig";

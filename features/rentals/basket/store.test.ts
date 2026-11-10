@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { clampQty } from "./quantity";
+import { clampQty } from "@/lib/forms/quantity";
+
 import { basketSchema } from "./store";
 
 const empty = { lines: [], startDate: "", endDate: "" };

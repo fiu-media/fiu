@@ -18,17 +18,17 @@ import {
   FoldSnapSequel,
   FoldTwoDoors,
 } from "@/app/(site)/[lang]/dev/_concepts/home/BelowFoldOptions";
-import { railInset, railWidth } from "@/components/layout/nav/rail";
 import { SiteNav } from "@/components/layout/nav/SiteNav";
 import { GlassPillLink } from "@/components/ui/Glass";
+import { HeroFade } from "@/components/ui/HeroFade";
 import { WORK_QUERY } from "@/content/project";
-import { ContactLinks, getSiteSettings, toTeam } from "@/content/siteSettings";
-import { fallbackStills, HeroFade } from "@/features/home";
+import { ContactLinks, fallbackStills, getSiteSettings, toTeam } from "@/content/siteSettings";
 import { at } from "@/lib/at";
 import { logo } from "@/lib/brand";
 import { cn } from "@/lib/cn";
 import { isLocale, type Locale, localizedPath } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
+import { railInset, railWidth } from "@/lib/rail";
 import { fetchContent } from "@/sanity/lib/fetch";
 import { toSizedImage } from "@/sanity/lib/image";
 

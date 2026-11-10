@@ -1,7 +1,7 @@
-import { fallbackStills } from "@/features/home/fallback-stills";
 import { at } from "@/lib/at";
 import { type SizedImage, toSizedImage } from "@/sanity/lib/image";
 
+import { fallbackStills } from "./fallbackStills";
 import type { SiteSettings } from "./loaders";
 
 export type Team = {

@@ -4,7 +4,6 @@ import { notFound } from "next/navigation";
 import { PortableText } from "next-sanity";
 import { Suspense } from "react";
 
-import { floatingBarInset, pageGutter, pageTop } from "@/components/layout/nav/rail";
 import { BackLink } from "@/components/ui/BackLink";
 import { FullBleedScroll } from "@/components/ui/FullBleedScroll";
 import { SizedImg } from "@/components/ui/SizedImg";
@@ -15,6 +14,7 @@ import { cn } from "@/lib/cn";
 import { getLocale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { format } from "@/lib/i18n/format";
+import { floatingBarInset, pageGutter, pageTop } from "@/lib/rail";
 import { href, pageMetadata, routes } from "@/lib/routes";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/talent/[slug]">): Promise<Metadata> {
