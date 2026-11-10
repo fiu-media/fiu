@@ -2,8 +2,8 @@ import { projectMeta } from "@/content/project";
 import type { Locale } from "@/lib/i18n/config";
 import { href, routes } from "@/lib/routes";
 import type { HOME_STILLS_QUERY_RESULT, WORK_QUERY_RESULT } from "@/sanity.types";
+import { editAttr } from "@/sanity/lib/editing";
 import { type SizedImage, toSizedImage } from "@/sanity/lib/image";
-import { projectAttribute } from "@/sanity/lib/projects";
 
 import type { FoldProject } from "./components/HomeFold";
 
@@ -51,7 +51,7 @@ function toStills(projectId: string, field: "stills" | "stillsMobile", stills: H
   return (stills ?? []).flatMap((still) => {
     const image = toSizedImage(still, field === "stillsMobile" ? PORTRAIT_HERO_WIDTH : HERO_WIDTH);
     if (!image) return [];
-    return [{ ...image, dataSanity: projectAttribute(projectId, `${field}[_key=="${still._key}"]`) }];
+    return [{ ...image, dataSanity: editAttr("project", projectId, `${field}[_key=="${still._key}"]`) }];
   });
 }
 

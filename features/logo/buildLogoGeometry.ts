@@ -4,7 +4,7 @@ import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js
 import type { LogoMeshMode } from "./config/schemas";
 export type { LogoMeshMode };
 
-export type LogoStroke = {
+type LogoStroke = {
   /** Centreline samples: [x, y, radius] in logo-world units. */
   points: number[][];
   closed?: boolean;

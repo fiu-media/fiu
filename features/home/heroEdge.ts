@@ -8,7 +8,7 @@
  */
 
 /** The rail's text at rest over footage: white at this opacity. */
-export const TEXT_ALPHA = 0.8;
+const TEXT_ALPHA = 0.8;
 /** WCAG AA for small text (4.5), with margin for anti-aliasing and for the backdrop not being a flat grey. */
 const TARGET_CONTRAST = 4.8;
 /** sRGB is roughly a 2.2 power curve, so darkening a channel by `a` scales luminance by about (1 - a) ^ 2.2. */

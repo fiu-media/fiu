@@ -1,0 +1,13 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  // knip's Next, Vitest, Playwright and ESLint plugins find the app router files, configs and tests. These are the
+  // entry points nothing imports: Next's instrumentation hooks, react-email templates (run by `email dev`), and the
+  // command-line scripts, e2e helpers and Sanity migrations.
+  "entry": ["instrumentation*.ts", "emails/*.tsx", "scripts/**/*.ts", "e2e/**/*.ts", "migrations/**/*.ts"],
+  // Vendored Draco decoder, copied from three/examples for self-hosting; it is loaded by URL at runtime.
+  "ignore": ["public/**"],
+  // `setup` runs the globally installed Vercel CLI.
+  "ignoreBinaries": ["vercel"],
+  // turbo.json configures Turborepo, which Vercel runs for builds. Nothing here imports or calls the package.
+  "ignoreDependencies": ["turbo"],
+}

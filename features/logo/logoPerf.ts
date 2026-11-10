@@ -6,7 +6,7 @@ import type { LogoGlassParams, LogoRimLook } from "./config/schemas";
  * MeshTransmissionMaterial dominates via its sample count and buffer passes; env soft lights
  * matter because Environment re-renders every frame; point lights are lighter.
  */
-export function estimateLogoCost(params: LogoGlassParams) {
+function estimateLogoCost(params: LogoGlassParams) {
   const softOn = params.lights.soft.filter((l) => l.enabled).length;
   const pointsOn = params.lights.points.filter((l) => l.enabled).length;
   const backsideMul = params.backside === false ? 1 : 2;

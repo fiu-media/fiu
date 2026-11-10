@@ -3,7 +3,7 @@ import type { LogoDecision, LogoTier } from "@/features/logo";
 import { hasIntroPlayed, isSplashDismissed } from "./session";
 
 /** splash up, then the logo spinning, then settled (stills rotate, scene interactive). */
-export type Stage = "splash" | "spin" | "settled";
+type Stage = "splash" | "spin" | "settled";
 export type Mode = "pending" | "live" | "static";
 
 /** "pending" on the server and during hydration, then the glass logo's starting tier, or "static". See `logoTier.ts`. */

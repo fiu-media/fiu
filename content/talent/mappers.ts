@@ -26,7 +26,7 @@ export function toRosterItems(people: TALENT_QUERY_RESULT, lang: Locale): Roster
 }
 
 /** A project on a person's page: the shared slide data, plus what they did on it. */
-export type TalentProject = ProjectSlideData & { id: string; role?: string };
+type TalentProject = ProjectSlideData & { id: string; role?: string };
 
 export type TalentProfile = {
   name: string;

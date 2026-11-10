@@ -114,6 +114,3 @@ export const contactSchema = z.object({
   enquiryType: z.enum(ENQUIRY_TYPES),
   message: required(limits.message),
 });
-
-export type QuoteInput = z.infer<typeof quoteSchema>;
-export type ContactInput = z.infer<typeof contactSchema>;

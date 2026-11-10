@@ -195,7 +195,3 @@ export function diffConfigs(
 
   return { entries, unchanged };
 }
-
-export function countChanges(diff: ConfigDiff): number {
-  return diff.entries.length;
-}

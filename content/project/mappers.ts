@@ -78,7 +78,7 @@ export function plainText(blocks: { children?: { text?: string }[] }[] | null | 
 }
 
 /** A slide in a list, with what the list needs to key it and link to the project's own page. */
-export type WorkSlide = ProjectSlideData & { id: string; href?: string };
+type WorkSlide = ProjectSlideData & { id: string; href?: string };
 
 /**
  * Our Work: the type filters worth offering, which one is active, and the slides to show. Only types that have projects
