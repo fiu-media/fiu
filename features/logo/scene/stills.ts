@@ -43,8 +43,10 @@ export function resolveStillTint(still: SceneStill, texture?: THREE.Texture): TH
 
 /** Downsample and average. Returns null if the image can't be read (tainted / not ready). */
 function sampleAverageColor(texture: THREE.Texture): THREE.Color | null {
-  const img = texture.image as CanvasImageSource | undefined;
-  if (!img || typeof document === "undefined") return null;
+  // Stills come from TextureLoader, which gives an <img>; anything else (or the server) has nothing to sample.
+  if (typeof document === "undefined") return null;
+  const img = texture.image;
+  if (!(img instanceof HTMLImageElement)) return null;
 
   try {
     const canvas = document.createElement("canvas");

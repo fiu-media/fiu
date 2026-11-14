@@ -1,14 +1,13 @@
 import { expect, type Page, test } from "@playwright/test";
 
+import { en } from "../lib/i18n/dictionaries/en";
 import { rentalItems } from "./fixtures/data";
 import { boundingBoxOf, clickUntil } from "./helpers";
 
 /** Opens the rental item that has several photos, and returns its gallery. */
 async function openGallery(page: Page) {
   await page.goto(`/rentals/${rentalItems.multi.slug}`);
-  // The gallery streams in after the page loads.
-  // eslint-disable-next-line playwright/no-networkidle -- the gallery has no ready signal other than its requests settling
-  await page.waitForLoadState("networkidle");
+  // The gallery streams in after the page loads; the count below waits for it.
   const gallery = page.getByRole("group", { name: /^Photos of / });
   await expect(gallery.getByRole("tab", { name: /^Show photo/ })).toHaveCount(rentalItems.multi.photos.length);
   return gallery;
@@ -35,7 +34,7 @@ test("rental gallery: buttons, keyboard, thumbnails and swipe stay in sync", asy
   await expect(current).toHaveAttribute("aria-label", /^Show photo 1 of /);
 
   // The arrow keys on the large photo change it too, and leave focus where it is.
-  const large = gallery.locator("div[tabindex='0']").first();
+  const large = gallery.getByRole("region", { name: en.rentals.largePhoto });
   await large.focus();
   await page.keyboard.press("ArrowRight");
   await expect(current).toHaveAttribute("aria-label", /^Show photo 2 of /);

@@ -1,5 +1,5 @@
 import { orderRankField, orderRankOrdering } from "@sanity/orderable-document-list";
-import { defineArrayMember, defineField, defineType } from "sanity";
+import { defineArrayMember, defineField, defineType, type PreviewValue } from "sanity";
 
 import {
   defaultLanguageReference,
@@ -23,6 +23,7 @@ export const talent = defineType({
       type: "array",
       of: [defineArrayMember(defaultLanguageReference("role"))],
       readOnly: readOnlyInTranslation,
+      validation: (rule) => rule.required().min(1),
     }),
     imageWithAlt("portrait", "Portrait", true),
     defineField({
@@ -46,13 +47,23 @@ export const talent = defineType({
   preview: {
     // Roles are references; previews can only dereference a fixed number of array entries.
     select: { title: "name", role0: "roles.0.title", role1: "roles.1.title", role2: "roles.2.title", media: "portrait" },
-    // Sanity types the selected values as `any`.
-    /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-    prepare: ({ title, role0, role1, role2, media }) => ({
+    // Sanity types the selected values as `any`, so the parameter says what they are.
+    prepare: ({
       title,
+      role0,
+      role1,
+      role2,
+      media,
+    }: {
+      title?: string;
+      role0?: string;
+      role1?: string;
+      role2?: string;
+      media?: PreviewValue["media"];
+    }) => ({
+      title: title ?? "Untitled",
       subtitle: [role0, role1, role2].filter(Boolean).join(", "),
       media,
     }),
-    /* eslint-enable @typescript-eslint/no-unsafe-assignment */
   },
 });

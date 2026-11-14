@@ -89,9 +89,8 @@ export const quoteRequest = defineType({
     }) => {
       const lines = Array.isArray(items) ? items.length : 0;
       return {
-        // An empty production counts as missing, so the company stands in.
-        // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
-        title: [name, production || company].filter(Boolean).join(" · "),
+        // Without a production, the company stands in.
+        title: [name, production ?? company].filter(Boolean).join(" · "),
         subtitle: [
           capitalise(status),
           startDate && endDate && startDate !== endDate

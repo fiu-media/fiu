@@ -1,5 +1,7 @@
 export type VimeoRef = { id: string; hash?: string | undefined };
 
+const HEX = /^[0-9a-f]+$/i;
+
 /**
  * The video id (and the privacy hash of an unlisted video) from the Vimeo URLs editors paste:
  * `vimeo.com/123`, `vimeo.com/123/abcdef`, `vimeo.com/channels/x/123` or `player.vimeo.com/video/123?h=abcdef`.
@@ -17,10 +19,9 @@ export function parseVimeo(url: string | null | undefined): VimeoRef | null {
   const index = segments.findIndex((segment) => /^\d+$/.test(segment));
   const id = segments[index];
   if (id === undefined) return null;
-  const hash = parsed.searchParams.get("h") ?? segments[index + 1]?.match(/^[0-9a-f]+$/i)?.[0];
-  // An empty hash is no hash.
-  // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
-  return { id, hash: hash || undefined };
+  // Hashes are hex, so an empty or malformed `?h=` falls through to the one in the path, if any.
+  const hash = parsed.searchParams.get("h")?.match(HEX)?.[0] ?? segments[index + 1]?.match(HEX)?.[0];
+  return { id, hash };
 }
 
 type EmbedOptions = {

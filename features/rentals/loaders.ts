@@ -11,7 +11,7 @@ import { fetchContent } from "@/sanity/lib/fetch";
 
 /** The catalogue in `lang`. Follows draft mode, so it must sit behind a Suspense boundary. */
 export async function getCatalogue(lang: Locale) {
-  return toCatalogue(await fetchContent(RENTALS_QUERY, lang));
+  return toCatalogue(await fetchContent(RENTALS_QUERY, lang, {}));
 }
 
 /** One item page's content, or `null` when there is no such (available) item. Follows draft mode like the catalogue. */

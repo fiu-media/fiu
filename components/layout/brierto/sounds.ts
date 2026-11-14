@@ -20,14 +20,14 @@ export const LOOP_MS = 3600;
 export const BOOM_EVENT = "brierto-boom";
 
 export function audioContext(): AudioContext | null {
-  const Ctor =
-    (window.AudioContext as typeof AudioContext | undefined)
-    ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+  // Read before the `in` check, which leaves `window` typed `never` where there is no standard AudioContext.
+  const { webkitAudioContext } = window;
+  const Ctor = "AudioContext" in window ? window.AudioContext : webkitAudioContext;
   return Ctor ? new Ctor() : null;
 }
 
 /** Speech synthesis is missing in some browsers and webviews, though the DOM types say it is always there. */
-export const speech = () => window.speechSynthesis as SpeechSynthesis | undefined;
+export const speech = () => ("speechSynthesis" in window ? window.speechSynthesis : undefined);
 
 export function squeakyVoice(): SpeechSynthesisVoice | undefined {
   const voices = speech()?.getVoices() ?? [];

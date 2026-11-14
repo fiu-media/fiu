@@ -10,7 +10,7 @@ import type { IndexItem } from "./components/NameIndex";
 
 /** The roster as index rows. Follows draft mode, so it must sit behind a Suspense boundary. */
 export async function getRoster(lang: Locale): Promise<IndexItem[]> {
-  return toRosterItems(await fetchContent(TALENT_QUERY, lang), lang);
+  return toRosterItems(await fetchContent(TALENT_QUERY, lang, {}), lang);
 }
 
 /** One person's page, or `null` when there is no such person. The profile comes first because it names the person to look up projects for. */

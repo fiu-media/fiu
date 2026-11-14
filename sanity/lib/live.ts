@@ -45,6 +45,6 @@ export async function getDynamicFetchOptions(): Promise<DynamicFetchOptions> {
   const jar = await cookies();
   const perspective = await resolvePerspectiveFromCookies({ cookies: jar });
   const variant = await resolveVariantFromCookies({ cookies: jar });
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- the types say a perspective always resolves; "drafts" is the safe fallback if one doesn't
-  return { perspective: perspective ?? "drafts", variant, stega: true };
+  // A missing or invalid perspective cookie resolves to "drafts".
+  return { perspective, variant, stega: true };
 }

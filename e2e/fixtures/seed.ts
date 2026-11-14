@@ -29,9 +29,14 @@ async function main() {
       return [key, asset._id] as const;
     }),
   );
-  const assets = Object.fromEntries(uploaded) as Record<PhotoKey, string>;
+  const ids = new Map(uploaded);
+  const assetFor = (key: PhotoKey) => {
+    const id = ids.get(key);
+    if (!id) throw new Error(`[e2e] No uploaded asset for ${key}`);
+    return id;
+  };
 
-  const docs = fixtureDocuments(assets);
+  const docs = fixtureDocuments(assetFor);
   const transaction = client.transaction();
   for (const doc of docs) transaction.createOrReplace(doc);
   await transaction.commit();

@@ -193,7 +193,7 @@ describe("toProject", () => {
       { _key: "k3", role: "Grade", name: null, talentSlug: null },
     ],
     stills: { landscape: [{ ...image("s1"), _key: "s1" }], portrait: [] },
-  } as unknown as NonNullable<PROJECT_QUERY_RESULT>;
+  } satisfies NonNullable<PROJECT_QUERY_RESULT>;
 
   it("lists credits with a name, linking the ones that are on the roster", () => {
     const { credits } = toProject(project, [{ title: "A", slug: "a" }], "ga");
@@ -221,7 +221,10 @@ describe("toProjectMeta", () => {
   const meta = { title: "Solas", type: "Film", year: 2025, client: null };
 
   it("describes the project with its blurb", () => {
-    expect(toProjectMeta({ ...meta, description: [{ children: [{ text: "A story." }] }] } as never)).toEqual({
+    const description = [
+      { _type: "block" as const, _key: "b1", children: [{ _type: "span" as const, _key: "s1", text: "A story." }] },
+    ];
+    expect(toProjectMeta({ ...meta, description })).toEqual({
       title: "Solas",
       description: "A story.",
     });

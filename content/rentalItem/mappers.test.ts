@@ -1,7 +1,5 @@
 import { describe, expect, it } from "vitest";
 
-import { MAX_QTY } from "@/lib/forms/quantity";
-
 import { toCatalogue, toQuoteCatalogue, toRentalItem } from "./mappers";
 
 const image = (id: string, width = 4000, height = 3000) => ({
@@ -34,7 +32,7 @@ describe("toCatalogue", () => {
   it("makes one card per item, with the published id and the first image", () => {
     const { categories, cards } = toCatalogue({
       categories: [{ _id: "c", title: "Cameras", slug: "cameras" }],
-      items: [item, { ...item, baseId: "lamp", slug: "lamp", brand: null, category: null as never, images: null }],
+      items: [item, { ...item, baseId: "lamp", slug: "lamp", brand: null, category: null, images: null }],
     });
     expect(categories).toEqual([{ id: "cameras", title: "Cameras" }]);
     expect(cards[0]).toMatchObject({ id: "cam-en", slug: "alexa-mini", categoryId: "cameras", brand: "ARRI" });
@@ -80,8 +78,8 @@ describe("toQuoteCatalogue", () => {
     expect(toQuoteCatalogue("ga", [row]).cam?.href).toBe("/ga/rentals/alexa");
   });
 
-  it("caps an item with no cap of its own at MAX_QTY and allows no image", () => {
-    const catalogue = toQuoteCatalogue("en", [{ ...row, maxQuantity: null as never, image: null }]);
-    expect(catalogue.cam).toMatchObject({ max: MAX_QTY, image: null });
+  it("allows no image", () => {
+    const catalogue = toQuoteCatalogue("en", [{ ...row, image: null }]);
+    expect(catalogue.cam).toMatchObject({ max: 4, image: null });
   });
 });

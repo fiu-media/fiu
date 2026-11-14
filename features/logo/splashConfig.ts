@@ -8,7 +8,7 @@ import type { CSSProperties } from "react";
 export const SPLASH_FADE_MS = 400;
 
 /** CSS custom property carrying the fade, read by `duration-(--splash-fade)` classes. */
-export const splashFadeVars = { "--splash-fade": `${SPLASH_FADE_MS}ms` } as CSSProperties;
+export const splashFadeVars: CSSProperties = { "--splash-fade": `${SPLASH_FADE_MS}ms` };
 
 /** Keep the splash up at least this long so a fast load doesn't flash it. */
 export const SPLASH_MIN_MS = 800;

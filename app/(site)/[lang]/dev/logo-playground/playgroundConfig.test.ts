@@ -117,9 +117,12 @@ describe("importPlaygroundConfig", () => {
     });
 
     it("fills light flags that older snapshots omit", () => {
-      const old = structuredClone(presetConfig("light"));
-      const { feather, followPose, roll, lift, scaleZ, ...rest } = at(old.params.lights.soft, 0);
-      old.params.lights.soft[0] = rest as never;
+      const config = presetConfig("light");
+      const [first, ...others] = config.params.lights.soft;
+      if (!first) throw new Error("The preset has no soft lights");
+      const { feather, followPose, roll, lift, scaleZ, ...rest } = first;
+      // A snapshot as an older version wrote it: plain JSON, so it needn't match today's types.
+      const old = { ...config, params: { ...config.params, lights: { ...config.params.lights, soft: [rest, ...others] } } };
       const result = importPlaygroundConfig(current, JSON.stringify(old));
       if (!result.ok) throw new Error(result.error);
       expect(result.config.params.lights.soft[0]).toMatchObject({

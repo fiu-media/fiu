@@ -2,7 +2,7 @@ import { expect, type Locator, test } from "@playwright/test";
 
 import { en } from "../lib/i18n/dictionaries/en";
 import { format } from "../lib/i18n/format";
-import { clickUntil, isoDateFromNow, rentalsTest } from "./helpers";
+import { clickUntil, isoDateFromNow, skipWithoutRentals } from "./helpers";
 
 const { rentals, forms, quote } = en;
 
@@ -16,7 +16,9 @@ async function expectExamples(form: Locator) {
   expect(count).toBeGreaterThan(0);
   for (let i = 0; i < count; i++) {
     const field = fields.nth(i);
-    const label = await field.evaluate((el) => (el as HTMLInputElement).labels?.[0]?.textContent ?? "");
+    const label = await field.evaluate((el) =>
+      el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement ? (el.labels?.[0]?.textContent ?? "") : "",
+    );
     // Plumbing that carries a value (the phone's hidden control) has no label and nothing to type into.
     if (!label) continue;
     await expect(field, `a field labelled "${label}"`).toHaveAttribute("placeholder", /./);
@@ -34,7 +36,8 @@ test.describe("placeholders", () => {
   });
 
   // Rentals is hidden while `features.rentals` is off (see playwright.config.ts).
-  rentalsTest("the quote form gives one too, and its dates and phone look the same", async ({ page }) => {
+  test("the quote form gives one too, and its dates and phone look the same", async ({ page }) => {
+    skipWithoutRentals();
     await page.goto("/rentals");
     const added = page.getByRole("button", { name: format(rentals.inQuote, { qty: 1 }) }).first();
     await clickUntil(page.getByRole("button", { name: rentals.addToQuote }).first(), () =>

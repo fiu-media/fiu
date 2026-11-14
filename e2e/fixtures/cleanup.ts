@@ -40,7 +40,7 @@ export async function cleanup(client: SanityClient) {
       assetsRemoved++;
     } catch (error) {
       // Still referenced by something that isn't ours. Leave it rather than break that document.
-      console.warn(`[e2e] Kept asset ${id}: ${(error as Error).message}`);
+      console.warn(`[e2e] Kept asset ${id}: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 

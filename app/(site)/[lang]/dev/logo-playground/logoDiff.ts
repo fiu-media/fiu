@@ -37,8 +37,8 @@ export type ConfigDiff = {
   unchanged: number;
 };
 
-type Primitive = string | number | boolean;
-type LightLike = { id: string; label: string } & Record<string, Primitive>;
+/** A light by id and label, with all of its fields by name for the key-by-key walk. */
+type LightFields = { id: string; label: string; fields: Record<string, unknown> };
 
 const EPSILON = 1e-9;
 const GLOW_KEYS = new Set<string>(["glowSat", "glowLift", "glowLMin", "glowLMax"]);
@@ -60,14 +60,21 @@ function toDiffValue(value: unknown): DiffValue {
   if (value === undefined || value === null) return null;
   if (typeof value === "number" || typeof value === "boolean" || typeof value === "string") return value;
   // Not a primitive, so it only needs a readable stand-in in the diff list.
-  // eslint-disable-next-line @typescript-eslint/no-base-to-string
-  return String(value);
+  return JSON.stringify(value);
 }
 
 function describeExtrude(extrude: LogoExtrudeOverride | null): string {
   if (!extrude) return "off";
   return `${extrude.depth} / ${extrude.bevelThickness} / ${extrude.bevelSize}`;
 }
+
+/** An object's own fields by name, for comparing two of them key by key. */
+function fieldsOf(value: object): Record<string, unknown> {
+  return Object.fromEntries(Object.entries(value));
+}
+
+const lightFields = (lights: readonly { id: string; label: string }[]): LightFields[] =>
+  lights.map((light) => ({ id: light.id, label: light.label, fields: fieldsOf(light) }));
 
 function unionKeys(a: object, b: object): string[] {
   return [...new Set([...Object.keys(a), ...Object.keys(b)])];
@@ -127,8 +134,8 @@ export function diffConfigs(
     compare("config", key, labelFor(key), base[key], next[key]);
   }
 
-  const bp = base.params as Record<string, unknown>;
-  const np = next.params as Record<string, unknown>;
+  const bp = fieldsOf(base.params);
+  const np = fieldsOf(next.params);
   const interactionKeys = new Set<string>(Object.keys(pickInteractionParams(base.params)));
 
   for (const key of unionKeys(bp, np)) {
@@ -140,14 +147,10 @@ export function diffConfigs(
   const be = base.params.extrude;
   const ne = next.params.extrude;
   if (be && ne) {
-    for (const key of unionKeys(be, ne)) {
-      compare(
-        "extrude",
-        `params.extrude.${key}`,
-        labelFor(key),
-        be[key as keyof LogoExtrudeOverride],
-        ne[key as keyof LogoExtrudeOverride],
-      );
+    const bx = fieldsOf(be);
+    const nx = fieldsOf(ne);
+    for (const key of unionKeys(bx, nx)) {
+      compare("extrude", `params.extrude.${key}`, labelFor(key), bx[key], nx[key]);
     }
   } else if (be || ne) {
     entries.push({
@@ -165,10 +168,7 @@ export function diffConfigs(
   }
 
   const compareLights = (kind: "soft" | "points", noun: string) => {
-    const pairs = unionById(
-      base.params.lights[kind] as unknown as LightLike[],
-      next.params.lights[kind] as unknown as LightLike[],
-    );
+    const pairs = unionById(lightFields(base.params.lights[kind]), lightFields(next.params.lights[kind]));
     for (const { id, before, after } of pairs) {
       const prefix = `params.lights.${kind}.${id}`;
       if (!before || !after) {
@@ -185,9 +185,9 @@ export function diffConfigs(
         });
         continue;
       }
-      for (const key of unionKeys(before, after)) {
+      for (const key of unionKeys(before.fields, after.fields)) {
         if (SKIPPED_LIGHT_KEYS.has(key)) continue;
-        compare("lighting", `${prefix}.${key}`, humanize(key), before[key], after[key], after.label);
+        compare("lighting", `${prefix}.${key}`, humanize(key), before.fields[key], after.fields[key], after.label);
       }
     }
   };
