@@ -24,7 +24,7 @@
     "test:e2e": "playwright test",
     "pretypecheck": "npm run typegen",
     "typecheck": "next typegen && tsc --noEmit",
-    "typegen": "sanity schema extract --enforce-required-fields --force --path=sanity/extract.json && sanity typegen generate"
+    "typegen": "NODE_ENV=development sanity schema extract --enforce-required-fields --force --path=sanity/extract.json && NODE_ENV=development sanity typegen generate"
   },
   "allowScripts": {
     "esbuild": false,
@@ -38,7 +38,13 @@
     "*.{css,json,md,yml}": "prettier --write"
   },
   "overrides": {
+    "eslint-plugin-import": {
+      "eslint": "$eslint"
+    },
     "eslint-plugin-jsx-a11y": {
+      "eslint": "$eslint"
+    },
+    "eslint-plugin-react": {
       "eslint": "$eslint"
     }
   },
@@ -60,13 +66,12 @@
     "@vercel/otel": "^2.3.0",
     "@vercel/speed-insights": "^2.1.0",
     "@vimeo/player": "^2.30.4",
-    "arctic": "^3.7.0",
+    "better-auth": "^1.7.25",
     "botid": "^1.5.13",
     "clsx": "^2.1.1",
     "country-flag-icons": "^1.6.20",
     "embla-carousel-react": "^8.6.0",
     "intl-messageformat": "^12.1.5",
-    "jose": "^6.2.17",
     "leva": "^0.10.1",
     "libphonenumber-js": "^1.13.16",
     "lucide-react": "^1.72.0",
