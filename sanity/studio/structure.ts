@@ -1,6 +1,7 @@
 import { CogIcon } from "@sanity/icons/Cog";
 import { ComposeIcon } from "@sanity/icons/Compose";
 import { EnvelopeIcon } from "@sanity/icons/Envelope";
+import { RocketIcon } from "@sanity/icons/Rocket";
 import { ThLargeIcon } from "@sanity/icons/ThLarge";
 import { UsersIcon } from "@sanity/icons/Users";
 import { VideoIcon } from "@sanity/icons/Video";
@@ -38,6 +39,7 @@ export const structure: StructureResolver = (S, context) =>
     .title("Fiú Media")
     .items([
       S.listItem().title("Settings").icon(CogIcon).child(S.document().schemaType("siteSettings").documentId("siteSettings")),
+      S.listItem().title("Launch").icon(RocketIcon).child(S.document().schemaType("launchGate").documentId("launchGate")),
       S.divider(),
       S.listItem()
         .title("Projects")

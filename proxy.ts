@@ -1,5 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server";
 
+import { getLaunchAt } from "@/content/launchGate";
+import { env } from "@/env";
+import { decideGate, gateEnabled } from "@/lib/gate/decide";
+import { hasValidSession, SESSION_COOKIE } from "@/lib/gate/session";
 import { defaultLocale, isLocale, languageCookie, type Locale, locales, localizedPath } from "@/lib/i18n/config";
 import { preferredLocale } from "@/lib/i18n/negotiate";
 
@@ -17,11 +21,49 @@ function wantedLocale(request: NextRequest): Locale {
   return preferredLocale(request.headers.get("accept-language")) ?? defaultLocale;
 }
 
+/** Draft mode's cookie. Only an editor holding the Sanity preview secret can get it, which is what lets the Studio preview the site before launch. */
+const DRAFT_MODE_COOKIE = "__prerender_bypass";
+
+/**
+ * Before launch the public sees only the splash, and `/dev` is for staff at all times. Returns the response that
+ * stands in for the page, or `null` to carry on to the normal routing.
+ */
+async function gate(request: NextRequest): Promise<NextResponse | null> {
+  const enabled = gateEnabled(env.SITE_GATE, env.VERCEL_ENV);
+  if (!enabled) return null;
+  const { pathname } = request.nextUrl;
+  const decision = decideGate({
+    enabled,
+    launchAt: await getLaunchAt(),
+    now: new Date(),
+    hasSession: await hasValidSession(request.cookies.get(SESSION_COOKIE)?.value, env.AUTH_SECRET),
+    hasDraftCookie: request.cookies.has(DRAFT_MODE_COOKIE),
+    pathname,
+  });
+  if (decision === "open") return null;
+
+  if (decision === "login") {
+    const url = new URL("/api/auth/google", request.url);
+    url.searchParams.set("next", pathname + request.nextUrl.search);
+    return NextResponse.redirect(url);
+  }
+  const url = request.nextUrl.clone();
+  url.pathname = `/${defaultLocale}/launching`;
+  url.search = "";
+  const response = NextResponse.rewrite(url);
+  response.headers.set("X-Robots-Tag", "noindex, nofollow");
+  response.headers.set("Cache-Control", "no-store");
+  return response;
+}
+
 // English is served unprefixed (`/about`) and rewritten to `/en/about` internally; every other
 // locale keeps its visible prefix (`/ga/about`). The explicit `/en/...` form redirects to the
 // canonical unprefixed URL so each page has one address. A prefixed URL is always honoured, since
 // it is an explicit request; only an unprefixed one is sent on to the visitor's own language.
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
+  const gated = await gate(request);
+  if (gated) return gated;
+
   const { pathname } = request.nextUrl;
   const locale = locales.find((l) => pathname === `/${l}` || pathname.startsWith(`/${l}/`));
 
