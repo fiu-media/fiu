@@ -10,7 +10,7 @@ describe("documentTypes", () => {
 
   it("derives the lists the Studio and tooling use", () => {
     expect(translatedTypes).toEqual(["siteSettings", "project", "talent", "projectType", "role", "rentalCategory", "rentalItem"]);
-    expect(singletonTypes).toEqual(["siteSettings"]);
+    expect(singletonTypes).toEqual(["siteSettings", "launchGate"]);
     expect(inboxTypes).toEqual(["quoteRequest", "contactMessage"]);
   });
 

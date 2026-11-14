@@ -12,6 +12,7 @@ type Flags = {
 /** Every document type, with what the Studio and the tooling need to know about it. Keep in step with `schemaTypes` (checked by a test). */
 export const documentTypes = {
   siteSettings: { translated: true, singleton: true },
+  launchGate: { singleton: true },
   project: { translated: true },
   talent: { translated: true },
   projectType: { translated: true },

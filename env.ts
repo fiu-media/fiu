@@ -24,6 +24,14 @@ export const env = createEnv({
     RESEND_EMAIL_DOMAIN: requiredInProduction,
     // The Resend segment contact-form submitters are added to ("General"). Without it they're added to no segment.
     RESEND_SEGMENT_ID: z.string().min(1).optional(),
+    // Staff sign-in for the pre-launch gate and /dev: Google OAuth (an Internal client on our Workspace) and the key that signs sessions.
+    AUTH_SECRET: process.env.VERCEL_ENV === "production" ? z.string().min(32) : z.string().min(32).optional(),
+    GOOGLE_CLIENT_ID: requiredInProduction,
+    GOOGLE_CLIENT_SECRET: requiredInProduction,
+    // Only Google accounts in this Workspace domain can sign in. Unicode or punycode.
+    AUTH_ALLOWED_DOMAIN: z.string().min(1).default("xn--fi-ska.ie"),
+    // Forces the gate on or off. Unset, it is on in production only.
+    SITE_GATE: z.enum(["on", "off"]).optional(),
     // Set by Vercel.
     VERCEL_ENV: z.enum(["production", "preview", "development"]).optional(),
     VERCEL_PROJECT_PRODUCTION_URL: z.string().min(1).optional(),
@@ -41,6 +49,11 @@ export const env = createEnv({
     RESEND_API_KEY: process.env.RESEND_API_KEY,
     RESEND_EMAIL_DOMAIN: process.env.RESEND_EMAIL_DOMAIN,
     RESEND_SEGMENT_ID: process.env.RESEND_SEGMENT_ID,
+    AUTH_SECRET: process.env.AUTH_SECRET,
+    GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+    GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
+    AUTH_ALLOWED_DOMAIN: process.env.AUTH_ALLOWED_DOMAIN,
+    SITE_GATE: process.env.SITE_GATE,
     VERCEL_ENV: process.env.VERCEL_ENV,
     VERCEL_PROJECT_PRODUCTION_URL: process.env.VERCEL_PROJECT_PRODUCTION_URL,
     E2E_BYPASS_BOTID: process.env.E2E_BYPASS_BOTID,

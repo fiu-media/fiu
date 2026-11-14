@@ -87,11 +87,21 @@ The notification emails are React Email components in `emails/`, rendered by `li
 `env.ts` is the one place configuration is read and validated (`@t3-oss/env-nextjs`). `next.config.ts` imports it, so `next build` and `next dev` fail with a list of what's wrong instead of losing a form submission later. Import `env` from `@/env` rather than reading `process.env`; the exceptions are `NODE_ENV`/`CI` and the standalone tooling (`scripts/`, `e2e/global-teardown.ts`, `sanity.cli.ts`, `playwright.config.ts`), which run outside Next and check their own variables.
 
 - Always required: `NEXT_PUBLIC_SANITY_PROJECT_ID`, `NEXT_PUBLIC_SANITY_DATASET`.
-- Required when `VERCEL_ENV=production`: `SANITY_API_WRITE_TOKEN`, `RESEND_API_KEY`, `RESEND_EMAIL_DOMAIN` (mail is sent from `hello@` that domain, written as punycode if it is internationalised, so `mail.fiú.ie` and `mail.xn--fi-ska.ie` both work; it is a subdomain verified in Resend, so its reputation stays apart from the root domain, whose `_dmarc` record covers it. Visitor confirmations carry the studio's address as Reply-To, since `hello@` has no mailbox). Previews and local runs may omit them (email is then logged and skipped).
-- Optional: `SANITY_API_READ_TOKEN`, `NEXT_PUBLIC_SITE_URL`, `RESEND_SEGMENT_ID` (the Resend segment contact-form submitters are added to as unsubscribed contacts; without it they join no segment. Resend needs a custom `phone` contact property for their phone number).
+- Required when `VERCEL_ENV=production`: `SANITY_API_WRITE_TOKEN`, `RESEND_API_KEY`, `AUTH_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` (staff sign-in, see Launch gate below), `RESEND_EMAIL_DOMAIN` (mail is sent from `hello@` that domain, written as punycode if it is internationalised, so `mail.fiú.ie` and `mail.xn--fi-ska.ie` both work; it is a subdomain verified in Resend, so its reputation stays apart from the root domain, whose `_dmarc` record covers it. Visitor confirmations carry the studio's address as Reply-To, since `hello@` has no mailbox). Previews and local runs may omit them (email is then logged and skipped).
+- Optional: `SANITY_API_READ_TOKEN`, `AUTH_ALLOWED_DOMAIN`, `SITE_GATE`, `NEXT_PUBLIC_SITE_URL`, `RESEND_SEGMENT_ID` (the Resend segment contact-form submitters are added to as unsubscribed contacts; without it they join no segment. Resend needs a custom `phone` contact property for their phone number).
 - Notification recipients are not environment variables: editors set the Contact email and Quote request recipient in Site settings. With neither set, the notification is skipped (the visitor's confirmation is still sent).
 - Empty values count as unset. `SKIP_ENV_VALIDATION=1` skips the checks for a deliberately secret-less build.
 - Server-only variables throw if read from client code, but `env.ts` itself stays importable from the browser for the `NEXT_PUBLIC_*` values.
+
+## Launch gate
+
+Until the date in Studio > Launch (`launchGate.launchAt`), production shows every page as the logo splash (`/launching`, rewritten by `proxy.ts`, so the URL doesn't change) and sends `noindex`. If no date is published the site stays closed; set a past date to open it. A change reaches the live site within about 30 seconds (`content/launchGate/loaders.ts`), and if Sanity can't be reached the last known date is kept.
+
+- **Staff** sign in at `/login` with a Google account in the Workspace domain (`AUTH_ALLOWED_DOMAIN`, default `xn--fi-ska.ie`, i.e. fiú.ie) and see the real site. The check is on the server: the account's `hd` and email must both match and Google must have verified the email (`lib/gate/google.ts`). The session is a signed cookie lasting a week (`lib/gate/session.ts`); there is no database.
+- **Editors** previewing from the Studio get through while draft mode is on.
+- **`/dev`** (and `/ga/dev`) always needs a staff session, before and after launch; draft mode doesn't unlock it. After launch, visitors without one are sent to Google and back.
+- The gate is on in production only. Previews are behind Vercel Authentication and Google can't register one redirect URI per preview URL. Set `SITE_GATE=on` to try it locally (with the Google keys and `http://localhost:3000/api/auth/google/callback` registered on the OAuth client), or `off` to switch it off.
+- Setting up: create a Google OAuth client of type Internal, register `https://xn--fi-ska.ie/api/auth/google/callback` (the production host) and the localhost callback, then set `AUTH_SECRET` (`openssl rand -base64 32`), `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in Vercel.
 
 ## Deep links into the forms
 
