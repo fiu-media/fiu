@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 
-import { getLaunchAt } from "@/content/launchGate";
+import { getLaunchAt } from "@/content/launchGate/read";
 import { env } from "@/env";
 import { decideGate, gateEnabled } from "@/lib/gate/decide";
 import { hasValidSession, SESSION_COOKIE } from "@/lib/gate/session";
@@ -48,7 +48,9 @@ async function gate(request: NextRequest): Promise<NextResponse | null> {
     return NextResponse.redirect(url);
   }
   const url = request.nextUrl.clone();
-  url.pathname = `/${defaultLocale}/launching`;
+  // An explicit `/ga/...` URL gets the Irish splash; an unprefixed one the language the visitor prefers.
+  const locale = locales.find((l) => pathname === `/${l}` || pathname.startsWith(`/${l}/`)) ?? wantedLocale(request);
+  url.pathname = `/${locale}/launching`;
   url.search = "";
   const response = NextResponse.rewrite(url);
   response.headers.set("X-Robots-Tag", "noindex, nofollow");

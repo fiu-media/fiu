@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   describeRange,
+  formatDateInDublin,
   formatDateRange,
   formatLongDate,
   formatShortDate,
@@ -119,5 +120,13 @@ describe("describeRange", () => {
   it("adds the length, singular for one day", () => {
     expect(describeRange(en.dates, "en", "2026-11-03", "2026-11-05").replace(/\s/g, " ")).toBe("3–5 Nov 2026 · 3 days");
     expect(describeRange(en.dates, "en", "2026-11-03", "2026-11-03")).toBe("3 Nov 2026 · 1 day");
+  });
+});
+
+describe("formatDateInDublin", () => {
+  it("reads a moment as the calendar day it is in Dublin", () => {
+    // Midnight UTC in January is midnight in Dublin; in summer Dublin is an hour ahead, so 23:30 UTC is already the next day.
+    expect(formatDateInDublin(new Date("2027-01-01T00:00:00Z"), "en-IE")).toBe("1 January 2027");
+    expect(formatDateInDublin(new Date("2027-06-30T23:30:00Z"), "en-IE")).toBe("1 July 2027");
   });
 });

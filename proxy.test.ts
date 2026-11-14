@@ -14,7 +14,7 @@ const mocks = vi.hoisted(() => ({
   launchAt: null as Date | null,
 }));
 vi.mock("@/env", () => ({ env: mocks.env }));
-vi.mock("@/content/launchGate", () => ({ getLaunchAt: () => Promise.resolve(mocks.launchAt) }));
+vi.mock("@/content/launchGate/read", () => ({ getLaunchAt: () => Promise.resolve(mocks.launchAt) }));
 
 const run = (path: string, init?: { headers?: Record<string, string>; method?: string }) =>
   proxy(new NextRequest(`https://fiu.test${path}`, init));
@@ -114,12 +114,27 @@ describe("proxy", () => {
 
     it("shows the splash instead of every page before launch, whatever the language", async () => {
       gateOn(future);
-      for (const path of ["/", "/about", "/ga/about", "/en/about"]) {
+      for (const [path, splash] of [
+        ["/", "/en/launching"],
+        ["/about", "/en/launching"],
+        ["/en/about", "/en/launching"],
+        ["/ga", "/ga/launching"],
+        ["/ga/about", "/ga/launching"],
+      ] as const) {
         const response = await proxy(new NextRequest(`https://fiu.test${path}`));
-        expect(response.headers.get("x-middleware-rewrite")).toBe("https://fiu.test/en/launching");
+        expect(response.headers.get("x-middleware-rewrite")).toBe(`https://fiu.test${splash}`);
         expect(response.headers.get("x-robots-tag")).toBe("noindex, nofollow");
         expect(response.headers.get("cache-control")).toBe("no-store");
       }
+    });
+
+    it("shows the splash in the language the visitor chose, or the browser prefers", async () => {
+      gateOn(future);
+      expect((await run("/about", choosing("ga"))).headers.get("x-middleware-rewrite")).toBe("https://fiu.test/ga/launching");
+      expect((await run("/", asking("ga-IE,ga;q=0.9"))).headers.get("x-middleware-rewrite")).toBe(
+        "https://fiu.test/ga/launching",
+      );
+      expect((await run("/ga/about")).headers.get("x-middleware-rewrite")).toBe("https://fiu.test/ga/launching");
     });
 
     it("stays closed while no launch date is published", async () => {

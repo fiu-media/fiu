@@ -1,1 +1,1 @@
-export { getLaunchAt } from "./loaders";
+export { getLaunchDate } from "./loaders";

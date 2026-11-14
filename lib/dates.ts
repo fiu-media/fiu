@@ -68,3 +68,8 @@ export function describeRange(dates: Dictionary["dates"], lang: Locale, start: s
     duration: format(days === 1 ? dates.dayOne : dates.dayMany, { count: days }),
   });
 }
+
+/** A localised full date such as "1 January 2027" for a moment in time, read as the calendar day it is in Dublin. */
+export function formatDateInDublin(moment: Date, locale: string): string {
+  return new Intl.DateTimeFormat(locale, { dateStyle: "long", timeZone: "Europe/Dublin" }).format(moment);
+}

@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const fetch = vi.hoisted(() => vi.fn());
 vi.mock("@/sanity/lib/client", () => ({ client: { fetch } }));
 
-import { getLaunchAt, LAUNCH_AT_TTL_MS, resetLaunchAtCache, toLaunchAt } from "./loaders";
+import { getLaunchAt, LAUNCH_AT_TTL_MS, resetLaunchAtCache, toLaunchAt } from "./read";
 
 const t0 = 1_000_000;
 
