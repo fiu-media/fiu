@@ -14,7 +14,7 @@ import { type HeroStills, toFoldProjects, toHeroStills } from "./mappers";
 
 /** The hero's stills from the projects the editors picked, or the bundled ones until there are any. */
 export async function getHomeStills(lang: Locale): Promise<HeroStills> {
-  const data = await fetchContent(HOME_STILLS_QUERY, lang);
+  const data = await fetchContent(HOME_STILLS_QUERY, lang, {});
   const stills = toHeroStills(data?.projects ?? []);
   return stills.landscape.length + stills.portrait.length > 0 ? stills : fallbackHeroStills;
 }
@@ -24,7 +24,11 @@ export async function getHomeStills(lang: Locale): Promise<HeroStills> {
  * this adds no fetch).
  */
 export async function getHomeFold(lang: Locale): Promise<HomeFoldProps> {
-  const [dict, settings, work] = await Promise.all([getDictionary(lang), getSiteSettings(lang), fetchContent(WORK_QUERY, lang)]);
+  const [dict, settings, work] = await Promise.all([
+    getDictionary(lang),
+    getSiteSettings(lang),
+    fetchContent(WORK_QUERY, lang, {}),
+  ]);
   const { _id, slogan, sloganGloss, manifesto } = settings;
 
   return {

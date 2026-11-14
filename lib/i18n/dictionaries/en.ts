@@ -251,6 +251,8 @@ export const en = {
     backToRentals: "All rentals",
     noImage: "Photo coming soon",
     galleryLabel: "Photos of {name}",
+    // The large photo, which takes focus so the arrow keys can step through the photos.
+    largePhoto: "Large photo",
     showImage: "Show photo {n} of {total}",
     photoOf: "Photo {n} of {total}",
     previousImage: "Previous photo",

@@ -57,7 +57,7 @@ const project = (extra: Partial<TALENT_PROJECTS_QUERY_RESULT[number]> = {}): TAL
 describe("toRosterItems", () => {
   const people: TALENT_QUERY_RESULT = [
     { _id: "t1", name: "Aoife", slug: "aoife", roles: ["Director", "Editor"], portrait: image("a") },
-    { _id: "t2", name: "Cian", slug: "cian", roles: null, portrait: null },
+    { _id: "t2", name: "Cian", slug: "cian", roles: [], portrait: null },
   ];
 
   it("lists name, roles and a link to the person's page", () => {
@@ -83,7 +83,7 @@ describe("toTalentProfile", () => {
   });
 
   it("has no portrait or roles when none are set", () => {
-    expect(toTalentProfile(profile({ portrait: null, roles: null }), [])).toMatchObject({ portrait: null, roles: "" });
+    expect(toTalentProfile(profile({ portrait: null, roles: [] }), [])).toMatchObject({ portrait: null, roles: "" });
   });
 
   it("points each edit link at the published document", () => {

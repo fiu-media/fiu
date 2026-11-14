@@ -14,7 +14,7 @@ vi.mock("@/lib/email/send", () => ({ sendEmail: mocks.sendEmail }));
 import { at } from "@/lib/at";
 import { build } from "@/lib/email/templates";
 
-import { guardSubmission, handleSubmission } from "./submit";
+import { guardSubmission, handleSubmission, noChecks } from "./submit";
 
 const { checkBotId } = mocks;
 
@@ -53,7 +53,8 @@ describe("guardSubmission", () => {
   it("rejects a filled honeypot and doesn't echo it back", async () => {
     const result = await guardSubmission(schema, form({ name: "Aoife", email: "a@example.com", website: "http://spam" }));
     expect(result).toMatchObject({ ok: false, result: { error: { formErrors: ["rejected"] } } });
-    expect((result as { result: { submission: { payload: object } } }).result.submission.payload).not.toHaveProperty("website");
+    expect(result).toHaveProperty("result.submission.payload");
+    expect(result).not.toHaveProperty("result.submission.payload.website");
   });
 
   it("treats a whitespace-only honeypot as empty", async () => {
@@ -107,6 +108,7 @@ describe("handleSubmission", () => {
         docType: "contactMessage",
         recipient: "contact",
         getRecipient: mocks.getRecipient,
+        validate: noChecks,
         toDocument: ({ name, email, message }) => ({ name, email, message }),
         emails: ({ data, dict, teamDict, studioLink }) => ({
           notification: build("contactNotification", teamDict, { ...data, phone: "", enquiryType: "Talent" }, { studioLink }),

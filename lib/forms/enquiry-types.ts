@@ -2,5 +2,4 @@
 export const ENQUIRY_TYPES = ["Project", "Talent", "Rentals", "Other"] as const;
 export type EnquiryType = (typeof ENQUIRY_TYPES)[number];
 
-export const isEnquiryType = (value: string | null): value is EnquiryType =>
-  (ENQUIRY_TYPES as readonly string[]).includes(value ?? "");
+export const isEnquiryType = (value: string | null): value is EnquiryType => ENQUIRY_TYPES.some((type) => type === value);

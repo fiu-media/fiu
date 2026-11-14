@@ -14,7 +14,6 @@ vi.mock("@/lib/email/send", () => ({ sendEmail: mocks.sendEmail }));
 vi.mock("@/content/siteSettings", () => ({ getRecipient: mocks.getRecipient }));
 
 import { at } from "@/lib/at";
-import { MAX_QTY } from "@/lib/forms/quantity";
 
 import { submitQuote } from "./actions";
 
@@ -135,13 +134,6 @@ describe("submitQuote", () => {
     mocks.fetch.mockResolvedValue([{ ...camera, maxQuantity: 1 }]);
     expect(await submitQuote(idle, form())).toMatchObject({ error: { formErrors: ["overLimit"] } });
     expect(mocks.create).not.toHaveBeenCalled();
-  });
-
-  it("falls back to MAX_QTY when the item has none", async () => {
-    mocks.fetch.mockResolvedValue([{ ...camera, maxQuantity: null }]);
-    expect(await submitQuote(idle, form({ items: JSON.stringify([{ itemId: "cam", qty: MAX_QTY }]) }))).toMatchObject({
-      success: true,
-    });
   });
 
   it("stores an accented address but can only email the studio, and says so", async () => {

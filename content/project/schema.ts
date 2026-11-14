@@ -1,5 +1,5 @@
 import { orderRankField, orderRankOrdering } from "@sanity/orderable-document-list";
-import { defineArrayMember, defineField, defineType } from "sanity";
+import { defineArrayMember, defineField, defineType, type PreviewValue } from "sanity";
 
 import {
   defaultLanguageReference,
@@ -76,9 +76,11 @@ export const project = defineType({
             rule.custom((credit) => (credit?.talent || credit?.name ? true : "Pick a talent or enter a name")),
           preview: {
             select: { role: "role.title", talent: "talent.name", name: "name" },
-            // Sanity types the selected values as `any`.
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-            prepare: ({ role, talent, name }) => ({ title: role, subtitle: talent ?? name }),
+            // Sanity types the selected values as `any`, so the parameter says what they are.
+            prepare: ({ role, talent, name }: { role?: string; talent?: string; name?: string }) => ({
+              title: role ?? "Untitled",
+              subtitle: talent ?? name ?? "",
+            }),
           },
         }),
       ],
@@ -89,13 +91,11 @@ export const project = defineType({
   orderings: [orderRankOrdering, { title: "Year, newest first", name: "yearDesc", by: [{ field: "year", direction: "desc" }] }],
   preview: {
     select: { title: "title", type: "type.title", year: "year", media: "coverStill" },
-    // Sanity types the selected values as `any`.
-    /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-    prepare: ({ title, type, year, media }) => ({
-      title,
+    // Sanity types the selected values as `any`, so the parameter says what they are.
+    prepare: ({ title, type, year, media }: { title?: string; type?: string; year?: number; media?: PreviewValue["media"] }) => ({
+      title: title ?? "Untitled",
       subtitle: [type, year].filter(Boolean).join(" · "),
       media,
     }),
-    /* eslint-enable @typescript-eslint/no-unsafe-assignment */
   },
 });

@@ -134,7 +134,7 @@ export const STORED_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const DECISIONS: readonly LogoDecision[] = [...TIERS, "static"];
 
 function isDecision(value: unknown): value is LogoDecision {
-  return DECISIONS.includes(value as LogoDecision);
+  return DECISIONS.some((decision) => decision === value);
 }
 
 /** When this device was found too slow, as stored: anything malformed reads as no verdict. */
@@ -147,13 +147,13 @@ export function isTooSlowFresh(at: number | null, now: number): boolean {
 
 // Read from storage when the module loads, which is synchronous; the server has no storage, so there it stays null.
 const tooSlowStore = createStore<{ at: number | null }>()(
-  persist(() => ({ at: null as number | null }), {
+  persist<{ at: number | null }>(() => ({ at: null }), {
     name: STORAGE_KEY,
     version: 1,
     storage: createJSONStorage(() => safeStorage),
     merge: (persisted, current) => ({
       ...current,
-      at: tooSlowSchema.parse((persisted as { at?: unknown } | undefined)?.at),
+      at: tooSlowSchema.parse(typeof persisted === "object" && persisted !== null && "at" in persisted ? persisted.at : null),
     }),
   }),
 );
@@ -167,11 +167,10 @@ export function rememberTooSlow() {
 }
 
 function readDeviceInfo(): DeviceInfo {
-  const nav = navigator as Navigator & { deviceMemory?: number; connection?: { saveData?: boolean } };
   const base = {
-    deviceMemory: nav.deviceMemory,
-    cores: nav.hardwareConcurrency || undefined,
-    saveData: Boolean(nav.connection?.saveData),
+    deviceMemory: navigator.deviceMemory,
+    cores: navigator.hardwareConcurrency || undefined,
+    saveData: Boolean(navigator.connection?.saveData),
   };
   try {
     let gl = document.createElement("canvas").getContext("webgl2", { failIfMajorPerformanceCaveat: true });

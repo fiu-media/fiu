@@ -5,7 +5,14 @@ import { matches } from "@/lib/hooks/useMediaQuery";
 import { UPRIGHT_TOUCH } from "@/lib/media";
 import type { VimeoRef } from "@/lib/vimeo";
 
-import { fullscreenElement, needsTapInPlayer, turnForVideo, unlockOrientation } from "./fullscreen";
+import {
+  exitFullscreen,
+  fullscreenElement,
+  needsTapInPlayer,
+  requestFullscreen,
+  turnForVideo,
+  unlockOrientation,
+} from "./fullscreen";
 import { useVimeoPlayer } from "./useVimeoPlayer";
 import { runVimeoShortcut } from "./vimeoShortcuts";
 
@@ -79,9 +86,7 @@ export function usePlayback(rootRef: RefObject<HTMLElement | null>, { video }: {
     setRevealed(false);
     setPlayFullscreenNatively(false);
     setTapInPlayer(false);
-    // iPhone Safari has no Fullscreen API, though the DOM types say it does.
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    if (fullscreenElement() === rootRef.current) void document.exitFullscreen?.().catch(() => {});
+    if (fullscreenElement() === rootRef.current) void exitFullscreen();
     unlockOrientation();
     // The player is gone; put keyboard focus back where it came from.
     requestAnimationFrame(() => rootRef.current?.querySelector<HTMLButtonElement>("[data-play]")?.focus());
@@ -165,11 +170,8 @@ export function usePlayback(rootRef: RefObject<HTMLElement | null>, { video }: {
     };
 
     const toggleFullscreen = () => {
-      // iPhone Safari has no Fullscreen API, though the DOM types say it does.
-      /* eslint-disable @typescript-eslint/no-unnecessary-condition */
-      if (fullscreenElement()) void document.exitFullscreen?.().catch(() => {});
-      else void playerFrame.requestFullscreen?.().catch(() => {});
-      /* eslint-enable @typescript-eslint/no-unnecessary-condition */
+      if (fullscreenElement()) void exitFullscreen();
+      else void requestFullscreen(playerFrame);
     };
 
     const onKeyDown = (event: KeyboardEvent) => {

@@ -12,7 +12,7 @@ export const dateLocale: Record<Locale, string> = { en: "en-IE", ga: "ga-IE" };
 /** Served without a URL prefix; proxy.ts rewrites it to `/en/...` internally. */
 export const defaultLocale: Locale = "en";
 
-export const isLocale = (value: string): value is Locale => (locales as readonly string[]).includes(value);
+export const isLocale = (value: string): value is Locale => locales.some((locale) => locale === value);
 
 /** The `lang` route param as a `Locale`; an unknown value is a 404. */
 export async function getLocale(params: Promise<{ lang: string }>): Promise<Locale> {

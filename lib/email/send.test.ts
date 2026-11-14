@@ -1,11 +1,11 @@
 import { createElement } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const mocks = vi.hoisted(() => ({
-  send: vi.fn(),
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- the assertion types the object the tests fill in later
-  env: {} as { RESEND_API_KEY?: string | undefined; RESEND_EMAIL_DOMAIN?: string | undefined },
-}));
+const mocks = vi.hoisted(() => {
+  // Typed up front because the tests fill it in later.
+  const env: { RESEND_API_KEY?: string | undefined; RESEND_EMAIL_DOMAIN?: string | undefined } = {};
+  return { send: vi.fn(), env };
+});
 vi.mock("resend", () => ({
   Resend: class {
     emails = { send: mocks.send };

@@ -7,8 +7,11 @@ import { hasValidSession, SESSION_COOKIE } from "@/lib/gate/session";
 import { defaultLocale, isLocale, languageCookie, type Locale, locales, localizedPath } from "@/lib/i18n/config";
 import { preferredLocale } from "@/lib/i18n/negotiate";
 
-/** Turn off to stop sending visitors to the language their browser prefers (the switcher and cookie still work). */
-const DETECT_LANGUAGE = true;
+/**
+ * `detectLanguage`: turn off to stop sending visitors to the language their browser prefers (the switcher and cookie
+ * still work). Annotated as a plain boolean so the check below isn't flagged for testing a value that can never change.
+ */
+const switches: { detectLanguage: boolean } = { detectLanguage: true };
 
 /**
  * The language to serve an unprefixed URL in: the visitor's explicit choice (the cookie the switcher
@@ -77,8 +80,7 @@ export async function proxy(request: NextRequest) {
   if (locale) return NextResponse.next();
 
   // Only page loads move; a form post to the same URL must reach its action as sent.
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- DETECT_LANGUAGE is a switch kept as a constant so it can be flipped
-  if (DETECT_LANGUAGE && (request.method === "GET" || request.method === "HEAD")) {
+  if (switches.detectLanguage && (request.method === "GET" || request.method === "HEAD")) {
     const wanted = wantedLocale(request);
     if (wanted !== defaultLocale) {
       const url = request.nextUrl.clone();

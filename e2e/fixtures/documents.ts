@@ -14,9 +14,9 @@ const paragraph = (key: string, text: string) => ({
 });
 
 /** The documents the suite creates, given the id of the uploaded image asset for each photo. */
-export function fixtureDocuments(assets: Record<PhotoKey, string>): Doc[] {
+export function fixtureDocuments(assetFor: (key: PhotoKey) => string): Doc[] {
   const alt = (key: PhotoKey) => `Test photo ${key.toUpperCase()}`;
-  const image = (key: PhotoKey) => ({ _type: "image", asset: ref(assets[key]), alt: alt(key) });
+  const image = (key: PhotoKey) => ({ _type: "image", asset: ref(assetFor(key)), alt: alt(key) });
   const arrayImage = (key: PhotoKey, i: number) => ({ ...image(key), _key: `photo-${i}` });
 
   const docs: Doc[] = [];

@@ -117,7 +117,7 @@ export function Logo({
     // so drag coast and the return spring don't integrate that whole gap in one step.
     const delta = Math.min(rawDelta, 1 / 30);
     const look = paramsRef.current;
-    tintGlow(material.current as Parameters<typeof tintGlow>[0], glow, tint.current, look);
+    tintGlow(material.current, glow, tint.current, look);
 
     // The first frames compile shaders and can stall for a long time, so the intro is
     // driven by capped frame deltas rather than wall-clock time: it always plays in full,

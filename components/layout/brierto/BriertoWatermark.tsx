@@ -3,7 +3,7 @@
 import "./brierto-watermark.module.css";
 
 import { useSearchParams } from "next/navigation";
-import { type CSSProperties, Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 
 import { BOOM_EVENT } from "./sounds";
 import { useSoundtrack } from "./useSoundtrack";
@@ -93,31 +93,27 @@ function WatermarkGate() {
             <span
               key={spark.index}
               className="brierto-spark"
-              style={
-                {
-                  "--x": spark.x,
-                  "--y": spark.y,
-                  "--dx": spark.dx,
-                  "--dy": spark.dy,
-                  "--delay": spark.delay,
-                  "--color": spark.color,
-                } as CSSProperties
-              }
+              style={{
+                "--x": spark.x,
+                "--y": spark.y,
+                "--dx": spark.dx,
+                "--dy": spark.dy,
+                "--delay": spark.delay,
+                "--color": spark.color,
+              }}
             />
           ))}
           {BLASTS.map((blast) => (
             <div
               key={blast.word}
               className="brierto-boom"
-              style={
-                {
-                  "--x": blast.x,
-                  "--y": blast.y,
-                  "--rot": blast.rot,
-                  "--delay": blast.delay,
-                  "--size": blast.size,
-                } as CSSProperties
-              }
+              style={{
+                "--x": blast.x,
+                "--y": blast.y,
+                "--rot": blast.rot,
+                "--delay": blast.delay,
+                "--size": blast.size,
+              }}
             >
               <span>{blast.word}</span>
             </div>

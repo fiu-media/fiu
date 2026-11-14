@@ -24,18 +24,20 @@ describe("project page", () => {
     }),
     project("ga", { stills: [still("b")] }),
   ];
-  const fetch = async (lang: string) =>
-    (await (
+  // groq-js returns `any`; the annotation says which fields these tests read.
+  type Result = {
+    title: string;
+    description: unknown[] | null;
+    credits: { name: string }[] | null;
+    stills: { landscape: { _key: string }[]; portrait: { _key: string }[] };
+  };
+  const fetch = async (lang: string): Promise<Result> =>
+    (
       await evaluate(parse(PROJECT_QUERY, { params: { lang, fallbackLang: "en", slug: "solas" } }), {
-        dataset: projects as never,
+        dataset: projects,
         params: { lang, fallbackLang: "en", slug: "solas" },
       })
-    ).get()) as {
-      title: string;
-      description: unknown[] | null;
-      credits: { name: string }[] | null;
-      stills: { landscape: { _key: string }[]; portrait: { _key: string }[] };
-    };
+    ).get();
 
   it("inherits the description, credits and untranslated stills from the default language", async () => {
     const ga = await fetch("ga");

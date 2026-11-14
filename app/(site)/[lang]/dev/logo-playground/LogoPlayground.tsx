@@ -2,16 +2,7 @@
 
 import dynamic from "next/dynamic";
 import Image, { type StaticImageData } from "next/image";
-import {
-  Component,
-  type CSSProperties,
-  type ReactNode,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  useSyncExternalStore,
-} from "react";
+import { Component, type ReactNode, useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 
 import { GlassPillButton } from "@/components/ui/Glass";
 import {
@@ -361,12 +352,10 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
         className="sweep-stage pointer-events-none absolute inset-0"
         data-sweep-axis={sweep.css ? sweep.state.axis : undefined}
         data-sweep-paused={sweep.paused ? "" : undefined}
-        style={
-          {
-            "--sweep-period": `${sweep.state.periodSeconds}s`,
-            "--sweep-amp": sweep.state.amplitude,
-          } as CSSProperties
-        }
+        style={{
+          "--sweep-period": `${sweep.state.periodSeconds}s`,
+          "--sweep-amp": sweep.state.amplitude,
+        }}
       >
         <header className="pointer-events-auto absolute top-0 right-0 left-0 z-30 flex items-center justify-between gap-3 p-4">
           <div>

@@ -56,17 +56,12 @@ export function NameIndex({
   }
 
   return (
-    // The list only listens for the pointer leaving and focus moving out, to clear the highlight; the links inside are
-    // the interactive parts.
-    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
+    // The pointer leaving the list clears the highlight; so does focus leaving it, which each link checks as it blurs.
     <ul
       ref={box}
       aria-label={label}
       className="relative divide-y divide-line border-y border-line"
       onPointerLeave={() => setActive(null)}
-      onBlur={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget)) setActive(null);
-      }}
     >
       {items.map((item, i) => (
         <li key={item.href}>
@@ -79,6 +74,9 @@ export function NameIndex({
               place(event.clientX, event.clientY, active === null);
             }}
             onPointerMove={(event) => place(event.clientX, event.clientY)}
+            onBlur={(event) => {
+              if (!box.current?.contains(event.relatedTarget)) setActive(null);
+            }}
             onFocus={(event) => {
               const wasHidden = active === null;
               setActive(i);

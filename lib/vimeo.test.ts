@@ -9,6 +9,9 @@ describe("parseVimeo", () => {
     ["https://vimeo.com/channels/staffpicks/123456", { id: "123456", hash: undefined }],
     ["https://player.vimeo.com/video/123456?h=abcdef0123", { id: "123456", hash: "abcdef0123" }],
     ["https://www.vimeo.com/123456", { id: "123456", hash: undefined }],
+    ["https://player.vimeo.com/video/123456?h=", { id: "123456", hash: undefined }],
+    ["https://vimeo.com/123456/abcdef0123?h=", { id: "123456", hash: "abcdef0123" }],
+    ["https://vimeo.com/123456/abcdef0123?h=not-hex", { id: "123456", hash: "abcdef0123" }],
   ])("reads %s", (url, expected) => {
     expect(parseVimeo(url)).toEqual(expected);
   });

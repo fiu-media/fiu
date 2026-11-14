@@ -1,10 +1,11 @@
 import AxeBuilder from "@axe-core/playwright";
 import { devices, expect, type Page, test } from "@playwright/test";
+import { z } from "zod";
 
 import { at } from "../lib/at";
 import { en } from "../lib/i18n/dictionaries/en";
 import { rentalItems } from "./fixtures/data";
-import { isoDateFromNow } from "./helpers";
+import { isoDateFromNow, waitForImagesAndFonts } from "./helpers";
 
 const { quote, forms } = en;
 
@@ -71,8 +72,8 @@ test.describe("copy link", () => {
   test("the quote form with its copy button has no accessibility violations", async ({ page }) => {
     await page.goto(`/rentals/quote?pickup=${isoDateFromNow(14)}&return=${isoDateFromNow(16)}&item=${slug}`);
     await expect(page.getByRole("button", { name: quote.copyLink })).toBeVisible();
-    // eslint-disable-next-line playwright/no-networkidle -- axe runs once the late-loading images are in
-    await page.waitForLoadState("networkidle");
+    // Axe runs once the late-loading images are in.
+    await waitForImagesAndFonts(page);
     const { violations } = await new AxeBuilder({ page }).analyze();
     expect(violations.map((v) => `${v.id}: ${v.help}`)).toEqual([]);
   });
@@ -142,11 +143,15 @@ test.describe("share link on a phone", () => {
     await page.getByLabel(forms.fields.email).fill("aoife@example.com");
   }
 
-  const read = (page: Page) =>
-    page.evaluate(() => ({
-      shared: (window as unknown as { __shared: { url: string; title: string }[] }).__shared,
-      copied: (window as unknown as { __copied: string[] }).__copied,
-    }));
+  // What the stubs above recorded. They live on `window`, which the page's types don't know, so the result is checked here.
+  const recorded = z.object({ shared: z.array(z.object({ url: z.string(), title: z.string() })), copied: z.array(z.string()) });
+  const read = async (page: Page) =>
+    recorded.parse(
+      await page.evaluate(() => ({
+        shared: "__shared" in window ? window.__shared : null,
+        copied: "__copied" in window ? window.__copied : null,
+      })),
+    );
 
   test("opens the share sheet with the link, and doesn't copy", async ({ page }) => {
     await openQuote(page);

@@ -70,7 +70,7 @@ Also enforced:
 - **No import cycles** (`import-x/no-cycle`) in the source folders.
 - **Size.** A file may have at most 400 lines (not counting blank lines and comments), a function 150, and a function's cyclomatic complexity may be at most 20. Tests, `e2e/` and `app/**/dev/**` are exempt from all three; the dictionaries, `features/logo/buildLogoGeometry.ts` and `features/logo/scene/shaders.ts` from the file limit.
 
-The rules check the `@/` form of an import; a relative `../../features/x` between modules isn't caught, so don't write one. When a rule gets in the way of something legitimate, move the shared piece down a layer first (that is almost always the right fix). If it truly is a one-off, use `// eslint-disable-next-line no-restricted-imports -- <why>`.
+The rules check the `@/` form of an import; a relative `../../features/x` between modules isn't caught, so don't write one. When a rule gets in the way of something legitimate, move the shared piece down a layer first (that is almost always the right fix). If it truly is a one-off, add a block for that file to `eslint.config.mjs` with a comment saying why. Inline `eslint-disable` comments are switched off (`noInlineConfig`), so every exception lives in the config where it can be seen.
 
 ## Sanity types
 
