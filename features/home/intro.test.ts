@@ -161,4 +161,12 @@ describe("session", () => {
     expect(fresh.hasIntroPlayed()).toBe(true);
     expect(fresh.isSplashDismissed()).toBe(true);
   });
+
+  it("remembers the still on show", async () => {
+    vi.resetModules();
+    const fresh = await import("./session");
+    expect(fresh.getStill()).toBeNull();
+    fresh.setStill("/b.jpg");
+    expect(fresh.getStill()).toBe("/b.jpg");
+  });
 });
