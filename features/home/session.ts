@@ -2,7 +2,7 @@
  * Things that happen once per page load and must survive the hero remounting (a Suspense swap, a client navigation
  * back to `/`, a language switch, which mounts the page tree again).
  */
-const flags = { introPlayed: false, splashDismissed: false };
+const flags = { introPlayed: false, splashDismissed: false, still: null as string | null };
 
 /** The intro has played out. A hero mounted after that shows the logo at rest, not spinning in from the middle again. */
 export const hasIntroPlayed = () => flags.introPlayed;
@@ -14,4 +14,10 @@ export const markIntroPlayed = () => {
 export const isSplashDismissed = () => flags.splashDismissed;
 export const markSplashDismissed = () => {
   flags.splashDismissed = true;
+};
+
+/** The still on show (its `src`), so a hero that mounts again, in another language, opens on the same one. */
+export const getStill = () => flags.still;
+export const setStill = (src: string) => {
+  flags.still = src;
 };

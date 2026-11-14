@@ -52,7 +52,8 @@ export function HomeHero({ landscape, portrait }: HeroStills) {
     onFail,
     onTooSlow,
   } = useHeroIntro();
-  const index = useStillRotation(slides.length, introDone);
+  const stillKeys = useMemo(() => slides.map(({ landscape }) => landscape.src), [slides]);
+  const index = useStillRotation(stillKeys, introDone);
   const current = index % slides.length;
   // The desktop rail's labels sit on the still's left edge; only a bright one darkens it.
   const images = useRef<(HTMLImageElement | null)[]>([]);

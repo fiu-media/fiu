@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useReducer, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useReducer, useRef, useState, useSyncExternalStore } from "react";
 
 import {
   decideLogoTier,
@@ -26,7 +26,7 @@ import {
   selectSplashDone,
   type Support,
 } from "./intro";
-import { markIntroPlayed } from "./session";
+import { getStill, markIntroPlayed, setStill } from "./session";
 
 /**
  * "pending" on the server and during hydration, then the glass logo's starting tier, or "static"
@@ -117,15 +117,26 @@ export function useHeroIntro() {
 const ROTATE_SECONDS = 6;
 
 /**
- * Which of `count` stills is showing, moving on every ROTATE_SECONDS while `enabled`. Held until the intro is over so a
- * still crossfade (and its extra rendering) never lands mid-spin.
+ * Which of `keys` (one per still) is showing, moving on every ROTATE_SECONDS while `enabled`. Held until the intro is over so a
+ * still crossfade (and its extra rendering) never lands mid-spin. A hero that mounts again (a language switch) opens on the
+ * still that was showing, found by its key because another language's set may be ordered differently.
  */
-export function useStillRotation(count: number, enabled: boolean) {
-  const [index, setIndex] = useState(0);
+export function useStillRotation(keys: string[], enabled: boolean) {
+  const count = keys.length;
+  const [index, setIndex] = useState(() => Math.max(0, keys.indexOf(getStill() ?? "")));
   useEffect(() => {
     if (!enabled) return;
     const id = window.setInterval(() => setIndex((i) => (i + 1) % count), ROTATE_SECONDS * 1000);
     return () => window.clearInterval(id);
   }, [enabled, count]);
+  // Only a move is recorded, not a mount: the first paint's stand-in stills are not the CMS's, and must not overwrite
+  // the still that was carried while they show.
+  const shown = useRef(index);
+  useEffect(() => {
+    if (shown.current === index) return;
+    shown.current = index;
+    const key = keys[index % count];
+    if (key !== undefined) setStill(key);
+  }, [index, keys, count]);
   return index;
 }
