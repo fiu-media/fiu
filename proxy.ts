@@ -2,8 +2,8 @@ import { type NextRequest, NextResponse } from "next/server";
 
 import { getLaunchAt } from "@/content/launchGate/read";
 import { env } from "@/env";
+import { hasStaffSession } from "@/lib/auth";
 import { decideGate, gateEnabled } from "@/lib/gate/decide";
-import { hasValidSession, SESSION_COOKIE } from "@/lib/gate/session";
 import { defaultLocale, isLocale, languageCookie, type Locale, locales, localizedPath } from "@/lib/i18n/config";
 import { preferredLocale } from "@/lib/i18n/negotiate";
 
@@ -39,7 +39,7 @@ async function gate(request: NextRequest): Promise<NextResponse | null> {
     enabled,
     launchAt: await getLaunchAt(),
     now: new Date(),
-    hasSession: await hasValidSession(request.cookies.get(SESSION_COOKIE)?.value, env.AUTH_SECRET),
+    hasSession: await hasStaffSession(request.headers),
     hasDraftCookie: request.cookies.has(DRAFT_MODE_COOKIE),
     pathname,
   });

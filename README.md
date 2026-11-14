@@ -97,11 +97,11 @@ The notification emails are React Email components in `emails/`, rendered by `li
 
 Until the date in Studio > Launch (`launchGate.launchAt`), production shows every page as the logo splash (`/launching`, rewritten by `proxy.ts`, so the URL doesn't change) and sends `noindex`. If no date is published the site stays closed; set a past date to open it. A change reaches the live site within about 30 seconds (`content/launchGate/loaders.ts`), and if Sanity can't be reached the last known date is kept.
 
-- **Staff** sign in at `/login` with a Google account in the Workspace domain (`AUTH_ALLOWED_DOMAIN`, default `xn--fi-ska.ie`, i.e. fiú.ie) and see the real site. The check is on the server: the account's `hd` and email must both match and Google must have verified the email (`lib/gate/google.ts`). The session is a signed cookie lasting a week (`lib/gate/session.ts`); there is no database.
+- **Staff** sign in at `/login` with a Google account in the Workspace domain (`AUTH_ALLOWED_DOMAIN`, default `xn--fi-ska.ie`, i.e. fiú.ie) and see the real site. The check is on the server: the account's `hd` and email must both match and Google must have verified the email (`lib/gate/google.ts`, run from `lib/auth.ts`). Sign-in is [Better Auth](https://better-auth.com) in stateless mode: the session is an encrypted cookie lasting a week, and there is no database.
 - **Editors** previewing from the Studio get through while draft mode is on.
 - **`/dev`** (and `/ga/dev`) always needs a staff session, before and after launch; draft mode doesn't unlock it. After launch, visitors without one are sent to Google and back.
-- The gate is on in production only. Previews are behind Vercel Authentication and Google can't register one redirect URI per preview URL. Set `SITE_GATE=on` to try it locally (with the Google keys and `http://localhost:3000/api/auth/google/callback` registered on the OAuth client), or `off` to switch it off.
-- Setting up: create a Google OAuth client of type Internal, register `https://xn--fi-ska.ie/api/auth/google/callback` (the production host) and the localhost callback, then set `AUTH_SECRET` (`openssl rand -base64 32`), `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in Vercel.
+- The gate is on in production only. Previews are behind Vercel Authentication and Google can't register one redirect URI per preview URL. Set `SITE_GATE=on` to try it locally (with the Google keys and `http://localhost:3000/api/auth/callback/google` registered on the OAuth client), or `off` to switch it off.
+- Setting up: create a Google OAuth client of type Internal, register `https://xn--fi-ska.ie/api/auth/callback/google` (the production host) and the localhost callback, then set `AUTH_SECRET` (`openssl rand -base64 32`), `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in Vercel.
 
 ## Deep links into the forms
 

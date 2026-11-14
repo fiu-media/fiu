@@ -1,19 +1,20 @@
 import { NextRequest } from "next/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { signSession } from "@/lib/gate/session";
-
 import { proxy } from "./proxy";
 
 const mocks = vi.hoisted(() => ({
   env: {
     SITE_GATE: undefined as "on" | "off" | undefined,
     VERCEL_ENV: undefined as string | undefined,
-    AUTH_SECRET: "k".repeat(32),
   },
   launchAt: null as Date | null,
 }));
 vi.mock("@/env", () => ({ env: mocks.env }));
+// Better Auth is its own library's to test; here a cookie called `fiu-staff` stands in for a valid session.
+vi.mock("@/lib/auth", () => ({
+  hasStaffSession: (headers: Headers) => Promise.resolve((headers.get("cookie") ?? "").includes("fiu-staff=valid")),
+}));
 vi.mock("@/content/launchGate/read", () => ({ getLaunchAt: () => Promise.resolve(mocks.launchAt) }));
 
 const run = (path: string, init?: { headers?: Record<string, string>; method?: string }) =>
@@ -102,9 +103,7 @@ describe("proxy", () => {
       mocks.env.SITE_GATE = "on";
       mocks.launchAt = launchAt;
     };
-    const withSession = async () => ({
-      headers: { cookie: `fiu-session=${await signSession("a@xn--fi-ska.ie", mocks.env.AUTH_SECRET)}` },
-    });
+    const withSession = () => ({ headers: { cookie: "fiu-staff=valid" } });
 
     afterEach(() => {
       mocks.env.SITE_GATE = undefined;
@@ -149,16 +148,15 @@ describe("proxy", () => {
 
     it("lets a signed-in member of staff, and an editor in draft mode, through before launch", async () => {
       gateOn(future);
-      expect((await run("/about", await withSession())).headers.get("x-middleware-rewrite")).toBe("https://fiu.test/en/about");
+      expect((await run("/about", withSession())).headers.get("x-middleware-rewrite")).toBe("https://fiu.test/en/about");
       expect((await run("/about", { headers: { cookie: "__prerender_bypass=abc" } })).headers.get("x-middleware-rewrite")).toBe(
         "https://fiu.test/en/about",
       );
     });
 
-    it("does not accept a session signed with another key", async () => {
+    it("does not accept a cookie that isn't a valid session", async () => {
       gateOn(future);
-      const forged = await signSession("a@xn--fi-ska.ie", "z".repeat(32));
-      const response = await run("/about", { headers: { cookie: `fiu-session=${forged}` } });
+      const response = await run("/about", { headers: { cookie: "fiu-staff=forged" } });
       expect(response.headers.get("x-middleware-rewrite")).toBe("https://fiu.test/en/launching");
     });
 
@@ -171,7 +169,7 @@ describe("proxy", () => {
           `https://fiu.test/api/auth/google?next=${encodeURIComponent(`${path}?x=1`)}`,
         );
       }
-      expect((await run("/dev/specimen", await withSession())).headers.get("x-middleware-rewrite")).toBe(
+      expect((await run("/dev/specimen", withSession())).headers.get("x-middleware-rewrite")).toBe(
         "https://fiu.test/en/dev/specimen",
       );
       expect((await run("/devices")).headers.get("x-middleware-rewrite")).toBe("https://fiu.test/en/devices");
