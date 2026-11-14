@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
+import type { WORK_QUERY_RESULT } from "@/sanity.types";
+
 import { MAX_HERO_STILLS, STRIP_PROJECTS, toFoldProjects, toHeroStills } from "./mappers";
+
+type WorkProject = WORK_QUERY_RESULT["projects"][number];
 
 const still = (key: string) => ({
   _key: key,
@@ -49,17 +53,19 @@ describe("toHeroStills", () => {
 
 describe("toFoldProjects", () => {
   const cover = still("cover");
-  const work = (slug: string | null, extra: Record<string, unknown> = {}) =>
-    ({
-      _id: `p-${slug}`,
-      title: `Title ${slug}`,
-      slug,
-      type: "Film",
-      year: 2025,
-      client: null,
-      cover: { landscape: cover, portrait: null },
-      ...extra,
-    }) as never;
+  const work = (slug: string, extra: Partial<WorkProject> = {}): WorkProject => ({
+    _id: `p-${slug}`,
+    title: `Title ${slug}`,
+    slug,
+    typeSlug: "film",
+    type: "Film",
+    year: 2025,
+    client: null,
+    vimeoUrl: null,
+    previewLoopUrl: null,
+    cover: { landscape: cover, portrait: null },
+    ...extra,
+  });
 
   it("keeps the projects' order, links them and writes the meta line", () => {
     const [first] = toFoldProjects([work("a"), work("b")], "ga");
@@ -69,8 +75,8 @@ describe("toFoldProjects", () => {
   it("skips projects without a cover or a slug, and stops at the strip's length", () => {
     const many = Array.from({ length: 8 }, (_, i) => work(`s${i}`));
     expect(
-      toFoldProjects([work("nocover", { cover: { landscape: null, portrait: null } }), work(null), ...many], "en"),
+      toFoldProjects([work("nocover", { cover: { landscape: null, portrait: null } }), work(""), ...many], "en"),
     ).toHaveLength(STRIP_PROJECTS);
-    expect(toFoldProjects([work("nocover", { cover: { landscape: null, portrait: null } }), work(null)], "en")).toEqual([]);
+    expect(toFoldProjects([work("nocover", { cover: { landscape: null, portrait: null } }), work("")], "en")).toEqual([]);
   });
 });

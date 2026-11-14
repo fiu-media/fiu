@@ -27,7 +27,7 @@ export default defineConfig({
     templates: (templates) => templates.filter(({ id }) => !hiddenTemplates.includes(id)),
   },
   document: {
-    actions: (prev, { schemaType }) => singletonActions(prev as { action?: string }[], schemaType) as typeof prev,
+    actions: (prev, { schemaType }) => singletonActions(prev, schemaType),
   },
   plugins: [
     structureTool({ structure }),

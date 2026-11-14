@@ -2,6 +2,8 @@
 // hasn't been translated yet falls back to its default-language counterpart instead of vanishing.
 // New queries (projects, talent, ...) should follow the same pattern.
 
+import { MAX_QTY } from "@/lib/forms/quantity";
+
 /**
  * Documents of `type` in `$lang`, plus default-language ones with no translation (matched by slug).
  * `extra` adds filter terms (pass `""` for none). The helpers in this file are generic and use literal
@@ -55,14 +57,16 @@ export const translatedTitle = <const T extends string>(type: T) =>
 /**
  * What names a rental item and its cap, shared by every rental query. Names and brands are never translated (read-only
  * in translations), so every language shows the default-language value. `baseId` is the default-language document's
- * id, which basket lines use so they survive a language switch. `as const` keeps the literal type for TypeGen.
+ * id, which basket lines use so they survive a language switch. The Studio requires a cap, but stored data isn't
+ * guaranteed to follow its validation, so a missing one falls back to `MAX_QTY` here and is never null downstream.
+ * `as const` keeps the literal type for TypeGen.
  */
 export const RENTAL_ITEM_IDENTITY = `
   _id,
   "baseId": coalesce(${DEFAULT_COUNTERPART}._id, _id),
   "name": coalesce(${DEFAULT_COUNTERPART}.name, name),
   "brand": coalesce(${DEFAULT_COUNTERPART}.brand, brand),
-  "maxQuantity": coalesce(${DEFAULT_COUNTERPART}.maxQuantity, maxQuantity)
+  "maxQuantity": coalesce(${DEFAULT_COUNTERPART}.maxQuantity, maxQuantity, ${MAX_QTY})
 ` as const;
 
 /**

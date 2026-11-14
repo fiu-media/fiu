@@ -10,9 +10,8 @@ import { studioUrl } from "@/sanity/studio-env";
  */
 export function siteOrigin() {
   const fallback = env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${env.VERCEL_PROJECT_PRODUCTION_URL}` : "https://xn--fi-ska.ie";
-  // An empty NEXT_PUBLIC_SITE_URL counts as unset.
-  // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
-  const origin = env.NEXT_PUBLIC_SITE_URL || fallback;
+  // `env` turns an empty NEXT_PUBLIC_SITE_URL into undefined, so it falls back too.
+  const origin = env.NEXT_PUBLIC_SITE_URL ?? fallback;
   return origin.replace(/\/$/, "");
 }
 

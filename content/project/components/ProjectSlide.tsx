@@ -91,7 +91,7 @@ export function ProjectSlide({
           <div aria-hidden className="absolute inset-0 bg-bg-raised" />
         )}
 
-        {showLoop && <PreviewLoop src={vimeoEmbedUrl(loop, { background: true })} />}
+        {showLoop && <PreviewLoop src={vimeoEmbedUrl(loop, { background: true })} title={title} />}
 
         {!playing && (
           // Keeps the white logo, filter pills and counter legible over bright covers.

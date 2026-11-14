@@ -66,8 +66,12 @@ function QuoteFormFields({ lang, dict, countries }: Props) {
 
   /** A link that reopens this quote, for sending to someone else. Nothing personal goes in it. */
   const shareLink = () => {
-    const data = new FormData(document.getElementById(conform.form.id) as HTMLFormElement);
-    const text = (name: string) => (typeof data.get(name) === "string" ? (data.get(name) as string) : "");
+    const form = document.getElementById(conform.form.id);
+    const data = form instanceof HTMLFormElement ? new FormData(form) : null;
+    const text = (name: string) => {
+      const value = data?.get(name);
+      return typeof value === "string" ? value : "";
+    };
     const path = quoteHref(lang, {
       start: isIsoDate(startDate) ? startDate : undefined,
       end: isIsoDate(endDate) ? endDate : undefined,

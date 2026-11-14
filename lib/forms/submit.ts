@@ -97,6 +97,9 @@ type EmailContext<D, X> = {
   studioLink: string;
 };
 
+/** `validate` for a form with no outside checks: it always passes, with no `extra`. */
+export const noChecks = () => Promise.resolve({ extra: undefined });
+
 type SubmissionConfig<S extends z.ZodType<Submitted>, X> = {
   schema: S;
   docType: "contactMessage" | "quoteRequest";
@@ -104,8 +107,11 @@ type SubmissionConfig<S extends z.ZodType<Submitted>, X> = {
   recipient: "contact" | "quote";
   /** Looks that address up (content/siteSettings has it); passed in so this module stays below `content` in the layering. */
   getRecipient: (kind: "contact" | "quote", lang: Locale) => Promise<string | null>;
-  /** Checks that need the outside world (the quote's availability and limits). Fail with form errors, or carry on with `extra`. */
-  validate?: (data: z.output<S>) => Promise<{ formErrors: FormErrorCode[] } | { extra: X }>;
+  /**
+   * Checks that need the outside world (the quote's availability and limits). Fail with form errors, or carry on with
+   * `extra`. A form with nothing to check passes `noChecks`.
+   */
+  validate: (data: z.output<S>) => Promise<{ formErrors: FormErrorCode[] } | { extra: X }>;
   /** The submission's own fields; the id, type, status and time are added here. */
   toDocument: (data: z.output<S>, extra: X) => Record<string, unknown>;
   emails: (context: EmailContext<z.output<S>, X>) => { notification: Built; confirmation: Built };
@@ -127,12 +133,9 @@ export async function handleSubmission<S extends z.ZodType<Submitted>, X = undef
   if (!guarded.ok) return guarded.result;
   const { data, fail, succeed } = guarded;
 
-  let extra = undefined as X;
-  if (validate) {
-    const checked = await validate(data);
-    if ("formErrors" in checked) return fail({ formErrors: checked.formErrors });
-    extra = checked.extra;
-  }
+  const checked = await validate(data);
+  if ("formErrors" in checked) return fail({ formErrors: checked.formErrors });
+  const { extra } = checked;
 
   const id = `${docType}-${data.submissionId}`;
   try {

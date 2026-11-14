@@ -6,14 +6,14 @@ import { fetchContent } from "@/sanity/lib/fetch";
 
 /** Our Work: the type filters and the slides for `?type=`. Follows draft mode, so it must sit behind a Suspense boundary. */
 export async function getWorkIndex(lang: Locale, requestedType: string | null | undefined) {
-  return toWorkIndex(await fetchContent(WORK_QUERY, lang), lang, requestedType);
+  return toWorkIndex(await fetchContent(WORK_QUERY, lang, {}), lang, requestedType);
 }
 
 /** One project's page, or `null` when there is no such project. Follows draft mode like the index. */
 export async function getProject(lang: Locale, slug: string) {
   const [project, order] = await Promise.all([
     fetchContent(PROJECT_QUERY, lang, { slug }),
-    fetchContent(PROJECT_ORDER_QUERY, lang),
+    fetchContent(PROJECT_ORDER_QUERY, lang, {}),
   ]);
   return project ? toProject(project, order, lang) : null;
 }

@@ -1,12 +1,13 @@
 import { defineLocations, type PresentationPluginOptions } from "sanity/presentation";
 
-import { defaultLocale, type Locale } from "../../../lib/i18n/config";
+import { defaultLocale, isLocale, type Locale } from "../../../lib/i18n/config";
 import { href, routes } from "../../../lib/routes";
 
 type Location = { title: string; href: string };
 
 /** The language a document was written in; documents from before translations existed have none. */
-const langOf = (doc: { language?: string | null } | null): Locale => (doc?.language ?? defaultLocale) as Locale;
+const langOf = (doc: { language?: string | null } | null): Locale =>
+  doc?.language && isLocale(doc.language) ? doc.language : defaultLocale;
 
 /**
  * Where Presentation shows a document: its own page (if it has a slug) and, optionally, the index it is listed on.

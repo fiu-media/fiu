@@ -1,5 +1,7 @@
 import * as THREE from "three";
 
+import { devInfo } from "@/lib/devInfo";
+
 import type { LogoGlassParams } from "../config/schemas";
 
 /** Floor for the interaction `weight` so a stray 0 can't divide by zero. */
@@ -107,12 +109,14 @@ export function stepDrag(d: DragState, look: LogoGlassParams, weight: number, de
 
 /** Internal glow picks up the still temperature (like liquid-glass.jpg's warm core). */
 export function tintGlow(
-  mat: (THREE.MeshPhysicalMaterial & { attenuationColor?: THREE.Color }) | null,
+  // drei types the material's colour as anything a colour prop accepts; on the live material it is a `THREE.Color`.
+  mat: { attenuationColor?: unknown } | null,
   glow: THREE.Color,
   tint: THREE.Color,
   look: LogoGlassParams,
 ) {
-  if (!mat?.attenuationColor) return;
+  const target = mat?.attenuationColor;
+  if (!(target instanceof THREE.Color)) return;
   glow.copy(tint);
   const hsl = { h: 0, s: 0, l: 0 };
   glow.getHSL(hsl);
@@ -121,7 +125,7 @@ export function tintGlow(
     Math.min(0.85, hsl.s * look.glowSat),
     THREE.MathUtils.clamp(hsl.l + look.glowLift, look.glowLMin, look.glowLMax),
   );
-  mat.attenuationColor.copy(glow);
+  target.copy(glow);
 }
 
 export type IntroStats = { frames: number; ms: number; worst: number; logged: boolean };
@@ -139,8 +143,7 @@ export function logIntroFrame(st: IntroStats, rawDelta: number, t: number, intro
   } else if (!st.logged && st.frames > 0) {
     st.logged = true;
     // One-off intro frame-rate readout.
-    // eslint-disable-next-line no-console
-    console.info(
+    devInfo(
       `[logo intro] ${st.frames} frames over ${(st.ms / 1000).toFixed(2)}s: `
         + `${((st.frames * 1000) / st.ms).toFixed(0)} fps avg, worst frame ${st.worst.toFixed(0)} ms`,
     );

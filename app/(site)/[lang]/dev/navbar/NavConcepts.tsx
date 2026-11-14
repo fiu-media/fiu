@@ -2,7 +2,7 @@
 
 import { Menu, X } from "lucide-react";
 import Image from "next/image";
-import { type CSSProperties, type ReactNode, type RefObject, useEffect, useRef, useState } from "react";
+import { type ReactNode, type RefObject, useEffect, useRef, useState } from "react";
 
 import { LogoMask } from "@/components/layout/nav/HomeLink";
 import { GlassPanel, GlassPillButton } from "@/components/ui/Glass";
@@ -51,7 +51,7 @@ export function NavPreview({
   return (
     <div
       data-surface={dark ? "cinematic" : "adaptive"}
-      style={{ "--frame-h": "max(28rem, calc(100dvh - 20rem))" } as CSSProperties}
+      style={{ "--frame-h": "max(28rem, calc(100dvh - 20rem))" }}
       className={`@container relative mx-auto h-(--frame-h) overflow-hidden rounded-3xl border border-line text-fg ${
         dark ? "bg-ink" : "bg-bg"
       } ${width === "phone" ? "w-[390px] max-w-full" : "w-full"}`}
@@ -124,7 +124,7 @@ function useMenu() {
       if (event.key === "Escape") setOpen(false);
     };
     const onDown = (event: PointerEvent) => {
-      if (ref.current && !ref.current.contains(event.target as Node)) setOpen(false);
+      if (ref.current && event.target instanceof Node && !ref.current.contains(event.target)) setOpen(false);
     };
     document.addEventListener("keydown", onKey);
     document.addEventListener("pointerdown", onDown);

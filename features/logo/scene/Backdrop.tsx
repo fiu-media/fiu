@@ -21,6 +21,9 @@ const SPLASH_WHITE = 1.5;
 const REVEAL_SECONDS = SPLASH_FADE_MS / 1000;
 
 /** Set a uniform by name; the material's `uniforms` record is untyped, so a lookup can miss. */
+/** A texture uniform, empty until a still is set on it. */
+const textureUniform = (): THREE.IUniform<THREE.Texture | null> => ({ value: null });
+
 function setUniform(uniforms: Record<string, THREE.IUniform>, name: string, value: unknown) {
   const uniform = uniforms[name];
   if (uniform) uniform.value = value;
@@ -43,8 +46,8 @@ export function Backdrop({
 
   const material = useRef<THREE.ShaderMaterial>(null);
   const [uniforms] = useState(() => ({
-    tFrom: { value: null as THREE.Texture | null },
-    tTo: { value: null as THREE.Texture | null },
+    tFrom: textureUniform(),
+    tTo: textureUniform(),
     fromAspect: { value: 1 },
     toAspect: { value: 1 },
     planeAspect: { value: 1 },

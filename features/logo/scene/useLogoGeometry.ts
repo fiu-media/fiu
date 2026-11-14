@@ -2,9 +2,12 @@ import { useEffect, useMemo } from "react";
 
 import paths from "@/public/brand/fiu-logo-paths.json";
 
-import { buildLogoGeometry, type LogoMeshMode, type LogoPaths } from "../buildLogoGeometry";
+import { buildLogoGeometry, type LogoMeshMode, logoPathsSchema } from "../buildLogoGeometry";
 import type { LogoGlassParams } from "../config/schemas";
 import { CAMERA_Z } from "./shared";
+
+/** The logo's paths, checked once when the 3D bundle loads. */
+const LOGO_PATHS = logoPathsSchema.parse(paths);
 
 /**
  * The logo mesh for `meshMode` (the playground can override the extrude's depth and bevel), disposed when replaced,
@@ -18,7 +21,7 @@ export function useLogoGeometry(meshMode: LogoMeshMode, extrudeOverride: LogoGla
   const bevelSize = extrudeOverride?.bevelSize;
 
   const geometry = useMemo(() => {
-    const base = paths as unknown as LogoPaths;
+    const base = LOGO_PATHS;
     if (
       meshMode === "extrude"
       && base.extrude

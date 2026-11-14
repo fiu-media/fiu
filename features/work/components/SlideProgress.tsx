@@ -41,7 +41,7 @@ export function SlideProgress({
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
-          if (entry.isIntersecting) setCurrent([...slides].indexOf(entry.target as HTMLElement));
+          if (entry.isIntersecting) setCurrent([...slides].findIndex((slide) => slide === entry.target));
         }
       },
       { threshold: 0.5 },

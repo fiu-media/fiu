@@ -1,4 +1,3 @@
-import { MAX_QTY } from "@/lib/forms/quantity";
 import type { Locale } from "@/lib/i18n/config";
 import { href, routes } from "@/lib/routes";
 import type { QUOTE_CATALOGUE_QUERY_RESULT, RENTAL_ITEM_QUERY_RESULT, RENTALS_QUERY_RESULT } from "@/sanity.types";
@@ -11,8 +10,20 @@ const CARD_WIDTH = 800;
 const DETAIL_WIDTH = 1400;
 const BASKET_THUMB_WIDTH = 160;
 
+/**
+ * An item as it can really arrive. The Studio requires a category, so TypeGen types it as always there, but deleting the
+ * category leaves the reference dangling and the query returns `null` for it.
+ */
+type MayDangle<T extends { category: unknown }> = Omit<T, "category"> & { category: T["category"] | null };
+
 /** The catalogue page: the filter's categories and one card per item. */
-export function toCatalogue({ categories, items }: RENTALS_QUERY_RESULT): {
+export function toCatalogue({
+  categories,
+  items,
+}: {
+  categories: RENTALS_QUERY_RESULT["categories"];
+  items: MayDangle<RENTALS_QUERY_RESULT["items"][number]>[];
+}): {
   categories: { id: string; title: string }[];
   cards: CatalogueCard[];
 } {
@@ -24,7 +35,6 @@ export function toCatalogue({ categories, items }: RENTALS_QUERY_RESULT): {
       slug: item.slug,
       brand: item.brand,
       summary: item.summary,
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- a category reference can dangle; the generated type doesn't say so
       categoryId: item.category?.slug ?? null,
       image: item.images?.[0] ? toSizedImage(item.images[0], CARD_WIDTH) : null,
     })),
@@ -47,14 +57,13 @@ export type RentalItemView = {
 };
 
 /** `null` for an item that doesn't exist (or isn't available), which the page turns into a 404. */
-export function toRentalItem(item: RENTAL_ITEM_QUERY_RESULT): RentalItemView | null {
+export function toRentalItem(item: MayDangle<NonNullable<RENTAL_ITEM_QUERY_RESULT>> | null): RentalItemView | null {
   if (!item) return null;
   return {
     id: publishedId(item.baseId),
     name: item.name,
     brand: item.brand,
     summary: item.summary,
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- a category reference can dangle; the generated type doesn't say so
     categoryTitle: item.category?.title ?? null,
     maxQuantity: item.maxQuantity,
     images: (item.images ?? []).flatMap((image) => toSizedImage(image, DETAIL_WIDTH) ?? []),
@@ -74,9 +83,8 @@ export function toQuoteCatalogue(lang: Locale, items: QUOTE_CATALOGUE_QUERY_RESU
       brand: item.brand,
       slug: item.slug,
       href: href(lang, routes.rentalItem(item.slug)),
-      // An item with no cap of its own can still only be asked for up to `MAX_QTY`.
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- maxQuantity is required by validation in the Studio, but stored data isn't guaranteed to follow it
-      max: item.maxQuantity ?? MAX_QTY,
+      // The query fills in `MAX_QTY` for an item with no cap of its own.
+      max: item.maxQuantity,
       // The lookup has no dimensions, so the image gets the default 4:3 frame.
       image: item.image ? toSizedImage({ ...item.image, dimensions: null }, BASKET_THUMB_WIDTH) : null,
     };

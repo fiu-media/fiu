@@ -13,7 +13,9 @@ export function useRestStills(srcs: string, firstSrc: string, enabled: boolean) 
   const [rest, setRest] = useState<Record<string, THREE.Texture>>({});
   useEffect(() => {
     if (!enabled) return;
-    let cancelled = false;
+    // Aborted by the cleanup below, which can happen while the loop awaits.
+    const controller = new AbortController();
+    const { signal } = controller;
     const loader = new THREE.TextureLoader();
     // Fire and forget: the stills past the first load in the background, and a failed one is skipped below.
     void (async () => {
@@ -21,9 +23,7 @@ export function useRestStills(srcs: string, firstSrc: string, enabled: boolean) 
         if (src === firstSrc) continue;
         try {
           const t = configureStill(await loader.loadAsync(src));
-          // `cancelled` is set by the cleanup below while this awaits, which the types can't see.
-          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-          if (cancelled) {
+          if (signal.aborted) {
             t.dispose();
             return;
           }
@@ -35,14 +35,10 @@ export function useRestStills(srcs: string, firstSrc: string, enabled: boolean) 
           console.warn("[LogoScene] still failed to load:", src, error);
         }
         await new Promise((resolve) => setTimeout(resolve, 60));
-        // `cancelled` is set by the cleanup below while this awaits, which the types can't see.
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-        if (cancelled) return;
+        if (signal.aborted) return;
       }
     })();
-    return () => {
-      cancelled = true;
-    };
+    return () => controller.abort();
   }, [enabled, srcs, firstSrc, gl]);
   return rest;
 }

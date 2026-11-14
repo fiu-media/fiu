@@ -138,7 +138,7 @@ export function Field({
   useAutoGrow(textarea);
   // Heights are in lines (`lh`) plus the padding and border, and never more than 60% of the screen: on a phone, with the
   // keyboard up, a tall box would leave no room to see what is being typed.
-  const sizes = {
+  const sizes: CSSProperties = {
     "--min": `min(calc(${minRows}lh + 1.5rem + 2px), 60dvh)`,
     "--max": `min(calc(${maxRows}lh + 1.5rem + 2px), 60dvh)`,
   };
@@ -149,7 +149,7 @@ export function Field({
         {...shared}
         // `resize-y`: the handle moves the bottom edge only, not the width, which the form's layout sets.
         className={cn(className, "field-sizing-content max-h-(--max) min-h-(--min) resize-y")}
-        style={sizes as CSSProperties}
+        style={sizes}
         defaultValue={field.defaultValue}
         rows={minRows}
       />

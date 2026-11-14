@@ -58,7 +58,7 @@ const HOME_PROJECT_ID = "project-and-again-the-vintage-movement";
 async function main() {
   const stills = await Promise.all(STILLS.map((s) => uploadStill(s.file, s.alt)));
 
-  const docs: Record<string, unknown>[] = [];
+  const docs: { _id: string; _type: string; [field: string]: unknown }[] = [];
   // The banquet table stands in for the team until Fiú has a photo.
   const teamStill = { ...stills[1], alt: "Placeholder team photo" };
 
@@ -191,10 +191,10 @@ async function main() {
   );
 
   const existing = new Set(await client.fetch<string[]>(`*[_id in $ids]._id`, { ids: docs.map((d) => d._id) }));
-  const missing = docs.filter((doc) => !existing.has(doc._id as string));
+  const missing = docs.filter((doc) => !existing.has(doc._id));
 
   const tx = client.transaction();
-  for (const doc of missing) tx.createIfNotExists(doc as { _id: string; _type: string });
+  for (const doc of missing) tx.createIfNotExists(doc);
   await tx.commit();
 
   // Fields added to a document type after a dataset was first seeded: filled in only where they are still missing, so

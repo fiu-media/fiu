@@ -18,6 +18,8 @@ import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSyn
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
+import { z } from "zod";
+
 import { translatedTypes } from "../sanity/schema/documentTypes";
 import { env, toolingClient } from "../sanity/tooling-client";
 
@@ -30,10 +32,13 @@ const projectId = env("NEXT_PUBLIC_SANITY_PROJECT_ID");
 const sanity = (...args: string[]) => execFileSync("npx", ["sanity", ...args, "--project-id", projectId], { stdio: "inherit" });
 const clientFor = (dataset: string) => toolingClient({ token: "write", dataset });
 
-type Doc = { _id: string; [key: string]: unknown };
-const META = new Set(["_rev", "_createdAt", "_updatedAt"]);
-const withoutMeta = (doc: Doc) => Object.fromEntries(Object.entries(doc).filter(([key]) => !META.has(key))) as Doc;
+type Doc = { _id: string; _type: string; [key: string]: unknown };
+/** The document without the fields Sanity sets itself, which differ between datasets for the same content. */
+const withoutMeta = ({ _rev, _createdAt, _updatedAt, ...doc }: Doc) => doc;
 const same = (a: Doc, b: Doc) => JSON.stringify(withoutMeta(a)) === JSON.stringify(withoutMeta(b));
+
+/** A line of a dataset export: only its type matters here. */
+const exportedType = z.object({ _type: z.string() });
 
 async function main() {
   // Built first, so a missing token fails now rather than after the export and import.
@@ -52,7 +57,7 @@ async function main() {
     const data = join(extracted, folder, "data.ndjson");
     const kept = readFileSync(data, "utf8")
       .split("\n")
-      .filter((line) => line.trim() && CONTENT_TYPES.includes((JSON.parse(line) as { _type: string })._type));
+      .filter((line) => line.trim() && CONTENT_TYPES.includes(exportedType.parse(JSON.parse(line))._type));
     writeFileSync(data, `${kept.join("\n")}\n`);
 
     const filtered = join(work, "filtered.tar.gz");
@@ -76,7 +81,7 @@ async function main() {
   if (extra.length || stale.length) {
     const tx = dev.transaction();
     for (const doc of extra) tx.delete(doc._id);
-    for (const doc of stale) tx.createOrReplace(withoutMeta(doc) as Doc & { _type: string });
+    for (const doc of stale) tx.createOrReplace(withoutMeta(doc));
     await tx.commit();
   }
   console.log(`Synced ${source.length} documents to ${TARGET}; removed ${extra.length} dev-only, re-synced ${stale.length}.`);

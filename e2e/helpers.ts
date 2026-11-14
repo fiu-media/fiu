@@ -1,12 +1,36 @@
-import { expect, type Locator, test } from "@playwright/test";
+import { expect, type Locator, type Page, test } from "@playwright/test";
 
 import { features } from "../lib/features";
 import { TEST_EMAIL_DOMAIN } from "./fixtures/data";
 
-/** `test` while Rentals is on, `test.skip` while it is hidden (its pages are a 404, so there is nothing to drive). */
-// `test.skip` is meant to be passed around like this.
-// eslint-disable-next-line @typescript-eslint/unbound-method
-export const rentalsTest = features.rentals ? test : test.skip;
+/** Call first in a test that drives Rentals: skips it while Rentals is hidden (its pages are a 404, so there is nothing to drive). */
+export function skipWithoutRentals() {
+  test.skip(!features.rentals, "Rentals is switched off (features.rentals)");
+}
+
+/**
+ * Waits for the fonts and every image on screen to finish loading, so axe measures contrast on the final page. An
+ * image below the fold that loads lazily isn't waited for, since it never starts until it is scrolled to.
+ */
+export async function waitForImagesAndFonts(page: Page) {
+  await page.evaluate(() => document.fonts.ready.then(() => undefined));
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        [...document.images].every((img) => {
+          const box = img.getBoundingClientRect();
+          const onScreen = box.bottom > 0 && box.top < innerHeight && box.right > 0 && box.left < innerWidth;
+          return img.complete || !onScreen;
+        }),
+      ),
+    )
+    .toBe(true);
+}
+
+/** Waits for every CSS transition and animation running in `locator` (and its descendants) to finish. */
+export async function waitForAnimations(locator: Locator) {
+  await locator.evaluate((el) => Promise.all(el.getAnimations({ subtree: true }).map((a) => a.finished)).then(() => undefined));
+}
 
 /** Where an element is on screen. Throws if it has no box (hidden or detached), which a test can't use anyway. */
 export async function boundingBoxOf(locator: Locator) {

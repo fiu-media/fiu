@@ -21,12 +21,14 @@ describe("home stills", () => {
     project("b-en", "b", "en", { stills: [still("b1"), still("b2")] }),
     project("a-ga", "a", "ga", { stills: [still("a-ga1")] }),
   ];
-  const fetch = async (lang: string) => {
+  // groq-js returns `any`; the annotation says which fields these tests read.
+  type Result = {
+    _id: string;
+    projects: { _id: string; stills: { _key: string }[] | null; stillsMobile: { _key: string }[] | null }[];
+  };
+  const fetch = async (lang: string): Promise<Result> => {
     const params = { lang, fallbackLang: "en" };
-    return (await (await evaluate(parse(HOME_STILLS_QUERY, { params }), { dataset: dataset as never, params })).get()) as {
-      _id: string;
-      projects: { _id: string; stills: { _key: string }[] | null; stillsMobile: { _key: string }[] | null }[];
-    };
+    return (await evaluate(parse(HOME_STILLS_QUERY, { params }), { dataset, params })).get();
   };
 
   it("lists the referenced projects' stills in the editors' order", async () => {
@@ -70,14 +72,11 @@ describe("site settings", () => {
       teamStill: image("image-ga-team"),
     },
   ];
-  const fetch = async (lang: string) => {
+  // groq-js returns `any`; the annotation says which fields these tests read.
+  type Result = Doc & { aboutStill: { alt: string } | null; teamStill: { alt: string } | null };
+  const fetch = async (lang: string): Promise<Result> => {
     const params = { lang, fallbackLang: "en" };
-    return (await (
-      await evaluate(parse(SITE_SETTINGS_QUERY, { params }), { dataset: dataset as never, params })
-    ).get()) as Doc & {
-      aboutStill: { alt: string } | null;
-      teamStill: { alt: string } | null;
-    };
+    return (await evaluate(parse(SITE_SETTINGS_QUERY, { params }), { dataset, params })).get();
   };
 
   it("reads the document in the requested language", async () => {

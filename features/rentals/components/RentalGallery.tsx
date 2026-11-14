@@ -2,7 +2,7 @@
 
 import { Tabs } from "@base-ui/react/tabs";
 import useEmblaCarousel from "embla-carousel-react";
-import { useEffect, useState } from "react";
+import { type KeyboardEvent, useEffect, useRef, useState } from "react";
 
 import { StepButton } from "@/components/ui/StepButton";
 import { cn } from "@/lib/cn";
@@ -65,6 +65,13 @@ function Carousel({ images, name, dict }: { images: SizedImage[]; name: string; 
   }, [strip, index]);
 
   const { select, onKeyDown } = useStepper(images.length, index, setIndex);
+  // The arrow keys step the photos from anywhere in the large view (the photo or its buttons). The handler sits on the
+  // root, which is a component rather than a DOM element, and only acts for the large view: the thumbnails are Base UI
+  // tabs, which handle their own arrow keys.
+  const largeView = useRef<HTMLDivElement>(null);
+  const onLargeViewKeyDown = (event: KeyboardEvent) => {
+    if (event.target instanceof Node && largeView.current?.contains(event.target)) onKeyDown(event);
+  };
   const swipe = useSwipe((direction) => select(index + direction), SWIPE_DISTANCE);
 
   return (
@@ -74,11 +81,11 @@ function Carousel({ images, name, dict }: { images: SizedImage[]; name: string; 
       role="group"
       aria-roledescription="carousel"
       aria-label={format(dict.galleryLabel, { name })}
+      onKeyDown={onLargeViewKeyDown}
       className="flex flex-col gap-4"
     >
-      {/* The carousel steps with the arrow keys, so the wrapper that hears them has to take focus. */}
-      {/* eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex, jsx-a11y/no-static-element-interactions */}
-      <div tabIndex={0} onKeyDown={onKeyDown} className="relative rounded-3xl">
+      {/* The carousel steps with the arrow keys, so the large view has to take focus; a named region may. */}
+      <div ref={largeView} role="region" aria-label={dict.largePhoto} tabIndex={0} className="relative rounded-3xl">
         <div {...swipe} className="touch-pan-y overflow-hidden rounded-3xl bg-white">
           <div className="grid">
             {/* Every panel stays laid out (Base UI's `hidden` is overridden) so they can cross-fade; the hidden ones are

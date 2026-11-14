@@ -81,7 +81,7 @@ export const structure: StructureResolver = (S, context) =>
 export const hiddenTemplates = [...singletonTypes, ...inboxTypes];
 
 /** Singletons can't be duplicated or deleted. */
-export const singletonActions = (actions: { action?: string }[], schemaType: string) =>
+export const singletonActions = <A extends { action?: string }>(actions: A[], schemaType: string): A[] =>
   singletonTypes.includes(schemaType)
     ? actions.filter(({ action }) => action && ["publish", "discardChanges", "restore"].includes(action))
     : actions;
