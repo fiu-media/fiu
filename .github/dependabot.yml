@@ -7,6 +7,11 @@ updates:
     groups:
       minor-and-patch:
         update-types: [minor, patch]
+    ignore:
+      # @vercel/otel needs @opentelemetry/resources 2.x, whose peer range is
+      # api <1.10.0. Remove once @vercel/otel supports resources 3.x.
+      - dependency-name: "@opentelemetry/api"
+        versions: [">=1.10.0"]
   - package-ecosystem: github-actions
     directory: /
     schedule:
