@@ -28,6 +28,4 @@ export type FormErrorCode = (typeof FORM_ERROR_CODES)[number];
  */
 export type FormState = (SubmissionResult & { success?: boolean; confirmation?: boolean }) | null;
 
-const codes: readonly string[] = FORM_ERROR_CODES;
-
-export const toErrorCode = (message: string): FormErrorCode => (codes.includes(message) ? (message as FormErrorCode) : "invalid");
+export const toErrorCode = (message: string): FormErrorCode => FORM_ERROR_CODES.find((code) => code === message) ?? "invalid";

@@ -4,6 +4,7 @@ import { LevaPanel, useControls, useCreateStore } from "leva";
 import type { Schema } from "leva/dist/declarations/src/types";
 import { useEffect, useEffectEvent, useRef } from "react";
 import { createPortal } from "react-dom";
+import { z } from "zod";
 
 import {
   type LogoExtrudeOverride,
@@ -62,11 +63,14 @@ function slider(def: SliderRange, value: number, apply: (value: number, get: Get
   return { value, min: def.min, max: def.max, step: def.step, label: def.label, onChange: fromPanel(apply) };
 }
 
+/** The values this panel's inputs hold: sliders, toggles, selects and positions. Leva types them as `any`. */
+const inputValue = z.union([z.number(), z.boolean(), z.string(), z.object({ x: z.number(), y: z.number(), z: z.number() })]);
+
 /** `{ key: item.value }` for every input in a schema, in the shape Leva's `set` takes. */
 function valuesOf(schema: Schema): Schema {
   const values: Schema = {};
   for (const [key, item] of Object.entries(schema)) {
-    if (typeof item === "object" && "value" in item) values[key] = item.value as Schema[string];
+    if (typeof item === "object" && "value" in item) values[key] = inputValue.parse(item.value);
   }
   return values;
 }

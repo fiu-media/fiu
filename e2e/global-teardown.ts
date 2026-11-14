@@ -11,6 +11,6 @@ export default async function globalTeardown() {
     await cleanup(fixtureClient());
   } catch (error) {
     // Never fail the run over cleanup; the next run's seeding clears whatever is left.
-    console.warn(`[e2e] Skipped cleanup: ${(error as Error).message}`);
+    console.warn(`[e2e] Skipped cleanup: ${error instanceof Error ? error.message : String(error)}`);
   }
 }

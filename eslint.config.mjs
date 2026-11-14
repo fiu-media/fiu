@@ -124,11 +124,14 @@ const eslintConfig = defineConfig([
       "playwright/no-standalone-expect": "off",
       // `audit()` in a11y.spec.ts runs the axe check, so a test that only calls it still asserts.
       "playwright/expect-expect": ["error", { assertFunctionNames: ["audit"] }],
+      // `test.skip(condition, why)` is how a test bows out while the feature it drives is switched off (skipWithoutRentals).
+      "playwright/no-skipped-test": ["error", { allowConditional: true }],
     },
   },
   {
-    // A disable comment that no longer silences anything is dead weight; fail on it.
-    linterOptions: { reportUnusedDisableDirectives: "error" },
+    // Exceptions live in this file, next to the reason for them, never in inline `eslint-disable` comments: those are
+    // ignored and reported.
+    linterOptions: { noInlineConfig: true },
     // `react` and `@typescript-eslint` are already registered by the Next presets.
     plugins: { "simple-import-sort": simpleImportSort, "import-x": importX },
     rules: {
@@ -362,8 +365,17 @@ const eslintConfig = defineConfig([
     rules: { "max-lines": "off", "max-lines-per-function": "off", complexity: "off" },
   },
   {
-    // Command-line tooling is meant to print.
-    files: ["scripts/**", "e2e/**", "migrations/**"],
+    // Declarations that add to a library's or the DOM's types: merging only works with an `interface`, and the index
+    // signature is the merged member itself.
+    files: ["types/**/*.d.ts"],
+    rules: {
+      "@typescript-eslint/consistent-type-definitions": "off",
+      "@typescript-eslint/consistent-indexed-object-style": "off",
+    },
+  },
+  {
+    // Command-line tooling is meant to print, and `devInfo` is the one place app code prints dev-only diagnostics.
+    files: ["scripts/**", "e2e/**", "migrations/**", "lib/devInfo.ts"],
     rules: { "no-console": "off" },
   },
   {

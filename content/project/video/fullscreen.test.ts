@@ -6,8 +6,8 @@ afterEach(() => vi.unstubAllGlobals());
 
 describe("fullscreenElement", () => {
   it("prefers the standard element, falls back to Safari's, and is null otherwise", () => {
-    const standard = {} as Element;
-    const prefixed = {} as Element;
+    const standard = {};
+    const prefixed = {};
     vi.stubGlobal("document", { fullscreenElement: standard, webkitFullscreenElement: prefixed });
     expect(fullscreenElement()).toBe(standard);
     vi.stubGlobal("document", { fullscreenElement: null, webkitFullscreenElement: prefixed });

@@ -78,12 +78,12 @@ export function ArtDirectedImage({
   const wide = props(landscape);
   const tall = props(portrait);
   // The blur and the crop are CSS variables so the same media query that picks the file picks them too.
-  const vars = {
+  const vars: CSSProperties = {
     "--still-position": landscape.position ?? "50% 50%",
     "--still-position-portrait": portrait.position ?? "50% 50%",
     "--still-blur": blur(landscape),
     "--still-blur-portrait": blur(portrait),
-  } as CSSProperties;
+  };
 
   return (
     <picture>

@@ -1,6 +1,8 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import { type RefObject, useCallback, useEffect, useRef } from "react";
 
+import { devInfo } from "@/lib/devInfo";
+
 import {
   FLOOR_SECONDS,
   higherTier,
@@ -14,6 +16,9 @@ import {
   TIER_SETTINGS,
 } from "../logoTier";
 import { holdForGpu, type Pacing, releasePacing } from "./gpuPacing";
+
+/** The start-up probe's progress: the tier it is aiming for and the frame times it has measured so far. */
+type Probe = { phase: "warmup" | "measure" | "done"; frames: number; ms: number[]; want: LogoTier; measured: boolean };
 
 /** A gap this long between frames is the demand loop waking from idle, not a slow frame. */
 const IDLE_GAP_SECONDS = 0.5;
@@ -49,15 +54,7 @@ export function useLogoQuality({
   const invalidate = useThree((s) => s.invalidate);
   const setDpr = useThree((s) => s.setDpr);
   const gl = useThree((s) => s.gl);
-  const probe = useRef({
-    // Without the assertion the ref would be typed `string`.
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-    phase: "warmup" as "warmup" | "measure" | "done",
-    frames: 0,
-    ms: [] as number[],
-    want: startTier,
-    measured: false,
-  });
+  const probe = useRef<Probe>({ phase: "warmup", frames: 0, ms: [], want: startTier, measured: false });
   const run = useRef({ slow: 0, fast: 0, crawl: 0, cooldown: 0, gaveUp: false });
   const pacing = useRef<Pacing>({ fences: [], waiting: null, timer: 0 });
 
@@ -73,9 +70,7 @@ export function useLogoQuality({
   useEffect(() => releaseFences, [releaseFences]);
 
   const log = (message: string) => {
-    // Dev-only tier diagnostics.
-    // eslint-disable-next-line no-console
-    if (process.env.NODE_ENV !== "production") console.info(`[logo tier] ${message}`);
+    devInfo(`[logo tier] ${message}`);
   };
   const step = (next: LogoTier) => {
     probe.current.want = next;

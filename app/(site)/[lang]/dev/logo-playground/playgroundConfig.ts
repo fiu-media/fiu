@@ -1,5 +1,4 @@
 import {
-  interactionParamsSchema,
   LOGO_PARAM_PRESETS,
   type LogoGlassParams,
   type LogoInteractionParams,
@@ -7,6 +6,7 @@ import {
   type LogoMaterialParams,
   type LogoMeshMode,
   type LogoRimLook,
+  materialParamsSchema,
 } from "@/features/logo";
 import { omitUndefined } from "@/lib/omitUndefined";
 
@@ -22,8 +22,6 @@ import {
   type LogoPlaygroundConfig,
   materialImportSchema,
 } from "./playgroundSchemas";
-
-const INTERACTION_KEYS = interactionParamsSchema.keyof().options;
 
 function cloneLights(lights: LogoLightsConfig): LogoLightsConfig {
   return {
@@ -59,21 +57,12 @@ function fence(lang: string, value: unknown): string {
   return [`\`\`\`${lang}`, JSON.stringify(value, null, 2), "```"].join("\n");
 }
 
-function omitKeys<T extends Record<string, unknown>, K extends keyof T>(params: T, keys: readonly K[]): Omit<T, K> {
-  const next = { ...params };
-  // The keys are typed as keys of `params`, so each one exists to delete.
-  // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-  for (const key of keys) delete next[key];
-  return next;
-}
-
-/** Material / glow / extrude — everything except lights and interaction. */
+/**
+ * Material / glow / extrude — everything except lights and interaction. The material schema keeps only its own keys (zod
+ * drops the rest) and parsing copies nested objects, so the result shares nothing with `params`.
+ */
 function pickMaterialParams(params: LogoGlassParams): LogoMaterialParams {
-  const material = omitKeys(params, ["lights", ...INTERACTION_KEYS]);
-  return {
-    ...material,
-    extrude: material.extrude ? { ...material.extrude } : null,
-  };
+  return materialParamsSchema.parse(params);
 }
 
 export function pickInteractionParams(params: LogoGlassParams): LogoInteractionParams {

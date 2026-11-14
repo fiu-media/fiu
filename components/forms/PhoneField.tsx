@@ -2,7 +2,7 @@
 
 import { BaseControl, useControl } from "@conform-to/react/future";
 import * as flags from "country-flag-icons/react/3x2";
-import type { CountryCode } from "libphonenumber-js/min";
+import { type CountryCode, isSupportedCountry } from "libphonenumber-js/min";
 import { type ChangeEvent, useLayoutEffect, useRef, useState } from "react";
 
 import { cn } from "@/lib/cn";
@@ -14,7 +14,8 @@ import { chevron, controlClass, FieldFrame, type FieldProps, placeholderClass } 
 /** What an example looks like, as the number input shows it (no trunk 0, no dialling code). */
 const SAMPLE: Partial<Record<CountryCode, string>> = { IE: "(83) 123 4567" };
 
-const FLAGS = flags as unknown as Record<string, React.ComponentType<React.SVGAttributes<SVGElement>> | undefined>;
+/** Every flag by country code. A lookup rather than `flags[code]`, since the package has no flag for every code. */
+const FLAGS = new Map(Object.entries(flags));
 /**
  * A phone number: a country select (flag; name and dialling code in the list) and the number itself. The
  * country's dialling code sits in front of the number as plain text, so the number is written without it, and
@@ -64,7 +65,7 @@ export function PhoneField({
     change(next.e164);
   }
 
-  const Flag = FLAGS[country];
+  const Flag = FLAGS.get(country);
   const option = ({ code, name }: CountryOption) => (
     <option key={code} value={code}>
       {name} (+{callingCode(code)})
@@ -85,7 +86,10 @@ export function PhoneField({
           <select
             aria-label={countryLabel}
             value={country}
-            onChange={(event) => update(text, event.target.value as CountryCode)}
+            onChange={(event) => {
+              // The options are all supported countries, so this only guards against a tampered select.
+              if (isSupportedCountry(event.target.value)) update(text, event.target.value);
+            }}
             onBlur={() => blur()}
             className="absolute inset-0 size-full cursor-pointer opacity-0"
           >

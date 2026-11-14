@@ -12,17 +12,16 @@ import { useVimeoPlayer } from "./useVimeoPlayer";
  * It fades in once the player reports playback rather than on the iframe's load, which fires before the
  * first frame and would show black.
  */
-export function PreviewLoop({ src }: { src: string }) {
+export function PreviewLoop({ src, title }: { src: string; title: string }) {
   const [frame, setFrame] = useState<HTMLIFrameElement | null>(null);
   const [ready, setReady] = useState(false);
   useVimeoPlayer(frame, { play: () => setReady(true), bufferend: () => setReady(true) });
   return (
-    // Decorative: aria-hidden and out of the tab order, so an accessible name would never be announced.
-    // eslint-disable-next-line jsx-a11y/iframe-has-title
+    // Decorative: aria-hidden and out of the tab order, so the title is never announced; it names the frame in dev tools.
     <iframe
       ref={setFrame}
       src={src}
-      title=""
+      title={title}
       aria-hidden
       tabIndex={-1}
       loading="lazy"

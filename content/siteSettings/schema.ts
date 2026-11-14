@@ -98,7 +98,8 @@ export const siteSettings = defineType({
       group: "contact",
       description:
         "Shown on the site and linked with mailto:. Either form of an internationalised domain (fiú.ie or xn--fi-ska.ie) is fine; the site shows it in Unicode.",
-      validation: (rule) => rule.email(),
+      // Required: it is where contact form notifications go (and quote requests, without a quote recipient).
+      validation: (rule) => rule.required().email(),
     }),
     defineField({
       name: "quoteRecipient",

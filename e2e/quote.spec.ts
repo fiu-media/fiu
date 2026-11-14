@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { z } from "zod";
 
 import { en } from "../lib/i18n/dictionaries/en";
 import { format } from "../lib/i18n/format";
@@ -123,12 +124,11 @@ test.describe("quote request", () => {
 
   test("an error only the server knows about comes back in the summary", async ({ page }) => {
     // An item that has since been unpublished: the browser can't tell, the server can.
-    await page.evaluate(() => {
-      const key = "fiu:quote-basket";
-      const stored = JSON.parse(localStorage.getItem(key) ?? "{}") as { state: { lines: unknown[] } };
-      stored.state.lines.push({ itemId: "rental-no-longer-exists", qty: 1 });
-      localStorage.setItem(key, JSON.stringify(stored));
-    });
+    const key = "fiu:quote-basket";
+    const basket = z.object({ state: z.object({ lines: z.array(z.unknown()) }).loose() }).loose();
+    const stored = basket.parse(JSON.parse((await page.evaluate((k) => localStorage.getItem(k), key)) ?? "{}"));
+    stored.state.lines.push({ itemId: "rental-no-longer-exists", qty: 1 });
+    await page.evaluate(([k, value]) => localStorage.setItem(k, value), [key, JSON.stringify(stored)] as const);
     await page.reload();
 
     await page.getByLabel(quote.startDate).fill(isoDateFromNow(14));

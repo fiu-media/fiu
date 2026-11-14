@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
+import { z } from "zod";
 
 import { at } from "@/lib/at";
 
@@ -7,45 +8,55 @@ import type { LogoMeshMode } from "./config/schemas";
 export type { LogoMeshMode };
 
 /** Fixed-length tuples so `[0]`, `[1]` reads stay typed under noUncheckedIndexedAccess. */
-type Point = [x: number, y: number];
-type Sample = [x: number, y: number, radius: number];
+const point = z.tuple([z.number(), z.number()]);
+/** [x, y, radius] */
+const sample = z.tuple([z.number(), z.number(), z.number()]);
+type Point = z.infer<typeof point>;
+type Sample = z.infer<typeof sample>;
 
-type LogoStroke = {
-  /** Centreline samples: [x, y, radius] in logo-world units. */
-  points: Sample[];
-  closed?: boolean;
-  /** End treatments — `point` already tapers to ~0 in the radius data. */
-  caps?: ("flat" | "point")[];
-  /** Per-end angle of each flat cut in the logo plane (y-up), measured from the artwork. */
-  cuts?: (number | null)[];
-};
-
-export type LogoPaths = {
-  strokes: LogoStroke[];
+/**
+ * `public/brand/fiu-logo-paths.json` (written by scripts/logo/06_paths_for_three.py). JSON imports type tuples as plain
+ * arrays, so the file is parsed with this schema where it is read, and the type comes from the schema.
+ */
+export const logoPathsSchema = z.object({
+  strokes: z.array(
+    z.object({
+      /** Centreline samples: [x, y, radius] in logo-world units. */
+      points: z.array(sample),
+      closed: z.boolean().optional(),
+      /** End treatments — `point` already tapers to ~0 in the radius data. */
+      caps: z.array(z.enum(["flat", "point"])).optional(),
+      /** Per-end angle of each flat cut in the logo plane (y-up), measured from the artwork. */
+      cuts: z.array(z.number().nullable()).optional(),
+    }),
+  ),
   /** Flat silhouette extrude (compare mode). */
-  extrude?: {
-    depth: number;
-    bevelThickness: number;
-    bevelSize: number;
-    bevelSegments: number;
-  };
+  extrude: z
+    .object({ depth: z.number(), bevelThickness: z.number(), bevelSize: z.number(), bevelSegments: z.number() })
+    .optional(),
   /**
    * Silhouettes are pre-inset by their own `bevel` (three pushes the side walls outward by
    * bevelSize), so the extruded outline lands exactly on the white.png artwork.
    */
-  shapes?: {
-    outer: Point[];
-    holes: Point[][];
-    bevel?: number;
-    /** Needle/sharp tips: [x, y, influence radius] — depth is tapered inside it. */
-    tips?: Sample[];
-    /** True (un-inset) artwork outline rings, used to measure distance to the edge near tips. */
-    outline?: Point[][];
-  }[];
-  diamonds: { corners: Point[]; depth: number; bevel: number }[];
+  shapes: z
+    .array(
+      z.object({
+        outer: z.array(point),
+        holes: z.array(z.array(point)),
+        bevel: z.number().optional(),
+        /** Needle/sharp tips: [x, y, influence radius] — depth is tapered inside it. */
+        tips: z.array(sample).optional(),
+        /** True (un-inset) artwork outline rings, used to measure distance to the edge near tips. */
+        outline: z.array(z.array(point)).optional(),
+      }),
+    )
+    .optional(),
+  diamonds: z.array(z.object({ corners: z.array(point), depth: z.number(), bevel: z.number() })),
   /** Sheared f-tip cut: edge angle in logo plane (y-up). Flat tube caps use this. */
-  tipCut?: { angle: number; side: number };
-};
+  tipCut: z.object({ angle: z.number(), side: z.number() }).optional(),
+});
+export type LogoPaths = z.infer<typeof logoPathsSchema>;
+type LogoStroke = LogoPaths["strokes"][number];
 
 const RADIAL = 12;
 const MIN_R = 0.002;
@@ -367,7 +378,9 @@ function distToSegment(px: number, py: number, ax: number, ay: number, bx: numbe
  * the top rounds over the needle the same way it does along the rest of the outline.
  */
 function taperTips(g: THREE.BufferGeometry, tips: Sample[], outline: Point[][], depth: number, bevel: number) {
-  const pos = g.getAttribute("position") as THREE.BufferAttribute;
+  const pos = g.getAttribute("position");
+  // An extruded geometry's positions are a plain attribute; an interleaved one would need a different writer.
+  if (!(pos instanceof THREE.BufferAttribute)) throw new Error("Expected a plain position attribute");
   const edges = tips.map(([tx, ty, r]) => {
     const near: [ax: number, ay: number, bx: number, by: number][] = [];
     for (const ring of outline) {
@@ -440,6 +453,11 @@ function buildExtrudedBody(paths: LogoPaths): THREE.BufferGeometry[] {
  * - `tubes` — pure variable-radius centreline tubes (liquid-glass taper).
  * - `extrude` — constant-depth silhouette extrude (compare mode).
  */
+/** `mergeGeometries`, typed as it behaves: it returns null when the parts can't be merged, though its types say it never does. */
+function mergeOrNull(parts: THREE.BufferGeometry[]): THREE.BufferGeometry | null {
+  return mergeGeometries(parts, false);
+}
+
 export function buildLogoGeometry(paths: LogoPaths, mode: LogoMeshMode = "extrude"): THREE.BufferGeometry {
   const tipCutAngle = paths.tipCut?.angle;
   const parts: THREE.BufferGeometry[] =
@@ -447,10 +465,8 @@ export function buildLogoGeometry(paths: LogoPaths, mode: LogoMeshMode = "extrud
 
   parts.push(...buildDiamonds(paths.diamonds));
 
-  const merged = mergeGeometries(parts, false);
+  const merged = mergeOrNull(parts);
   for (const g of parts) g.dispose();
-  // `mergeGeometries` returns null when the parts can't be merged, though its types say it never does.
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   if (!merged) throw new Error("Failed to merge logo geometries");
   merged.computeVertexNormals();
   merged.computeBoundingBox();

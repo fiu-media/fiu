@@ -23,20 +23,19 @@ export type QueriedImage = {
   dimensions?: SanityImageDimensions | null;
 };
 
-/** The share of the image's width and height the editor's crop leaves (1 and 1 without a crop). */
-function keptByCrop(crop: SanityImageCrop | null) {
-  // The generated types say every crop field is present; these defaults cover data that omits one.
-  /* eslint-disable @typescript-eslint/no-unnecessary-condition */
+/**
+ * The share of the image's width and height the editor's crop leaves (1 and 1 without a crop). The generated types say
+ * every crop field is present, but stored data can omit one, so the parameter is typed `Partial` and each gets a default.
+ */
+function keptByCrop(crop: Partial<SanityImageCrop> | null) {
   return {
     width: crop ? 1 - (crop.left ?? 0) - (crop.right ?? 0) : 1,
     height: crop ? 1 - (crop.top ?? 0) - (crop.bottom ?? 0) : 1,
   };
-  /* eslint-enable @typescript-eslint/no-unnecessary-condition */
 }
 
-/** The hotspot as a CSS `object-position`, or undefined when the editor set none. */
-function hotspotPosition(hotspot: SanityImageHotspot | null) {
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- as above
+/** The hotspot as a CSS `object-position`, or undefined when the editor set none. `Partial` for the same reason as above. */
+function hotspotPosition(hotspot: Partial<SanityImageHotspot> | null) {
   return hotspot ? `${(hotspot.x ?? 0.5) * 100}% ${(hotspot.y ?? 0.5) * 100}%` : undefined;
 }
 

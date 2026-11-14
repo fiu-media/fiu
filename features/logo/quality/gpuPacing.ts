@@ -3,11 +3,17 @@ import type { WebGLRenderer } from "three";
 /** The GPU fences the probe is waiting on, and the timer polling them. */
 export type Pacing = { fences: WebGLSync[]; waiting: WebGLSync | null; timer: number };
 
+/** The renderer's context, if it is WebGL 2 (three's renderer is WebGL 2 only, but its types allow WebGL 1). */
+const webgl2 = (gl: WebGLRenderer) => {
+  const ctx = gl.getContext();
+  return ctx instanceof WebGL2RenderingContext ? ctx : null;
+};
+
 /** Drops every fence still held, and stops polling. */
 export function releasePacing(gl: WebGLRenderer, q: Pacing) {
-  const ctx = gl.getContext() as WebGL2RenderingContext;
+  const ctx = webgl2(gl);
   window.clearTimeout(q.timer);
-  for (const sync of q.waiting ? [q.waiting, ...q.fences] : q.fences) ctx.deleteSync(sync);
+  if (ctx) for (const sync of q.waiting ? [q.waiting, ...q.fences] : q.fences) ctx.deleteSync(sync);
   q.fences = [];
   q.waiting = null;
 }
@@ -19,10 +25,11 @@ export function releasePacing(gl: WebGLRenderer, q: Pacing) {
  * probe reads them as fast, and the stall lands later, on screen.
  */
 export function holdForGpu(gl: WebGLRenderer, q: Pacing, invalidate: () => void) {
-  const ctx = gl.getContext() as WebGL2RenderingContext;
-  // Placed before this frame renders, so it covers everything up to the previous frame.
-  const sync = ctx.fenceSync(ctx.SYNC_GPU_COMMANDS_COMPLETE, 0);
-  if (!sync) {
+  const ctx = webgl2(gl);
+  // Placed before this frame renders, so it covers everything up to the previous frame. Fences need WebGL 2; without
+  // it there is nothing to wait on.
+  const sync = ctx ? ctx.fenceSync(ctx.SYNC_GPU_COMMANDS_COMPLETE, 0) : null;
+  if (!ctx || !sync) {
     invalidate();
     return;
   }
