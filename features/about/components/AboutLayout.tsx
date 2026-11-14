@@ -1,4 +1,3 @@
-import { ArrowDown } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { SheetFade } from "@/components/ui/HeroFade";
@@ -7,10 +6,14 @@ import { type Team, TeamFigure } from "@/content/siteSettings";
 import { cn } from "@/lib/cn";
 import type { SizedImage } from "@/sanity/lib/image";
 
+import { ScrollDownButton } from "./ScrollDownButton";
+
 export type AboutLayoutProps = {
   still: SizedImage;
   slogan: string | null;
   gloss: string | null;
+  /** Accessible name of the arrow that scrolls past the first screen. */
+  scrollLabel: string;
   manifesto: ReactNode;
   contacts: ReactNode;
   /** The team photo. Only Option A shows it (beside the manifesto); the sign-off options B to F ignore it. */
@@ -38,8 +41,9 @@ export function AboutHeroSection({
   still,
   slogan,
   gloss,
+  scrollLabel,
   attributes,
-}: Pick<AboutLayoutProps, "still" | "slogan" | "gloss" | "attributes">) {
+}: Pick<AboutLayoutProps, "still" | "slogan" | "gloss" | "scrollLabel" | "attributes">) {
   return (
     <>
       <div className="sticky top-0 -z-10 h-dvh">
@@ -54,7 +58,7 @@ export function AboutHeroSection({
           {slogan}
         </h1>
         {gloss && <p className="mt-4 max-w-xl text-base text-on-image/80 md:text-lg">{gloss}</p>}
-        <ArrowDown aria-hidden className="mt-8 size-5 text-on-image/60" />
+        <ScrollDownButton label={scrollLabel} />
       </section>
     </>
   );
@@ -65,7 +69,7 @@ export function AboutHeroSection({
  * manifesto and contact links follow on plain dark, so no running text sits over the photo. With a team photo
  * it sits beside the manifesto (above it on phones), in the same frame Home's fold uses.
  */
-export function AboutLayoutA({ still, slogan, gloss, manifesto, contacts, team, attributes }: AboutLayoutProps) {
+export function AboutLayoutA({ still, slogan, gloss, scrollLabel, manifesto, contacts, team, attributes }: AboutLayoutProps) {
   const body = (
     <>
       {manifesto && (
@@ -78,7 +82,7 @@ export function AboutLayoutA({ still, slogan, gloss, manifesto, contacts, team, 
   );
   return (
     <main className="relative text-on-image">
-      <AboutHeroSection still={still} slogan={slogan} gloss={gloss} attributes={attributes} />
+      <AboutHeroSection still={still} slogan={slogan} gloss={gloss} scrollLabel={scrollLabel} attributes={attributes} />
 
       {/* Plain dark from here, so the surface's colours rather than the white kept for text over the photo. */}
       <section className="relative bg-ink px-5 py-24 text-fg md:px-10 md:py-36">

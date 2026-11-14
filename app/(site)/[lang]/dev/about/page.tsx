@@ -80,6 +80,7 @@ async function Options({
     still,
     slogan: settings.slogan ?? null,
     gloss: settings.sloganGloss ?? null,
+    scrollLabel: dict.common.scrollDown,
     manifesto: sampleManifesto,
     // Sample links until the editors have set the real ones.
     contacts: (

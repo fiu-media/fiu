@@ -26,7 +26,13 @@ function Manifesto({
 function Shell({ props, children }: { props: AboutTeamProps; children: ReactNode }) {
   return (
     <main className="relative text-white">
-      <AboutHeroSection still={props.still} slogan={props.slogan} gloss={props.gloss} attributes={props.attributes} />
+      <AboutHeroSection
+        still={props.still}
+        slogan={props.slogan}
+        gloss={props.gloss}
+        scrollLabel={props.scrollLabel}
+        attributes={props.attributes}
+      />
       {children}
     </main>
   );

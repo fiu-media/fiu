@@ -68,6 +68,7 @@ async function Options({
     still,
     slogan: settings.slogan ?? null,
     gloss: settings.sloganGloss ?? null,
+    scrollLabel: dict.common.scrollDown,
     manifesto: settings.manifesto?.length ? <PortableText value={settings.manifesto} /> : sampleManifesto,
     contacts: (
       <ContactLinks
