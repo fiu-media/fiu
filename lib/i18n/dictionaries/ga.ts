@@ -11,6 +11,7 @@ export const ga: Dictionary = {
   },
   common: {
     loading: "Á luchtú…",
+    scrollDown: "Scrollaigh síos",
   },
   nav: {
     label: "Príomhroghchlár",

@@ -6,6 +6,7 @@ export const en = {
   },
   common: {
     loading: "Loading…",
+    scrollDown: "Scroll down",
   },
   nav: {
     label: "Primary",
