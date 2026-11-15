@@ -15,6 +15,7 @@ vi.mock("@/env", () => ({ env: mocks.env }));
 vi.mock("@/lib/auth", () => ({
   hasStaffSession: (headers: Headers) => Promise.resolve((headers.get("cookie") ?? "").includes("fiu-staff=valid")),
 }));
+vi.mock("@/lib/siteUrl", () => ({ siteUrl: "https://fiu.test" }));
 vi.mock("@/content/launchGate/read", () => ({ getLaunchAt: () => Promise.resolve(mocks.launchAt) }));
 
 const run = (path: string, init?: { headers?: Record<string, string>; method?: string }) =>
@@ -122,8 +123,28 @@ describe("proxy", () => {
       ] as const) {
         const response = await proxy(new NextRequest(`https://fiu.test${path}`));
         expect(response.headers.get("x-middleware-rewrite")).toBe(`https://fiu.test${splash}`);
-        expect(response.headers.get("x-robots-tag")).toBe("noindex, nofollow");
         expect(response.headers.get("cache-control")).toBe("no-store");
+      }
+    });
+
+    it("lets search engines index the splash at the two home URLs only", async () => {
+      gateOn(future);
+      for (const path of ["/", "/ga"]) {
+        expect((await run(path)).headers.get("x-robots-tag")).toBeNull();
+        expect((await run(path, choosing("ga"))).headers.get("x-robots-tag")).toBeNull();
+      }
+      for (const path of [
+        "/about",
+        "/work/solas",
+        "/en",
+        "/en/about",
+        "/ga/about",
+        "/ga/",
+        "/launching",
+        "/en/launching",
+        "/ga/launching",
+      ]) {
+        expect((await run(path)).headers.get("x-robots-tag"), path).toBe("noindex, nofollow");
       }
     });
 
@@ -160,11 +181,18 @@ describe("proxy", () => {
       expect(response.headers.get("x-middleware-rewrite")).toBe("https://fiu.test/en/launching");
     });
 
-    it("has no sitemap before launch, except for staff, and serves it untouched afterwards", async () => {
+    it("lists only the two splash URLs in the sitemap before launch, except for staff, and serves it untouched afterwards", async () => {
       gateOn(future);
       const closed = await run("/sitemap.xml");
-      expect(closed.status).toBe(404);
+      expect(closed.status).toBe(200);
+      expect(closed.headers.get("content-type")).toBe("application/xml");
+      expect(closed.headers.get("cache-control")).toBe("no-store");
       expect(closed.headers.get("x-middleware-rewrite")).toBeNull();
+      const xml = await closed.text();
+      expect([...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map(([, url]) => url)).toEqual([
+        "https://fiu.test",
+        "https://fiu.test/ga",
+      ]);
       expect((await run("/sitemap.xml", withSession())).headers.get("x-middleware-next")).toBe("1");
 
       gateOn(past);
