@@ -25,8 +25,8 @@ const credentials = { clientId: env.GOOGLE_CLIENT_ID ?? "", clientSecret: env.GO
 const googleProfile = google({ ...credentials, hd: "*" });
 
 /**
- * Staff sign-in for the pre-launch gate and `/dev`. There is no database: the session is an encrypted cookie, so
- * nothing is stored and signing out only clears it.
+ * Staff sign-in for the pre-launch gate, `/dev` and `/dashboard`. There is no database: the session is an encrypted
+ * cookie, so nothing is stored and signing out only clears it.
  */
 export const auth = betterAuth({
   baseURL,
@@ -47,12 +47,17 @@ export const auth = betterAuth({
   },
 });
 
+/** The signed-in staff session, or `null`. Never throws: anything unreadable is "not signed in". */
+export async function getStaffSession(headers: Headers) {
+  if (!authConfigured) return null;
+  try {
+    return await auth.api.getSession({ headers });
+  } catch {
+    return null;
+  }
+}
+
 /** Whether the request carries a signed-in staff session. Never throws: anything unreadable is "not signed in". */
 export async function hasStaffSession(headers: Headers): Promise<boolean> {
-  if (!authConfigured) return false;
-  try {
-    return (await auth.api.getSession({ headers })) !== null;
-  } catch {
-    return false;
-  }
+  return (await getStaffSession(headers)) !== null;
 }

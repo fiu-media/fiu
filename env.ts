@@ -24,7 +24,7 @@ export const env = createEnv({
     RESEND_EMAIL_DOMAIN: requiredInProduction,
     // The Resend segment contact-form submitters are added to ("General"). Without it they're added to no segment.
     RESEND_SEGMENT_ID: z.string().min(1).optional(),
-    // Staff sign-in for the pre-launch gate and /dev: Google OAuth (an Internal client on our Workspace) and the key that signs sessions.
+    // Staff sign-in for the pre-launch gate, /dev and /dashboard: Google OAuth (an Internal client on our Workspace) and the key that signs sessions.
     AUTH_SECRET: process.env.VERCEL_ENV === "production" ? z.string().min(32) : z.string().min(32).optional(),
     GOOGLE_CLIENT_ID: requiredInProduction,
     GOOGLE_CLIENT_SECRET: requiredInProduction,

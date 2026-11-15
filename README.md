@@ -99,7 +99,7 @@ Until the date in Studio > Launch (`launchGate.launchAt`), production shows ever
 
 - **Staff** sign in at `/login` with a Google account in the Workspace domain (`AUTH_ALLOWED_DOMAIN`, default `xn--fi-ska.ie`, i.e. fiú.ie) and see the real site. The check is on the server: the account's `hd` and email must both match and Google must have verified the email (`lib/gate/google.ts`, run from `lib/auth.ts`). Sign-in is [Better Auth](https://better-auth.com) in stateless mode: the session is an encrypted cookie lasting a week, and there is no database.
 - **Editors** previewing from the Studio get through while draft mode is on.
-- **`/dev`** (and `/ga/dev`) always needs a staff session, before and after launch; draft mode doesn't unlock it. After launch, visitors without one are sent to Google and back.
+- **`/dev`** and **`/dashboard`** (and their `/ga/...` forms) always need a staff session, before and after launch; draft mode doesn't unlock them. After launch, visitors without one are sent to Google and back.
 - The gate is on in production only. Previews are behind Vercel Authentication and Google can't register one redirect URI per preview URL. Set `SITE_GATE=on` to try it locally (with the Google keys and `http://localhost:3000/api/auth/callback/google` registered on the OAuth client), or `off` to switch it off.
 - Setting up: create a Google OAuth client of type Internal, register `https://xn--fi-ska.ie/api/auth/callback/google` (the production host) and the localhost callback, then set `AUTH_SECRET` (`openssl rand -base64 32`), `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in Vercel.
 

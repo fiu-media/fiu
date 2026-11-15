@@ -3,12 +3,25 @@ import { locales } from "@/lib/i18n/config";
 /** What the proxy does with a request: let it through, show the splash, or send the visitor to sign in. */
 export type GateDecision = "open" | "splash" | "login";
 
-/** `/dev` and anything under it, with or without a language prefix. `/devices` and `/about/dev` are ordinary pages. */
-export function isDevPath(pathname: string): boolean {
+/** First path segment after an optional language prefix (`/ga/dashboard` → `dashboard`). */
+function pathSection(pathname: string): string {
   const segments = pathname.split("/");
   const first = segments[1] ?? "";
-  const section = locales.some((locale) => locale === first) ? segments[2] : first;
-  return section === "dev";
+  return locales.some((locale) => locale === first) ? (segments[2] ?? "") : first;
+}
+
+/**
+ * `/dev` and `/dashboard` (and anything under them), with or without a language prefix. Sibling paths like
+ * `/devices` stay ordinary pages.
+ */
+export function isStaffOnlyPath(pathname: string): boolean {
+  const section = pathSection(pathname);
+  return section === "dev" || section === "dashboard";
+}
+
+/** Whether the path is the `/dev` playground (not `/dashboard`). */
+export function isDevPath(pathname: string): boolean {
+  return pathSection(pathname) === "dev";
 }
 
 /** The gate is on in production unless `SITE_GATE` says otherwise, and off elsewhere unless it says `on`. */
@@ -30,13 +43,13 @@ type Request = {
 };
 
 /**
- * `/dev` always needs a staff session, launched or not, and draft mode doesn't count. Everything else is open once
- * `launchAt` has passed; before that, to staff and to editors previewing from the Studio.
+ * `/dev` and `/dashboard` always need a staff session, launched or not, and draft mode doesn't count. Everything else
+ * is open once `launchAt` has passed; before that, to staff and to editors previewing from the Studio.
  */
 export function decideGate({ enabled, launchAt, now, hasSession, hasDraftCookie, pathname }: Request): GateDecision {
   if (!enabled) return "open";
   const launched = launchAt !== null && now >= launchAt;
-  if (isDevPath(pathname)) {
+  if (isStaffOnlyPath(pathname)) {
     if (hasSession) return "open";
     return launched ? "login" : "splash";
   }

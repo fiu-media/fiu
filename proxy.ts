@@ -28,8 +28,8 @@ function wantedLocale(request: NextRequest): Locale {
 const DRAFT_MODE_COOKIE = "__prerender_bypass";
 
 /**
- * Before launch the public sees only the splash, and `/dev` is for staff at all times. Returns the response that
- * stands in for the page, or `null` to carry on to the normal routing.
+ * Before launch the public sees only the splash, and `/dev` and `/dashboard` are for staff at all times. Returns the
+ * response that stands in for the page, or `null` to carry on to the normal routing.
  */
 async function gate(request: NextRequest): Promise<NextResponse | null> {
   const enabled = gateEnabled(env.SITE_GATE, env.VERCEL_ENV);
