@@ -11,7 +11,7 @@ import { SchemeSwitcher } from "../specimen/SchemeSwitcher";
 import { NavPreview, type OptionKey } from "./NavConcepts";
 
 // Sign-off page for the site navigation: five concepts over placeholder content. Unlisted and kept
-// out of search engines, like /dev/grids and /dev/specimen.
+// out of search engines, like /concepts/grids and /concepts/specimen.
 export const metadata: Metadata = {
   title: "Navbar options",
   robots: { index: false, follow: false },
@@ -47,7 +47,7 @@ const concepts: Record<OptionKey, { title: string; note: string }> = {
   },
 };
 
-export default function NavbarPage({ params, searchParams }: PageProps<"/[lang]/dev/navbar">) {
+export default function NavbarPage({ params, searchParams }: PageProps<"/[lang]/concepts/navbar">) {
   // searchParams is dynamic, so the page streams in behind a boundary.
   return (
     <Suspense>
@@ -82,7 +82,7 @@ async function Navbar({
       surface: next.surface ?? surface,
       width: next.width ?? width,
     });
-    return `${localizedPath(lang, "/dev/navbar")}?${search}`;
+    return `${localizedPath(lang, "/concepts/navbar")}?${search}`;
   };
   const concept = concepts[option];
 

@@ -160,17 +160,17 @@ describe("proxy", () => {
       expect(response.headers.get("x-middleware-rewrite")).toBe("https://fiu.test/en/launching");
     });
 
-    it("keeps /dev and /dashboard for signed-in staff after launch, sending everyone else to sign in and back", async () => {
+    it("keeps /concepts and /dashboard for signed-in staff after launch, sending everyone else to sign in and back", async () => {
       gateOn(past);
-      for (const path of ["/dev/specimen", "/ga/dev", "/en/dev", "/dashboard", "/ga/dashboard", "/en/dashboard"]) {
+      for (const path of ["/concepts/specimen", "/ga/concepts", "/en/concepts", "/dashboard", "/ga/dashboard", "/en/dashboard"]) {
         const response = await run(`${path}?x=1`, { headers: { cookie: "__prerender_bypass=abc" } });
         expect(response.status).toBe(307);
         expect(response.headers.get("location")).toBe(
           `https://fiu.test/api/auth/google?next=${encodeURIComponent(`${path}?x=1`)}`,
         );
       }
-      expect((await run("/dev/specimen", withSession())).headers.get("x-middleware-rewrite")).toBe(
-        "https://fiu.test/en/dev/specimen",
+      expect((await run("/concepts/specimen", withSession())).headers.get("x-middleware-rewrite")).toBe(
+        "https://fiu.test/en/concepts/specimen",
       );
       expect((await run("/dashboard", withSession())).headers.get("x-middleware-rewrite")).toBe("https://fiu.test/en/dashboard");
       expect((await run("/devices")).headers.get("x-middleware-rewrite")).toBe("https://fiu.test/en/devices");

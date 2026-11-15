@@ -37,7 +37,7 @@ const projects = [
   { title: "Last Orders", meta: "Commercial · 2025", credit: "Client: Sample Brand" },
 ];
 
-export default async function SpecimenPage({ params }: PageProps<"/[lang]/dev/specimen">) {
+export default async function SpecimenPage({ params }: PageProps<"/[lang]/concepts/specimen">) {
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
   const dict = await getDictionary(lang);

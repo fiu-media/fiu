@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { decideGate, gateEnabled, isDevPath, isStaffOnlyPath } from "./decide";
+import { decideGate, gateEnabled, isConceptsPath, isStaffOnlyPath } from "./decide";
 
 const past = new Date("2020-01-01T00:00:00Z");
 const future = new Date("2999-01-01T00:00:00Z");
@@ -20,7 +20,7 @@ const decide = (overrides: Partial<Parameters<typeof decideGate>[0]> = {}) =>
 describe("decideGate", () => {
   it("does nothing when the gate is off", () => {
     expect(decide({ enabled: false })).toBe("open");
-    expect(decide({ enabled: false, pathname: "/dev" })).toBe("open");
+    expect(decide({ enabled: false, pathname: "/concepts" })).toBe("open");
     expect(decide({ enabled: false, pathname: "/dashboard" })).toBe("open");
   });
 
@@ -40,7 +40,7 @@ describe("decideGate", () => {
     expect(decide({ hasDraftCookie: true })).toBe("open");
   });
 
-  describe.each(["/dev", "/dashboard"])("%s", (root) => {
+  describe.each(["/concepts", "/dashboard"])("%s", (root) => {
     it("needs a session even after launch, and draft mode doesn't count", () => {
       expect(decide({ launchAt: past, pathname: root })).toBe("login");
       expect(decide({ launchAt: past, pathname: `/ga${root}`, hasDraftCookie: true })).toBe("login");
@@ -57,12 +57,12 @@ describe("decideGate", () => {
 
 describe("isStaffOnlyPath", () => {
   it.each([
-    "/dev",
-    "/dev/",
-    "/dev/specimen",
-    "/en/dev",
-    "/ga/dev",
-    "/ga/dev/specimen",
+    "/concepts",
+    "/concepts/",
+    "/concepts/specimen",
+    "/en/concepts",
+    "/ga/concepts",
+    "/ga/concepts/specimen",
     "/dashboard",
     "/dashboard/",
     "/en/dashboard",
@@ -71,21 +71,31 @@ describe("isStaffOnlyPath", () => {
     expect(isStaffOnlyPath(path)).toBe(true);
   });
 
-  it.each(["/", "/devices", "/developer", "/about/dev", "/ga", "/ga/devices", "/fr/dev", "/work/dev/x", "/dashboards"])(
-    "leaves %s public",
-    (path) => {
-      expect(isStaffOnlyPath(path)).toBe(false);
-    },
-  );
+  it.each([
+    "/",
+    "/devices",
+    "/developer",
+    "/about/concepts",
+    "/ga",
+    "/ga/devices",
+    "/fr/concepts",
+    "/work/concepts/x",
+    "/dashboards",
+  ])("leaves %s public", (path) => {
+    expect(isStaffOnlyPath(path)).toBe(false);
+  });
 });
 
-describe("isDevPath", () => {
-  it.each(["/dev", "/dev/", "/dev/specimen", "/en/dev", "/ga/dev", "/ga/dev/specimen"])("matches %s", (path) => {
-    expect(isDevPath(path)).toBe(true);
-  });
+describe("isConceptsPath", () => {
+  it.each(["/concepts", "/concepts/", "/concepts/specimen", "/en/concepts", "/ga/concepts", "/ga/concepts/specimen"])(
+    "matches %s",
+    (path) => {
+      expect(isConceptsPath(path)).toBe(true);
+    },
+  );
 
-  it.each(["/dashboard", "/ga/dashboard", "/", "/devices", "/about/dev"])("leaves %s alone", (path) => {
-    expect(isDevPath(path)).toBe(false);
+  it.each(["/dashboard", "/ga/dashboard", "/", "/devices", "/about/concepts"])("leaves %s alone", (path) => {
+    expect(isConceptsPath(path)).toBe(false);
   });
 });
 

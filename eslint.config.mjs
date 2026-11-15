@@ -90,8 +90,8 @@ const eslintConfig = defineConfig([
     },
   },
   {
-    // The /dev concept pages mock up links and buttons with `href="#"`.
-    files: ["app/**/dev/**"],
+    // The /concepts pages mock up links and buttons with `href="#"`.
+    files: ["app/**/concepts/**"],
     rules: { "jsx-a11y/anchor-is-valid": "off" },
   },
   {
@@ -275,7 +275,7 @@ const eslintConfig = defineConfig([
     // Pages, layouts and actions compose features and content modules. `loaders` is the one server-only file a page may
     // import from a feature directly: the index also feeds client components, which must not pull in the fetch code.
     files: ["app/**"],
-    ignores: ["app/**/dev/**"],
+    ignores: ["app/**/concepts/**"],
     rules: restrict({
       patterns: [
         deny(
@@ -289,12 +289,16 @@ const eslintConfig = defineConfig([
           "!@/features/*/loaders",
         ),
         deny("Import a content module through its index.ts (@/content/<type>), not its internals.", "@/content/*/**"),
-        deny("/dev is for sign-off and playgrounds; production code does not depend on it.", "@/app/**/dev/**", "**/dev/**"),
+        deny(
+          "/concepts is for sign-off and playgrounds; production code does not depend on it.",
+          "@/app/**/concepts/**",
+          "**/concepts/**",
+        ),
         noSchemaCode,
       ],
     }),
   },
-  // `app/**/dev/**` may import anything, so it has no block.
+  // `app/**/concepts/**` may import anything, so it has no block.
   {
     // Sanity is read through `fetchContent` (sanity/lib/fetch.ts), which owns perspectives, variants and the cache boundary.
     files: ["**/*.{ts,tsx,mts}"],
@@ -360,8 +364,8 @@ const eslintConfig = defineConfig([
     rules: { "max-lines": "off" },
   },
   {
-    // Tests list their cases inside one `describe`, and /dev holds throwaway playgrounds and sign-off options.
-    files: ["**/*.test.ts", "e2e/**", "app/**/dev/**"],
+    // Tests list their cases inside one `describe`, and /concepts holds throwaway playgrounds and sign-off options.
+    files: ["**/*.test.ts", "e2e/**", "app/**/concepts/**"],
     rules: { "max-lines": "off", "max-lines-per-function": "off", complexity: "off" },
   },
   {

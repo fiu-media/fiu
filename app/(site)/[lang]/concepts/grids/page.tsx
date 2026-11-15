@@ -19,7 +19,7 @@ import pond from "@/public/stills/pond.jpg";
 import supper from "@/public/stills/supper.jpg";
 
 // Sign-off page for the Our Work and Talent grids (issue #9): two options each, on placeholder
-// content. Unlisted and kept out of search engines, like /dev/specimen.
+// content. Unlisted and kept out of search engines, like /concepts/specimen.
 export const metadata: Metadata = {
   title: "Grid options",
   robots: { index: false, follow: false },
@@ -65,7 +65,7 @@ const pageLabel: Record<PageKey, string> = { work: "Our Work", talent: "Talent" 
 
 type View = { title: string; note: string; content: ReactNode };
 
-export default function GridsPage({ params, searchParams }: PageProps<"/[lang]/dev/grids">) {
+export default function GridsPage({ params, searchParams }: PageProps<"/[lang]/concepts/grids">) {
   // searchParams is dynamic, so the page streams in behind a boundary.
   return (
     <Suspense>
@@ -273,7 +273,7 @@ async function Grids({
     },
   };
 
-  const href = (p: PageKey, o: OptionKey) => `${localizedPath(lang, "/dev/grids")}?page=${p}&option=${o}`;
+  const href = (p: PageKey, o: OptionKey) => `${localizedPath(lang, "/concepts/grids")}?page=${p}&option=${o}`;
   const view = views[page][option];
 
   return (

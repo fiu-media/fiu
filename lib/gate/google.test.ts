@@ -50,7 +50,7 @@ describe("normaliseDomain", () => {
 
 describe("safeNext", () => {
   it("keeps paths on this site", () => {
-    expect(safeNext("/dev/specimen?x=1")).toBe("/dev/specimen?x=1");
+    expect(safeNext("/concepts/specimen?x=1")).toBe("/concepts/specimen?x=1");
     expect(safeNext("/")).toBe("/");
   });
 

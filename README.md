@@ -45,7 +45,7 @@ Code is grouped by product area, not by kind. The rule for where something goes:
 | `lib/`                                                      | Pure utilities, i18n, email and forms helpers; `lib/hooks/` has the client hooks.                                                                   |
 | `sanity/lib/`                                               | Shared Sanity plumbing: client, live fetching, image sizing (`image.ts`) and the GROQ fragments queries are built from (`groq.ts`).                 |
 | `sanity/schema/`, `sanity/studio/`                          | The Studio's schema index and shared fields, and its structure, languages, icon and Presentation resolver.                                          |
-| `app/(site)/[lang]/dev/_concepts/`                          | Design sign-off options that only the `/dev` pages use. They stay out of production modules.                                                        |
+| `app/(site)/[lang]/concepts/_options/`                      | Design sign-off options that only the `/concepts` pages use. They stay out of production modules.                                                   |
 
 Every content module and feature area has an `index.ts` that re-exports what other modules and `app/` import; import through it, and use relative or direct imports inside a module. A content module's index does not re-export `schema.ts`: only the Studio imports schemas, through `sanity/schema/index.ts`. Where an index import would create a cycle, or would pull a heavy module into the main bundle (the lazy `features/logo/LogoScene`), import the file directly (a dynamic `import()` like the lazy scene's isn't checked by the lint rules). A feature's `loaders.ts` stays out of its index when client components import that index (`features/rentals`); `app/` may import such a `loaders` file directly.
 
@@ -61,14 +61,14 @@ Every content module and feature area has an `index.ts` that re-exports what oth
 | `content/<type>`                                                  | `lib`, `components`, `sanity/lib`, `content/<other>` (its `index.ts`)                         | `features`, `app`, other types' internals                    |
 | `content/*/schema.ts`, `sanity/schema`, `sanity/studio`, `emails` | relative imports of `sanity/schema/fields.ts` and `lib` constants                             | the `@/` alias, `next`, `react-dom`, `server-only`, app code |
 | `features/<area>`                                                 | `lib`, `components`, `sanity/lib`, `content/<type>` and `features/<other>` (their `index.ts`) | other areas' internals, `app`                                |
-| `app` (not `/dev`)                                                | `features/*` (`index.ts` or `loaders`), `content/*` (`index.ts`), `components`, `lib`         | `sanity/lib/live`, `sanity/lib/fetch`, `app/**/dev/**`       |
-| `app/**/dev/**`                                                   | anything                                                                                      |                                                              |
+| `app` (not `/concepts`)                                           | `features/*` (`index.ts` or `loaders`), `content/*` (`index.ts`), `components`, `lib`         | `sanity/lib/live`, `sanity/lib/fetch`, `app/**/concepts/**`  |
+| `app/**/concepts/**`                                              | anything                                                                                      |                                                              |
 
 Also enforced:
 
 - **Reading content.** Pages and components never call Sanity themselves: they go through a loader, which uses `fetchContent` (`sanity/lib/fetch.ts`). `cachedSanity`, `getDynamicFetchOptions` and `sanityFetch` can't be used outside `sanity/lib` (`sanityFetch` only in `sanity/lib/live.ts`).
 - **No import cycles** (`import-x/no-cycle`) in the source folders.
-- **Size.** A file may have at most 400 lines (not counting blank lines and comments), a function 150, and a function's cyclomatic complexity may be at most 20. Tests, `e2e/` and `app/**/dev/**` are exempt from all three; the dictionaries, `features/logo/buildLogoGeometry.ts` and `features/logo/scene/shaders.ts` from the file limit.
+- **Size.** A file may have at most 400 lines (not counting blank lines and comments), a function 150, and a function's cyclomatic complexity may be at most 20. Tests, `e2e/` and `app/**/concepts/**` are exempt from all three; the dictionaries, `features/logo/buildLogoGeometry.ts` and `features/logo/scene/shaders.ts` from the file limit.
 
 The rules check the `@/` form of an import; a relative `../../features/x` between modules isn't caught, so don't write one. When a rule gets in the way of something legitimate, move the shared piece down a layer first (that is almost always the right fix). If it truly is a one-off, add a block for that file to `eslint.config.mjs` with a comment saying why. Inline `eslint-disable` comments are switched off (`noInlineConfig`), so every exception lives in the config where it can be seen.
 
@@ -99,7 +99,7 @@ Until the date in Studio > Launch (`launchGate.launchAt`), production shows ever
 
 - **Staff** sign in at `/login` with a Google account in the Workspace domain (`AUTH_ALLOWED_DOMAIN`, default `xn--fi-ska.ie`, i.e. fiú.ie) and see the real site. The check is on the server: the account's `hd` and email must both match and Google must have verified the email (`lib/gate/google.ts`, run from `lib/auth.ts`). Sign-in is [Better Auth](https://better-auth.com) in stateless mode: the session is an encrypted cookie lasting a week, and there is no database.
 - **Editors** previewing from the Studio get through while draft mode is on.
-- **`/dev`** and **`/dashboard`** (and their `/ga/...` forms) always need a staff session, before and after launch; draft mode doesn't unlock them. After launch, visitors without one are sent to Google and back.
+- **`/concepts`** and **`/dashboard`** (and their `/ga/...` forms) always need a staff session, before and after launch; draft mode doesn't unlock them. After launch, visitors without one are sent to Google and back.
 - The gate is on in production only. Previews are behind Vercel Authentication and Google can't register one redirect URI per preview URL. Set `SITE_GATE=on` to try it locally (with the Google keys and `http://localhost:3000/api/auth/callback/google` registered on the OAuth client), or `off` to switch it off.
 - Setting up: create a Google OAuth client of type Internal, register `https://xn--fi-ska.ie/api/auth/callback/google` (the production host) and the localhost callback, then set `AUTH_SECRET` (`openssl rand -base64 32`), `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in Vercel.
 

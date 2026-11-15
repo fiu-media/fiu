@@ -25,8 +25,16 @@ const nextConfig: NextConfig = {
     // simple-icons ships all ~3,400 icons from one barrel, so only the ones imported get bundled. lucide-react is covered by Next's defaults.
     optimizePackageImports: ["simple-icons"],
   },
-  // Staff sign-in is not linked from the public nav: they go to /login (or arrive from /dev or /dashboard).
-  redirects: () => Promise.resolve([{ source: "/login", destination: "/api/auth/google", permanent: false }]),
+  // Staff sign-in is not linked from the public nav: they go to /login (or arrive from /concepts or /dashboard).
+  // `/dev` was renamed to `/concepts`; keep old bookmarks working.
+  redirects: () =>
+    Promise.resolve([
+      { source: "/login", destination: "/api/auth/google", permanent: false },
+      { source: "/dev", destination: "/concepts", permanent: true },
+      { source: "/dev/:path*", destination: "/concepts/:path*", permanent: true },
+      { source: "/:lang(en|ga)/dev", destination: "/:lang/concepts", permanent: true },
+      { source: "/:lang(en|ga)/dev/:path*", destination: "/:lang/concepts/:path*", permanent: true },
+    ]),
   cacheComponents: true,
   partialPrefetching: true,
   cacheLife: {

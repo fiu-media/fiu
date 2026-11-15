@@ -12,10 +12,10 @@ import { getDictionary } from "@/lib/i18n/dictionaries";
 import { railInset } from "@/lib/rail";
 import { toSizedImage } from "@/sanity/lib/image";
 
-import { AboutLayoutB, AboutLayoutC, AboutLayoutD, AboutLayoutE, AboutLayoutF } from "../_concepts/about/AboutLayoutOptions";
+import { AboutLayoutB, AboutLayoutC, AboutLayoutD, AboutLayoutE, AboutLayoutF } from "../_options/about/AboutLayoutOptions";
 
 // Sign-off page for the About layout (issue #55): six options on the real still, slogan and gloss.
-// The manifesto and contact links are sample copy because the real ones aren't written yet. Unlisted, like /dev/grids.
+// The manifesto and contact links are sample copy because the real ones aren't written yet. Unlisted, like /concepts/grids.
 export const metadata: Metadata = {
   title: "About layout options",
   robots: { index: false, follow: false },
@@ -53,7 +53,7 @@ const sampleManifesto = (
   </>
 );
 
-export default function AboutOptionsPage({ params, searchParams }: PageProps<"/[lang]/dev/about">) {
+export default function AboutOptionsPage({ params, searchParams }: PageProps<"/[lang]/concepts/about">) {
   return (
     <Suspense>
       <Options params={params} searchParams={searchParams} />
@@ -102,7 +102,7 @@ async function Options({
 
       <nav
         aria-label="About layout options"
-        className="fixed bottom-5 left-1/2 z-40 flex -translate-x-1/2 gap-2 md:top-[calc(var(--dev-bar,2.5rem)+0.75rem)] md:bottom-auto md:ml-8"
+        className="fixed bottom-5 left-1/2 z-40 flex -translate-x-1/2 gap-2 md:top-[calc(var(--concepts-bar,2.5rem)+0.75rem)] md:bottom-auto md:ml-8"
       >
         {OPTIONS.map((o) => (
           <GlassPillLink
@@ -110,7 +110,7 @@ async function Options({
             size="sm"
             onImage
             scroll={false}
-            href={`${localizedPath(lang, "/dev/about")}?option=${o}`}
+            href={`${localizedPath(lang, "/concepts/about")}?option=${o}`}
             current={o === option}
             aria-label={`${o.toUpperCase()}: ${optionName[o]}`}
           >

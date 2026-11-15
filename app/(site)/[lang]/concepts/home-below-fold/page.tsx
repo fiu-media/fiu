@@ -17,7 +17,7 @@ import {
   FoldReelTeamLead,
   FoldSnapSequel,
   FoldTwoDoors,
-} from "@/app/(site)/[lang]/dev/_concepts/home/BelowFoldOptions";
+} from "@/app/(site)/[lang]/concepts/_options/home/BelowFoldOptions";
 import { SiteNav } from "@/components/layout/nav/SiteNav";
 import { GlassPillLink } from "@/components/ui/Glass";
 import { HeroFade } from "@/components/ui/HeroFade";
@@ -33,7 +33,7 @@ import { fetchContent } from "@/sanity/lib/fetch";
 import { toSizedImage } from "@/sanity/lib/image";
 
 // Sign-off page for the condensed About + Our Work under Home's first screen: seven options (A to D, then three reel strips that also carry the team photo, email and Instagram) on the real slogan, About
-// still and projects. Unlisted, like /dev/about. The first screen here is a stand-in (a still and the flat logo): the
+// still and projects. Unlisted, like /concepts/about. The first screen here is a stand-in (a still and the flat logo): the
 // live WebGL hero isn't needed to judge the fold, and Home's mobile scroll lock isn't applied.
 export const metadata: Metadata = {
   title: "Home below the fold",
@@ -102,7 +102,7 @@ const labels: FoldProps["labels"] = {
   view: "View project",
 };
 
-export default function HomeBelowFoldPage({ params, searchParams }: PageProps<"/[lang]/dev/home-below-fold">) {
+export default function HomeBelowFoldPage({ params, searchParams }: PageProps<"/[lang]/concepts/home-below-fold">) {
   return (
     <Suspense>
       <Options params={params} searchParams={searchParams} />
@@ -123,7 +123,7 @@ async function Options({
   const option: Option = OPTIONS.find((o) => o === requested) ?? "a";
   const seam: Seam = SEAMS.find((s) => s === requestedSeam) ?? "none";
   const tail = tailSeams.includes(seam);
-  const href = (o: Option, s: Seam) => `${localizedPath(lang, "/dev/home-below-fold")}?option=${o}&seam=${s}`;
+  const href = (o: Option, s: Seam) => `${localizedPath(lang, "/concepts/home-below-fold")}?option=${o}&seam=${s}`;
   const [dict, { about, projects }] = await Promise.all([getDictionary(lang), getContent(lang)]);
 
   const props: FoldProps = {
@@ -200,7 +200,7 @@ async function Options({
 
       <nav
         aria-label="Below the fold options"
-        className="fixed bottom-5 left-1/2 z-40 flex -translate-x-1/2 gap-2 md:top-[calc(var(--dev-bar,2.5rem)+0.75rem)] md:bottom-auto md:ml-8"
+        className="fixed bottom-5 left-1/2 z-40 flex -translate-x-1/2 gap-2 md:top-[calc(var(--concepts-bar,2.5rem)+0.75rem)] md:bottom-auto md:ml-8"
       >
         {OPTIONS.map((o) => (
           <GlassPillLink
@@ -220,7 +220,7 @@ async function Options({
 
       <nav
         aria-label="Hero seam options"
-        className="fixed bottom-16 left-1/2 z-40 flex -translate-x-1/2 gap-2 md:top-[calc(var(--dev-bar,2.5rem)+3.25rem)] md:bottom-auto md:ml-8"
+        className="fixed bottom-16 left-1/2 z-40 flex -translate-x-1/2 gap-2 md:top-[calc(var(--concepts-bar,2.5rem)+3.25rem)] md:bottom-auto md:ml-8"
       >
         {SEAMS.map((s) => (
           <GlassPillLink key={s} size="sm" onImage scroll={false} href={href(option, s)} current={s === seam}>

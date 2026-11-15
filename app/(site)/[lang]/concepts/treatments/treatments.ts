@@ -1,4 +1,4 @@
-// The three design treatments on /dev/treatments (issue #50), and what differs between them. The tokens themselves live
+// The three design treatments on /concepts/treatments (issue #50), and what differs between them. The tokens themselves live
 // in treatments.css, scoped to `[data-treatment]`; this is the copy and the few values components take as props.
 
 export const TREATMENTS = ["expressive", "middle", "clinical"] as const;

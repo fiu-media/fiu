@@ -11,17 +11,17 @@ function pathSection(pathname: string): string {
 }
 
 /**
- * `/dev` and `/dashboard` (and anything under them), with or without a language prefix. Sibling paths like
+ * `/concepts` and `/dashboard` (and anything under them), with or without a language prefix. Sibling paths like
  * `/devices` stay ordinary pages.
  */
 export function isStaffOnlyPath(pathname: string): boolean {
   const section = pathSection(pathname);
-  return section === "dev" || section === "dashboard";
+  return section === "concepts" || section === "dashboard";
 }
 
-/** Whether the path is the `/dev` playground (not `/dashboard`). */
-export function isDevPath(pathname: string): boolean {
-  return pathSection(pathname) === "dev";
+/** Whether the path is the `/concepts` playground (not `/dashboard`). */
+export function isConceptsPath(pathname: string): boolean {
+  return pathSection(pathname) === "concepts";
 }
 
 /** The gate is on in production unless `SITE_GATE` says otherwise, and off elsewhere unless it says `on`. */
@@ -43,7 +43,7 @@ type Request = {
 };
 
 /**
- * `/dev` and `/dashboard` always need a staff session, launched or not, and draft mode doesn't count. Everything else
+ * `/concepts` and `/dashboard` always need a staff session, launched or not, and draft mode doesn't count. Everything else
  * is open once `launchAt` has passed; before that, to staff and to editors previewing from the Studio.
  */
 export function decideGate({ enabled, launchAt, now, hasSession, hasDraftCookie, pathname }: Request): GateDecision {

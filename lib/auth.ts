@@ -25,7 +25,7 @@ const credentials = { clientId: env.GOOGLE_CLIENT_ID ?? "", clientSecret: env.GO
 const googleProfile = google({ ...credentials, hd: "*" });
 
 /**
- * Staff sign-in for the pre-launch gate, `/dev` and `/dashboard`. There is no database: the session is an encrypted
+ * Staff sign-in for the pre-launch gate, `/concepts` and `/dashboard`. There is no database: the session is an encrypted
  * cookie, so nothing is stored and signing out only clears it.
  */
 export const auth = betterAuth({

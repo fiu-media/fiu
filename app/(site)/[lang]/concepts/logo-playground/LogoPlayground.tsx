@@ -290,7 +290,7 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
   };
 
   return (
-    <div className="relative h-[calc(100dvh-var(--dev-bar))] overflow-hidden bg-ink text-white">
+    <div className="relative h-[calc(100dvh-var(--concepts-bar))] overflow-hidden bg-ink text-white">
       <LevaParams
         params={config.params}
         loaded={loaded}
@@ -360,7 +360,7 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
         <header className="pointer-events-auto absolute top-0 right-0 left-0 z-30 flex items-center justify-between gap-3 p-4">
           <div>
             <p className="text-sm font-medium tracking-wide">Fiú · logo playground</p>
-            <p className="text-xs text-white/55">/dev/logo-playground · unlisted</p>
+            <p className="text-xs text-white/55">/concepts/logo-playground · unlisted</p>
           </div>
           <div className="flex gap-1.5">
             <GlassPillButton size="sm" onImage onClick={() => setPanelOpen((o) => !o)}>

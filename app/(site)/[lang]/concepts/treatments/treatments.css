@@ -1,7 +1,7 @@
 /*
  * Design treatments (issue #50)
  * -----------------------------
- * Three looks for Fiú to compare on /dev/treatments. Everything here is scoped to a `[data-treatment]` wrapper, and only
+ * Three looks for Fiú to compare on /concepts/treatments. Everything here is scoped to a `[data-treatment]` wrapper, and only
  * that page renders one, so the live site is untouched. A (expressive) declares none of the site tokens: it inherits
  * them from globals.css, so it is always what is live.
  *
