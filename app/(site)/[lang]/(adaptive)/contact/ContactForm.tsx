@@ -1,6 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
+import { type SubmitEvent, useEffect, useRef } from "react";
 
 import { Field } from "@/components/forms/Field";
 import { Form, SubmitButton } from "@/components/forms/Form";
@@ -8,7 +9,9 @@ import { FormSuccess } from "@/components/forms/FormSuccess";
 import { PhoneField } from "@/components/forms/PhoneField";
 import { PrefillBoundary } from "@/components/forms/PrefillBoundary";
 import { useConformForm } from "@/components/forms/useConformForm";
+import { trackEvent } from "@/lib/analytics";
 import type { CountryList } from "@/lib/forms/countries";
+import { isEnquiryType } from "@/lib/forms/enquiry-types";
 import { CONTACT_PARAMS, contactPrefill } from "@/lib/forms/prefill";
 import { contactSchema, ENQUIRY_TYPES, limits } from "@/lib/forms/schemas";
 import type { Locale } from "@/lib/i18n/config";
@@ -37,16 +40,40 @@ function ContactFormFields({ lang, dict, countries }: Props) {
     schema: contactSchema,
     defaultValue: { enquiryType },
   });
-  const { fields, pending } = conform;
+  const { fields, pending, succeeded, formProps } = conform;
 
-  if (conform.succeeded) {
+  // Success replies reset the form, so stash the type from the submit that succeeded.
+  const lastEnquiryType = useRef(enquiryType);
+  const tracked = useRef(false);
+  useEffect(() => {
+    if (!succeeded || tracked.current) return;
+    tracked.current = true;
+    trackEvent("Contact Submitted", { enquiryType: lastEnquiryType.current });
+  }, [succeeded]);
+
+  if (succeeded) {
     return (
       <FormSuccess title={contact.successTitle} body={conform.confirmed ? contact.successBody : contact.successBodyNoEmail} />
     );
   }
 
   return (
-    <Form conform={conform} lang={lang} forms={forms} className="max-w-xl gap-4">
+    <Form
+      conform={{
+        ...conform,
+        formProps: {
+          ...formProps,
+          onSubmit: (event: SubmitEvent<HTMLFormElement>) => {
+            const type = new FormData(event.currentTarget).get("enquiryType");
+            if (typeof type === "string" && isEnquiryType(type)) lastEnquiryType.current = type;
+            formProps.onSubmit(event);
+          },
+        },
+      }}
+      lang={lang}
+      forms={forms}
+      className="max-w-xl gap-4"
+    >
       <Field field={fields.enquiryType} as="select" label={contact.enquiryType} required autoComplete="off">
         {ENQUIRY_TYPES.map((type) => (
           <option key={type} value={type}>

@@ -21,6 +21,7 @@ type Meta = { type: string | null; year: number | null; client: string | null };
 export type ProjectSlideSource = Meta & {
   _id: string;
   title: string;
+  slug: string | null;
   vimeoUrl: string | null;
   previewLoopUrl: string | null;
   cover: { landscape: QueriedImage | null; portrait: QueriedImage | null };
@@ -34,7 +35,7 @@ export function projectMeta({ type, year, client }: Meta): string {
 /** The data props of a `ProjectSlide`; the caller adds the rest (label, link, priority, dictionary). */
 export type ProjectSlideData = Pick<
   ProjectSlideProps,
-  "title" | "meta" | "image" | "mobileImage" | "vimeoUrl" | "previewLoopUrl" | "titleAttribute"
+  "title" | "meta" | "slug" | "image" | "mobileImage" | "vimeoUrl" | "previewLoopUrl" | "titleAttribute"
 >;
 
 /** A project as the data props of a `ProjectSlide`. */
@@ -42,6 +43,7 @@ export function toProjectSlideData(project: ProjectSlideSource): ProjectSlideDat
   return {
     title: project.title,
     meta: projectMeta(project),
+    slug: project.slug,
     image: project.cover.landscape ? toSizedImage(project.cover.landscape, COVER_WIDTH) : null,
     mobileImage: project.cover.portrait ? toSizedImage(project.cover.portrait, COVER_MOBILE_WIDTH) : null,
     vimeoUrl: project.vimeoUrl,

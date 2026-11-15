@@ -1,6 +1,7 @@
 import type Player from "@vimeo/player";
 import { type RefObject, useCallback, useEffect, useRef, useState } from "react";
 
+import { trackEvent } from "@/lib/analytics";
 import { matches } from "@/lib/hooks/useMediaQuery";
 import { UPRIGHT_TOUCH } from "@/lib/media";
 import type { VimeoRef } from "@/lib/vimeo";
@@ -52,7 +53,10 @@ async function unmute(player: Player) {
  * and orientation, the unmute heuristic, pausing when the slide scrolls away, and the keyboard shortcuts.
  * `rootRef` is the slide's own element: it is what goes full screen and what keeps keyboard focus.
  */
-export function usePlayback(rootRef: RefObject<HTMLElement | null>, { video }: { video: VimeoRef | null }) {
+export function usePlayback(
+  rootRef: RefObject<HTMLElement | null>,
+  { video, slug }: { video: VimeoRef | null; slug?: string | null | undefined },
+) {
   const [playerFrame, setPlayerFrame] = useState<HTMLIFrameElement | null>(null);
   const away = useRef(false);
   const [onScreen, setOnScreen] = useState(false);
@@ -70,6 +74,7 @@ export function usePlayback(rootRef: RefObject<HTMLElement | null>, { video }: {
 
   const play = useCallback(() => {
     if (!video) return;
+    if (slug) trackEvent("Film Played", { slug });
     setPlaying(true);
     setTapInPlayer(needsTapInPlayer());
     triedUnmute.current = false;
@@ -79,7 +84,7 @@ export function usePlayback(rootRef: RefObject<HTMLElement | null>, { video }: {
     const slide = rootRef.current;
     if (slide?.requestFullscreen) void slide.requestFullscreen().catch(() => {});
     else setPlayFullscreenNatively(true);
-  }, [video, rootRef]);
+  }, [video, rootRef, slug]);
   const reveal = useCallback(() => setRevealed(true), []);
   const stop = useCallback(() => {
     setPlaying(false);

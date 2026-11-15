@@ -1,0 +1,112 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+
+import { GlassPanel } from "@/components/ui/Glass";
+import { isLocale, localizedPath } from "@/lib/i18n/config";
+
+// Index of the unlisted /concepts surfaces, so every ongoing concept is one click away. Kept out of
+// search engines, like the pages it links to.
+export const metadata: Metadata = {
+  title: "Concepts",
+  robots: { index: false, follow: false },
+};
+
+type Concept = { href: string; title: string; kind: "Sign-off" | "Tuning"; note: string };
+
+// Add a new /concepts page here when it's created.
+const concepts: Concept[] = [
+  {
+    href: "/concepts/navbar",
+    title: "Navbar options",
+    kind: "Sign-off",
+    note: "Five navbar concepts (capsule, type only, logo as the menu, floating dock, side rail) on dark and light surfaces, at desktop and phone widths.",
+  },
+  {
+    href: "/concepts/language-switcher",
+    title: "Language switcher options",
+    kind: "Sign-off",
+    note: "Five looks for the English / Gaeilge switcher (both names, set like the links, the other language only, capsule, hairline codes) in the side rail and the phone menu. Hairline codes (E) is the one in use.",
+  },
+  {
+    href: "/concepts/grids",
+    title: "Grid options",
+    kind: "Sign-off",
+    note: "Layout options for the Our Work and Talent grids on placeholder content (issue #9).",
+  },
+  {
+    href: "/concepts/about",
+    title: "About layout options",
+    kind: "Sign-off",
+    note: "Six layouts for the About page (slogan first, split screen, letterbox, poster, statement, glass caption) on the real still and slogan (issue #55). Option A is live at /about.",
+  },
+  {
+    href: "/concepts/about-team",
+    title: "About team photo",
+    kind: "Sign-off",
+    note: "Three places for a photo of the Fiú team on About (group portrait after the manifesto, beside the words, a second screen of its own), on a placeholder photo. Option 2 (beside the words) is live at /about.",
+  },
+  {
+    href: "/concepts/home-below-fold",
+    title: "Home below the fold",
+    kind: "Sign-off",
+    note: "Seven ways to put a condensed About and Our Work under Home's first screen (reel strip, statement + index, two doors, snap sequel, and three reel strips with the team photo, email and Instagram) on the real slogan, About still and projects. Option F (reel + team lead) is live on Home. A second row of pills compares how the hero meets the fold: hard edge (live), fade, mirror, light spill, frame edge, lights down, frosted rail, fade + rail.",
+  },
+  {
+    href: "/concepts/not-found",
+    title: "404 options",
+    kind: "Sign-off",
+    note: "Three layouts for the custom not-found page (cinematic with a still, adaptive type only, cinematic with moving light) and two copy sets (issue #56).",
+  },
+  {
+    href: "/concepts/treatments",
+    title: "Design treatments",
+    kind: "Sign-off",
+    note: "Expressive (live), a middle ground, and cold + clinical, side by side and then in full on the hero, nav, work cards and a form (issue #50).",
+  },
+  {
+    href: "/concepts/specimen",
+    title: "Design specimen",
+    kind: "Sign-off",
+    note: "Living reference for the theme: type (Fraunces + Manrope), cinematic and adaptive surfaces, and liquid glass.",
+  },
+  {
+    href: "/concepts/logo-playground",
+    title: "Logo playground",
+    kind: "Tuning",
+    note: "Tuning surface for the glass logo over the home hero stills, with a diff viewer and a slowly moving light (issue #51).",
+  },
+];
+
+export default async function ConceptsIndexPage({ params }: PageProps<"/[lang]/concepts">) {
+  const { lang } = await params;
+  if (!isLocale(lang)) notFound();
+
+  return (
+    <main data-surface="cinematic" className="min-h-dvh bg-ink text-fg">
+      <div className="mx-auto max-w-6xl px-4 py-12 md:px-6 md:py-16">
+        <header className="mb-8 border-b border-line pb-6">
+          <p className="text-xs font-medium tracking-[0.14em] text-fg-muted uppercase">Fiú · concepts</p>
+          <h1 className="mt-2 font-display text-4xl md:text-5xl">Concepts</h1>
+          <p className="mt-2 max-w-2xl text-sm text-fg-muted">
+            Everything we&rsquo;re still deciding or tuning. Unlisted and kept out of search engines.
+          </p>
+        </header>
+
+        <ul className="grid gap-4 sm:grid-cols-2">
+          {concepts.map((concept) => (
+            <li key={concept.href}>
+              <Link href={localizedPath(lang, concept.href)} className="block h-full rounded-[28px]">
+                <GlassPanel onImage className="h-full p-6">
+                  <p className="text-xs font-medium tracking-[0.14em] text-fg-muted uppercase">{concept.kind}</p>
+                  <h2 className="mt-2 font-display text-2xl md:text-3xl">{concept.title}</h2>
+                  <p className="mt-2 text-sm text-fg-muted">{concept.note}</p>
+                </GlassPanel>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </main>
+  );
+}

@@ -1,6 +1,9 @@
+"use client";
+
 import { siInstagram } from "simple-icons";
 
 import { BrandIcon } from "@/components/ui/BrandIcon";
+import { trackEvent } from "@/lib/analytics";
 
 import type { SiteContact } from "../loaders";
 
@@ -16,6 +19,8 @@ type Props = {
   linkClassName?: string;
 };
 
+const outbound = (destination: "instagram" | "email") => () => trackEvent("Outbound Link", { destination });
+
 /** Email and Instagram as plain links; renders nothing when the editors haven't set either. */
 export function ContactLinks({ contact: { email, instagram }, labels, variant, linkClassName = "link-inline" }: Props) {
   if (!email && !instagram) return null;
@@ -24,13 +29,19 @@ export function ContactLinks({ contact: { email, instagram }, labels, variant, l
     return (
       <>
         {email && (
-          <a href={`mailto:${email}`} className={linkClassName}>
+          <a href={`mailto:${email}`} className={linkClassName} onClick={outbound("email")}>
             <span className="sr-only">{labels.email}: </span>
             {email}
           </a>
         )}
         {instagram && (
-          <a href={instagram.href} target="_blank" rel="noopener noreferrer" className={linkClassName}>
+          <a
+            href={instagram.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={linkClassName}
+            onClick={outbound("instagram")}
+          >
             <span className="sr-only">{labels.instagram}: </span>
             {instagram.handle}
           </a>
@@ -45,7 +56,7 @@ export function ContactLinks({ contact: { email, instagram }, labels, variant, l
         {email && (
           <li>
             <span className="sr-only">{labels.email}: </span>
-            <a href={`mailto:${email}`} className="text-lg link-inline">
+            <a href={`mailto:${email}`} className="text-lg link-inline" onClick={outbound("email")}>
               {email}
             </a>
           </li>
@@ -58,6 +69,7 @@ export function ContactLinks({ contact: { email, instagram }, labels, variant, l
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 text-lg link-inline"
+              onClick={outbound("instagram")}
             >
               <BrandIcon icon={siInstagram} />
               {instagram.handle}
@@ -74,7 +86,7 @@ export function ContactLinks({ contact: { email, instagram }, labels, variant, l
         <div>
           <dt className="text-sm text-fg-muted">{labels.email}</dt>
           <dd>
-            <a href={`mailto:${email}`} className="link-inline">
+            <a href={`mailto:${email}`} className="link-inline" onClick={outbound("email")}>
               {email}
             </a>
           </dd>
@@ -89,6 +101,7 @@ export function ContactLinks({ contact: { email, instagram }, labels, variant, l
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 link-inline"
+              onClick={outbound("instagram")}
             >
               <BrandIcon icon={siInstagram} />
               {instagram.handle}

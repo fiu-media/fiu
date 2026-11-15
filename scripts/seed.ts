@@ -17,9 +17,9 @@ import { toolingClient } from "../sanity/tooling-client";
 // `published` is the client's default perspective; keep it, so what counts as already existing is unchanged.
 const client = toolingClient({ token: "write", perspective: "published" });
 
-// The stand-in stills the /dev pages use, shared out among the sample projects.
+// The stand-in stills the /concepts pages use, shared out among the sample projects.
 // The mockup's gear photos are retailer/stock images, so rental items deliberately get no images until Fiú shoots its own.
-const STILLS_DIR = "app/(site)/[lang]/dev/_concepts/stills";
+const STILLS_DIR = "app/(site)/[lang]/concepts/_options/stills";
 const STILLS = [
   { file: "conservatory.jpg", alt: "Conservatory" },
   { file: "banquet.jpg", alt: "Banquet table" },

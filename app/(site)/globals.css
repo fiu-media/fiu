@@ -30,7 +30,7 @@
     color-scheme: dark;
   }
 
-  /* Pin the adaptive surfaces to one scheme (the /dev scheme switcher; a future site toggle). */
+  /* Pin the adaptive surfaces to one scheme (the /concepts scheme switcher; a future site toggle). */
   :root[data-force-scheme="light"],
   :root[data-force-scheme="light"] [data-surface="adaptive"] {
     color-scheme: light;

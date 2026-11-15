@@ -34,7 +34,7 @@ const HIDDEN_SCENE_OPACITY = 0.001;
  * Home hero (Canva mockup 1): rotating full-bleed stills with the glass logo. Until the editors have picked projects
  * with stills there is no photography, and so no glass (it has nothing to refract): the flat logo sits on the ink.
  *
- * Mesh / rim playground controls live at `/dev/logo-playground`.
+ * Mesh / rim playground controls live at `/concepts/logo-playground`.
  */
 export function HomeHero({ landscape, portrait }: HeroStills) {
   const portraitScreen = usePortrait();
@@ -104,7 +104,7 @@ export function HomeHero({ landscape, portrait }: HeroStills) {
           ) : null,
         )}
         {/* Mobile: the photo dissolves into the ink over the bleed below the hero, under the logo layers that follow. On
-            desktop the hero ends in a hard edge at the fold (other seams are compared on /dev/home-below-fold). */}
+            desktop the hero ends in a hard edge at the fold (other seams are compared on /concepts/home-below-fold). */}
         <HeroFade bleed />
         {/* Behind a bright still, the edge under the desktop rail darkens just enough for its labels (--hero-edge, see
             useHeroEdge). Under the logo layers, so it never dims the logo. */}
