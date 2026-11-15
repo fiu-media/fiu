@@ -8,7 +8,7 @@ import { isLocale, type Locale, localizedPath } from "@/lib/i18n/config";
 import { type Copy, OptionA, OptionB, OptionC } from "./NotFoundOptions";
 
 // Sign-off page for the custom 404 (issue #56): three layouts, two copy sets. Unlisted and kept
-// out of search engines, like /dev/grids.
+// out of search engines, like /concepts/grids.
 export const metadata: Metadata = {
   title: "404 options",
   robots: { index: false, follow: false },
@@ -66,7 +66,7 @@ const pick = <T extends string>(value: string | string[] | undefined, allowed: r
   return allowed.find((a) => a === first) ?? fallback;
 };
 
-export default function NotFoundOptionsPage({ params, searchParams }: PageProps<"/[lang]/dev/not-found">) {
+export default function NotFoundOptionsPage({ params, searchParams }: PageProps<"/[lang]/concepts/not-found">) {
   // searchParams is dynamic, so the page streams in behind a boundary.
   return (
     <Suspense>
@@ -89,7 +89,7 @@ async function Options({
   const copyKey = pick(query.copy, COPIES, "plain");
   const view = views[option];
 
-  const href = (o: OptionKey, c: CopyKey) => `${localizedPath(lang, "/dev/not-found")}?option=${o}&copy=${c}`;
+  const href = (o: OptionKey, c: CopyKey) => `${localizedPath(lang, "/concepts/not-found")}?option=${o}&copy=${c}`;
 
   return (
     <main data-surface="cinematic" className="min-h-dvh bg-ink text-fg">

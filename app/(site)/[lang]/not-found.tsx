@@ -11,7 +11,7 @@ import { cinematicViewport, INK } from "@/lib/theme";
 export const viewport = cinematicViewport;
 
 // not-found.tsx gets no params, so every language's 404 is rendered and NotFoundLocale shows the one the URL is in.
-// Compare the other layouts at /dev/not-found.
+// Compare the other layouts at /concepts/not-found.
 export default function NotFound() {
   // Spelled out, so a new locale is a type error here until it has a page.
   const pages: Record<Locale, ReactNode> = { en: <NotFoundPage lang="en" />, ga: <NotFoundPage lang="ga" /> };

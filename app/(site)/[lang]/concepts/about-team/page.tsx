@@ -3,7 +3,12 @@ import { notFound } from "next/navigation";
 import { PortableText } from "next-sanity";
 import { Suspense } from "react";
 
-import { type AboutTeamProps, TeamBand, TeamBeside, TeamScreen } from "@/app/(site)/[lang]/dev/_concepts/about/AboutTeamOptions";
+import {
+  type AboutTeamProps,
+  TeamBand,
+  TeamBeside,
+  TeamScreen,
+} from "@/app/(site)/[lang]/concepts/_options/about/AboutTeamOptions";
 import { SiteNav } from "@/components/layout/nav/SiteNav";
 import { GlassPillLink } from "@/components/ui/Glass";
 import { ContactLinks, fallbackStills, getSiteSettings, toTeam } from "@/content/siteSettings";
@@ -15,7 +20,7 @@ import { toSizedImage } from "@/sanity/lib/image";
 
 // Sign-off page for where the team photo goes on About: three placements on the About layout (option A). Option 2 is live
 // at /about, with the photo from Site settings. The
-// photo and caption come from Site settings (a stand-in until Fiú has uploaded one). Unlisted, like /dev/about.
+// photo and caption come from Site settings (a stand-in until Fiú has uploaded one). Unlisted, like /concepts/about.
 export const metadata: Metadata = {
   title: "About team photo options",
   robots: { index: false, follow: false },
@@ -42,7 +47,7 @@ const sampleManifesto = (
   </>
 );
 
-export default function AboutTeamOptionsPage({ params, searchParams }: PageProps<"/[lang]/dev/about-team">) {
+export default function AboutTeamOptionsPage({ params, searchParams }: PageProps<"/[lang]/concepts/about-team">) {
   return (
     <Suspense>
       <Options params={params} searchParams={searchParams} />
@@ -92,7 +97,7 @@ async function Options({
 
       <nav
         aria-label="Team photo options"
-        className="fixed bottom-5 left-1/2 z-40 flex -translate-x-1/2 gap-2 md:top-[calc(var(--dev-bar,2.5rem)+0.75rem)] md:bottom-auto md:ml-8"
+        className="fixed bottom-5 left-1/2 z-40 flex -translate-x-1/2 gap-2 md:top-[calc(var(--concepts-bar,2.5rem)+0.75rem)] md:bottom-auto md:ml-8"
       >
         {OPTIONS.map((o) => (
           <GlassPillLink
@@ -100,7 +105,7 @@ async function Options({
             size="sm"
             onImage
             scroll={false}
-            href={`${localizedPath(lang, "/dev/about-team")}?option=${o}`}
+            href={`${localizedPath(lang, "/concepts/about-team")}?option=${o}`}
             current={o === option}
             aria-label={`${o}: ${optionName[o]}`}
           >

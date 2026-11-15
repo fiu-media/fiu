@@ -1,6 +1,6 @@
 /*
  * Hero-to-fold seams that need more than a class: the reflection, the scroll-driven dimming and the light spill. Only
- * /dev/home-below-fold uses these. Home ships the hard edge.
+ * /concepts/home-below-fold uses these. Home ships the hard edge.
  */
 
 /* Mirror: the browser reflects the still below the first screen, fading into the ink within 14dvh. Drawn from the

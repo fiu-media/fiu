@@ -25,7 +25,7 @@ import { QuoteSample } from "./QuoteSample";
 import { aspectLabel, ASPECTS, type Treatment, TREATMENTS, treatments } from "./treatments";
 
 // Sign-off page for the design treatment (issue #50): expressive (live), a middle ground, and cold + clinical, side by
-// side and then in full on real-looking surfaces. Unlisted and kept out of search engines, like the other /dev pages.
+// side and then in full on real-looking surfaces. Unlisted and kept out of search engines, like the other /concepts pages.
 export const metadata: Metadata = {
   title: "Design treatments",
   robots: { index: false, follow: false },
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
 // The clinical treatment's headings. Loaded here only, so the live site doesn't pay for it.
 const grotesk = Inter_Tight({ subsets: ["latin", "latin-ext"], variable: "--font-grotesk" });
 
-// Sample copy only: placeholder project titles, as on /dev/specimen.
+// Sample copy only: placeholder project titles, as on /concepts/specimen.
 const projects = [
   { title: "Solas", meta: "Short film · 2026", credit: "Dir. Aoife Ní Bhriain", still: banquet },
   { title: "Bláthanna", meta: "Music video · 2026", credit: "Dir. Cian Ó Sé", still: supper },
@@ -44,7 +44,7 @@ const projects = [
 /** Every sample pretends to be on Our Work. */
 const CURRENT = "/work";
 
-export default function TreatmentsPage({ params, searchParams }: PageProps<"/[lang]/dev/treatments">) {
+export default function TreatmentsPage({ params, searchParams }: PageProps<"/[lang]/concepts/treatments">) {
   // searchParams is dynamic, so the page streams in behind a boundary.
   return (
     <Suspense>
@@ -70,7 +70,7 @@ async function Treatments({
   const selected = pick((await searchParams).treatment, TREATMENTS, "expressive");
   const dict = await getDictionary(lang);
   const nav = getNavItems(lang, dict).map((item) => ({ ...item, current: item.href.endsWith(CURRENT) }));
-  const href = (treatment: Treatment) => `${localizedPath(lang, "/dev/treatments")}?treatment=${treatment}`;
+  const href = (treatment: Treatment) => `${localizedPath(lang, "/concepts/treatments")}?treatment=${treatment}`;
 
   return (
     <main data-surface="adaptive" className={cn(grotesk.variable, "min-h-dvh bg-bg text-fg")}>
@@ -90,7 +90,7 @@ async function Treatments({
 
       <div className="mx-auto max-w-7xl px-4 py-10 md:px-6 md:py-14">
         <header className="mb-10 max-w-3xl">
-          <p className="eyebrow">Fiú · dev · issue #50</p>
+          <p className="eyebrow">Fiú · concepts · issue #50</p>
           <h1 className="mt-2 font-display text-4xl md:text-5xl">Design treatments</h1>
           <p className="mt-3 text-fg-muted">
             Three directions on the same pieces. A is what&rsquo;s live; C is cold and clinical; B splits the difference. Compare

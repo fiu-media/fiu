@@ -7,7 +7,7 @@ import { getDictionary } from "@/lib/i18n/dictionaries";
 import { LanguageConcepts, type OptionKey } from "./LanguageConcepts";
 
 // Sign-off page for the language switcher: five looks in the side rail and the phone menu. Option E is the
-// one the nav uses. Unlisted and kept out of search engines, like /dev/navbar.
+// one the nav uses. Unlisted and kept out of search engines, like /concepts/navbar.
 export const metadata: Metadata = {
   title: "Language switcher options",
   robots: { index: false, follow: false },
@@ -41,7 +41,7 @@ const options: { key: OptionKey; title: string; note: string }[] = [
   },
 ];
 
-export default async function LanguageSwitcherPage({ params }: PageProps<"/[lang]/dev/language-switcher">) {
+export default async function LanguageSwitcherPage({ params }: PageProps<"/[lang]/concepts/language-switcher">) {
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
   const { nav } = await getDictionary(lang);
@@ -50,7 +50,7 @@ export default async function LanguageSwitcherPage({ params }: PageProps<"/[lang
     <main data-surface="cinematic" className="min-h-dvh bg-ink text-fg">
       <div className="mx-auto max-w-6xl px-4 py-12 md:px-6 md:py-16">
         <header className="mb-8">
-          <p className="text-xs font-medium tracking-[0.14em] text-fg-muted uppercase">Fiú · dev</p>
+          <p className="text-xs font-medium tracking-[0.14em] text-fg-muted uppercase">Fiú · concepts</p>
           <h1 className="mt-2 font-display text-4xl md:text-5xl">Language switcher</h1>
           <p className="mt-2 max-w-2xl text-sm text-fg-muted">
             Five looks for the switcher, each shown in the desktop rail (over an image and on the adaptive surface) and in the
