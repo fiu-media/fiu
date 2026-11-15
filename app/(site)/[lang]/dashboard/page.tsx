@@ -18,7 +18,7 @@ import {
 } from "simple-icons";
 
 import { BrandIcon } from "@/components/ui/BrandIcon";
-import { GlassPanel, GlassPillButton, GlassPillLink } from "@/components/ui/Glass";
+import { GlassPanel, GlassPillButton } from "@/components/ui/Glass";
 import { getSiteSettings } from "@/content/siteSettings";
 import { env } from "@/env";
 import { getStaffSession } from "@/lib/auth";
@@ -265,11 +265,7 @@ async function DashboardSession() {
             Sign out
           </GlassPillButton>
         </form>
-      ) : (
-        <GlassPillLink href="/login" onImage size="sm">
-          Sign in
-        </GlassPillLink>
-      )}
+      ) : null}
     </div>
   );
 }
