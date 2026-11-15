@@ -1,7 +1,6 @@
 import { PortableText } from "next-sanity";
 
-import { ContactLinks, fallbackStills, getSiteSettings, toTeam } from "@/content/siteSettings";
-import { at } from "@/lib/at";
+import { ContactLinks, getSiteSettings, toTeam } from "@/content/siteSettings";
 import type { Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { editAttr } from "@/sanity/lib/editing";
@@ -9,20 +8,20 @@ import { toSizedImage } from "@/sanity/lib/image";
 
 import type { AboutLayoutProps } from "./components/AboutLayout";
 
-/** Everything the About layout shows, from Site settings: the editors' content, or the dictionary's and the bundled still. */
+/** Everything the About layout shows, from Site settings. What the editors haven't set yet (the still, the team photo) is left out. */
 export async function getAbout(lang: Locale): Promise<AboutLayoutProps> {
   const [dict, settings] = await Promise.all([getDictionary(lang), getSiteSettings(lang)]);
   const { _id, aboutStill, slogan, sloganGloss, manifesto } = settings;
   const attr = (path: string) => (_id ? editAttr("siteSettings", _id, path) : undefined);
 
   return {
-    still: (aboutStill ? toSizedImage(aboutStill, 2400) : null) ?? at(fallbackStills, 0),
+    still: aboutStill ? toSizedImage(aboutStill, 2400) : null,
     slogan: slogan ?? dict.about.title,
     gloss: sloganGloss ?? null,
     scrollLabel: dict.common.scrollDown,
     manifesto: manifesto?.length ? <PortableText value={manifesto} /> : null,
     contacts: <ContactLinks variant="list" contact={settings.contact} labels={dict.contactLinks} />,
-    team: toTeam(settings, dict.about.teamHeading),
+    team: toTeam(settings, dict.about.teamHeading) ?? undefined,
     attributes: _id
       ? { still: attr("aboutStill"), slogan: attr("slogan"), manifesto: attr("manifesto"), team: attr("teamStill") }
       : undefined,

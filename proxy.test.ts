@@ -160,6 +160,22 @@ describe("proxy", () => {
       expect(response.headers.get("x-middleware-rewrite")).toBe("https://fiu.test/en/launching");
     });
 
+    it("has no sitemap before launch, except for staff, and serves it untouched afterwards", async () => {
+      gateOn(future);
+      const closed = await run("/sitemap.xml");
+      expect(closed.status).toBe(404);
+      expect(closed.headers.get("x-middleware-rewrite")).toBeNull();
+      expect((await run("/sitemap.xml", withSession())).headers.get("x-middleware-next")).toBe("1");
+
+      gateOn(past);
+      // No rewrite to a locale and no move to the visitor's language: it has one address.
+      const open = await run("/sitemap.xml", asking("ga"));
+      expect(open.status).toBe(200);
+      expect(open.headers.get("x-middleware-next")).toBe("1");
+      expect(open.headers.get("x-middleware-rewrite")).toBeNull();
+      expect(open.headers.get("location")).toBeNull();
+    });
+
     it("keeps /dev for signed-in staff after launch, sending everyone else to sign in and back", async () => {
       gateOn(past);
       for (const path of ["/dev/specimen", "/ga/dev", "/en/dev"]) {

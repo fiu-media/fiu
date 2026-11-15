@@ -4,7 +4,7 @@ import type { Locale } from "@/lib/i18n/config";
 import { href, routes } from "@/lib/routes";
 import type { TALENT_PROFILE_QUERY_RESULT, TALENT_PROJECTS_QUERY_RESULT, TALENT_QUERY_RESULT } from "@/sanity.types";
 import { editAttr } from "@/sanity/lib/editing";
-import { type SizedImage, toSizedImage } from "@/sanity/lib/image";
+import { type SizedImage, toShareImage, toSizedImage } from "@/sanity/lib/image";
 
 /** Image widths (px) the talent views ask for. */
 export const PORTRAIT_INDEX_WIDTH = 640;
@@ -62,7 +62,15 @@ export function toTalentProfile(
   };
 }
 
-/** The page title and description of a person's page, from the profile query. */
-export function toProfileMeta({ name, roles }: Pick<NonNullable<TALENT_PROFILE_QUERY_RESULT>, "name" | "roles">) {
-  return { title: name, description: joinRoles(roles) || undefined };
+/** The page title and description of a person's page, and their portrait as the picture a link preview shows. */
+export function toProfileMeta({
+  name,
+  roles,
+  portrait,
+}: Pick<NonNullable<TALENT_PROFILE_QUERY_RESULT>, "name" | "roles" | "portrait">) {
+  return {
+    title: name,
+    description: joinRoles(roles) || undefined,
+    image: portrait ? toShareImage(portrait) : null,
+  };
 }

@@ -136,7 +136,7 @@ function Nav({ lang, items, homeHref, labels, onImage, overFootage, pathname }: 
           onImage ? "absolute inset-x-0 top-0" : "relative",
           // Over footage, a soft scrim behind the logo and the Menu button keeps them legible against a bright sky.
           overFootage
-            && "before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:-z-10 before:h-40 before:bg-gradient-to-b before:from-scrim/50 before:to-transparent",
+            && "before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:-z-10 before:h-40 before:bg-gradient-to-b before:from-scrim/60 before:to-transparent",
         )}
       >
         <HomeLink href={homeHref} label={labels.home} className="h-9" />

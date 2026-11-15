@@ -5,17 +5,18 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { PageShell } from "@/components/ui/PageShell";
 import { Skeleton, SkeletonGroup } from "@/components/ui/Skeleton";
 import { getSiteSettings } from "@/content/siteSettings";
+import { siteMetadata } from "@/features/site";
 import { getRoster, getTalentMeta, NameIndex } from "@/features/talent";
 import { cn } from "@/lib/cn";
 import { getLocale, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { floatingBarInset, pageTop } from "@/lib/rail";
-import { pageMetadata, routes } from "@/lib/routes";
+import { routes } from "@/lib/routes";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/talent">): Promise<Metadata> {
   const lang = await getLocale(params);
   const { title, description } = await getTalentMeta(lang);
-  return pageMetadata(lang, routes.talent(), { title, description });
+  return siteMetadata(lang, routes.talent(), { title, description });
 }
 
 export default async function TalentPage({ params }: PageProps<"/[lang]/talent">) {

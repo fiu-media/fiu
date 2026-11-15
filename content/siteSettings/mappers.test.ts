@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 
-import { fallbackStills } from "./fallbackStills";
 import { toTeam } from "./mappers";
 
 const photo = {
@@ -15,14 +14,12 @@ const photo = {
 describe("toTeam", () => {
   it("uses the editors' photo, sized to the width asked for, with the heading and caption", () => {
     const team = toTeam({ teamStill: photo, teamCaption: "On set, 2026" }, "The team", 800);
-    expect(team.image.alt).toBe("The crew");
-    expect(team.image.width).toBe(800);
+    expect(team?.image.alt).toBe("The crew");
+    expect(team?.image.width).toBe(800);
     expect(team).toMatchObject({ heading: "The team", caption: "On set, 2026" });
   });
 
-  it("falls back to a bundled still until a photo is uploaded", () => {
-    const team = toTeam({ teamStill: null, teamCaption: null }, "The team");
-    expect(fallbackStills).toContain(team.image);
-    expect(team.caption).toBeNull();
+  it("is nothing until a photo is uploaded, so the pages show no stand-in", () => {
+    expect(toTeam({ teamStill: null, teamCaption: "On set, 2026" }, "The team")).toBeNull();
   });
 });

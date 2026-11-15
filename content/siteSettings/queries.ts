@@ -38,6 +38,8 @@ const SITE_SETTINGS_FIELDS = `
   _id, slogan, sloganGloss, manifesto, contactEmail, instagram, teamCaption,
   rentalsIntro, quoteIntro, contactIntro, workIntro, talentIntro,
   aboutTagline, workTagline, talentTagline, rentalsTagline, contactTagline,
+  seoTitle, seoDescription,
+  "seoImage": seoImage{ asset, crop, hotspot },
   "aboutStill": aboutStill{ ${IMAGE_FIELDS} },
   "teamStill": teamStill{ ${IMAGE_FIELDS} }
 ` as const;
@@ -67,6 +69,9 @@ export const SITE_SETTINGS_QUERY = defineQuery(`{
   "talentTagline": coalesce(cur.talentTagline, fb.talentTagline),
   "rentalsTagline": coalesce(cur.rentalsTagline, fb.rentalsTagline),
   "contactTagline": coalesce(cur.contactTagline, fb.contactTagline),
+  "seoTitle": coalesce(cur.seoTitle, fb.seoTitle),
+  "seoDescription": coalesce(cur.seoDescription, fb.seoDescription),
+  "seoImage": select(defined(cur.seoImage.asset) => cur.seoImage, fb.seoImage),
   "aboutStill": select(defined(cur.aboutStill.asset) => cur.aboutStill, fb.aboutStill),
   "teamStill": select(defined(cur.teamStill.asset) => cur.teamStill, fb.teamStill)
 }`);

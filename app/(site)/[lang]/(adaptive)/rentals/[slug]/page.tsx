@@ -7,16 +7,17 @@ import { DetailList } from "@/components/ui/DetailList";
 import { PageShell } from "@/components/ui/PageShell";
 import { DetailAddToQuote, ItemSkeleton, RentalGallery } from "@/features/rentals";
 import { getRentalItem } from "@/features/rentals/loaders";
+import { siteMetadata } from "@/features/site";
 import { getLocale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
-import { href, pageMetadata, routes } from "@/lib/routes";
+import { href, routes } from "@/lib/routes";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/rentals/[slug]">): Promise<Metadata> {
   const { slug } = await params;
   const lang = await getLocale(params);
   const item = await getRentalItem(lang, slug);
   if (!item) return {};
-  return pageMetadata(lang, routes.rentalItem(slug), { title: item.name, description: item.summary ?? undefined });
+  return siteMetadata(lang, routes.rentalItem(slug), { title: item.name, description: item.summary ?? undefined });
 }
 
 export default function RentalItemPage({ params }: PageProps<"/[lang]/rentals/[slug]">) {

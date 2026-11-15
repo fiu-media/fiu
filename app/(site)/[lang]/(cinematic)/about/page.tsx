@@ -3,14 +3,15 @@ import { Suspense } from "react";
 
 import { FullScreenSkeleton } from "@/components/ui/Skeleton";
 import { AboutLayoutA, getAbout } from "@/features/about";
+import { siteMetadata } from "@/features/site";
 import { getLocale, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
-import { pageMetadata, routes } from "@/lib/routes";
+import { routes } from "@/lib/routes";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/about">): Promise<Metadata> {
   const lang = await getLocale(params);
   const { about } = await getDictionary(lang);
-  return pageMetadata(lang, routes.about(), { title: about.title });
+  return siteMetadata(lang, routes.about(), { title: about.title });
 }
 
 export default async function AboutPage({ params }: PageProps<"/[lang]/about">) {

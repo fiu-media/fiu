@@ -9,14 +9,12 @@ import { editAttr } from "@/sanity/lib/editing";
 import { fetchContent } from "@/sanity/lib/fetch";
 
 import type { HomeFoldProps } from "./components/HomeFold";
-import { fallbackHeroStills } from "./fallback-stills";
 import { type HeroStills, toFoldProjects, toHeroStills } from "./mappers";
 
-/** The hero's stills from the projects the editors picked, or the bundled ones until there are any. */
+/** The hero's stills from the projects the editors picked. Until there are any, both sets are empty and the hero is the logo alone. */
 export async function getHomeStills(lang: Locale): Promise<HeroStills> {
   const data = await fetchContent(HOME_STILLS_QUERY, lang, {});
-  const stills = toHeroStills(data?.projects ?? []);
-  return stills.landscape.length + stills.portrait.length > 0 ? stills : fallbackHeroStills;
+  return toHeroStills(data?.projects ?? []);
 }
 
 /**

@@ -4,7 +4,7 @@ import type { Locale } from "@/lib/i18n/config";
 import { href, routes } from "@/lib/routes";
 import type { PROJECT_ORDER_QUERY_RESULT, PROJECT_QUERY_RESULT, WORK_QUERY_RESULT } from "@/sanity.types";
 import { editAttr } from "@/sanity/lib/editing";
-import { type QueriedImage, type SizedImage, toSizedImage } from "@/sanity/lib/image";
+import { type QueriedImage, type SizedImage, toShareImage, toSizedImage } from "@/sanity/lib/image";
 
 import type { ProjectSlideProps } from "./components/ProjectSlide";
 import type { Still } from "./components/ProjectStills";
@@ -131,7 +131,14 @@ export function toProject(project: NonNullable<PROJECT_QUERY_RESULT>, order: PRO
   };
 }
 
-/** The page title and description of a project's page: its blurb, else the line under its title. */
-export function toProjectMeta(project: Pick<NonNullable<PROJECT_QUERY_RESULT>, "title" | "description"> & Meta) {
-  return { title: project.title, description: plainText(project.description) || projectMeta(project) || undefined };
+/**
+ * The page title and description of a project's page (its blurb, else the line under its title), and its cover as the
+ * picture a link preview shows.
+ */
+export function toProjectMeta(project: Pick<NonNullable<PROJECT_QUERY_RESULT>, "title" | "description" | "cover"> & Meta) {
+  return {
+    title: project.title,
+    description: plainText(project.description) || projectMeta(project) || undefined,
+    image: project.cover.landscape ? toShareImage(project.cover.landscape) : null,
+  };
 }

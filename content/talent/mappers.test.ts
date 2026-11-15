@@ -107,7 +107,12 @@ describe("toTalentProfile", () => {
 
 describe("toProfileMeta", () => {
   it("uses the name and the roles", () => {
-    expect(toProfileMeta(profile())).toEqual({ title: "Aoife", description: "Director, Editor" });
+    expect(toProfileMeta(profile())).toMatchObject({ title: "Aoife", description: "Director, Editor" });
+  });
+
+  it("shares the portrait, and nothing without one", () => {
+    expect(toProfileMeta(profile()).image).toMatchObject({ width: 1200, height: 630, alt: "portrait" });
+    expect(toProfileMeta(profile({ portrait: null })).image).toBeNull();
   });
 
   it("has no description without roles", () => {

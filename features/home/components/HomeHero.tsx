@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import { Component, type ReactNode, useMemo, useRef } from "react";
+import { Component, type ReactNode, useMemo, useRef, useState } from "react";
 
 import { ArtDirectedImage } from "@/components/ui/ArtDirectedImage";
 import { HeroFade } from "@/components/ui/HeroFade";
@@ -13,8 +13,10 @@ import { cn } from "@/lib/cn";
 import { usePortrait } from "@/lib/hooks/usePortrait";
 
 import type { HeroStill, HeroStills } from "../mappers";
+import { hasIntroPlayed } from "../session";
 import { useHeroEdge } from "../useHeroEdge";
 import { useHeroIntro, useStillRotation } from "../useHeroIntro";
+import { useHeroWatched } from "../useHeroWatched";
 import { Splash } from "./Splash";
 
 const LogoScene = dynamic(() => import("@/features/logo/LogoScene"), { ssr: false });
@@ -29,7 +31,8 @@ const BLEED_CLASS = "max-md:-inset-y-48";
 const HIDDEN_SCENE_OPACITY = 0.001;
 
 /**
- * Home hero (Canva mockup 1): rotating full-bleed stills with the glass logo.
+ * Home hero (Canva mockup 1): rotating full-bleed stills with the glass logo. Until the editors have picked projects
+ * with stills there is no photography, and so no glass (it has nothing to refract): the flat logo sits on the ink.
  *
  * Mesh / rim playground controls live at `/dev/logo-playground`.
  */
@@ -51,10 +54,13 @@ export function HomeHero({ landscape, portrait }: HeroStills) {
     onIntroEnd,
     onFail,
     onTooSlow,
-  } = useHeroIntro();
+  } = useHeroIntro(slides.length > 0);
   const stillKeys = useMemo(() => slides.map(({ landscape }) => landscape.src), [slides]);
-  const index = useStillRotation(stillKeys, introDone);
-  const current = index % slides.length;
+  // The stills hold while the hero is scrolled away or the tab is hidden: the scene only draws when they move.
+  const layer = useRef<HTMLDivElement>(null);
+  const watched = useHeroWatched(layer);
+  const index = useStillRotation(stillKeys, introDone && watched);
+  const current = slides.length > 0 ? index % slides.length : 0;
   // The desktop rail's labels sit on the still's left edge; only a bright one darkens it.
   const images = useRef<(HTMLImageElement | null)[]>([]);
   const showing = slides[current];
@@ -63,8 +69,8 @@ export function HomeHero({ landscape, portrait }: HeroStills) {
   const sceneStills = useMemo(
     () =>
       slides.map(({ landscape, portrait }) => {
-        const { src, width, height, lightTint } = portraitScreen ? portrait : landscape;
-        return { src, width, height, lightTint };
+        const { src, width, height } = portraitScreen ? portrait : landscape;
+        return { src, width, height };
       }),
     [slides, portraitScreen],
   );
@@ -75,24 +81,28 @@ export function HomeHero({ landscape, portrait }: HeroStills) {
       <Splash done={splashDone} />
       {/* On mobile the photo is 12rem taller than the page above and below (BLEED_CLASS): real pixels for Safari to show behind
           its status bar and toolbar. Not fixed, or Safari would tint its bars from this layer instead. */}
-      <div className={cn("absolute inset-0 -z-10", BLEED_CLASS)}>
-        {slides.map(({ landscape, portrait }, i) => (
-          <ArtDirectedImage
-            key={i}
-            landscape={landscape}
-            portrait={portrait}
-            fill
-            quality={90}
-            sizes="100vw"
-            priority={i === 0}
-            dataSanity={(portraitScreen ? portrait : landscape).dataSanity}
-            style={{ opacity: i === current ? 1 : 0 }}
-            className="transition-opacity duration-[1600ms] ease-in-out"
-            imgRef={(img) => {
-              images.current[i] = img;
-            }}
-          />
-        ))}
+      <div ref={layer} className={cn("absolute inset-0 -z-10", BLEED_CLASS)}>
+        {/* Only the still on show is in the page until the intro is over; the rest are added then, well before their
+            turn. Stacked in the viewport, they would all download at once and hold up the first screen. */}
+        {slides.map(({ landscape, portrait }, i) =>
+          i === current || introDone ? (
+            <ArtDirectedImage
+              key={i}
+              landscape={landscape}
+              portrait={portrait}
+              fill
+              quality={90}
+              sizes="100vw"
+              priority={i === 0}
+              dataSanity={(portraitScreen ? portrait : landscape).dataSanity}
+              style={{ opacity: i === current ? 1 : 0 }}
+              className="transition-opacity duration-[1600ms] ease-in-out"
+              imgRef={(img) => {
+                images.current[i] = img;
+              }}
+            />
+          ) : null,
+        )}
         {/* Mobile: the photo dissolves into the ink over the bleed below the hero, under the logo layers that follow. On
             desktop the hero ends in a hard edge at the fold (other seams are compared on /dev/home-below-fold). */}
         <HeroFade bleed />
@@ -144,6 +154,23 @@ export function HomeHero({ landscape, portrait }: HeroStills) {
           </div>
         </SceneBoundary>
       )}
+    </>
+  );
+}
+
+/**
+ * Home's first screen before its stills are known (they follow draft mode, so they stream in): the splash, held up.
+ * It has no photography and keeps no intro state, so the intro plays once, on the hero that replaces it. Coming back
+ * to Home after the splash has gone, it is the flat logo where the intro left it.
+ */
+export function HomeHeroFallback() {
+  const [atRest] = useState(hasIntroPlayed);
+  return (
+    <>
+      <Splash done={false} />
+      <div className={cn("absolute inset-0 -z-10", BLEED_CLASS)}>
+        <SvgLogo fading={false} fadeEased={false} snapToLeft atLeft={atRest} />
+      </div>
     </>
   );
 }

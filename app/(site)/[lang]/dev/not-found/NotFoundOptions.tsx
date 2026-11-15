@@ -6,7 +6,8 @@ import { GlassPillLink } from "@/components/ui/Glass";
 import { type Locale, localizedPath } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { railInset } from "@/lib/rail";
-import glow from "@/public/stills/glow.jpg";
+
+import glow from "../_concepts/stills/glow.jpg";
 
 export type Copy = NotFoundCopy;
 

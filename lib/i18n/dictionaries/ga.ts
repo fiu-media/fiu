@@ -15,6 +15,7 @@ export const ga: Dictionary = {
   },
   nav: {
     label: "Príomhroghchlár",
+    skip: "Léim go dtí an príomhábhar",
     home: "Fiú Media, leathanach baile",
     menu: "Roghchlár",
     closeMenu: "Dún an roghchlár",

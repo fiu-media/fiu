@@ -46,6 +46,15 @@ describe("toHeroStills", () => {
     expect(portrait[0]!.dataSanity).toContain("id=a;type=project;path=stillsMobile:a-m1");
   });
 
+  it("keeps the blur-up placeholder on the first still only, since the rest load unseen", () => {
+    const blurred = (key: string) => ({ ...still(key), lqip: `data:image/jpeg;base64,${key}` });
+    const { landscape, portrait } = toHeroStills([
+      { _id: "a", stills: ["a1", "a2"].map(blurred), stillsMobile: ["a-m1", "a-m2"].map(blurred) },
+    ]);
+    expect(landscape.map((s) => s.blurDataURL)).toEqual(["data:image/jpeg;base64,a1", undefined]);
+    expect(portrait.map((s) => s.blurDataURL)).toEqual(["data:image/jpeg;base64,a-m1", undefined]);
+  });
+
   it("skips projects that were deleted", () => {
     expect(toHeroStills([null, project("a", ["a1"])]).landscape).toHaveLength(1);
   });

@@ -56,3 +56,8 @@ export const PROJECT_ORDER_QUERY = defineQuery(`
     "slug": slug.current
   }
 `);
+
+/** Every project that has a page, in every language it exists in, for the sitemap. */
+export const PROJECT_PAGES_QUERY = defineQuery(`
+  *[_type == "project" && defined(slug.current)]{ "slug": slug.current, language, _updatedAt }
+`);

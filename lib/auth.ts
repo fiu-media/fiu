@@ -3,14 +3,10 @@ import { google } from "better-auth/social-providers";
 
 import { env } from "@/env";
 import { isAllowedAccount, normaliseDomain } from "@/lib/gate/google";
+import { siteUrl } from "@/lib/siteUrl";
 
 /** How long a sign-in lasts, in seconds. */
 const SESSION_MAX_AGE = 60 * 60 * 24 * 7;
-
-/** Google needs the exact callback URL registered, so it comes from the canonical site URL, else the production host, else local dev. */
-const baseURL =
-  env.NEXT_PUBLIC_SITE_URL
-  ?? (env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${env.VERCEL_PROJECT_PRODUCTION_URL}` : "http://localhost:3000");
 
 /** Whether sign-in is set up. Local dev and previews run without the keys, and the gate is then simply closed. */
 export const authConfigured = Boolean(env.AUTH_SECRET && env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET);
@@ -29,7 +25,8 @@ const googleProfile = google({ ...credentials, hd: "*" });
  * nothing is stored and signing out only clears it.
  */
 export const auth = betterAuth({
-  baseURL,
+  // Google needs the exact callback URL registered, so it is built on the site's one public origin.
+  baseURL: siteUrl,
   secret: env.AUTH_SECRET,
   session: { expiresIn: SESSION_MAX_AGE },
   advanced: { cookiePrefix: "fiu" },

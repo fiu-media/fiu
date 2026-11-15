@@ -6,12 +6,14 @@ import { Suspense } from "react";
 import { type AboutTeamProps, TeamBand, TeamBeside, TeamScreen } from "@/app/(site)/[lang]/dev/_concepts/about/AboutTeamOptions";
 import { SiteNav } from "@/components/layout/nav/SiteNav";
 import { GlassPillLink } from "@/components/ui/Glass";
-import { ContactLinks, fallbackStills, getSiteSettings, toTeam } from "@/content/siteSettings";
+import { ContactLinks, getSiteSettings, toTeam } from "@/content/siteSettings";
 import { at } from "@/lib/at";
 import { isLocale, type Locale, localizedPath } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { railInset } from "@/lib/rail";
 import { toSizedImage } from "@/sanity/lib/image";
+
+import { devStills, standInTeam } from "../_concepts/stills/devStills";
 
 // Sign-off page for where the team photo goes on About: three placements on the About layout (option A). Option 2 is live
 // at /about, with the photo from Site settings. The
@@ -63,7 +65,7 @@ async function Options({
   const option: Option = OPTIONS.find((o) => o === requested) ?? "1";
   const [dict, settings] = await Promise.all([getDictionary(lang), getSettings(lang)]);
 
-  const still = (settings.aboutStill ? toSizedImage(settings.aboutStill, 2400) : null) ?? at(fallbackStills, 0);
+  const still = (settings.aboutStill ? toSizedImage(settings.aboutStill, 2400) : null) ?? at(devStills, 0);
   const props: AboutTeamProps = {
     still,
     slogan: settings.slogan ?? null,
@@ -81,7 +83,10 @@ async function Options({
       />
     ),
     // From Site settings like the live pages; the badge marks a photo that is still the code's stand-in.
-    team: { ...toTeam(settings, dict.about.teamHeading), placeholder: !settings.teamStill },
+    team: {
+      ...(toTeam(settings, dict.about.teamHeading) ?? standInTeam(dict.about.teamHeading)),
+      placeholder: !settings.teamStill,
+    },
   };
   const Layout = layouts[option];
 

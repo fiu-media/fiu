@@ -1,16 +1,15 @@
 import type { Metadata } from "next";
 
-import banquet from "@/public/stills/banquet.jpg";
-import bouquet from "@/public/stills/bouquet.jpg";
-import citrus from "@/public/stills/citrus.jpg";
-import conservatory from "@/public/stills/conservatory.jpg";
-import fur from "@/public/stills/fur.jpg";
-import glow from "@/public/stills/glow.jpg";
-import grapes from "@/public/stills/grapes.jpg";
-import parlor from "@/public/stills/parlor.jpg";
-import pond from "@/public/stills/pond.jpg";
-import supper from "@/public/stills/supper.jpg";
-
+import banquet from "../_concepts/stills/banquet.jpg";
+import bouquet from "../_concepts/stills/bouquet.jpg";
+import citrus from "../_concepts/stills/citrus.jpg";
+import conservatory from "../_concepts/stills/conservatory.jpg";
+import fur from "../_concepts/stills/fur.jpg";
+import glow from "../_concepts/stills/glow.jpg";
+import grapes from "../_concepts/stills/grapes.jpg";
+import parlor from "../_concepts/stills/parlor.jpg";
+import pond from "../_concepts/stills/pond.jpg";
+import supper from "../_concepts/stills/supper.jpg";
 import { LogoPlayground } from "./LogoPlayground";
 
 // Unlisted tuning surface — same stills as the home hero.

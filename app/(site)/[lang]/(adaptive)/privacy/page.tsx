@@ -5,11 +5,12 @@ import { PageShell } from "@/components/ui/PageShell";
 import { PageTitle } from "@/components/ui/PageTitle";
 import { ContactLinks, getSiteSettings } from "@/content/siteSettings";
 import { BulletList, PolicySection as Section, StorageGroup, WithLink } from "@/features/privacy";
+import { siteMetadata } from "@/features/site";
 import { formatLongDate } from "@/lib/dates";
 import { dateLocale, getLocale, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { format } from "@/lib/i18n/format";
-import { href, pageMetadata, routes } from "@/lib/routes";
+import { href, routes } from "@/lib/routes";
 
 /** Where a complaint to Ireland's data protection authority is made. */
 const DPC_URL = "https://www.dataprotection.ie";
@@ -20,7 +21,7 @@ const UPDATED = "2026-11-08";
 export async function generateMetadata({ params }: PageProps<"/[lang]/privacy">): Promise<Metadata> {
   const lang = await getLocale(params);
   const { privacy } = await getDictionary(lang);
-  return pageMetadata(lang, routes.privacy(), { title: privacy.title });
+  return siteMetadata(lang, routes.privacy(), { title: privacy.title });
 }
 
 export default async function PrivacyPage({ params }: PageProps<"/[lang]/privacy">) {

@@ -28,7 +28,8 @@ export type FoldProject = {
   href: string;
 };
 
-type FoldTeam = Team;
+/** `null` until the editors upload a team photo: the fold then runs as one column of text. */
+type FoldTeam = Team | null;
 
 export type FoldProps = {
   about: FoldAbout;
@@ -114,11 +115,12 @@ export function HomeFold({ about, team, teamAttribute, contacts, projects, workH
     <section aria-label={labels.about} className="bg-ink py-20 text-fg md:py-28">
       <div
         className={cn(
-          "mx-auto grid max-w-6xl items-center gap-12 md:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] md:gap-20",
+          "mx-auto max-w-6xl",
+          team && "grid items-center gap-12 md:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] md:gap-20",
           pageGutter,
         )}
       >
-        <TeamFigure team={team} attribute={teamAttribute} />
+        {team && <TeamFigure team={team} attribute={teamAttribute} />}
         <div className="flex flex-col items-start gap-6">
           <h2 className="font-display text-4xl leading-[1.05] text-balance italic md:text-5xl">{about.slogan}</h2>
           <div className="space-y-4 text-base leading-relaxed text-fg/85 md:text-lg">

@@ -4,7 +4,7 @@ import { Suspense } from "react";
 
 import { SiteNav } from "@/components/layout/nav/SiteNav";
 import { GlassPillLink } from "@/components/ui/Glass";
-import { ContactLinks, fallbackStills, getSiteSettings } from "@/content/siteSettings";
+import { ContactLinks, getSiteSettings } from "@/content/siteSettings";
 import { AboutLayoutA } from "@/features/about";
 import { at } from "@/lib/at";
 import { isLocale, type Locale, localizedPath } from "@/lib/i18n/config";
@@ -13,6 +13,7 @@ import { railInset } from "@/lib/rail";
 import { toSizedImage } from "@/sanity/lib/image";
 
 import { AboutLayoutB, AboutLayoutC, AboutLayoutD, AboutLayoutE, AboutLayoutF } from "../_concepts/about/AboutLayoutOptions";
+import { devStills } from "../_concepts/stills/devStills";
 
 // Sign-off page for the About layout (issue #55): six options on the real still, slogan and gloss.
 // The manifesto and contact links are sample copy because the real ones aren't written yet. Unlisted, like /dev/grids.
@@ -74,7 +75,7 @@ async function Options({
   const option: Option = OPTIONS.find((o) => o === requested) ?? "a";
   const [dict, settings] = await Promise.all([getDictionary(lang), getSettings(lang)]);
 
-  const still = (settings.aboutStill ? toSizedImage(settings.aboutStill, 2400) : null) ?? at(fallbackStills, 0);
+  const still = (settings.aboutStill ? toSizedImage(settings.aboutStill, 2400) : null) ?? at(devStills, 0);
   const Layout = layouts[option];
   const props = {
     still,

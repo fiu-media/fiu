@@ -45,7 +45,7 @@ Code is grouped by product area, not by kind. The rule for where something goes:
 | `lib/`                                                      | Pure utilities, i18n, email and forms helpers; `lib/hooks/` has the client hooks.                                                                   |
 | `sanity/lib/`                                               | Shared Sanity plumbing: client, live fetching, image sizing (`image.ts`) and the GROQ fragments queries are built from (`groq.ts`).                 |
 | `sanity/schema/`, `sanity/studio/`                          | The Studio's schema index and shared fields, and its structure, languages, icon and Presentation resolver.                                          |
-| `app/(site)/[lang]/dev/_concepts/`                          | Design sign-off options that only the `/dev` pages use. They stay out of production modules.                                                        |
+| `app/(site)/[lang]/dev/_concepts/`                          | Design sign-off options that only the `/dev` pages use, and their stand-in stills (`stills/`). They stay out of production modules.                 |
 
 Every content module and feature area has an `index.ts` that re-exports what other modules and `app/` import; import through it, and use relative or direct imports inside a module. A content module's index does not re-export `schema.ts`: only the Studio imports schemas, through `sanity/schema/index.ts`. Where an index import would create a cycle, or would pull a heavy module into the main bundle (the lazy `features/logo/LogoScene`), import the file directly (a dynamic `import()` like the lazy scene's isn't checked by the lint rules). A feature's `loaders.ts` stays out of its index when client components import that index (`features/rentals`); `app/` may import such a `loaders` file directly.
 
@@ -103,6 +103,14 @@ Until the date in Studio > Launch (`launchGate.launchAt`), production shows ever
 - The gate is on in production only. Previews are behind Vercel Authentication and Google can't register one redirect URI per preview URL. Set `SITE_GATE=on` to try it locally (with the Google keys and `http://localhost:3000/api/auth/callback/google` registered on the OAuth client), or `off` to switch it off.
 - Setting up: create a Google OAuth client of type Internal, register `https://xn--fi-ska.ie/api/auth/callback/google` (the production host) and the localhost callback, then set `AUTH_SECRET` (`openssl rand -base64 32`), `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in Vercel.
 
+## Search engines and link previews
+
+- **One helper.** Every page's `generateMetadata` returns `siteMetadata(lang, path, { title, description, image })` (`features/site/metadata.ts`): the canonical and hreflang links, and the whole Open Graph and Twitter card. Next replaces `openGraph` from one segment to the next instead of merging it, so a page that sets its own would lose the site's defaults; the helper fills them in.
+- **Site URL.** Absolute URLs are built on `siteUrl` (`lib/siteUrl.ts`): `NEXT_PUBLIC_SITE_URL`, else the production host, else localhost.
+- **Defaults come from the Studio.** Site settings > SEO has the default title, description and share image. Without an image, `public/brand/og.png` is used (the white mark on ink, made by `scripts/logo/07_share_image.py`). A project shares its cover and a person their portrait, cut to 1200×630 around the hotspot.
+- **`/sitemap.xml`** (`app/sitemap.ts`) lists every page in both languages, with projects and people read from Sanity. It goes through the launch gate: before launch it is a 404, so nothing unreleased is listed. **`/robots.txt`** (`app/robots.ts`) is always served, because a crawler has to be let in to see the gate's `noindex`.
+- **Structured data.** Home carries `Organization` and `WebSite` JSON-LD (`features/site/components/SiteJsonLd.tsx`).
+
 ## Deep links into the forms
 
 > **Rentals is hidden for now.** The `features.rentals` flag in `lib/features.ts` is off, so `rentals/layout.tsx` returns a 404 for every `/rentals*` URL, and the nav and BotID leave Rentals out. Everything else (components, Sanity schema, quote actions, emails, form helpers) is still in place. To bring it back, set the flag to `true`; the Rentals e2e specs and fixtures follow it.
@@ -146,7 +154,7 @@ npm run test:e2e  # Playwright + axe against a production build
 
 Unit tests sit next to the code they cover (`*.test.ts`) and need no setup.
 
-The e2e tests drive a real browser through the quote request, the contact form and the mobile menu, and run axe on the public pages. They run against the `dev` Sanity dataset and don't depend on what is in it: the suite creates the content it needs (rental items, talent, a project and their photos, all with ids starting `e2e-`, listed in `e2e/fixtures/data.ts`), acts on that, and removes it again. They submit real forms, so they need `.env.local` with `NEXT_PUBLIC_SANITY_DATASET=dev` and an Editor token in `SANITY_API_WRITE_TOKEN`. First time only: `npx playwright install chromium`.
+The e2e tests drive a real browser through the quote request, the contact form and the mobile menu, walk the keyboard path (the skip link, the rail, the contact form), and run axe on the public pages. They run against the `dev` Sanity dataset and don't depend on what is in it: the suite creates the content it needs (rental items, talent, a project and their photos, all with ids starting `e2e-`, listed in `e2e/fixtures/data.ts`), acts on that, and removes it again. They submit real forms, so they need `.env.local` with `NEXT_PUBLIC_SANITY_DATASET=dev` and an Editor token in `SANITY_API_WRITE_TOKEN`. First time only: `npx playwright install chromium`.
 
 ```bash
 npm run test:e2e   # seeds the content, builds the site, starts it, runs the tests, then cleans up

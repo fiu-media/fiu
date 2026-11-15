@@ -64,5 +64,35 @@ export function toSizedImage(image: QueriedImage, width = 1200): SizedImage | nu
   };
 }
 
+/** The size link previews are drawn at (Open Graph's 1.91:1). */
+const SHARE_WIDTH = 1200;
+const SHARE_HEIGHT = 630;
+
+/** An image as a link preview shows it: an absolute URL with its size, for `openGraph.images`. */
+export type ShareImage = { url: string; width: number; height: number; alt?: string };
+
+/**
+ * A queried Sanity image cut to the link-preview frame around the editor's hotspot (null without an asset). Always a
+ * JPEG: not every app that draws previews reads the newer formats `auto=format` would pick.
+ */
+export function toShareImage(
+  image: Pick<QueriedImage, "asset" | "crop" | "hotspot"> & { alt?: string | null },
+): ShareImage | null {
+  const { asset, crop, hotspot, alt } = image;
+  if (!asset) return null;
+  return {
+    url: urlFor({ asset, crop: crop ?? undefined, hotspot: hotspot ?? undefined })
+      .width(SHARE_WIDTH)
+      .height(SHARE_HEIGHT)
+      .fit("crop")
+      .format("jpg")
+      .quality(82)
+      .url(),
+    width: SHARE_WIDTH,
+    height: SHARE_HEIGHT,
+    ...(alt ? { alt } : {}),
+  };
+}
+
 /** Drafts show up as `drafts.<id>` in preview; items are always referenced by their published id. */
 export const publishedId = (id: string) => id.replace(/^drafts\./, "");

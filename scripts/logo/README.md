@@ -19,6 +19,13 @@ python3 -m venv /tmp/fiu-py && /tmp/fiu-py/bin/pip install numpy scipy scikit-im
 /tmp/fiu-py/bin/python scripts/logo/05_white_svg.py design/refs/white.png public/brand/fiu-logo.svg
 ```
 
+**Share image:** `public/brand/og.png`, the white mark centred on the site's ink at 1200×630. Link previews show it
+when a page has no picture of its own and Site settings has no "Default share image". Needs only Pillow:
+
+```sh
+python3 scripts/logo/07_share_image.py   # design/refs/white.png → public/brand/og.png
+```
+
 Everything in `06_paths_for_three.py` is traced from `design/refs/white.png` (ü segments and
 dots sit exactly where the white mark has them; liquid-glass.jpg is no longer used).
 

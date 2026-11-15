@@ -10,18 +10,22 @@ import { Suspense } from "react";
 import { BriertoWatermark } from "@/components/layout/brierto/BriertoWatermark";
 import { InlineScript } from "@/components/layout/InlineScript";
 import { SanityChrome } from "@/components/sanity/SanityChrome";
+import { getSiteDefaults } from "@/features/site";
 import { getLocale, locales } from "@/lib/i18n/config";
-import { getDictionary } from "@/lib/i18n/dictionaries";
+import { siteUrl } from "@/lib/siteUrl";
 import { INK } from "@/lib/theme";
 
 // Type pairing "Expressive": Fraunces for display, Manrope for text.
+// `subsets` only picks the files to preload: every subset stays in the CSS and loads when a page uses its characters.
+// Latin covers English and Irish (the fadas are in it), so only that is preloaded; the extended file (names like
+// Łukasz or Zoë's ő) costs as much again and would compete with the first screen for nothing on most pages.
 const fraunces = Fraunces({
-  subsets: ["latin", "latin-ext"],
+  subsets: ["latin"],
   style: ["normal", "italic"],
   axes: ["SOFT", "opsz"],
   variable: "--font-fraunces",
 });
-const manrope = Manrope({ subsets: ["latin", "latin-ext"], variable: "--font-manrope" });
+const manrope = Manrope({ subsets: ["latin"], variable: "--font-manrope" });
 
 export function generateStaticParams() {
   return locales.map((lang) => ({ lang }));
@@ -29,13 +33,15 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: LayoutProps<"/[lang]">): Promise<Metadata> {
   const lang = await getLocale(params);
-  const { site } = await getDictionary(lang);
+  const { name, title, description } = await getSiteDefaults(lang);
   return {
+    // Canonicals, hreflang links and share images are written as paths; this makes them absolute.
+    metadataBase: new URL(siteUrl),
     title: {
-      default: site.name,
-      template: `%s · ${site.name}`,
+      default: title,
+      template: `%s · ${name}`,
     },
-    description: site.description,
+    description,
   };
 }
 

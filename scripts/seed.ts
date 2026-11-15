@@ -17,8 +17,9 @@ import { toolingClient } from "../sanity/tooling-client";
 // `published` is the client's default perspective; keep it, so what counts as already existing is unchanged.
 const client = toolingClient({ token: "write", perspective: "published" });
 
-// Stills from public/stills, shared out among the sample projects. The mockup's gear photos are
-// retailer/stock images, so rental items deliberately get no images until Fiú shoots its own.
+// The stand-in stills the /dev pages use, shared out among the sample projects.
+// The mockup's gear photos are retailer/stock images, so rental items deliberately get no images until Fiú shoots its own.
+const STILLS_DIR = "app/(site)/[lang]/dev/_concepts/stills";
 const STILLS = [
   { file: "conservatory.jpg", alt: "Conservatory" },
   { file: "banquet.jpg", alt: "Banquet table" },
@@ -33,7 +34,7 @@ const STILLS = [
 ];
 
 async function uploadStill(file: string, alt: string, extra: Record<string, unknown> = {}) {
-  const asset = await client.assets.upload("image", createReadStream(join("public/stills", file)), {
+  const asset = await client.assets.upload("image", createReadStream(join(STILLS_DIR, file)), {
     filename: basename(file),
   });
   return { _type: "image", asset: { _type: "reference", _ref: asset._id }, alt, ...extra };

@@ -17,6 +17,8 @@ async function audit(page: Page, path: string, open?: (page: Page) => Promise<vo
   // Wait for the page to settle (images and fonts in) before measuring.
   await waitForImagesAndFonts(page);
   await open?.(page);
+  // axe checks that headings exist and don't skip levels, not that the page has exactly one title.
+  await expect(page.locator("h1"), `One <h1> on ${path}`).toHaveCount(1);
   const { violations } = await new AxeBuilder({ page }).analyze();
   expect(
     violations.map((v) => `${v.id} (${v.impact}): ${v.help}\n${v.nodes.map((n) => `  ${n.target.join(" ")}`).join("\n")}`),

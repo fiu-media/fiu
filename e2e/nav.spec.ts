@@ -43,10 +43,10 @@ test.describe("on Home", () => {
     await page.evaluate(() => window.scrollTo(0, 0));
     await expect.poll(scrollY).toBe(192);
 
-    // The fold is reachable by scrolling, and carries the team photo's heading.
-    const team = page.getByText(en.about.teamHeading, { exact: true });
-    await team.scrollIntoViewIfNeeded();
-    await expect(team).toBeInViewport();
+    // The fold is reachable by scrolling. Its link to About is always there; the team photo only once one is uploaded.
+    const about = page.getByRole("region", { name: en.nav.about }).getByRole("link", { name: en.home.aboutCta });
+    await about.scrollIntoViewIfNeeded();
+    await expect(about).toBeInViewport();
     expect(await scrollY()).toBeGreaterThan(192);
   });
 

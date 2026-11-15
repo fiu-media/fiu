@@ -218,7 +218,7 @@ describe("toProject", () => {
 });
 
 describe("toProjectMeta", () => {
-  const meta = { title: "Solas", type: "Film", year: 2025, client: null };
+  const meta = { title: "Solas", type: "Film", year: 2025, client: null, cover: { landscape: null, portrait: null } };
 
   it("describes the project with its blurb", () => {
     const description = [
@@ -227,13 +227,18 @@ describe("toProjectMeta", () => {
     expect(toProjectMeta({ ...meta, description })).toEqual({
       title: "Solas",
       description: "A story.",
+      image: null,
     });
+  });
+
+  it("shares the landscape cover, cut to the link-preview frame", () => {
+    const shared = toProjectMeta({ ...meta, description: null, cover: { landscape: image("cover"), portrait: null } }).image;
+    expect(shared).toMatchObject({ width: 1200, height: 630, alt: "cover" });
+    expect(shared?.url).toContain("w=1200&h=630");
   });
 
   it("falls back to the line under the title, then to nothing", () => {
     expect(toProjectMeta({ ...meta, description: null }).description).toBe("Film · 2025");
-    expect(
-      toProjectMeta({ title: "Solas", type: null, year: null, client: null, description: null }).description,
-    ).toBeUndefined();
+    expect(toProjectMeta({ ...meta, type: null, year: null, description: null }).description).toBeUndefined();
   });
 });
