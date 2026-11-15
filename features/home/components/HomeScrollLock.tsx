@@ -1,71 +1,60 @@
 "use client";
 
-import { useEffect, useLayoutEffect } from "react";
+import { useEffect } from "react";
 
-import { nudgeHomeScroll, pinHomeScroll } from "@/lib/homeScroll";
 import { matches } from "@/lib/hooks/useMediaQuery";
+import { prefersReducedMotion } from "@/lib/hooks/useReducedMotion";
 import { MOBILE } from "@/lib/media";
 
+/** How long the scroll must have been still before the page eases back to the hero. */
+const IDLE_MS = 140;
+
 /**
- * Keeps Home's scroll from going above the hero (mobile only).
+ * Keeps Home on its hero on phones, not up in the photo bleed above it.
  *
- * Safari only shows page pixels behind its status bar and toolbar when the page has content beyond the
- * viewport edges, so the hero carries BLEED_PX of photo above and below. Below that bleed the page goes on to the fold,
- * which scrolls like any page; above the hero there is nothing to read, so the scroll is held at BLEED_PX or more,
- * e.g. after Next.js restores the scroll to the top or the toolbar changes the viewport height.
- *
- * The flag lives on <html> and is set from an effect, not from Home's markup: Next keeps the previous route
- * mounted but hidden (Activity), so a marker in Home's DOM would outlive the page and lock every page after it.
- * Effect cleanups run when Home is hidden, which is what removes the flag.
- *
- * The inline script (pin.ts) pins the scroll as soon as the bleed hero is in the document, so the first paint is
- * already in place. Nudging once the first photo and then the page have loaded (and when the splash goes, see Splash)
- * makes Safari sample again; each nudge restores itself without stacking against this listener.
+ * Safari and Chrome on iOS only draw page pixels behind the notch and the toolbar when the page has content beyond the
+ * viewport edges, so the hero carries photo above (the notch's height) and below (a toolbar's worth), and the page
+ * rests at the hero (the inline script in pin.ts puts the first paint there). Scrolling up into the bleed is allowed while a finger is on the screen
+ * or the page is still moving; this only acts once both have stopped, and then eases back. It never calls scrollTo while
+ * a gesture is in progress, which on iOS cancels the gesture and leaves the page stuck or jittering.
  */
 export function HomeScrollLock() {
-  useLayoutEffect(() => {
-    document.documentElement.dataset.homeLock = "";
-    return () => {
-      delete document.documentElement.dataset.homeLock;
-    };
-  }, []);
   useEffect(() => {
     if (!matches(MOBILE)) return;
-    const pin = pinHomeScroll;
-    const nudge = nudgeHomeScroll;
-    const onImageLoad = (event: Event) => {
-      if (!(event.target instanceof HTMLImageElement) || !event.target.closest("[data-home-bleed]")) return;
-      document.removeEventListener("load", onImageLoad, true);
-      nudge();
+    const heroTop = () => (document.querySelector("[data-hero]")?.getBoundingClientRect().top ?? 0) + window.scrollY;
+    let timer = 0;
+    let touching = false;
+    const settle = () => {
+      const top = heroTop();
+      if (touching || window.scrollY >= top - 0.5) return;
+      window.scrollTo({ top, behavior: prefersReducedMotion() ? "instant" : "smooth" });
     };
-    // Toolbar show/hide fires resize in bursts; one pin per frame is enough.
-    let resizeFrame = 0;
-    const onResize = () => {
-      resizeFrame ||= window.requestAnimationFrame(() => {
-        resizeFrame = 0;
-        pin();
-      });
+    const schedule = () => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(settle, IDLE_MS);
     };
-    pin();
-    const id = window.requestAnimationFrame(() => {
-      pin();
-      // The photo may already be in by the time this runs (cached, fast connection).
-      if (document.querySelector<HTMLImageElement>("[data-home-bleed] img")?.complete) nudge();
-    });
-    // Image `load` events don't bubble, so listen in the capture phase.
-    document.addEventListener("load", onImageLoad, true);
-    if (document.readyState !== "complete") window.addEventListener("load", nudge, { once: true });
-    window.addEventListener("scroll", pin, { passive: true });
-    window.addEventListener("resize", onResize);
-    window.addEventListener("pageshow", pin);
+    const onTouchStart = () => {
+      touching = true;
+      window.clearTimeout(timer);
+    };
+    const onTouchEnd = () => {
+      touching = false;
+      schedule();
+    };
+    // Next may have put the page back at the top (a restored scroll, a language switch) before this mounted.
+    if (window.scrollY < heroTop() - 0.5) window.scrollTo({ top: heroTop(), behavior: "instant" });
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("touchstart", onTouchStart, { passive: true });
+    window.addEventListener("touchend", onTouchEnd, { passive: true });
+    window.addEventListener("touchcancel", onTouchEnd, { passive: true });
+    window.addEventListener("pageshow", schedule);
     return () => {
-      window.cancelAnimationFrame(id);
-      if (resizeFrame) window.cancelAnimationFrame(resizeFrame);
-      document.removeEventListener("load", onImageLoad, true);
-      window.removeEventListener("load", nudge);
-      window.removeEventListener("scroll", pin);
-      window.removeEventListener("resize", onResize);
-      window.removeEventListener("pageshow", pin);
+      window.clearTimeout(timer);
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchend", onTouchEnd);
+      window.removeEventListener("touchcancel", onTouchEnd);
+      window.removeEventListener("pageshow", schedule);
     };
   }, []);
   return null;

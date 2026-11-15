@@ -29,37 +29,27 @@ test("choosing a link closes the menu and navigates", async ({ page }) => {
 });
 
 // Home runs its live WebGL logo unless motion is reduced. On a CI runner that is software-rendered, and it
-// starves the page's main thread, so the click on the menu link can stall past the test timeout. The scroll lock
-// has nothing to do with the scene, so this test runs against the static hero.
+// starves the page's main thread, so the click on the menu link can stall past the test timeout. The scroll checks
+// have nothing to do with the scene, so these tests run against the static hero.
 test.describe("on Home", () => {
   test.use({ reducedMotion: "reduce" });
 
-  test("on a phone Home scrolls down to its fold but not up into the bleed", async ({ page }) => {
+  test("on a phone Home rests on the hero, scrolls down to its fold and eases back up from the bleed", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/");
     const scrollY = () => page.evaluate(() => window.scrollY);
-    // The hero starts below the 12rem bleed (BLEED_PX) and is held there.
-    await expect.poll(scrollY).toBe(192);
+    // The hero starts below the top bleed (the notch's height). Scrolled up into it and
+    // left alone, the page settles back.
+    const heroTop = () =>
+      page.evaluate(() => (document.querySelector("[data-hero]")?.getBoundingClientRect().top ?? 0) + window.scrollY);
+    await expect.poll(scrollY).toBe(await heroTop());
     await page.evaluate(() => window.scrollTo(0, 0));
-    await expect.poll(scrollY).toBe(192);
+    await expect.poll(scrollY).toBe(await heroTop());
 
     // The fold is reachable by scrolling. Its link to About is always there; the team photo only once one is uploaded.
     const about = page.getByRole("region", { name: en.nav.about }).getByRole("link", { name: en.home.aboutCta });
     await about.scrollIntoViewIfNeeded();
     await expect(about).toBeInViewport();
-    expect(await scrollY()).toBeGreaterThan(192);
-  });
-
-  test("leaving Home releases its mobile scroll lock", async ({ page }) => {
-    await page.goto("/");
-    const html = page.locator("html");
-    await expect(html).toHaveAttribute("data-home-lock", "");
-
-    await page.getByRole("button", { name: en.nav.menu }).first().click();
-    await page.getByRole("dialog", { name: en.nav.label }).getByRole("link", { name: en.nav.contact }).click();
-    await expect(page).toHaveURL(/\/contact$/);
-
-    await expect(html).not.toHaveAttribute("data-home-lock", "");
-    expect(await html.evaluate((el) => getComputedStyle(el).touchAction)).not.toBe("none");
+    expect(await scrollY()).toBeGreaterThan(await heroTop());
   });
 });

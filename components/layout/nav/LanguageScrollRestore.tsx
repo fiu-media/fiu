@@ -2,10 +2,6 @@
 
 import { useLayoutEffect } from "react";
 
-import { BLEED_PX, homeIsLocked } from "@/lib/homeScroll";
-import { matches } from "@/lib/hooks/useMediaQuery";
-import { MOBILE } from "@/lib/media";
-
 import { takeCarriedScroll } from "./languageScroll";
 
 /** The page may still be streaming in, so wait this many frames for it to grow tall enough before giving up. */
@@ -23,9 +19,7 @@ export function LanguageScrollRestore({ pathname }: { pathname: string }) {
     let id = 0;
     const apply = () => {
       const max = document.documentElement.scrollHeight - window.innerHeight;
-      // On Home mobile the pin floor is BLEED_PX; restoring above the hero would fight HomeScrollLock and jitter.
-      const floor = homeIsLocked() && matches(MOBILE) ? BLEED_PX : 0;
-      const target = Math.max(floor, Math.min(y, Math.max(max, 0)));
+      const target = Math.min(y, Math.max(max, 0));
       window.scrollTo({ top: target, behavior: "instant" });
       // Reached, or the page has stopped growing: done. Otherwise try again once more of it has arrived.
       if (max >= y || ++frame >= MAX_FRAMES) return;

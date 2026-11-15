@@ -1,12 +1,11 @@
-import { BLEED_PX } from "@/lib/bleedPx";
 import { MOBILE } from "@/lib/media";
 
-// Apart from lib/homeScroll.ts because the Home page (a Server Component) imports the script, and homeScroll.ts reaches
-// the client-only media hooks.
+/** Where the hero starts in the document: the top bleed (`--bleed`, see Home's page). */
+export const HERO_TOP = `(document.querySelector("[data-hero]").getBoundingClientRect().top+scrollY)`;
 
 /**
  * Puts the scroll at the hero (the bottom of the top bleed) while the HTML is still parsing — placed in the page right
  * after the bleed hero, so the document is already tall enough and the first paint is already in place. Home can be
- * scrolled down from there to its fold, but not up into the bleed.
+ * scrolled down from there to its fold; scrolling up into the bleed eases back (HomeScrollLock).
  */
-export const pinHomeScrollScript = `if(matchMedia(${JSON.stringify(MOBILE)}).matches)scrollTo(0,${BLEED_PX})`;
+export const pinHomeScrollScript = `if(matchMedia(${JSON.stringify(MOBILE)}).matches)scrollTo(0,${HERO_TOP})`;
