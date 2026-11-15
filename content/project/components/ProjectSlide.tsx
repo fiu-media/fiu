@@ -21,6 +21,8 @@ export type ProjectSlideProps = {
   /** Accessible name for the slide, e.g. "Solas, 2 of 5". */
   label: string;
   title: string;
+  /** Project slug for analytics when Play is pressed. */
+  slug?: string | null | undefined;
   /** One line under the title: type, year, client. */
   meta: string;
   /** `data-sanity` value that makes the title clickable in the Presentation tool. */
@@ -51,6 +53,7 @@ export type ProjectSlideProps = {
 export function ProjectSlide({
   label,
   title,
+  slug,
   meta,
   titleAttribute,
   role,
@@ -72,6 +75,7 @@ export function ProjectSlide({
   const { playing, revealed, fullscreen, tapInPlayer, playFullscreenNatively, play, stop, setPlayerFrame, onScreen } =
     usePlayback(root, {
       video,
+      slug,
     });
 
   const showLoop = loop !== null && onScreen && !playing && !reducedMotion;

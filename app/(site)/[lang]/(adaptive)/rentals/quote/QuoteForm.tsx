@@ -14,6 +14,7 @@ import { PrefillBoundary } from "@/components/forms/PrefillBoundary";
 import { useConformForm } from "@/components/forms/useConformForm";
 import { GlassPillLink } from "@/components/ui/Glass";
 import { QuoteLines, useCatalogue, useQuoteBasket } from "@/features/rentals";
+import { trackEvent } from "@/lib/analytics";
 import { describeRange, isIsoDate, isValidRange, todayInDublin } from "@/lib/dates";
 import type { CountryList } from "@/lib/forms/countries";
 import { QUOTE_PARAMS, quoteHref, quotePrefill } from "@/lib/forms/prefill";
@@ -82,9 +83,14 @@ function QuoteFormFields({ lang, dict, countries }: Props) {
     return `${window.location.origin}${path}`;
   };
 
+  // Basket clears on success; capture the count first. A ref avoids a second fire when clear empties the lines.
+  const tracked = useRef(false);
   useEffect(() => {
-    if (succeeded) clear();
-  }, [succeeded, clear]);
+    if (!succeeded || tracked.current) return;
+    tracked.current = true;
+    trackEvent("Quote Submitted", { itemCount: lines.length });
+    clear();
+  }, [succeeded, clear, lines.length]);
 
   // The basket only exists in the browser, so until it is read the form would flash "empty".
   if (!ready) return <QuoteFormSkeleton label={dict.common.loading} />;

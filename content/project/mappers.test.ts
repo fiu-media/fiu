@@ -39,6 +39,7 @@ describe("toProjectSlideData", () => {
   const project = {
     _id: "drafts.p1",
     title: "Solas",
+    slug: "solas",
     type: "Film",
     year: 2025,
     client: null,
@@ -51,6 +52,7 @@ describe("toProjectSlideData", () => {
     const data = toProjectSlideData(project);
     expect(data).toMatchObject({
       title: "Solas",
+      slug: "solas",
       meta: "Film · 2025",
       vimeoUrl: "https://vimeo.com/1",
       previewLoopUrl: null,
