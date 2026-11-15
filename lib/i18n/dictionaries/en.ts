@@ -10,6 +10,7 @@ export const en = {
   },
   nav: {
     label: "Primary",
+    skip: "Skip to content",
     home: "Fiú Media, home",
     menu: "Menu",
     closeMenu: "Close menu",

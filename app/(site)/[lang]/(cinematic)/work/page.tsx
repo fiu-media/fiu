@@ -7,20 +7,22 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { FullScreenSkeleton, Skeleton } from "@/components/ui/Skeleton";
 import { ProjectSlide } from "@/content/project";
 import { getSiteSettings } from "@/content/siteSettings";
+import { siteMetadata } from "@/features/site";
 import { getWorkIndex, getWorkMeta, SlideProgress } from "@/features/work";
 import { cn } from "@/lib/cn";
 import { getLocale, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { format } from "@/lib/i18n/format";
 import { floatingBarInset, pageGutter, pageTop } from "@/lib/rail";
-import { href, pageMetadata, routes } from "@/lib/routes";
+import { href, routes } from "@/lib/routes";
+import { skipTarget } from "@/lib/skipLink";
 
 const SCROLL_ID = "work-scroll";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/work">): Promise<Metadata> {
   const lang = await getLocale(params);
   const { title, description } = await getWorkMeta(lang);
-  return pageMetadata(lang, routes.work(), { title, description });
+  return siteMetadata(lang, routes.work(), { title, description });
 }
 
 export default async function WorkPage({ params, searchParams }: PageProps<"/[lang]/work">) {
@@ -30,7 +32,7 @@ export default async function WorkPage({ params, searchParams }: PageProps<"/[la
     getSiteSettings(lang, { draft: false }),
   ]);
   return (
-    <main>
+    <main {...skipTarget}>
       {/* snap-start: the page snaps to its slides, and without this it would skip the title. */}
       {/* The gutter is inside the max-width box, as on the other pages, so the title lines up with theirs. */}
       <header className={cn("snap-start pb-10 md:pb-12", floatingBarInset, pageTop)}>

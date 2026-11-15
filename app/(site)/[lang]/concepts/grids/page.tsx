@@ -8,15 +8,16 @@ import { NameIndex } from "@/features/talent";
 import { at } from "@/lib/at";
 import { isLocale, localizedPath } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
-import banquet from "@/public/stills/banquet.jpg";
-import bouquet from "@/public/stills/bouquet.jpg";
-import citrus from "@/public/stills/citrus.jpg";
-import conservatory from "@/public/stills/conservatory.jpg";
-import fur from "@/public/stills/fur.jpg";
-import glow from "@/public/stills/glow.jpg";
-import grapes from "@/public/stills/grapes.jpg";
-import pond from "@/public/stills/pond.jpg";
-import supper from "@/public/stills/supper.jpg";
+
+import banquet from "../_options/stills/banquet.jpg";
+import bouquet from "../_options/stills/bouquet.jpg";
+import citrus from "../_options/stills/citrus.jpg";
+import conservatory from "../_options/stills/conservatory.jpg";
+import fur from "../_options/stills/fur.jpg";
+import glow from "../_options/stills/glow.jpg";
+import grapes from "../_options/stills/grapes.jpg";
+import pond from "../_options/stills/pond.jpg";
+import supper from "../_options/stills/supper.jpg";
 
 // Sign-off page for the Our Work and Talent grids (issue #9): two options each, on placeholder
 // content. Unlisted and kept out of search engines, like /concepts/specimen.

@@ -30,12 +30,13 @@ import { getStill, markIntroPlayed, setStill } from "./session";
 
 /**
  * "pending" on the server and during hydration, then the glass logo's starting tier, or "static"
- * (the SVG) for reduced motion and devices below the floor. See `logoTier.ts`.
+ * (the SVG) for reduced motion, devices below the floor, and a hero with no still for the glass to refract
+ * (`hasStills` false). See `logoTier.ts`.
  */
-function useLiveSupport(): Support {
+function useLiveSupport(hasStills: boolean): Support {
   return useSyncExternalStore(
     subscribeToReducedMotion,
-    () => (prefersReducedMotion() ? "static" : decideLogoTier()),
+    () => (!hasStills || prefersReducedMotion() ? "static" : decideLogoTier()),
     () => "pending",
   );
 }
@@ -44,11 +45,11 @@ function useLiveSupport(): Support {
  * The home hero's intro (splash, then the logo spinning, then settled): `introReducer` holds the state and this hook
  * feeds it the timers and the scene's callbacks. The intro is one schedule: the splash lifts, the glass logo starts to
  * spin partway through the fade, and the intro settles. Held in "splash" until the gates open, and skipped when the
- * splash was already dismissed.
+ * splash was already dismissed. `hasStills` is whether the hero has any photography: without it there is no glass logo.
  */
-export function useHeroIntro() {
+export function useHeroIntro(hasStills: boolean) {
   const [state, dispatch] = useReducer(introReducer, undefined, initialIntro);
-  const support = useLiveSupport();
+  const support = useLiveSupport(hasStills);
   const mode = selectMode(state, support);
   const splashDone = selectSplashDone(state, support);
   const introDone = selectIntroDone(state);
@@ -118,19 +119,20 @@ const ROTATE_SECONDS = 6;
 
 /**
  * Which of `keys` (one per still) is showing, moving on every ROTATE_SECONDS while `enabled`. Held until the intro is over so a
- * still crossfade (and its extra rendering) never lands mid-spin. A hero that mounts again (a language switch) opens on the
+ * still crossfade (and its extra rendering) never lands mid-spin, and while nobody can see the hero (`useHeroWatched`). A hero that mounts again (a language switch) opens on the
  * still that was showing, found by its key because another language's set may be ordered differently.
  */
 export function useStillRotation(keys: string[], enabled: boolean) {
   const count = keys.length;
   const [index, setIndex] = useState(() => Math.max(0, keys.indexOf(getStill() ?? "")));
   useEffect(() => {
-    if (!enabled) return;
+    // One still (or none) has nothing to move on to.
+    if (!enabled || count < 2) return;
     const id = window.setInterval(() => setIndex((i) => (i + 1) % count), ROTATE_SECONDS * 1000);
     return () => window.clearInterval(id);
   }, [enabled, count]);
-  // Only a move is recorded, not a mount: the first paint's stand-in stills are not the CMS's, and must not overwrite
-  // the still that was carried while they show.
+  // Only a move is recorded, not a mount: a hero that mounts again opens on the still that was carried over, and must
+  // not overwrite it with its own first one before it has found it.
   const shown = useRef(index);
   useEffect(() => {
     if (shown.current === index) return;

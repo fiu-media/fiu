@@ -9,24 +9,26 @@ import { BackLink } from "@/components/ui/BackLink";
 import { DetailList } from "@/components/ui/DetailList";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ProjectSlide, ProjectStills } from "@/content/project";
+import { siteMetadata } from "@/features/site";
 import { getProject, getProjectMeta } from "@/features/work";
 import { cn } from "@/lib/cn";
 import { getLocale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { pageGutter } from "@/lib/rail";
-import { href, pageMetadata, routes } from "@/lib/routes";
+import { href, routes } from "@/lib/routes";
+import { skipTarget } from "@/lib/skipLink";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/work/[slug]">): Promise<Metadata> {
   const [lang, { slug }] = await Promise.all([getLocale(params), params]);
   const meta = await getProjectMeta(lang, slug);
   if (!meta) return {};
-  return pageMetadata(lang, routes.project(slug), meta);
+  return siteMetadata(lang, routes.project(slug), meta);
 }
 
 export default function ProjectPage({ params }: PageProps<"/[lang]/work/[slug]">) {
   // Slugs are only known at runtime, so the project streams in behind a Suspense boundary.
   return (
-    <main>
+    <main {...skipTarget}>
       <Suspense fallback={<Skeleton className="h-dvh rounded-none" />}>
         <Project params={params} />
       </Suspense>

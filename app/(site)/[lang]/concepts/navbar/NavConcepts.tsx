@@ -7,10 +7,11 @@ import { type ReactNode, type RefObject, useEffect, useRef, useState } from "rea
 import { LogoMask } from "@/components/layout/nav/HomeLink";
 import { GlassPanel, GlassPillButton } from "@/components/ui/Glass";
 import type { NavItem } from "@/lib/i18n/nav";
-import conservatory from "@/public/stills/conservatory.jpg";
-import glow from "@/public/stills/glow.jpg";
-import pond from "@/public/stills/pond.jpg";
-import supper from "@/public/stills/supper.jpg";
+
+import conservatory from "../_options/stills/conservatory.jpg";
+import glow from "../_options/stills/glow.jpg";
+import pond from "../_options/stills/pond.jpg";
+import supper from "../_options/stills/supper.jpg";
 
 export type OptionKey = "a" | "b" | "c" | "d" | "e";
 

@@ -9,25 +9,27 @@ import { FullBleedScroll } from "@/components/ui/FullBleedScroll";
 import { SizedImg } from "@/components/ui/SizedImg";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ProjectSlide } from "@/content/project";
+import { siteMetadata } from "@/features/site";
 import { getProfileMeta, getTalentProfile } from "@/features/talent";
 import { cn } from "@/lib/cn";
 import { getLocale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { format } from "@/lib/i18n/format";
 import { floatingBarInset, pageGutter, pageTop } from "@/lib/rail";
-import { href, pageMetadata, routes } from "@/lib/routes";
+import { href, routes } from "@/lib/routes";
+import { skipTarget } from "@/lib/skipLink";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/talent/[slug]">): Promise<Metadata> {
   const [lang, { slug }] = await Promise.all([getLocale(params), params]);
   const meta = await getProfileMeta(lang, slug);
   if (!meta) return {};
-  return pageMetadata(lang, routes.person(slug), meta);
+  return siteMetadata(lang, routes.person(slug), meta);
 }
 
 export default function TalentProfilePage({ params }: PageProps<"/[lang]/talent/[slug]">) {
   // Slugs are only known at runtime, so the profile streams in behind a Suspense boundary.
   return (
-    <main>
+    <main {...skipTarget}>
       <Suspense fallback={<ProfileSkeleton />}>
         <Profile params={params} />
       </Suspense>

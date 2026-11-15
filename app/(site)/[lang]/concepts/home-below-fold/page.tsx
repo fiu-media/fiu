@@ -22,7 +22,7 @@ import { SiteNav } from "@/components/layout/nav/SiteNav";
 import { GlassPillLink } from "@/components/ui/Glass";
 import { HeroFade } from "@/components/ui/HeroFade";
 import { WORK_QUERY } from "@/content/project";
-import { ContactLinks, fallbackStills, getSiteSettings, toTeam } from "@/content/siteSettings";
+import { ContactLinks, getSiteSettings, toTeam } from "@/content/siteSettings";
 import { at } from "@/lib/at";
 import { logo } from "@/lib/brand";
 import { cn } from "@/lib/cn";
@@ -31,6 +31,8 @@ import { getDictionary } from "@/lib/i18n/dictionaries";
 import { railInset, railWidth } from "@/lib/rail";
 import { fetchContent } from "@/sanity/lib/fetch";
 import { toSizedImage } from "@/sanity/lib/image";
+
+import { standInStills, standInTeam } from "../_options/stills/standInStills";
 
 // Sign-off page for the condensed About + Our Work under Home's first screen: seven options (A to D, then three reel strips that also carry the team photo, email and Instagram) on the real slogan, About
 // still and projects. Unlisted, like /concepts/about. The first screen here is a stand-in (a still and the flat logo): the
@@ -41,7 +43,7 @@ export const metadata: Metadata = {
 };
 
 /** The first fallback still; the hero and the seam variants share it. */
-const heroStill = at(fallbackStills, 0);
+const heroStill = at(standInStills, 0);
 
 const OPTIONS = ["a", "b", "c", "d", "e", "f", "g"] as const;
 type Option = (typeof OPTIONS)[number];
@@ -136,7 +138,7 @@ async function Options({
       href: localizedPath(lang, "/about"),
     },
     // From Site settings like the live pages; the badge marks a photo that is still the code's stand-in.
-    team: { ...toTeam(about, dict.about.teamHeading), placeholder: !about.teamStill },
+    team: { ...(toTeam(about, dict.about.teamHeading) ?? standInTeam(dict.about.teamHeading)), placeholder: !about.teamStill },
     // Sample links until the editors have set the real ones.
     contacts: (
       <ContactLinks
@@ -257,7 +259,7 @@ async function getContent(lang: Locale) {
 
   // The options need a handful of projects to be judged fairly, so pad with samples until the real ones fill the row.
   const samples: FoldProject[] = sampleProjects.map((title, i) => {
-    const s = at(fallbackStills, (i + 1) % fallbackStills.length);
+    const s = at(standInStills, (i + 1) % standInStills.length);
     return {
       id: `sample-${title}`,
       title,

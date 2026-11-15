@@ -20,3 +20,8 @@ export const TALENT_PROFILE_QUERY = defineQuery(`
     "talentId": coalesce(${DEFAULT_COUNTERPART}._id, _id)
   }
 `);
+
+/** Every person who has a page, in every language they have one in, for the sitemap. */
+export const TALENT_PAGES_QUERY = defineQuery(`
+  *[_type == "talent" && defined(slug.current)]{ "slug": slug.current, language, _updatedAt }
+`);

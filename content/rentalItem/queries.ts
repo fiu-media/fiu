@@ -50,3 +50,8 @@ export const AVAILABLE_ITEM_IDS_QUERY = defineQuery(`
     ${RENTAL_ITEM_IDENTITY}
   }
 `);
+
+/** Every available rental item that has a page, in every language it exists in, for the sitemap. */
+export const RENTAL_PAGES_QUERY = defineQuery(`
+  *[_type == "rentalItem" && defined(slug.current)${RENTAL_AVAILABLE}]{ "slug": slug.current, language, _updatedAt }
+`);

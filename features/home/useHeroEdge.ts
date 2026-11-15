@@ -31,8 +31,8 @@ const UNREADABLE_EDGE = edgeForLuminance(1);
 const cache = new Map<string, number>();
 let canvas: HTMLCanvasElement | null = null;
 /**
- * The value currently applied, so a change can tell whether it is going up or down. Never cleared on unmount: Home's
- * stand-in hero unmounts after the real one has set it, and only `.hero-edge` (on Home) reads it anyway.
+ * The value currently applied, so a change can tell whether it is going up or down. Never cleared on unmount: a hero
+ * that mounts again (a language switch) carries on from it, and only `.hero-edge` (on Home) reads it anyway.
  */
 let applied: number | null = null;
 
@@ -84,7 +84,7 @@ export function useHeroEdge(images: RefObject<(HTMLImageElement | null)[]>, curr
       applied = edge;
     };
     const update = () => {
-      // Only the hero on screen: Home's stand-in hero (the Suspense fallback) and the real one can briefly both exist.
+      // Only a still that is on screen: a hero being replaced (a language switch) can briefly exist beside the new one.
       if (!img || !matches(DESKTOP) || !img.isConnected || img.getBoundingClientRect().width === 0) return;
       if (!img.complete || img.naturalWidth === 0) {
         img.addEventListener("load", update, { once: true });

@@ -1,6 +1,7 @@
 import { type Locale, localizedPath } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getNavItems } from "@/lib/i18n/nav";
+import { skipHref } from "@/lib/skipLink";
 
 import { SiteNavClient } from "./SiteNavClient";
 
@@ -21,13 +22,19 @@ export async function SiteNav({
 }) {
   const dict = await getDictionary(lang);
   return (
-    <SiteNavClient
-      lang={lang}
-      items={getNavItems(lang, dict)}
-      homeHref={localizedPath(lang, "/")}
-      labels={dict.nav}
-      onImage={onImage}
-      overFootage={overFootage}
-    />
+    <>
+      {/* First in the tab order on every page: past the rail (or the menu bar) to the page's <main>. */}
+      <a href={skipHref} className="skip-link">
+        {dict.nav.skip}
+      </a>
+      <SiteNavClient
+        lang={lang}
+        items={getNavItems(lang, dict)}
+        homeHref={localizedPath(lang, "/")}
+        labels={dict.nav}
+        onImage={onImage}
+        overFootage={overFootage}
+      />
+    </>
   );
 }

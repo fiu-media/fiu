@@ -174,6 +174,31 @@ body {
 }
 
 /*
+ * "Skip to content": the first stop in the tab order (SiteNav), parked above the screen until the keyboard reaches
+ * it. Above everything, Home's splash included, so it can be read whenever it has focus.
+ */
+.skip-link {
+  position: fixed;
+  top: max(0.75rem, env(safe-area-inset-top));
+  left: max(0.75rem, env(safe-area-inset-left));
+  z-index: 60;
+  transform: translateY(-200%);
+  border-radius: 9999px;
+  background: var(--bg-raised);
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--fg);
+}
+.skip-link:focus-visible {
+  transform: none;
+}
+/* The skip link's target takes focus so the next Tab starts inside the page; a ring around the whole page says nothing. */
+main:focus {
+  outline: none;
+}
+
+/*
  * Liquid glass
  * ------------
  * Clear acrylic like the live logo: no tint or frost on the faces, a thin grey edge with

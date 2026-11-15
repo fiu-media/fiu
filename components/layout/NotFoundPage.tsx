@@ -6,6 +6,7 @@ import { getDictionary } from "@/lib/i18n/dictionaries";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { getNavItems } from "@/lib/i18n/nav";
 import { pageGutter, railInset } from "@/lib/rail";
+import { skipTarget } from "@/lib/skipLink";
 
 export type NotFoundCopy = Dictionary["notFound"];
 
@@ -36,7 +37,7 @@ export async function NotFoundPage({
         <div className="absolute inset-0 bg-gradient-to-t from-ink/80 to-transparent" />
       </div>
       <SiteNav lang={lang} onImage />
-      <main className={cn("flex flex-1 flex-col justify-center gap-6 pt-24 pb-14 md:pt-0", pageGutter)}>
+      <main {...skipTarget} className={cn("flex flex-1 flex-col justify-center gap-6 pt-24 pb-14 md:pt-0", pageGutter)}>
         <p className="eyebrow">{copy.eyebrow}</p>
         <h1 className="max-w-3xl font-display text-5xl leading-[1.02] md:text-8xl">{copy.heading}</h1>
         <p className="max-w-md text-base text-fg-muted md:text-lg">{copy.body}</p>

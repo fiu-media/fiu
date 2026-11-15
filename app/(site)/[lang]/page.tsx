@@ -5,27 +5,28 @@ import { preload } from "react-dom";
 import { InlineScript } from "@/components/layout/InlineScript";
 import { SiteNav } from "@/components/layout/nav/SiteNav";
 import {
-  fallbackHeroStills,
   getHomeFold,
   getHomeStills,
   HomeFold,
   HomeHero,
+  HomeHeroFallback,
   HomeScrollLock,
   pinHomeScrollScript,
 } from "@/features/home";
-import { SiteFooter } from "@/features/site";
+import { SiteFooter, SiteJsonLd, siteMetadata } from "@/features/site";
 import { getLocale, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { LANDSCAPE, PORTRAIT } from "@/lib/media";
 import { railInset } from "@/lib/rail";
-import { pageMetadata, routes } from "@/lib/routes";
+import { routes } from "@/lib/routes";
+import { skipTarget } from "@/lib/skipLink";
 import { cinematicViewport } from "@/lib/theme";
 
 export const viewport = cinematicViewport;
 
 export async function generateMetadata({ params }: PageProps<"/[lang]">): Promise<Metadata> {
   const lang = await getLocale(params);
-  return pageMetadata(lang, routes.home());
+  return siteMetadata(lang, routes.home());
 }
 
 export default async function Home({ params }: PageProps<"/[lang]">) {
@@ -33,8 +34,9 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
   const dict = await getDictionary(lang);
   return (
     <div data-surface="cinematic" className="bg-ink">
+      <SiteJsonLd lang={lang} />
       <HomeScrollLock />
-      <main>
+      <main {...skipTarget}>
         {/* On mobile the photo bleeds 12rem past the hero above and below, inside a document that can't be scrolled above
             the hero (HomeScrollLock), so Safari has real pixels to show behind its status bar and toolbar. The hero uses
             svh on phones so toolbar show/hide doesn't resize the first screen and jitter the pin; from md up it is a
@@ -43,8 +45,8 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
           <div data-hero className="relative isolate h-svh bg-ink select-none md:h-dvh md:overflow-hidden">
             {/* The hero is imagery only: select-none stops a select-all or long-press copying the stills' alt texts as one string. */}
             <h1 className="sr-only">{dict.site.name}</h1>
-            {/* Reads draft mode, so it streams; the fallback stills keep the first paint identical. */}
-            <Suspense fallback={<HomeHero {...fallbackHeroStills} />}>
+            {/* Reads draft mode, so it streams in behind the splash, which is all the first paint shows. */}
+            <Suspense fallback={<HomeHeroFallback />}>
               <CmsHero lang={lang} />
             </Suspense>
             <SiteNav lang={lang} onImage overFootage />

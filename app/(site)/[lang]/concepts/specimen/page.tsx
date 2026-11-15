@@ -8,17 +8,17 @@ import { logo } from "@/lib/brand";
 import { isLocale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getNavItems, type NavItem } from "@/lib/i18n/nav";
-import banquet from "@/public/stills/banquet.jpg";
-import bouquet from "@/public/stills/bouquet.jpg";
-import citrus from "@/public/stills/citrus.jpg";
-import conservatory from "@/public/stills/conservatory.jpg";
-import fur from "@/public/stills/fur.jpg";
-import glow from "@/public/stills/glow.jpg";
-import grapes from "@/public/stills/grapes.jpg";
-import parlor from "@/public/stills/parlor.jpg";
-import pond from "@/public/stills/pond.jpg";
-import supper from "@/public/stills/supper.jpg";
 
+import banquet from "../_options/stills/banquet.jpg";
+import bouquet from "../_options/stills/bouquet.jpg";
+import citrus from "../_options/stills/citrus.jpg";
+import conservatory from "../_options/stills/conservatory.jpg";
+import fur from "../_options/stills/fur.jpg";
+import glow from "../_options/stills/glow.jpg";
+import grapes from "../_options/stills/grapes.jpg";
+import parlor from "../_options/stills/parlor.jpg";
+import pond from "../_options/stills/pond.jpg";
+import supper from "../_options/stills/supper.jpg";
 import { SchemeSwitcher } from "./SchemeSwitcher";
 
 // Living reference for the site's design theme: type (Fraunces + Manrope), cinematic and

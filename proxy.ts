@@ -24,6 +24,9 @@ function wantedLocale(request: NextRequest): Locale {
   return preferredLocale(request.headers.get("accept-language")) ?? defaultLocale;
 }
 
+/** The sitemap's public URL. It lists every project and person, so it goes through the gate like a page (see `config`). */
+const SITEMAP_PATH = "/sitemap.xml";
+
 /** Draft mode's cookie. Only an editor holding the Sanity preview secret can get it, which is what lets the Studio preview the site before launch. */
 const DRAFT_MODE_COOKIE = "__prerender_bypass";
 
@@ -50,6 +53,8 @@ async function gate(request: NextRequest): Promise<NextResponse | null> {
     url.searchParams.set("next", pathname + request.nextUrl.search);
     return NextResponse.redirect(url);
   }
+  // Nothing to show in its place: until launch there is no sitemap.
+  if (pathname === SITEMAP_PATH) return new NextResponse(null, { status: 404, headers: { "Cache-Control": "no-store" } });
   const url = request.nextUrl.clone();
   // An explicit `/ga/...` URL gets the Irish splash; an unprefixed one the language the visitor prefers.
   const locale = locales.find((l) => pathname === `/${l}` || pathname.startsWith(`/${l}/`)) ?? wantedLocale(request);
@@ -70,6 +75,8 @@ export async function proxy(request: NextRequest) {
   if (gated) return gated;
 
   const { pathname } = request.nextUrl;
+  // Not a page: it has one address and no language, so none of the routing below applies.
+  if (pathname === SITEMAP_PATH) return NextResponse.next();
   const locale = locales.find((l) => pathname === `/${l}` || pathname.startsWith(`/${l}/`));
 
   if (locale === defaultLocale) {
@@ -98,6 +105,7 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Skip the API, Next internals and anything that looks like a file (public assets, favicon).
-  matcher: ["/((?!api|_next|_vercel|.*\\..*).*)"],
+  // Skip the API, Next internals and anything that looks like a file (public assets, favicon). The sitemap looks like
+  // a file too, but it names every project and person, so it is listed to put it behind the launch gate.
+  matcher: ["/((?!api|_next|_vercel|.*\\..*).*)", "/sitemap.xml"],
 };

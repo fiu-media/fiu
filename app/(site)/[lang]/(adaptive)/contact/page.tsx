@@ -6,17 +6,18 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { PageShell } from "@/components/ui/PageShell";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ContactLinks, getSiteSettings } from "@/content/siteSettings";
+import { siteMetadata } from "@/features/site";
 import { countryList } from "@/lib/forms/countries";
 import { getLocale, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
-import { pageMetadata, routes } from "@/lib/routes";
+import { routes } from "@/lib/routes";
 
 import { ContactForm } from "./ContactForm";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/contact">): Promise<Metadata> {
   const lang = await getLocale(params);
   const [{ contact }, { contactIntro }] = await Promise.all([getDictionary(lang), getSiteSettings(lang, { draft: false })]);
-  return pageMetadata(lang, routes.contact(), { title: contact.title, description: contactIntro ?? undefined });
+  return siteMetadata(lang, routes.contact(), { title: contact.title, description: contactIntro ?? undefined });
 }
 
 export default async function ContactPage({ params }: PageProps<"/[lang]/contact">) {

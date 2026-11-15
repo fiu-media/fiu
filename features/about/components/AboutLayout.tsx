@@ -4,12 +4,14 @@ import { SheetFade } from "@/components/ui/HeroFade";
 import { SizedImg } from "@/components/ui/SizedImg";
 import { type Team, TeamFigure } from "@/content/siteSettings";
 import { cn } from "@/lib/cn";
+import { skipTarget } from "@/lib/skipLink";
 import type { SizedImage } from "@/sanity/lib/image";
 
 import { ScrollDownButton } from "./ScrollDownButton";
 
 export type AboutLayoutProps = {
-  still: SizedImage;
+  /** The photo behind the first screen; without one the slogan sits on the plain dark page. */
+  still: SizedImage | null;
   slogan: string | null;
   gloss: string | null;
   /** Accessible name of the arrow that scrolls past the first screen. */
@@ -29,14 +31,15 @@ export function Still({
   attribute,
   className,
 }: {
-  still: SizedImage;
+  still: SizedImage | null;
   attribute?: string | undefined;
   className?: string | undefined;
 }) {
+  if (!still) return null;
   return <SizedImg image={still} sizes="100vw" priority data-sanity={attribute} className={cn("size-full", className)} />;
 }
 
-/** The first screen of Option A: the still with the slogan large over it. */
+/** The first screen of Option A: the still with the slogan large over it (on the plain dark page until there is a still). */
 export function AboutHeroSection({
   still,
   slogan,
@@ -81,7 +84,7 @@ export function AboutLayoutA({ still, slogan, gloss, scrollLabel, manifesto, con
     </>
   );
   return (
-    <main className="relative text-on-image">
+    <main {...skipTarget} className="relative text-on-image">
       <AboutHeroSection still={still} slogan={slogan} gloss={gloss} scrollLabel={scrollLabel} attributes={attributes} />
 
       {/* Plain dark from here, so the surface's colours rather than the white kept for text over the photo. */}

@@ -45,7 +45,7 @@ export const siteSettings = defineType({
       ...imageWithAlt("teamStill", "Team photo"),
       group: "about",
       description:
-        "A photo of the whole team, shown on the About page and under the first screen of Home. Landscape works best (it is cropped to 4:3 on phones and a taller frame on desktop). Until one is added a stand-in photo is shown.",
+        "A photo of the whole team, shown on the About page and under the first screen of Home. Landscape works best (it is cropped to 4:3 on phones and a taller frame on desktop). Until one is added no photo is shown.",
     },
     defineField({
       name: "teamCaption",

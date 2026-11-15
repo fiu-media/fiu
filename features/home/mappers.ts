@@ -9,8 +9,6 @@ import { type SizedImage, toSizedImage } from "@/sanity/lib/image";
 import type { FoldProject } from "./components/HomeFold";
 
 export type HeroStill = SizedImage & {
-  /** Precomputed studio tint (hex) for the glass logo; avoids sampling the texture. Only the bundled fallbacks have one. */
-  lightTint?: string;
   /** `data-sanity` value that makes the still clickable in the Presentation tool. */
   dataSanity?: string;
 };
@@ -37,9 +35,17 @@ export const MAX_HERO_STILLS = 10;
 export function toHeroStills(projects: (HomeProject | null)[]): HeroStills {
   const sets = projects.filter((p): p is HomeProject => p !== null).map(toProjectSets);
   return {
-    landscape: takeTurns(sets.map((s) => s.landscape)),
-    portrait: takeTurns(sets.map((s) => s.portrait)),
+    landscape: firstBlursUp(takeTurns(sets.map((s) => s.landscape))),
+    portrait: firstBlursUp(takeTurns(sets.map((s) => s.portrait))),
   };
+}
+
+/**
+ * Only the first still keeps its blur-up placeholder. The rest load while they are invisible (the hero crossfades to a
+ * still that is already in), so theirs would never be seen, and each is over a kilobyte of the page's HTML, twice.
+ */
+function firstBlursUp(stills: HeroStill[]): HeroStill[] {
+  return stills.map(({ blurDataURL, ...still }, i) => (i === 0 && blurDataURL ? { ...still, blurDataURL } : still));
 }
 
 function toProjectSets(project: HomeProject) {
