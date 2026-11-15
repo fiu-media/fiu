@@ -36,10 +36,11 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
       <HomeScrollLock />
       <main>
         {/* On mobile the photo bleeds 12rem past the hero above and below, inside a document that can't be scrolled above
-            the hero (HomeScrollLock), so Safari has real pixels to show behind its status bar and toolbar. Off from md
-            up, the hero is a plain h-dvh screen. */}
+            the hero (HomeScrollLock), so Safari has real pixels to show behind its status bar and toolbar. The hero uses
+            svh on phones so toolbar show/hide doesn't resize the first screen and jitter the pin; from md up it is a
+            plain h-dvh screen. */}
         <div data-home-bleed className="max-md:py-48">
-          <div data-hero className="relative isolate h-dvh bg-ink select-none md:overflow-hidden">
+          <div data-hero className="relative isolate h-svh bg-ink select-none md:h-dvh md:overflow-hidden">
             {/* The hero is imagery only: select-none stops a select-all or long-press copying the stills' alt texts as one string. */}
             <h1 className="sr-only">{dict.site.name}</h1>
             {/* Reads draft mode, so it streams; the fallback stills keep the first paint identical. */}
@@ -49,6 +50,8 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
             <SiteNav lang={lang} onImage overFootage />
           </div>
         </div>
+        {/* Pin as soon as the bleed hero exists (tall enough to scroll to BLEED_PX), before the fold streams in. */}
+        <InlineScript html={pinHomeScrollScript} />
         {/* Under the fold: the team, the slogan and the work. Beside the rail like every other page. */}
         <div className={railInset}>
           <Suspense>
@@ -57,7 +60,6 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
           <SiteFooter lang={lang} />
         </div>
       </main>
-      <InlineScript html={pinHomeScrollScript} />
     </div>
   );
 }
