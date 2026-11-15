@@ -95,7 +95,7 @@ The notification emails are React Email components in `emails/`, rendered by `li
 
 ## Launch gate
 
-Until the date in Studio > Launch (`launchGate.launchAt`), production shows every page as the logo splash (`/launching`, rewritten by `proxy.ts`, so the URL doesn't change) and sends `noindex`. If no date is published the site stays closed; set a past date to open it. A change reaches the live site within about 30 seconds (`content/launchGate/loaders.ts`), and if Sanity can't be reached the last known date is kept.
+Until the date in Studio > Launch (`launchGate.launchAt`), production shows every page as the logo splash (`/launching`, rewritten by `proxy.ts`, so the URL doesn't change). Only the two home URLs, `/` and `/ga`, may be indexed, so Google can list the splash; every other URL sends `X-Robots-Tag: noindex, nofollow`. Don't put a `robots` meta on the splash page: Google takes the strictest directive, so it would override the proxy. If no date is published the site stays closed; set a past date to open it. A change reaches the live site within about 30 seconds (`content/launchGate/loaders.ts`), and if Sanity can't be reached the last known date is kept.
 
 - **Staff** sign in at `/login` with a Google account in the Workspace domain (`AUTH_ALLOWED_DOMAIN`, default `xn--fi-ska.ie`, i.e. fiú.ie) and see the real site. The check is on the server: the account's `hd` and email must both match and Google must have verified the email (`lib/gate/google.ts`, run from `lib/auth.ts`). Sign-in is [Better Auth](https://better-auth.com) in stateless mode: the session is an encrypted cookie lasting a week, and there is no database.
 - **Editors** previewing from the Studio get through while draft mode is on.
@@ -108,7 +108,7 @@ Until the date in Studio > Launch (`launchGate.launchAt`), production shows ever
 - **One helper.** Every page's `generateMetadata` returns `siteMetadata(lang, path, { title, description, image })` (`features/site/metadata.ts`): the canonical and hreflang links, and the whole Open Graph and Twitter card. Next replaces `openGraph` from one segment to the next instead of merging it, so a page that sets its own would lose the site's defaults; the helper fills them in.
 - **Site URL.** Absolute URLs are built on `siteUrl` (`lib/siteUrl.ts`): `NEXT_PUBLIC_SITE_URL`, else the production host, else localhost.
 - **Defaults come from the Studio.** Site settings > SEO has the default title, description and share image. Without an image, `public/brand/og.png` is used (the white mark on ink, made by `scripts/logo/07_share_image.py`). A project shares its cover and a person their portrait, cut to 1200×630 around the hotspot.
-- **`/sitemap.xml`** (`app/sitemap.ts`) lists every page in both languages, with projects and people read from Sanity. It goes through the launch gate: before launch it is a 404, so nothing unreleased is listed. **`/robots.txt`** (`app/robots.ts`) is always served, because a crawler has to be let in to see the gate's `noindex`.
+- **`/sitemap.xml`** (`app/sitemap.ts`) lists every page in both languages, with projects and people read from Sanity. It goes through the launch gate: before launch the proxy answers it with just `/` and `/ga` (`toSplashSitemap`), so nothing unreleased is listed. **`/robots.txt`** (`app/robots.ts`) is always served, because a crawler has to be let in to see the gate's `noindex` on every URL but the two home ones.
 - **Structured data.** Home carries `Organization` and `WebSite` JSON-LD (`features/site/components/SiteJsonLd.tsx`).
 
 ## Deep links into the forms

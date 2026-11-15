@@ -2,10 +2,12 @@ import { type NextRequest, NextResponse } from "next/server";
 
 import { getLaunchAt } from "@/content/launchGate/read";
 import { env } from "@/env";
+import { sitemapXml, toSplashSitemap } from "@/features/site/sitemap";
 import { hasStaffSession } from "@/lib/auth";
 import { decideGate, gateEnabled } from "@/lib/gate/decide";
 import { defaultLocale, isLocale, languageCookie, type Locale, locales, localizedPath } from "@/lib/i18n/config";
 import { preferredLocale } from "@/lib/i18n/negotiate";
+import { siteUrl } from "@/lib/siteUrl";
 
 /**
  * `detectLanguage`: turn off to stop sending visitors to the language their browser prefers (the switcher and cookie
@@ -26,6 +28,12 @@ function wantedLocale(request: NextRequest): Locale {
 
 /** The sitemap's public URL. It lists every project and person, so it goes through the gate like a page (see `config`). */
 const SITEMAP_PATH = "/sitemap.xml";
+
+/**
+ * The only URLs whose splash may be indexed (`/` and `/ga`): the site's two front doors. Every other URL shows the same
+ * splash, so letting them in would put dozens of duplicates, and the names of unreleased pages, in search results.
+ */
+const INDEXABLE_SPLASH_PATHS = new Set(locales.map((locale) => localizedPath(locale, "/")));
 
 /** Draft mode's cookie. Only an editor holding the Sanity preview secret can get it, which is what lets the Studio preview the site before launch. */
 const DRAFT_MODE_COOKIE = "__prerender_bypass";
@@ -53,15 +61,21 @@ async function gate(request: NextRequest): Promise<NextResponse | null> {
     url.searchParams.set("next", pathname + request.nextUrl.search);
     return NextResponse.redirect(url);
   }
-  // Nothing to show in its place: until launch there is no sitemap.
-  if (pathname === SITEMAP_PATH) return new NextResponse(null, { status: 404, headers: { "Cache-Control": "no-store" } });
+  // Until launch the sitemap lists the two splash URLs and nothing else. Built here, per request, rather than in
+  // `app/sitemap.ts`, whose cached copy could outlive the launch date.
+  if (pathname === SITEMAP_PATH) {
+    return new NextResponse(sitemapXml(toSplashSitemap(siteUrl)), {
+      headers: { "Content-Type": "application/xml", "Cache-Control": "no-store" },
+    });
+  }
   const url = request.nextUrl.clone();
   // An explicit `/ga/...` URL gets the Irish splash; an unprefixed one the language the visitor prefers.
   const locale = locales.find((l) => pathname === `/${l}` || pathname.startsWith(`/${l}/`)) ?? wantedLocale(request);
   url.pathname = `/${locale}/launching`;
   url.search = "";
   const response = NextResponse.rewrite(url);
-  response.headers.set("X-Robots-Tag", "noindex, nofollow");
+  // Closed unless the URL is one of the two front doors.
+  if (!INDEXABLE_SPLASH_PATHS.has(pathname)) response.headers.set("X-Robots-Tag", "noindex, nofollow");
   response.headers.set("Cache-Control", "no-store");
   return response;
 }

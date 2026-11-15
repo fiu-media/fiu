@@ -36,27 +36,59 @@ function toPages(docs: PageDoc[], toPath: (slug: string) => string): Page[] {
   }));
 }
 
+/** `path` in `locale` as an absolute URL on `origin` (no trailing slash); the default-language home is the bare origin. */
+function pageUrl(origin: string, locale: Locale, path: string) {
+  const localized = localizedPath(locale, path);
+  return localized === "/" ? origin : `${origin}${localized}`;
+}
+
+/** The entries for pages that exist in `available`, each listing its other-language twins so search engines pair them up. */
+function toEntries(pages: Page[], origin: string): MetadataRoute.Sitemap {
+  return pages.flatMap(({ path, locales: available, lastModified }) =>
+    available.map((locale) => ({
+      url: pageUrl(origin, locale, path),
+      ...(lastModified ? { lastModified } : {}),
+      alternates: { languages: Object.fromEntries(available.map((other) => [other, pageUrl(origin, other, path)])) },
+    })),
+  );
+}
+
 /**
  * The sitemap: every public page in every language it can be read in, each listing its other-language twins so search
  * engines pair them up. `origin` is the site's public URL without a trailing slash.
  */
 export function toSitemap({ projects, talent, rentals }: SitemapContent, origin: string): MetadataRoute.Sitemap {
   const fixed = [routes.home(), routes.about(), routes.work(), routes.talent(), routes.contact(), routes.privacy()];
-  const pages: Page[] = [
-    ...fixed.map((path) => ({ path, locales })),
-    ...toPages(projects, routes.project),
-    ...toPages(talent, routes.person),
-    ...(rentals ? [{ path: routes.rentals(), locales }, ...toPages(rentals, routes.rentalItem)] : []),
-  ];
-  const url = (locale: Locale, path: string) => {
-    const localized = localizedPath(locale, path);
-    return localized === "/" ? origin : `${origin}${localized}`;
-  };
-  return pages.flatMap(({ path, locales: available, lastModified }) =>
-    available.map((locale) => ({
-      url: url(locale, path),
-      ...(lastModified ? { lastModified } : {}),
-      alternates: { languages: Object.fromEntries(available.map((other) => [other, url(other, path)])) },
-    })),
+  return toEntries(
+    [
+      ...fixed.map((path) => ({ path, locales })),
+      ...toPages(projects, routes.project),
+      ...toPages(talent, routes.person),
+      ...(rentals ? [{ path: routes.rentals(), locales }, ...toPages(rentals, routes.rentalItem)] : []),
+    ],
+    origin,
   );
+}
+
+/** Before launch the only pages Google may know about are the splash's two home URLs; nothing unreleased is listed. */
+export function toSplashSitemap(origin: string): MetadataRoute.Sitemap {
+  return toEntries([{ path: routes.home(), locales }], origin);
+}
+
+const XML_ESCAPES: Record<string, string> = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&apos;" };
+const escapeXml = (value: string) => value.replace(/[&<>"']/g, (character) => XML_ESCAPES[character] ?? character);
+
+/**
+ * `entries` as sitemap XML, with the language twins as `xhtml:link` alternates (what Next writes for `app/sitemap.ts`).
+ * For the proxy, which can't use that file convention to answer before launch.
+ */
+export function sitemapXml(entries: MetadataRoute.Sitemap): string {
+  const urls = entries.map(({ url, lastModified, alternates }) => {
+    const links = Object.entries(alternates?.languages ?? {}).map(
+      ([hreflang, href]) => `<xhtml:link rel="alternate" hreflang="${escapeXml(hreflang)}" href="${escapeXml(String(href))}" />`,
+    );
+    const modified = lastModified ? [`<lastmod>${escapeXml(String(lastModified))}</lastmod>`] : [];
+    return `<url><loc>${escapeXml(url)}</loc>${[...links, ...modified].join("")}</url>`;
+  });
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">${urls.join("")}</urlset>\n`;
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { type SitemapContent, toSitemap } from "./sitemap";
+import { type SitemapContent, sitemapXml, toSitemap, toSplashSitemap } from "./sitemap";
 
 const ORIGIN = "https://fiu.test";
 const doc = (slug: string | null, language: string, _updatedAt = "2026-11-01T00:00:00Z") => ({ slug, language, _updatedAt });
@@ -63,5 +63,33 @@ describe("toSitemap", () => {
       "https://fiu.test/rentals/skypanel",
       "https://fiu.test/ga/rentals/skypanel",
     ]);
+  });
+});
+
+describe("toSplashSitemap", () => {
+  it("lists only the home page, in both languages, each naming its twin", () => {
+    expect(toSplashSitemap(ORIGIN)).toEqual([
+      { url: "https://fiu.test", alternates: { languages: { en: "https://fiu.test", ga: "https://fiu.test/ga" } } },
+      { url: "https://fiu.test/ga", alternates: { languages: { en: "https://fiu.test", ga: "https://fiu.test/ga" } } },
+    ]);
+  });
+});
+
+describe("sitemapXml", () => {
+  it("writes each entry with its language twins as xhtml alternates", () => {
+    const xml = sitemapXml(toSplashSitemap(ORIGIN));
+    expect(xml).toContain(
+      '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">',
+    );
+    expect(xml).toContain(
+      '<url><loc>https://fiu.test/ga</loc><xhtml:link rel="alternate" hreflang="en" href="https://fiu.test" />'
+        + '<xhtml:link rel="alternate" hreflang="ga" href="https://fiu.test/ga" /></url>',
+    );
+  });
+
+  it("escapes characters that mean something in XML, and writes the date when there is one", () => {
+    const xml = sitemapXml([{ url: "https://fiu.test/a?b=1&c=<2>", lastModified: "2026-11-01T00:00:00Z" }]);
+    expect(xml).toContain("<loc>https://fiu.test/a?b=1&amp;c=&lt;2&gt;</loc>");
+    expect(xml).toContain("<lastmod>2026-11-01T00:00:00Z</lastmod>");
   });
 });
