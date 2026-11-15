@@ -8,7 +8,7 @@ import { Suspense, useEffect, useRef, useState } from "react";
 
 import { GlassPillButton } from "@/components/ui/Glass";
 import { cn } from "@/lib/cn";
-import { nudgeHomeScrollRepeatedly } from "@/lib/homeScroll";
+import { homeIsLocked, nudgeHomeScrollRepeatedly } from "@/lib/homeScroll";
 import { matches, subscribeToMedia } from "@/lib/hooks/useMediaQuery";
 import type { Locale } from "@/lib/i18n/config";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
@@ -50,10 +50,10 @@ function Nav({ lang, items, homeHref, labels, onImage, overFootage, pathname }: 
   const popup = useRef<HTMLDivElement>(null);
   const rail = useRef<HTMLElement>(null);
   // On Home the photo is what Safari should tint its bars from again once the opaque menu is gone, but it only samples
-  // when the page scrolls, so nudge right away.
+  // when the page scrolls, so nudge right away (and only on Home — elsewhere the lock flag is already gone).
   const onOpenChange = (next: boolean) => {
     setOpenOn(next ? pathname : null);
-    if (!next) nudgeHomeScrollRepeatedly();
+    if (!next && homeIsLocked()) nudgeHomeScrollRepeatedly();
   };
   const close = () => onOpenChange(false);
 
