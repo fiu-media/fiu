@@ -51,7 +51,7 @@ export function decideGate({ enabled, launchAt, now, hasSession, hasDraftCookie,
   const launched = launchAt !== null && now >= launchAt;
   if (isStaffOnlyPath(pathname)) {
     if (hasSession) return "open";
-    return launched ? "login" : "splash";
+    return "login";
   }
   if (launched || hasSession || hasDraftCookie) return "open";
   return "splash";

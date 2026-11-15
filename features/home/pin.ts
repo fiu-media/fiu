@@ -5,7 +5,8 @@ import { MOBILE } from "@/lib/media";
 // the client-only media hooks.
 
 /**
- * Puts the scroll at the hero (the bottom of the top bleed) while the HTML is still parsing, so the first paint is already
- * in place. Home can be scrolled down from there to its fold, but not up into the bleed.
+ * Puts the scroll at the hero (the bottom of the top bleed) while the HTML is still parsing — placed in the page right
+ * after the bleed hero, so the document is already tall enough and the first paint is already in place. Home can be
+ * scrolled down from there to its fold, but not up into the bleed.
  */
 export const pinHomeScrollScript = `if(matchMedia(${JSON.stringify(MOBILE)}).matches)scrollTo(0,${BLEED_PX})`;

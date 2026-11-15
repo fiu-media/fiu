@@ -47,9 +47,9 @@ describe("decideGate", () => {
       expect(decide({ launchAt: past, pathname: root, hasSession: true })).toBe("open");
     });
 
-    it("shows the splash before launch, like everything else", () => {
-      expect(decide({ pathname: root })).toBe("splash");
-      expect(decide({ pathname: root, hasDraftCookie: true })).toBe("splash");
+    it("needs a session before launch too, and draft mode still doesn't count", () => {
+      expect(decide({ pathname: root })).toBe("login");
+      expect(decide({ pathname: root, hasDraftCookie: true })).toBe("login");
       expect(decide({ pathname: root, hasSession: true })).toBe("open");
     });
   });

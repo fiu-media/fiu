@@ -2,7 +2,7 @@
 
 import { useEffect, useLayoutEffect } from "react";
 
-import { BLEED_PX, homeIsLocked, nudgeHomeScroll } from "@/lib/homeScroll";
+import { nudgeHomeScroll, pinHomeScroll } from "@/lib/homeScroll";
 import { matches } from "@/lib/hooks/useMediaQuery";
 import { MOBILE } from "@/lib/media";
 
@@ -18,10 +18,9 @@ import { MOBILE } from "@/lib/media";
  * mounted but hidden (Activity), so a marker in Home's DOM would outlive the page and lock every page after it.
  * Effect cleanups run when Home is hidden, which is what removes the flag.
  *
- * The inline script (bleed.ts) already pins the scroll before first paint, so no scroll event follows and Safari can keep
- * the bar colour it sampled while the photo was still loading. Nudging the scroll once the first photo and then the page
- * have loaded (and when the splash goes, see Splash) makes it sample again; the `scroll` listener below puts the position
- * straight back.
+ * The inline script (pin.ts) pins the scroll as soon as the bleed hero is in the document, so the first paint is
+ * already in place. Nudging once the first photo and then the page have loaded (and when the splash goes, see Splash)
+ * makes Safari sample again; each nudge restores itself without stacking against this listener.
  */
 export function HomeScrollLock() {
   useLayoutEffect(() => {
@@ -32,16 +31,20 @@ export function HomeScrollLock() {
   }, []);
   useEffect(() => {
     if (!matches(MOBILE)) return;
-    const pin = () => {
-      if (homeIsLocked() && window.scrollY < BLEED_PX - 0.5) {
-        window.scrollTo({ top: BLEED_PX, behavior: "instant" });
-      }
-    };
+    const pin = pinHomeScroll;
     const nudge = nudgeHomeScroll;
     const onImageLoad = (event: Event) => {
       if (!(event.target instanceof HTMLImageElement) || !event.target.closest("[data-home-bleed]")) return;
       document.removeEventListener("load", onImageLoad, true);
       nudge();
+    };
+    // Toolbar show/hide fires resize in bursts; one pin per frame is enough.
+    let resizeFrame = 0;
+    const onResize = () => {
+      resizeFrame ||= window.requestAnimationFrame(() => {
+        resizeFrame = 0;
+        pin();
+      });
     };
     pin();
     const id = window.requestAnimationFrame(() => {
@@ -53,14 +56,15 @@ export function HomeScrollLock() {
     document.addEventListener("load", onImageLoad, true);
     if (document.readyState !== "complete") window.addEventListener("load", nudge, { once: true });
     window.addEventListener("scroll", pin, { passive: true });
-    window.addEventListener("resize", pin);
+    window.addEventListener("resize", onResize);
     window.addEventListener("pageshow", pin);
     return () => {
       window.cancelAnimationFrame(id);
+      if (resizeFrame) window.cancelAnimationFrame(resizeFrame);
       document.removeEventListener("load", onImageLoad, true);
       window.removeEventListener("load", nudge);
       window.removeEventListener("scroll", pin);
-      window.removeEventListener("resize", pin);
+      window.removeEventListener("resize", onResize);
       window.removeEventListener("pageshow", pin);
     };
   }, []);
