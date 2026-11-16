@@ -1,7 +1,7 @@
 import { MOBILE } from "@/lib/media";
 
 /** Where the hero starts in the document: the top bleed (`--bleed`, see Home's page). */
-export const HERO_TOP = `(document.querySelector("[data-hero]").getBoundingClientRect().top+scrollY)`;
+const HERO_TOP = `(document.querySelector("[data-hero]").getBoundingClientRect().top+scrollY)`;
 
 /**
  * Puts the scroll at the hero (the bottom of the top bleed) while the HTML is still parsing — placed in the page right
