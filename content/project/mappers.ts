@@ -115,6 +115,10 @@ export function toProject(project: NonNullable<PROJECT_QUERY_RESULT>, order: PRO
     description: project.description,
     /** `data-sanity` value that makes the description clickable in the Presentation tool. */
     descriptionAttribute: editAttr("project", project._id, "description"),
+    type: project.type,
+    year: project.year,
+    client: project.client,
+    descriptionPlain: plainText(project.description) || null,
     // A credit with no name has nothing to show.
     credits: (project.credits ?? []).flatMap((credit) =>
       credit.name
@@ -123,6 +127,7 @@ export function toProject(project: NonNullable<PROJECT_QUERY_RESULT>, order: PRO
               key: credit._key,
               role: credit.role,
               name: credit.name,
+              talentSlug: credit.talentSlug ?? null,
               href: credit.talentSlug ? href(lang, routes.person(credit.talentSlug)) : null,
             },
           ]

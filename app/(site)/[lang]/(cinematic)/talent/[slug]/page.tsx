@@ -9,7 +9,7 @@ import { FullBleedScroll } from "@/components/ui/FullBleedScroll";
 import { SizedImg } from "@/components/ui/SizedImg";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ProjectSlide } from "@/content/project";
-import { siteMetadata } from "@/features/site";
+import { PersonJsonLd, siteMetadata } from "@/features/site";
 import { getProfileMeta, getTalentProfile } from "@/features/talent";
 import { cn } from "@/lib/cn";
 import { getLocale } from "@/lib/i18n/config";
@@ -42,11 +42,19 @@ async function Profile({ params }: Pick<PageProps<"/[lang]/talent/[slug]">, "par
   const [{ talent, vimeo, slides }, profile] = await Promise.all([getDictionary(lang), getTalentProfile(lang, slug)]);
   if (!profile) notFound();
 
-  const { name, roles, portrait, bio, attrs, projects } = profile;
+  const { name, slug: personSlug, roles, roleList, portrait, bio, descriptionPlain, attrs, projects } = profile;
   const workLabel = format(talent.projectsOf, { name });
 
   return (
     <>
+      <PersonJsonLd
+        lang={lang}
+        name={name}
+        slug={personSlug}
+        roles={roleList}
+        description={descriptionPlain}
+        imageUrl={portrait?.src ?? null}
+      />
       {/* snap-start: the page snaps to its slides, and without this it would skip the bio. */}
       <section className={cn("snap-start pb-16 md:pb-12", pageGutter, floatingBarInset, pageTop)}>
         <div className="mx-auto mb-6 max-w-6xl">
