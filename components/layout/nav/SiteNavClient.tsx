@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
 
-import { GlassPillButton } from "@/components/ui/Glass";
 import { MenuGlyph } from "@/components/ui/MenuGlyph";
 import { cn } from "@/lib/cn";
 import { matches, subscribeToMedia } from "@/lib/hooks/useMediaQuery";
@@ -140,7 +139,11 @@ function Nav({ lang, items, homeHref, labels, onImage, overFootage, pathname }: 
         <Dialog.Root open={openOn === pathname} onOpenChange={onOpenChange} modal="trap-focus">
           <Dialog.Trigger
             aria-label={labels.menu}
-            render={<GlassPillButton size="sm" onImage={onImage} className="size-10 px-0" />}
+            className={cn(
+              "relative grid size-10 cursor-pointer place-items-center rounded-full transition-transform duration-200 before:absolute before:-inset-1 active:scale-95",
+              // Bare bars: white with a soft shadow over photography, the page's text colour elsewhere.
+              onImage ? "text-on-image drop-shadow-[0_1px_5px_rgb(0_0_0/0.5)]" : "text-fg",
+            )}
           >
             <MenuGlyph />
           </Dialog.Trigger>

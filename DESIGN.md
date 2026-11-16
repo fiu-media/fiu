@@ -157,7 +157,7 @@ Confirmed rejections: old-fashioned ornament in the UI (swashes, diamond markers
 - Footage runs full-bleed, one project per screen, with scroll-snap.
 - Clear-acrylic glass is the only material, and the only thing that rises off the page.
 - Fraunces italic for the brand voice; upright Manrope for anything you operate.
-- A 64px left rail on desktop. On phones, a floating bar with the logo and a glass menu button.
+- A 64px left rail on desktop. On phones, a floating bar with the logo and a bare menu icon.
 - Motion settles like a weighted object, with no bounce, and all of it turns off under reduced motion.
 
 ## Colors
@@ -221,7 +221,7 @@ The chrome uses near-black, warm off-white and greys only. The one colour accent
 
 On desktop (from `md`, 768px) a 64px rail is fixed down the left edge. It holds the logo at the top, the nav labels in the middle, and the language switcher at the bottom. The labels are set vertically (rotated, reading bottom to top), and a faint column of sprocket ticks runs down the rail's inner edge, its one nod to film. Content starts beside the rail with a 40px gutter (20px on phones), centred within 1152px.
 
-On phones the rail becomes a top bar: the logo on the left, a 40px glass Menu button on the right. On cinematic pages the bar floats over the footage; on adaptive pages it takes its own row. The menu opens as a full-screen, opaque Ink overlay with large Fraunces links.
+On phones the rail becomes a top bar: the logo on the left, a bare 40px Menu icon (three bars) on the right. On cinematic pages the bar floats over the footage; on adaptive pages it takes its own row. The menu opens as a full-screen, opaque Ink overlay with large Fraunces links.
 
 On Home the first screen is the still alone, fitted to the viewport, with no fade: on desktop the hero ends in a hard edge at the fold, and phones dissolve into Ink over a short bleed below it (3.75rem, or the safe-area inset if larger; the same strip of photo runs above the hero, behind the notch), with the fold starting 12rem below the hero so none of it shows in the first screen, behind the toolbars included. Other seams (fade, mirror, light spill, frame edge, lights down) are kept for comparison on /concepts/home-below-fold. Cinematic pages (Home, About, Work, Talent) are built from full-bleed slides that snap one per screen (`scroll-snap-type: y mandatory`). Captions sit at the bottom left, in line with the page gutter, over a Scrim gradient that darkens the frame toward the foot. Phones get portrait stills cut separately from the landscape set, not a crop of it. Adaptive pages (Contact, Privacy, later Rentals) sit in the same 1152px container. Contact splits into a 3:2 grid from `lg` (1024px): the form on the left, direct contact details on the right.
 
@@ -286,7 +286,7 @@ Quiet acrylic, tactile under the hand.
 ### Navigation
 
 - **Desktop rail:** 64px, Ink, Hairline right edge, sprocket ticks at 10% opacity. Labels are 0.875rem 500 Manrope set vertically in `fg-quiet` (the page's text at 50%, 4.76:1 on Ink; 62% in the light scheme), the same tone as the language not in use, and full white on hover. The current page goes full white with a 1px vertical rule beside it. Where footage runs under it (Home's hero), the rail has no backdrop, so the footage keeps its light: the hairline drops away, and the labels and the language codes share one set of tones, 80% white at rest and full white for the current language and on hover, with a tight halo hugging each letter (`text-shadow` at 63%, 53%, 39% and 25% black, 1px to 18px; a matching `drop-shadow` on the logo and language codes). Under them, an adaptive edge light: the hero reads the strip of each still under the rail (in word-sized bands, so a bright patch behind one label counts) and sets `--hero-edge` to just the darkening that keeps 80% white at 4.5:1, 0 on most stills and at most about 0.62 for a white frame, fading to nothing 12rem in. It rises before a brighter still fades in and only eases off once a crossfade has finished, so it never lags. It sits in the photo layer, under the logo, so the logo is never dimmed. Below the fold the rail settles back into the normal rail item by item, each label, the logo and the language codes switching (300ms) as the photo's bottom edge passes them, while the hairline grows down from that edge, so the change follows the edge the eye is already watching.
-- **Phone bar:** logo (36px tall) left, small glass Menu pill (40px square, 44px tap area) right. On Home, where the hero runs under the bar, a 160px Scrim fades down from 50% black behind them.
+- **Phone bar:** logo (36px tall) left, a bare Menu icon (three bars, 40px square, 44px tap area) right, which turns into the X as the menu opens. On Home, where the hero runs under the bar, a 160px Scrim fades down from 50% black behind them.
 - **Phone menu:** a full-screen opaque Ink overlay (opaque so Safari tints its bars correctly). Links are upright Fraunces at 3rem, 60% white, full white when current. Content fades over 300ms. Focus is trapped, Esc closes the menu, and focus goes back to the Menu button.
 - **Language switcher:** "EN" / "GA" at the foot of the rail, and inside the phone menu.
 
