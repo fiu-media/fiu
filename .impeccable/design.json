@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-09T23:46:36+00:00",
+  "generatedAt": "2026-11-16T19:44:24+00:00",
   "title": "Design System: Fiú Media",
   "extensions": {
     "colorMeta": {
@@ -77,6 +77,21 @@
           "oklch(95% 0.007 305)"
         ],
         "lightScheme": "#5f5a63"
+      },
+      "text-quiet": {
+        "role": "neutral",
+        "displayName": "Quiet Text",
+        "tonalRamp": [
+          "oklch(15% 0.005 75)",
+          "oklch(25% 0.007 75)",
+          "oklch(35% 0.008 75)",
+          "oklch(48% 0.010 75)",
+          "oklch(60% 0.010 75)",
+          "oklch(72% 0.008 75)",
+          "oklch(84% 0.007 75)",
+          "oklch(95% 0.005 75)"
+        ],
+        "lightScheme": "rgb(21 19 22 / 0.62)"
       },
       "line": {
         "role": "neutral",
@@ -261,7 +276,7 @@
       },
       "button-sm": {
         "displayName": "Button, small",
-        "purpose": "Small glass pill labels (filters, the Menu button)."
+        "purpose": "Small glass pill labels (filters)."
       }
     },
     "shadows": [
@@ -402,7 +417,7 @@
       "Footage runs full-bleed, one project per screen, with scroll-snap.",
       "Clear-acrylic glass is the only material, and the only thing that rises off the page.",
       "Fraunces italic for the brand voice; upright Manrope for anything you operate.",
-      "A 64px left rail on desktop. On phones, a floating bar with the logo and a glass menu button.",
+      "A 64px left rail on desktop. On phones, a floating bar with the logo and a bare menu icon.",
       "Motion settles like a weighted object, with no bounce, and all of it turns off under reduced motion."
     ],
     "rules": [
