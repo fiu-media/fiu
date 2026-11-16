@@ -1,0 +1,7 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": ["app/(site)/?lang?/concepts/**"],
+    "ignoreValues": []
+  }
+}
