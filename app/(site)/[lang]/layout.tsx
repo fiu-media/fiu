@@ -7,7 +7,6 @@ import { Fraunces, Manrope } from "next/font/google";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { Suspense } from "react";
 
-import { BriertoWatermark } from "@/components/layout/brierto/BriertoWatermark";
 import { InlineScript } from "@/components/layout/InlineScript";
 import { SanityChrome } from "@/components/sanity/SanityChrome";
 import { getSiteDefaults } from "@/features/site";
@@ -62,8 +61,6 @@ export default async function RootLayout({ children, params }: LayoutProps<"/[la
       </head>
       <body className="min-h-dvh font-sans antialiased">
         <NuqsAdapter>{children}</NuqsAdapter>
-        {/* Reads the search params, so it sits in its own Suspense (BriertoWatermark wraps itself in one). */}
-        <BriertoWatermark />
         <Suspense>
           <SanityChrome />
         </Suspense>
