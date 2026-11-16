@@ -78,12 +78,31 @@ describe("toRosterItems", () => {
 describe("toTalentProfile", () => {
   it("maps the person's fields", () => {
     const result = toTalentProfile(profile(), []);
-    expect(result).toMatchObject({ name: "Aoife", roles: "Director, Editor", bio: [], projects: [] });
+    expect(result).toMatchObject({
+      name: "Aoife",
+      slug: "aoife",
+      roles: "Director, Editor",
+      roleList: ["Director", "Editor"],
+      bio: [],
+      descriptionPlain: null,
+      projects: [],
+    });
     expect(result.portrait?.src).toBe(`img:portrait:${PORTRAIT_WIDTH}`);
   });
 
   it("has no portrait or roles when none are set", () => {
-    expect(toTalentProfile(profile({ portrait: null, roles: [] }), [])).toMatchObject({ portrait: null, roles: "" });
+    expect(toTalentProfile(profile({ portrait: null, roles: [] }), [])).toMatchObject({
+      portrait: null,
+      roles: "",
+      roleList: [],
+    });
+  });
+
+  it("flattens the bio for structured data", () => {
+    const bio = [
+      { _type: "block" as const, _key: "b1", children: [{ _type: "span" as const, _key: "s1", text: "Makes films." }] },
+    ];
+    expect(toTalentProfile(profile({ bio }), []).descriptionPlain).toBe("Makes films.");
   });
 
   it("points each edit link at the published document", () => {

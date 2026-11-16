@@ -3,7 +3,7 @@ import { Suspense } from "react";
 
 import { FullScreenSkeleton } from "@/components/ui/Skeleton";
 import { AboutLayoutA, getAbout } from "@/features/about";
-import { siteMetadata } from "@/features/site";
+import { AboutJsonLd, siteMetadata } from "@/features/site";
 import { getLocale, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { routes } from "@/lib/routes";
@@ -19,9 +19,12 @@ export default async function AboutPage({ params }: PageProps<"/[lang]/about">) 
   const { common } = await getDictionary(lang);
   // Draft mode makes the content dynamic, so it streams in behind a full-screen placeholder.
   return (
-    <Suspense fallback={<FullScreenSkeleton label={common.loading} />}>
-      <About lang={lang} />
-    </Suspense>
+    <>
+      <AboutJsonLd lang={lang} />
+      <Suspense fallback={<FullScreenSkeleton label={common.loading} />}>
+        <About lang={lang} />
+      </Suspense>
+    </>
   );
 }
 

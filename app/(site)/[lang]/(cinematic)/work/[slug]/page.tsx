@@ -9,7 +9,7 @@ import { BackLink } from "@/components/ui/BackLink";
 import { DetailList } from "@/components/ui/DetailList";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ProjectSlide, ProjectStills } from "@/content/project";
-import { siteMetadata } from "@/features/site";
+import { ProjectJsonLd, siteMetadata } from "@/features/site";
 import { getProject, getProjectMeta } from "@/features/work";
 import { cn } from "@/lib/cn";
 import { getLocale } from "@/lib/i18n/config";
@@ -41,12 +41,26 @@ async function Project({ params }: Pick<PageProps<"/[lang]/work/[slug]">, "param
   const [{ work, vimeo }, project] = await Promise.all([getDictionary(lang), getProject(lang, slug)]);
   if (!project) notFound();
 
-  const { slide, description, descriptionAttribute, credits, stills, next } = project;
+  const { slide, description, descriptionAttribute, descriptionPlain, type, year, client, credits, stills, next } = project;
   const hasDescription = !!description && description.length > 0;
   const hasStills = stills.landscape.length > 0 || stills.portrait.length > 0;
 
   return (
     <>
+      {slide.slug && (
+        <ProjectJsonLd
+          lang={lang}
+          title={slide.title}
+          slug={slide.slug}
+          description={descriptionPlain}
+          type={type}
+          year={year}
+          client={client}
+          imageUrl={slide.image?.src ?? null}
+          vimeoUrl={slide.vimeoUrl ?? null}
+          credits={credits}
+        />
+      )}
       <ProjectSlide
         as="h1"
         // Short of a full screen, so the page content shows beneath it: this is a page to scroll, not another slide.

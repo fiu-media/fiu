@@ -1,5 +1,5 @@
 import type { ProjectSlideData } from "@/content/project";
-import { toProjectSlideData } from "@/content/project";
+import { plainText, toProjectSlideData } from "@/content/project";
 import type { Locale } from "@/lib/i18n/config";
 import { href, routes } from "@/lib/routes";
 import type { TALENT_PROFILE_QUERY_RESULT, TALENT_PROJECTS_QUERY_RESULT, TALENT_QUERY_RESULT } from "@/sanity.types";
@@ -30,10 +30,15 @@ type TalentProject = ProjectSlideData & { id: string; role?: string | undefined 
 
 export type TalentProfile = {
   name: string;
+  slug: string;
   /** Joined for display; empty when none are set. */
   roles: string;
+  /** Individual roles, for structured data. */
+  roleList: string[];
   portrait: SizedImage | null;
   bio: NonNullable<TALENT_PROFILE_QUERY_RESULT>["bio"];
+  /** Plain-text bio for structured data; null when empty. */
+  descriptionPlain: string | null;
   /** `data-sanity` values that make each field clickable in the Presentation tool. */
   attrs: { portrait: string; name: string; bio: string };
   projects: TalentProject[];
@@ -44,11 +49,15 @@ export function toTalentProfile(
   profile: NonNullable<TALENT_PROFILE_QUERY_RESULT>,
   projects: TALENT_PROJECTS_QUERY_RESULT,
 ): TalentProfile {
+  const roleList = profile.roles.filter(Boolean);
   return {
     name: profile.name,
-    roles: joinRoles(profile.roles),
+    slug: profile.slug,
+    roles: joinRoles(roleList),
+    roleList,
     portrait: profile.portrait ? toSizedImage(profile.portrait, PORTRAIT_WIDTH) : null,
     bio: profile.bio,
+    descriptionPlain: plainText(profile.bio) || null,
     attrs: {
       portrait: editAttr("talent", profile._id, "portrait"),
       name: editAttr("talent", profile._id, "name"),

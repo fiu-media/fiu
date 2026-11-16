@@ -7,7 +7,8 @@ import { absoluteUrl } from "@/lib/siteUrl";
 const PRIVATE_PATHS = ["/concepts", "/dashboard", "/launching"];
 
 // Served at /robots.txt, before launch too: a crawler has to be let in to see the `noindex` the launch gate sends on
-// every URL but the two home ones, which may be indexed as the splash.
+// every URL but the two home ones, which may be indexed as the splash. `*` stays open so answer-engine crawlers
+// (GPTBot, ClaudeBot, PerplexityBot, Google-Extended and the rest) can read the public pages they cite from.
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: {
