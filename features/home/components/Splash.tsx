@@ -6,7 +6,6 @@ import { useEffect, useState } from "react";
 import { SPLASH_FADE_MS, splashFadeVars } from "@/features/logo";
 import { logo } from "@/lib/brand";
 import { cn } from "@/lib/cn";
-import { nudgeHomeScroll } from "@/lib/homeScroll";
 import { prefersReducedMotion } from "@/lib/hooks/useReducedMotion";
 
 import { isSplashDismissed, markSplashDismissed } from "../session";
@@ -43,19 +42,13 @@ export function Splash({ done }: { done: boolean }) {
     return () => window.clearTimeout(id);
   }, [done]);
 
-  // Safari only re-samples its bars when the page scrolls, not when pixels change under them, so nudge as the fade starts
-  // and again once the splash is gone.
-  useEffect(() => {
-    if (done || gone) nudgeHomeScroll();
-  }, [done, gone]);
-
   if (gone) return null;
 
   return (
     <div
       aria-hidden
       style={splashFadeVars}
-      className={cn("absolute inset-0 z-20 grid place-items-center max-md:-inset-y-48", done && "pointer-events-none")}
+      className={cn("absolute inset-0 z-20 grid place-items-center max-md:-inset-y-(--bleed)", done && "pointer-events-none")}
     >
       {/* Backdrop and logo fade together. In live mode the glass logo fades in on top over the
           same SPLASH_FADE_MS (HomeHero), so the handoff happens inside this one fade. */}

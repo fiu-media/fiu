@@ -111,14 +111,6 @@ html {
   background: var(--bg);
 }
 
-/* Home on mobile starts below a bleed of photo that HomeScrollLock keeps the scroll from going above; no bounce into it. */
-@media (max-width: 767px) {
-  html[data-home-lock],
-  html[data-home-lock] body {
-    overscroll-behavior: none;
-  }
-}
-
 html:has([data-surface="cinematic"]) {
   background: var(--ink);
 }
@@ -175,7 +167,9 @@ body {
 
 /*
  * "Skip to content": the first stop in the tab order (SiteNav), parked above the screen until the keyboard reaches
- * it. Above everything, Home's splash included, so it can be read whenever it has focus.
+ * it. Above everything, Home's splash included, so it can be read whenever it has focus. Also transparent while parked:
+ * on a phone the browser paints the page's pixels above the screen behind its notch and bars, so a link merely moved
+ * off-screen shows there as a blurred smear.
  */
 .skip-link {
   position: fixed;
@@ -183,6 +177,7 @@ body {
   left: max(0.75rem, env(safe-area-inset-left));
   z-index: 60;
   transform: translateY(-200%);
+  opacity: 0;
   border-radius: 9999px;
   background: var(--bg-raised);
   padding: 0.625rem 1rem;
@@ -192,7 +187,75 @@ body {
 }
 .skip-link:focus-visible {
   transform: none;
+  opacity: 1;
 }
+/*
+ * The phone menu's icon (MenuGlyph): three bars that turn into an X. The outer two slide to the middle and cross at
+ * 45 degrees, the middle one shortens away, all on the page's settle curve. `data-open` forces the X; otherwise the
+ * trigger's `data-popup-open` does, and inside the menu popup the starting and ending styles put it back to bars, so the
+ * Close button over the trigger animates the same turn in place.
+ */
+.menu-glyph {
+  position: relative;
+  display: block;
+  width: 1.5rem;
+  height: 1.5rem;
+  color: inherit;
+}
+.menu-glyph > span {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1.25rem;
+  height: 1.5px;
+  margin: -0.75px 0 0 -0.625rem;
+  border-radius: 9999px;
+  background: currentColor;
+  transition:
+    transform 320ms cubic-bezier(0.2, 0.7, 0.2, 1),
+    opacity 200ms ease-out;
+}
+.menu-glyph > span:nth-child(1) {
+  transform: translateY(-0.4375rem);
+}
+.menu-glyph > span:nth-child(3) {
+  transform: translateY(0.4375rem);
+}
+.menu-glyph > span:nth-child(2) {
+  transform-origin: center;
+}
+[data-popup-open] .menu-glyph > span:nth-child(1),
+.menu-glyph[data-open] > span:nth-child(1) {
+  transform: rotate(45deg);
+}
+[data-popup-open] .menu-glyph > span:nth-child(3),
+.menu-glyph[data-open] > span:nth-child(3) {
+  transform: rotate(-45deg);
+}
+[data-popup-open] .menu-glyph > span:nth-child(2),
+.menu-glyph[data-open] > span:nth-child(2) {
+  opacity: 0;
+  transform: scaleX(0);
+}
+[data-starting-style] .menu-glyph[data-open] > span:nth-child(1),
+[data-ending-style] .menu-glyph[data-open] > span:nth-child(1) {
+  transform: translateY(-0.4375rem);
+}
+[data-starting-style] .menu-glyph[data-open] > span:nth-child(3),
+[data-ending-style] .menu-glyph[data-open] > span:nth-child(3) {
+  transform: translateY(0.4375rem);
+}
+[data-starting-style] .menu-glyph[data-open] > span:nth-child(2),
+[data-ending-style] .menu-glyph[data-open] > span:nth-child(2) {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .menu-glyph > span {
+    transition: none;
+  }
+}
+
 /* The skip link's target takes focus so the next Tab starts inside the page; a ring around the whole page says nothing. */
 main:focus {
   outline: none;

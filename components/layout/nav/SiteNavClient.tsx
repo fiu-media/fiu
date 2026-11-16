@@ -1,14 +1,12 @@
 "use client";
 
 import { Dialog } from "@base-ui/react/dialog";
-import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
 
-import { GlassPillButton } from "@/components/ui/Glass";
+import { MenuGlyph } from "@/components/ui/MenuGlyph";
 import { cn } from "@/lib/cn";
-import { homeIsLocked, nudgeHomeScrollRepeatedly } from "@/lib/homeScroll";
 import { matches, subscribeToMedia } from "@/lib/hooks/useMediaQuery";
 import type { Locale } from "@/lib/i18n/config";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
@@ -49,12 +47,7 @@ function Nav({ lang, items, homeHref, labels, onImage, overFootage, pathname }: 
   const [openOn, setOpenOn] = useState<string | null>(null);
   const popup = useRef<HTMLDivElement>(null);
   const rail = useRef<HTMLElement>(null);
-  // On Home the photo is what Safari should tint its bars from again once the opaque menu is gone, but it only samples
-  // when the page scrolls, so nudge right away (and only on Home — elsewhere the lock flag is already gone).
-  const onOpenChange = (next: boolean) => {
-    setOpenOn(next ? pathname : null);
-    if (!next && homeIsLocked()) nudgeHomeScrollRepeatedly();
-  };
+  const onOpenChange = (next: boolean) => setOpenOn(next ? pathname : null);
   const close = () => onOpenChange(false);
 
   // Growing to the rail layout leaves it behind too.
@@ -146,9 +139,13 @@ function Nav({ lang, items, homeHref, labels, onImage, overFootage, pathname }: 
         <Dialog.Root open={openOn === pathname} onOpenChange={onOpenChange} modal="trap-focus">
           <Dialog.Trigger
             aria-label={labels.menu}
-            render={<GlassPillButton size="sm" onImage={onImage} className="size-10 px-0" />}
+            className={cn(
+              "relative grid size-10 cursor-pointer place-items-center rounded-full transition-transform duration-200 before:absolute before:-inset-1 active:scale-95",
+              // Bare bars: white with a soft shadow over photography, the page's text colour elsewhere.
+              onImage ? "text-on-image drop-shadow-[0_1px_5px_rgb(0_0_0/0.5)]" : "text-fg",
+            )}
           >
-            <Menu aria-hidden className="size-6" />
+            <MenuGlyph />
           </Dialog.Trigger>
           <Dialog.Portal>
             {/* The background is an opaque colour on the popup itself, not a translucent layer inside it: Safari takes
@@ -167,9 +164,9 @@ function Nav({ lang, items, homeHref, labels, onImage, overFootage, pathname }: 
                 <HomeLink href={homeHref} label={labels.home} className="h-9" />
                 <Dialog.Close
                   aria-label={labels.closeMenu}
-                  className="-mr-2 grid size-10 cursor-pointer place-items-center rounded-full hover:bg-fg/10"
+                  className="grid size-10 cursor-pointer place-items-center rounded-full hover:bg-fg/10"
                 >
-                  <X aria-hidden className="size-6" />
+                  <MenuGlyph open />
                 </Dialog.Close>
               </div>
               <nav

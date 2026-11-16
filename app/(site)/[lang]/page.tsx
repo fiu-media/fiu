@@ -37,11 +37,13 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
       <SiteJsonLd lang={lang} />
       <HomeScrollLock />
       <main {...skipTarget}>
-        {/* On mobile the photo bleeds 12rem past the hero above and below, inside a document that can't be scrolled above
-            the hero (HomeScrollLock), so Safari has real pixels to show behind its status bar and toolbar. The hero uses
-            svh on phones so toolbar show/hide doesn't resize the first screen and jitter the pin; from md up it is a
-            plain h-dvh screen. */}
-        <div data-home-bleed className="max-md:py-48">
+        {/* On mobile the photo bleeds past the hero by --bleed, above and below: real pixels for the browser to show
+            behind the notch and the top bar. The safe-area inset is 0 in a browser that isn't fullscreen, so 3.75rem (the
+            tallest status bar, 59pt) is the floor. The photo layer is only as tall as the hero plus that, so the still is
+            scaled to the hero, not to a much taller box that crops it. The page rests on the hero (the pin script and
+            HomeScrollLock), and the fold starts 12rem below it, so nothing of the fold shows in the first screen, however far the toolbars and the home indicator reach over the page (100lvh - 100svh was tried as a measure of that and still let the team photo show on a phone, so this is a fixed margin). The hero uses svh on phones so toolbar show/hide
+            doesn't resize the first screen; from md up it is a plain h-dvh screen. */}
+        <div className="max-md:pt-(--bleed) max-md:pb-48 max-md:[--bleed:max(env(safe-area-inset-top),3.75rem)]">
           <div data-hero className="relative isolate h-svh bg-ink select-none md:h-dvh md:overflow-hidden">
             {/* The hero is imagery only: select-none stops a select-all or long-press copying the stills' alt texts as one string. */}
             <h1 className="sr-only">{dict.site.name}</h1>
@@ -52,7 +54,7 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
             <SiteNav lang={lang} onImage overFootage />
           </div>
         </div>
-        {/* Pin as soon as the bleed hero exists (tall enough to scroll to BLEED_PX), before the fold streams in. */}
+        {/* Pin as soon as the bleed hero exists (tall enough to scroll to it), before the fold streams in. */}
         <InlineScript html={pinHomeScrollScript} />
         {/* Under the fold: the team, the slogan and the work. Beside the rail like every other page. */}
         <div className={railInset}>

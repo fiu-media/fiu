@@ -7,10 +7,10 @@ import { parseVimeo, vimeoEmbedUrl } from "@/lib/vimeo";
 export const organizationId = () => `${siteUrl}/#organization`;
 
 /** Stable id for the website node. */
-export const websiteId = () => `${siteUrl}/#website`;
+const websiteId = () => `${siteUrl}/#website`;
 
 /** The company behind the trading name, as the privacy policy names it. */
-export const LEGAL_NAME = "Fiu Media Limited";
+const LEGAL_NAME = "Fiu Media Limited";
 
 const LOGO = {
   "@type": "ImageObject" as const,
@@ -75,7 +75,7 @@ export function organizationNode({ name, description, email, instagramUrl }: Org
 }
 
 /** The site itself, pointing at the organisation that publishes it. */
-export function websiteNode(name: string) {
+function websiteNode(name: string) {
   return {
     "@type": "WebSite" as const,
     "@id": websiteId(),

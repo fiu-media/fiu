@@ -92,7 +92,9 @@ export function CanvasRoot({
       // the WebGL backdrop is only sampled for logo refraction (see BackdropLayerGate).
       onCreated={({ gl }) => {
         gl.setClearColor(0x000000, 0);
-        gl.domElement.style.touchAction = "none";
+        // The canvas fills Home's hero, so `none` would leave no place on the screen where a swipe could scroll the page.
+        // Vertical pans belong to the page (the drag ends on the resulting pointercancel); sideways drags still spin the logo.
+        gl.domElement.style.touchAction = "pan-y";
         gl.domElement.addEventListener("webglcontextlost", (event) => {
           event.preventDefault();
           onContextLost?.();

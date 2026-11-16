@@ -5,7 +5,7 @@ import Image from "next/image";
 import { Component, type ReactNode, useMemo, useRef, useState } from "react";
 
 import { ArtDirectedImage } from "@/components/ui/ArtDirectedImage";
-import { HeroFade } from "@/components/ui/HeroFade";
+import { HeroFade, HeroTopScrim } from "@/components/ui/HeroFade";
 import { splashFadeVars } from "@/features/logo";
 import { at } from "@/lib/at";
 import { logo } from "@/lib/brand";
@@ -21,8 +21,8 @@ import { Splash } from "./Splash";
 
 const LogoScene = dynamic(() => import("@/features/logo/LogoScene"), { ssr: false });
 
-/** Mobile only: matches the padding around Home's <main> and HomeScrollLock's BLEED_PX. Symmetric, so the logo stays centred. */
-const BLEED_CLASS = "max-md:-inset-y-48";
+/** Mobile only: the photo runs `--bleed` (set in Home's page) past the hero above and below, the same as the page's top padding. Symmetric, so the logo stays centred. */
+const BLEED_CLASS = "max-md:-inset-y-(--bleed)";
 /**
  * The hidden canvas is never fully transparent: at 0 the browser stops compositing it, and then
  * the scene's quality probe (which runs while it is hidden) misses that cost and reads a slow
@@ -106,6 +106,7 @@ export function HomeHero({ landscape, portrait }: HeroStills) {
         {/* Mobile: the photo dissolves into the ink over the bleed below the hero, under the logo layers that follow. On
             desktop the hero ends in a hard edge at the fold (other seams are compared on /concepts/home-below-fold). */}
         <HeroFade bleed />
+        <HeroTopScrim />
         {/* Behind a bright still, the edge under the desktop rail darkens just enough for its labels (--hero-edge, see
             useHeroEdge). Under the logo layers, so it never dims the logo. */}
         <div aria-hidden className="hero-edge pointer-events-none absolute inset-y-0 left-0 hidden w-48 md:block" />
