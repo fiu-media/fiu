@@ -22,6 +22,7 @@ import { GlassPanel, GlassPillButton } from "@/components/ui/Glass";
 import { getSiteSettings } from "@/content/siteSettings";
 import { env } from "@/env";
 import { getStaffSession } from "@/lib/auth";
+import { emailForDisplay } from "@/lib/email/display";
 import { getLocale, type Locale, localizedPath } from "@/lib/i18n/config";
 import { studioUrl } from "@/sanity/studio-env";
 
@@ -243,8 +244,10 @@ function DashboardSessionFallback() {
 async function DashboardSession() {
   const session = await getStaffSession(await headers());
   const user = session?.user;
+  // Google sends a Workspace address in punycode (`xn--…`); show it as the visitor would read it.
+  const email = user?.email ? emailForDisplay(user.email) : undefined;
   const trimmedName = user?.name.trim();
-  const displayName = trimmedName !== undefined && trimmedName !== "" ? trimmedName : user?.email;
+  const displayName = trimmedName !== undefined && trimmedName !== "" ? trimmedName : email;
 
   return (
     <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
@@ -252,7 +255,7 @@ async function DashboardSession() {
         {displayName ? (
           <>
             Signed in as <span className="text-fg">{displayName}</span>
-            {user?.email && user.name ? <span className="text-fg-muted"> ({user.email})</span> : null}.
+            {email && user?.name ? <span className="text-fg-muted"> ({email})</span> : null}.
           </>
         ) : (
           <>Staff tools for Fiú.</>
