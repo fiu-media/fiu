@@ -200,9 +200,24 @@ describe("toProject", () => {
   it("lists credits with a name, linking the ones that are on the roster", () => {
     const { credits } = toProject(project, [{ title: "A", slug: "a" }], "ga");
     expect(credits).toEqual([
-      { key: "k1", role: "Director", name: "Aoife", href: "/ga/talent/aoife" },
-      { key: "k2", role: "Sound", name: "Guest", href: null },
+      { key: "k1", role: "Director", name: "Aoife", talentSlug: "aoife", href: "/ga/talent/aoife" },
+      { key: "k2", role: "Sound", name: "Guest", talentSlug: null, href: null },
     ]);
+  });
+
+  it("keeps type, year, client and a plain-text description for structured data", () => {
+    const withBlurb = {
+      ...project,
+      description: [
+        { _type: "block" as const, _key: "b1", children: [{ _type: "span" as const, _key: "s1", text: "A story." }] },
+      ],
+    };
+    expect(toProject(withBlurb, [{ title: "A", slug: "a" }], "en")).toMatchObject({
+      type: "film",
+      year: 2025,
+      client: "RTÉ",
+      descriptionPlain: "A story.",
+    });
   });
 
   it("builds the hero slide, the stills and the next project", () => {
