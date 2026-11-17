@@ -54,6 +54,8 @@
        still holds 4.5:1 (dark 50%: 4.76:1 on ink; light 62%: about 4.9:1 on paper). */
     --fg-quiet: light-dark(rgb(21 19 22 / 0.62), rgb(242 238 232 / 0.5));
     --line: light-dark(rgb(21 19 22 / 0.12), rgb(255 255 255 / 0.12));
+    /* A form control's edge must hold 3:1 against the page (SC 1.4.11), unlike a divider: dark 35%, 3.1:1 on ink; light 50%, 3.4:1 on paper. */
+    --control-line: light-dark(rgb(21 19 22 / 0.5), rgb(255 255 255 / 0.35));
     --skeleton: light-dark(rgb(21 19 22 / 0.1), #24222a);
     --accent: light-dark(#a3122a, #ff5a6e);
     /* Text on an accent fill. The dark accent is too light for white text to pass AA, so it takes ink. */
@@ -92,6 +94,7 @@ html:has([data-snap="mandatory"]:not([style*="display: none"] *)) {
   --color-fg-muted: var(--fg-muted);
   --color-fg-quiet: var(--fg-quiet);
   --color-line: var(--line);
+  --color-control-line: var(--control-line);
   --color-skeleton: var(--skeleton);
   --color-accent: var(--accent);
   --color-on-accent: var(--on-accent);

@@ -7,7 +7,8 @@ import { cn } from "@/lib/cn";
 // The quote form's look, not its behaviour: the site's control styles, with one field showing an error so the accent
 // is on show. A client component because the control styles come from the (client) form module.
 export function QuoteSample({ radius }: { radius: number }) {
-  const control = (invalid?: boolean) => cn(controlClass, "rounded-(--radius-field)", invalid ? "border-accent" : "border-line");
+  const control = (invalid?: boolean) =>
+    cn(controlClass, "rounded-(--radius-field)", invalid ? "border-accent" : "border-control-line");
   return (
     <GlassPanel radius={radius} className="p-6 md:p-8">
       <h3 className="font-display text-3xl">Your quote</h3>

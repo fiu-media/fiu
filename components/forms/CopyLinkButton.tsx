@@ -102,7 +102,7 @@ export function CopyLinkButton({ label, copiedLabel, failedLabel, shareLabel, sh
             readOnly
             value={link}
             onFocus={(event) => event.target.select()}
-            className="w-full rounded-xl border border-line bg-bg-raised px-3 py-2 text-sm text-fg"
+            className="w-full rounded-xl border border-control-line bg-bg-raised px-3 py-2 text-sm text-fg"
           />
         </label>
       )}

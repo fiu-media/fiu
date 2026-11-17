@@ -108,6 +108,21 @@
         ],
         "lightScheme": "rgb(21 19 22 / 0.12)"
       },
+      "control-line": {
+        "role": "neutral",
+        "displayName": "Control Edge",
+        "tonalRamp": [
+          "oklch(15% 0.000 0)",
+          "oklch(25% 0.000 0)",
+          "oklch(35% 0.000 0)",
+          "oklch(48% 0.000 0)",
+          "oklch(60% 0.000 0)",
+          "oklch(72% 0.000 0)",
+          "oklch(84% 0.000 0)",
+          "oklch(95% 0.000 0)"
+        ],
+        "lightScheme": "rgb(21 19 22 / 0.5)"
+      },
       "skeleton": {
         "role": "neutral",
         "displayName": "Skeleton",
@@ -380,9 +395,9 @@
       "name": "Text Field",
       "kind": "input",
       "refersTo": "input",
-      "description": "Label above, Raised Ink fill, hairline border, 16px corners, example placeholder.",
+      "description": "Label above, Raised Ink fill, control-edge border, 16px corners, example placeholder.",
       "html": "<div class=\"ds-stage ds-col\"><label class=\"ds-label\" for=\"ds-name\">Name</label><input id=\"ds-name\" class=\"ds-input\" placeholder=\"Aoife Murphy\"><label class=\"ds-label\" for=\"ds-email\">Email</label><input id=\"ds-email\" class=\"ds-input ds-err\" aria-invalid=\"true\" value=\"aoife@\"><p class=\"ds-error\">Enter an email address like name@example.com.</p></div>",
-      "css": ".ds-stage{background:#0c0b0d;padding:24px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;}.ds-col{flex-direction:column;align-items:stretch;gap:6px;max-width:420px;}.ds-label{font:500 0.875rem/1.43 Manrope,ui-sans-serif,system-ui,sans-serif;color:#f2eee8;}.ds-input{font:400 1rem/1.5 Manrope,ui-sans-serif,system-ui,sans-serif;color:#f2eee8;background:#17151a;border:1px solid rgb(255 255 255 / 0.12);border-radius:16px;padding:12px 16px;margin-bottom:12px;}.ds-input::placeholder{color:rgb(163 157 168 / 0.7);}.ds-input:focus-visible{outline:2px solid #8ab4ff;outline-offset:3px;}.ds-err{border-color:#ff5a6e;margin-bottom:0;}.ds-error{margin:0;font:400 0.875rem/1.43 Manrope,ui-sans-serif,system-ui,sans-serif;color:#ff5a6e;}"
+      "css": ".ds-stage{background:#0c0b0d;padding:24px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;}.ds-col{flex-direction:column;align-items:stretch;gap:6px;max-width:420px;}.ds-label{font:500 0.875rem/1.43 Manrope,ui-sans-serif,system-ui,sans-serif;color:#f2eee8;}.ds-input{font:400 1rem/1.5 Manrope,ui-sans-serif,system-ui,sans-serif;color:#f2eee8;background:#17151a;border:1px solid rgb(255 255 255 / 0.35);border-radius:16px;padding:12px 16px;margin-bottom:12px;}.ds-input::placeholder{color:#a39da8;}.ds-input:focus-visible{outline:2px solid #8ab4ff;outline-offset:3px;}.ds-err{border-color:#ff5a6e;margin-bottom:0;}.ds-error{margin:0;font:400 0.875rem/1.43 Manrope,ui-sans-serif,system-ui,sans-serif;color:#ff5a6e;}"
     },
     {
       "name": "Side Rail",
