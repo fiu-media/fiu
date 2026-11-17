@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-16T19:44:24+00:00",
+  "generatedAt": "2026-11-17T20:03:52+00:00",
   "title": "Design System: Fiú Media",
   "extensions": {
     "colorMeta": {
@@ -444,6 +444,11 @@
       {
         "name": "The Scrim Rule",
         "body": "Nothing light sits on footage without a Scrim under it, and the Scrim is light falling off, never a band: soft gradients that fade to nothing, no hard edges, no opaque strips. Text over imagery must hold 4.5:1 against the brightest frame it can land on, and icons 3:1; the scrim, not a text shadow, is what guarantees it. Where the footage is usually dark enough on its own, the Scrim can be adaptive: measured per still and applied only to the frames that need it (the rail over Home's hero, see Navigation).",
+        "section": "colors"
+      },
+      {
+        "name": "The 404 Lamps Rule",
+        "body": "The 404 is the one place colour appears without footage: two blurred lights, Lamp Amber (`lamp-amber`, `#d6a06e`, 50% at the centre) and Lamp Rose (`lamp-rose`, `#c4786e`, 32%), drift slowly behind the text on loops of 32s and 47s (held still under reduced motion) over a dark foot fade. It stands in for the footage a missing page does not have, and the warmth is deliberate. These are the only gradient blobs on the site and the only colours outside Ink, white, grey and Signal Red: do not copy them to another page or add a third.",
         "section": "colors"
       },
       {

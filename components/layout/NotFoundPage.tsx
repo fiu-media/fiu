@@ -32,8 +32,8 @@ export async function NotFoundPage({
       className={cn("relative isolate flex flex-col overflow-hidden bg-ink text-fg", railInset, className)}
     >
       <div aria-hidden className="absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute -top-1/4 left-1/4 h-[150%] w-3/4 animate-[light-drift_32s_ease-in-out_infinite] rounded-full bg-[radial-gradient(closest-side,rgb(214_160_110/0.5),transparent)] blur-3xl motion-reduce:animate-none" />
-        <div className="absolute -bottom-1/4 left-1/2 h-[110%] w-1/2 animate-[light-drift-b_47s_ease-in-out_infinite] rounded-full bg-[radial-gradient(closest-side,rgb(196_120_110/0.32),transparent)] blur-3xl motion-reduce:animate-none" />
+        <div className="absolute -top-1/4 left-1/4 h-[150%] w-3/4 animate-[light-drift_32s_ease-in-out_infinite] rounded-full bg-[radial-gradient(closest-side,color-mix(in_srgb,var(--color-lamp-amber)_50%,transparent),transparent)] blur-3xl motion-reduce:animate-none" />
+        <div className="absolute -bottom-1/4 left-1/2 h-[110%] w-1/2 animate-[light-drift-b_47s_ease-in-out_infinite] rounded-full bg-[radial-gradient(closest-side,color-mix(in_srgb,var(--color-lamp-rose)_32%,transparent),transparent)] blur-3xl motion-reduce:animate-none" />
         <div className="absolute inset-0 bg-gradient-to-t from-ink/80 to-transparent" />
       </div>
       <SiteNav lang={lang} onImage />

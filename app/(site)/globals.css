@@ -103,6 +103,9 @@ html:has([data-snap="mandatory"]:not([style*="display: none"] *)) {
   /* Over footage the scheme never applies: type is always white and darkening is always black, whatever the surface. */
   --color-on-image: #fff;
   --color-scrim: #000;
+  /* The two lights on the 404 (see "The 404 Lamps Rule" in DESIGN.md); used nowhere else. */
+  --color-lamp-amber: #d6a06e;
+  --color-lamp-rose: #c4786e;
 
   --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-fraunces), ui-serif, Georgia, serif;
