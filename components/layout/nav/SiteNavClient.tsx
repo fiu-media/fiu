@@ -140,7 +140,7 @@ function Nav({ lang, items, homeHref, labels, onImage, overFootage, pathname }: 
           <Dialog.Trigger
             aria-label={labels.menu}
             className={cn(
-              "relative grid size-10 cursor-pointer place-items-center rounded-full transition-transform duration-200 before:absolute before:-inset-1 active:scale-95",
+              "relative grid size-10 cursor-pointer place-items-center rounded-full transition-transform duration-200 before:absolute before:-inset-1 active:scale-95 motion-reduce:transition-none",
               // Bare bars: white with a soft shadow over photography, the page's text colour elsewhere.
               onImage ? "text-on-image drop-shadow-[0_1px_5px_rgb(0_0_0/0.5)]" : "text-fg",
             )}
