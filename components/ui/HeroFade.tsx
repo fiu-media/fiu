@@ -42,13 +42,17 @@ export function HeroTopScrim({ className }: { className?: string }) {
 /**
  * The same dissolve for a sheet that slides up over a sticky photo (About): placed in the sheet, it rises above the
  * sheet's top edge, so the edge arrives as a soft fade instead of a hard line.
+ *
+ * It sits under the hero's bottom scrim (75% black, `from-scrim/75` in AboutLayout), so its end colour is `--ink`
+ * divided by 0.25: after that scrim it lands exactly on the sheet's ink. Change the scrim and this 0.25 (1 - 0.75)
+ * together, or a seam shows at the top of the sheet.
  */
 export function SheetFade({ className }: { className?: string }) {
   return (
     <div
       aria-hidden
       className={cn(
-        "pointer-events-none absolute inset-x-0 bottom-full h-[28dvh] bg-[linear-gradient(to_bottom,rgb(48_44_52/0)_0%,rgb(48_44_52/0.2)_26%,rgb(48_44_52/0.5)_52%,rgb(48_44_52/0.82)_78%,rgb(48_44_52)_100%)]",
+        "pointer-events-none absolute inset-x-0 bottom-full h-[28dvh] bg-[linear-gradient(to_bottom,color-mix(in_srgb,var(--sheet-ink)_0%,transparent)_0%,color-mix(in_srgb,var(--sheet-ink)_20%,transparent)_26%,color-mix(in_srgb,var(--sheet-ink)_50%,transparent)_52%,color-mix(in_srgb,var(--sheet-ink)_82%,transparent)_78%,var(--sheet-ink)_100%)] [--sheet-ink:rgb(from_var(--ink)_calc(r/0.25)_calc(g/0.25)_calc(b/0.25))]",
         className,
       )}
     />

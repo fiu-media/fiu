@@ -56,6 +56,7 @@ export function AboutHeroSection({
         <Still still={still} attribute={attributes?.still} />
       </div>
 
+      {/* The 75% foot of this scrim is why SheetFade ends on ink / 0.25: change one, change the other. */}
       <section className="relative -mt-[100dvh] flex h-dvh flex-col justify-end bg-gradient-to-t from-scrim/75 via-scrim/20 to-scrim/55 px-5 pb-[max(2.5rem,env(safe-area-inset-bottom))] md:px-10 md:pb-14">
         <h1
           lang={sloganLang}
