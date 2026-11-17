@@ -84,7 +84,7 @@ export function Reel({
             <Photo
               image={project.image}
               sizes="(min-width: 768px) 30rem, 78vw"
-              className="transition-transform duration-700 ease-out group-hover:scale-[1.03]"
+              className="transition-transform duration-700 ease-out group-hover:scale-[1.03] motion-reduce:transition-none"
             />
           </div>
           <h3 className="mt-4 font-display text-2xl md:text-3xl">{project.title}</h3>
