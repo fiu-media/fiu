@@ -122,7 +122,9 @@ export function HomeFold({ about, team, teamAttribute, contacts, projects, workH
       >
         {team && <TeamFigure team={team} attribute={teamAttribute} />}
         <div className="flex flex-col items-start gap-6">
-          <h2 className="font-display text-4xl leading-[1.05] text-balance italic md:text-5xl">{about.slogan}</h2>
+          <h2 lang="ga" className="font-display text-4xl leading-[1.05] text-balance italic md:text-5xl">
+            {about.slogan}
+          </h2>
           <div className="space-y-4 text-base leading-relaxed text-fg/85 md:text-lg">
             {about.gloss && <p className="text-fg">{about.gloss}</p>}
             {about.summary}

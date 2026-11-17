@@ -17,6 +17,7 @@ export async function getAbout(lang: Locale): Promise<AboutLayoutProps> {
   return {
     still: aboutStill ? toSizedImage(aboutStill, 2400) : null,
     slogan: slogan ?? dict.about.title,
+    ...(slogan && { sloganLang: "ga" as const }),
     gloss: sloganGloss ?? null,
     scrollLabel: dict.common.scrollDown,
     manifesto: manifesto?.length ? <PortableText value={manifesto} /> : null,
