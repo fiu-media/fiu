@@ -57,7 +57,11 @@ export function LanguageSwitcher({
               rememberLanguage(locale);
               carryScroll(switchLocalePath(pathname, locale), window.scrollY);
             }}
-            className="rounded-sm font-medium tracking-[0.14em] text-fg-quiet hover:text-fg aria-[current=true]:text-fg"
+            className={cn(
+              "relative rounded-sm font-medium tracking-[0.14em] text-fg-quiet hover:text-fg aria-[current=true]:text-fg",
+              // Invisible tap area. The rail's codes are 17px apart, so their areas stop at the divider between them.
+              rail && "before:absolute before:-inset-x-3 before:-inset-y-2",
+            )}
           >
             {locale.toUpperCase()}
             <span className="sr-only">, {localeNames[locale]}</span>
