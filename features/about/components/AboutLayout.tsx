@@ -76,7 +76,17 @@ export function AboutHeroSection({
  * manifesto and contact links follow on plain dark, so no running text sits over the photo. With a team photo
  * it sits beside the manifesto (above it on phones), in the same frame Home's fold uses.
  */
-export function AboutLayoutA({ still, slogan, sloganLang, gloss, scrollLabel, manifesto, contacts, team, attributes }: AboutLayoutProps) {
+export function AboutLayoutA({
+  still,
+  slogan,
+  sloganLang,
+  gloss,
+  scrollLabel,
+  manifesto,
+  contacts,
+  team,
+  attributes,
+}: AboutLayoutProps) {
   const body = (
     <>
       {manifesto && (
@@ -89,7 +99,14 @@ export function AboutLayoutA({ still, slogan, sloganLang, gloss, scrollLabel, ma
   );
   return (
     <main {...skipTarget} className="relative text-on-image">
-      <AboutHeroSection still={still} slogan={slogan} sloganLang={sloganLang} gloss={gloss} scrollLabel={scrollLabel} attributes={attributes} />
+      <AboutHeroSection
+        still={still}
+        slogan={slogan}
+        sloganLang={sloganLang}
+        gloss={gloss}
+        scrollLabel={scrollLabel}
+        attributes={attributes}
+      />
 
       {/* Plain dark from here, so the surface's colours rather than the white kept for text over the photo. */}
       <section className="relative bg-ink px-5 py-24 text-fg md:px-10 md:py-36">
