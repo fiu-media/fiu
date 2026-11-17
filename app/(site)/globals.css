@@ -87,6 +87,18 @@ html:has([data-snap="mandatory"]:not([style*="display: none"] *)) {
   scroll-snap-type: y mandatory;
 }
 
+/* The side rail needs height as well as width (its labels, in Irish, take about 620px); shorter windows get the phone bar.
+   Keep in step with `DESKTOP` in lib/media.ts. */
+@custom-variant rail (@media (min-width: 48rem) and (min-height: 40rem));
+@custom-variant no-rail {
+  @media (max-width: 47.9375rem) {
+    @slot;
+  }
+  @media (max-height: 39.9375rem) {
+    @slot;
+  }
+}
+
 @theme inline {
   --color-bg: var(--bg);
   --color-bg-raised: var(--bg-raised);
