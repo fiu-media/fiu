@@ -180,7 +180,7 @@ The chrome uses near-black, warm off-white and greys only. The one colour accent
 - **Muted Grey** (`text-muted`): intros, taglines, footer, optional-field hints, the rail's inactive labels (at 60% white), placeholders at 70%.
 - **Hairline** (`line`): 12% white rules. Control borders, the rail's edge, rows in the talent index.
 - **Skeleton** (`skeleton`): loading blocks, pulsing only when motion is allowed.
-- **On Image** (`on-image`): type and marks over footage: slide titles and captions (80% for meta lines, 65% for roles), the About slogan, the lightbox, progress ticks. Over footage the scheme never applies, so this is always white.
+- **On Image** (`on-image`): type and marks over footage: slide titles and captions (full white for meta lines, 65% for roles), the About slogan, the lightbox, progress ticks. Over footage the scheme never applies, so this is always white.
 - **Scrim** (`scrim`): the black that darkens footage under anything placed on it: caption gradients (75% at the foot), the top-of-frame fade on slides and About's still (55%, under the phone bar and slide counter), lightbox and drawer backdrops.
 - **Focus Blue** (`focus-blue`): the 2px focus ring, offset 3px, on every focusable element. Composite fields (phone, combobox) ring the whole field instead of the inner input.
 
