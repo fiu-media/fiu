@@ -89,7 +89,7 @@ async function Profile({ params }: Pick<PageProps<"/[lang]/talent/[slug]">, "par
               </div>
             )}
             {projects.length > 0 && (
-              <a href="#work" className="inline-flex items-center gap-1.5 text-sm link-quiet">
+              <a href="#work" className="-my-3 inline-flex items-center gap-1.5 py-3 text-sm link-quiet">
                 {workLabel}
                 <ArrowDown aria-hidden className="size-4" />
               </a>

@@ -164,7 +164,7 @@ function Nav({ lang, items, homeHref, labels, onImage, overFootage, pathname }: 
                 <HomeLink href={homeHref} label={labels.home} className="h-9" />
                 <Dialog.Close
                   aria-label={labels.closeMenu}
-                  className="grid size-10 cursor-pointer place-items-center rounded-full hover:bg-fg/10"
+                  className="relative grid size-10 cursor-pointer place-items-center rounded-full before:absolute before:-inset-1 hover:bg-fg/10"
                 >
                   <MenuGlyph open />
                 </Dialog.Close>
