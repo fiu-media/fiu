@@ -87,7 +87,7 @@ describe("submitQuote", () => {
   it("returns field errors for invalid input", async () => {
     const state = await submitQuote(idle, form({ email: "nope", name: "" }));
     expect(state).toMatchObject({
-      error: { fieldErrors: { email: ["emailInvalid"], name: ["required"] } },
+      error: { fieldErrors: { email: ["emailInvalid"], name: ["nameRequired"] } },
       submission: { payload: { email: "nope" } },
     });
     expect(mocks.create).not.toHaveBeenCalled();
