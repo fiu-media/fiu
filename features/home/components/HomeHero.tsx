@@ -11,6 +11,7 @@ import { at } from "@/lib/at";
 import { logo } from "@/lib/brand";
 import { cn } from "@/lib/cn";
 import { usePortrait } from "@/lib/hooks/usePortrait";
+import { useReducedMotion } from "@/lib/hooks/useReducedMotion";
 
 import type { HeroStill, HeroStills } from "../mappers";
 import { hasIntroPlayed } from "../session";
@@ -59,7 +60,9 @@ export function HomeHero({ landscape, portrait }: HeroStills) {
   // The stills hold while the hero is scrolled away or the tab is hidden: the scene only draws when they move.
   const layer = useRef<HTMLDivElement>(null);
   const watched = useHeroWatched(layer);
-  const index = useStillRotation(stillKeys, introDone && watched);
+  // Reduced motion holds the still the hero opened on (WCAG 2.2.2): the rotation never starts by itself.
+  const reduced = useReducedMotion();
+  const index = useStillRotation(stillKeys, introDone && watched && !reduced);
   const current = slides.length > 0 ? index % slides.length : 0;
   // The desktop rail's labels sit on the still's left edge; only a bright one darkens it.
   const images = useRef<(HTMLImageElement | null)[]>([]);
