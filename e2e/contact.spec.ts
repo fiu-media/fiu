@@ -13,7 +13,7 @@ test.describe("contact form", () => {
     await page.getByLabel(contact.message).fill("Hello from an address with a fada.");
     await page.getByRole("button", { name: contact.submit }).click();
 
-    await expect(page.getByRole("heading", { name: contact.successTitle })).toBeVisible();
+    await expect(page.getByRole("heading", { name: contact.successTitle })).toBeFocused();
     // Resend can't deliver to this address, so the page mustn't claim a copy was emailed.
     await expect(page.getByText(contact.successBodyNoEmail)).toBeVisible();
   });
