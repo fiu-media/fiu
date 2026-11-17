@@ -44,7 +44,7 @@ export async function NotFoundPage({
         <div>
           <NotFoundBackLink lang={lang} home={copy.home} backTo={copy.backTo} sections={getNavItems(lang, dict)} />
         </div>
-        <p className="font-display text-sm text-fg-muted italic">{dict.site.description}</p>
+        <p lang="ga" className="font-display text-sm text-fg-muted italic">{dict.site.description}</p>
       </main>
     </div>
   );

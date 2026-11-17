@@ -13,6 +13,8 @@ export type AboutLayoutProps = {
   /** The photo behind the first screen; without one the slogan sits on the plain dark page. */
   still: SizedImage | null;
   slogan: string | null;
+  /** "ga" when `slogan` is the editor-written Irish line; unset when it is the page-title fallback. */
+  sloganLang?: "ga" | undefined;
   gloss: string | null;
   /** Accessible name of the arrow that scrolls past the first screen. */
   scrollLabel: string;
@@ -43,10 +45,11 @@ export function Still({
 export function AboutHeroSection({
   still,
   slogan,
+  sloganLang,
   gloss,
   scrollLabel,
   attributes,
-}: Pick<AboutLayoutProps, "still" | "slogan" | "gloss" | "scrollLabel" | "attributes">) {
+}: Pick<AboutLayoutProps, "still" | "slogan" | "sloganLang" | "gloss" | "scrollLabel" | "attributes">) {
   return (
     <>
       <div className="sticky top-0 -z-10 h-dvh">
@@ -55,6 +58,7 @@ export function AboutHeroSection({
 
       <section className="relative -mt-[100dvh] flex h-dvh flex-col justify-end bg-gradient-to-t from-scrim/75 via-scrim/20 to-scrim/35 px-5 pb-[max(2.5rem,env(safe-area-inset-bottom))] md:px-10 md:pb-14">
         <h1
+          lang={sloganLang}
           data-sanity={attributes?.slogan}
           className="max-w-5xl font-display text-5xl leading-[1.02] text-balance italic md:text-8xl"
         >
@@ -72,7 +76,7 @@ export function AboutHeroSection({
  * manifesto and contact links follow on plain dark, so no running text sits over the photo. With a team photo
  * it sits beside the manifesto (above it on phones), in the same frame Home's fold uses.
  */
-export function AboutLayoutA({ still, slogan, gloss, scrollLabel, manifesto, contacts, team, attributes }: AboutLayoutProps) {
+export function AboutLayoutA({ still, slogan, sloganLang, gloss, scrollLabel, manifesto, contacts, team, attributes }: AboutLayoutProps) {
   const body = (
     <>
       {manifesto && (
@@ -85,7 +89,7 @@ export function AboutLayoutA({ still, slogan, gloss, scrollLabel, manifesto, con
   );
   return (
     <main {...skipTarget} className="relative text-on-image">
-      <AboutHeroSection still={still} slogan={slogan} gloss={gloss} scrollLabel={scrollLabel} attributes={attributes} />
+      <AboutHeroSection still={still} slogan={slogan} sloganLang={sloganLang} gloss={gloss} scrollLabel={scrollLabel} attributes={attributes} />
 
       {/* Plain dark from here, so the surface's colours rather than the white kept for text over the photo. */}
       <section className="relative bg-ink px-5 py-24 text-fg md:px-10 md:py-36">
