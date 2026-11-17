@@ -162,7 +162,7 @@ function Lightbox({
             </Dialog.Close>
           </div>
 
-          <div {...swipe} className="relative min-h-0 flex-1 touch-pan-y px-4 py-4 select-none md:px-20">
+          <div {...swipe} className="relative min-h-0 flex-1 touch-pan-y touch-pinch-zoom px-4 py-4 select-none md:px-20">
             <SizedImg key={current.full.src} image={current.full} fit="contain" sizes="100vw" priority className="size-full" />
             {many && (
               <>
