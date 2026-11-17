@@ -2,10 +2,14 @@
 export const PORTRAIT = "(orientation: portrait)";
 /** The opposite of `PORTRAIT`: every screen is one or the other. */
 export const LANDSCAPE = "(orientation: landscape)";
-/** Phones and anything narrower than Tailwind's `md` (48rem). Same break as `max-md:`. */
+/** Phones and anything narrower than Tailwind's `md` (48rem): Home's phone-only scroll pin. The nav's own break is `DESKTOP`. */
 export const MOBILE = "(max-width: 767px)";
-/** From Tailwind's `md` up, which is when the nav becomes the side rail. The opposite of `MOBILE`. */
-export const DESKTOP = "(min-width: 48rem)";
+/**
+ * Wide and tall enough for the side rail, which is when the nav is the rail; otherwise it is the phone bar and menu. The
+ * same break as the `rail:` and `no-rail:` variants (globals.css). Short is 40rem and under: the rail's labels, in Irish,
+ * need about 620px.
+ */
+export const DESKTOP = "(min-width: 48rem) and (min-height: 40rem)";
 /** A touch screen: the main pointer is imprecise (a finger), not a mouse. */
 export const COARSE_POINTER = "(pointer: coarse)";
 /** A touch device held upright. */

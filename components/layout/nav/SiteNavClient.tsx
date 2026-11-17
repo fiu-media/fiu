@@ -91,7 +91,7 @@ function Nav({ lang, items, homeHref, labels, onImage, overFootage, pathname }: 
       <aside
         ref={rail}
         className={cn(
-          "fixed inset-y-0 left-0 z-30 hidden flex-col items-center gap-8 border-r border-line pt-[max(1.75rem,env(safe-area-inset-top))] pb-7 pl-[env(safe-area-inset-left)] md:flex",
+          "fixed inset-y-0 left-0 z-30 hidden flex-col items-center gap-8 border-r border-line pt-[max(1.75rem,env(safe-area-inset-top))] pb-7 pl-[env(safe-area-inset-left)] rail:flex",
           railWidth,
           // Over Home's hero: a letter halo, and edge light only behind bright stills (`rail-halo` in globals.css).
           overFootage
@@ -125,7 +125,7 @@ function Nav({ lang, items, homeHref, labels, onImage, overFootage, pathname }: 
       {/* On cinematic pages the bar floats over the content; on adaptive pages it takes its own row. */}
       <header
         className={cn(
-          "z-30 flex items-center justify-between px-[max(1.25rem,env(safe-area-inset-left))] pt-[max(1.25rem,env(safe-area-inset-top))] pr-[max(1.25rem,env(safe-area-inset-right))] pb-4 md:hidden",
+          "z-30 flex items-center justify-between px-[max(1.25rem,env(safe-area-inset-left))] pt-[max(1.25rem,env(safe-area-inset-top))] pr-[max(1.25rem,env(safe-area-inset-right))] pb-4 rail:hidden",
           onImage ? "absolute inset-x-0 top-0" : "relative",
           // Over footage, a soft scrim behind the logo and the Menu button keeps them legible against a bright sky.
           overFootage
@@ -158,7 +158,7 @@ function Nav({ lang, items, homeHref, labels, onImage, overFootage, pathname }: 
               aria-label={labels.label}
               // Focusing the first link would put a focus ring on the Home link. Focus the overlay itself.
               initialFocus={popup}
-              className="group fixed inset-0 isolate z-50 flex touch-none flex-col overscroll-none bg-bg text-fg transition-[outline-color] duration-300 outline-none data-ending-style:outline-transparent motion-reduce:transition-none md:hidden"
+              className="group fixed inset-0 isolate z-50 flex touch-none flex-col overscroll-none bg-bg text-fg transition-[outline-color] duration-300 outline-none data-ending-style:outline-transparent motion-reduce:transition-none rail:hidden"
             >
               <div className="flex items-center justify-between px-[max(1.25rem,env(safe-area-inset-left))] pt-[max(1.25rem,env(safe-area-inset-top))] pr-[max(1.25rem,env(safe-area-inset-right))] transition-opacity duration-300 group-data-ending-style:opacity-0 group-data-starting-style:opacity-0 motion-reduce:transition-none">
                 <HomeLink href={homeHref} label={labels.home} className="h-9" />

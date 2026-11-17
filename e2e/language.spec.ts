@@ -46,7 +46,7 @@ test.describe("a browser that prefers English", () => {
 });
 
 test.describe("switching language part-way down a page", () => {
-  test.use({ locale: "en-IE", viewport: { width: 1280, height: 600 } });
+  test.use({ locale: "en-IE", viewport: { width: 1280, height: 650 } });
 
   test("keeps the scroll position", async ({ page }) => {
     await page.goto("/about");

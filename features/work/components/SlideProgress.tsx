@@ -61,7 +61,7 @@ export function SlideProgress({
     <>
       <div
         className={cn(
-          "pointer-events-none fixed inset-x-0 top-0 z-20 pt-[max(1.25rem,env(safe-area-inset-top))] max-md:pt-[calc(max(1.25rem,env(safe-area-inset-top))+3.25rem)]",
+          "pointer-events-none fixed inset-x-0 top-0 z-20 pt-[max(1.25rem,env(safe-area-inset-top))] no-rail:pt-[calc(max(1.25rem,env(safe-area-inset-top))+3.25rem)]",
           railLeft,
         )}
       >
