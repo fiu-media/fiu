@@ -93,7 +93,9 @@ export function SlideProgress({
                     aria-hidden
                     className={cn(
                       "h-0.5 w-6 origin-right rounded-full bg-on-image shadow-[0_0_6px_rgb(0_0_0/0.5)] transition-[transform,opacity] duration-300 motion-reduce:transition-none",
-                      i === current ? "scale-x-100 opacity-100" : "scale-x-50 opacity-45 group-hover:opacity-90 group-focus-visible:opacity-90",
+                      i === current
+                        ? "scale-x-100 opacity-100"
+                        : "scale-x-50 opacity-45 group-hover:opacity-90 group-focus-visible:opacity-90",
                     )}
                   />
                   <span
