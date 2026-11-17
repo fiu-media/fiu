@@ -29,6 +29,8 @@ export const ga: Dictionary = {
   home: {
     aboutCta: "Eolas Fúinn",
     workCta: "An obair ar fad",
+    pauseStills: "Cuir na grianghraif chúlra ar sos",
+    playStills: "Seinn na grianghraif chúlra",
   },
   slides: {
     label: "{title}, {index} as {total}",

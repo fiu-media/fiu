@@ -1,5 +1,6 @@
 "use client";
 
+import { Pause, Play } from "lucide-react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { Component, type ReactNode, useMemo, useRef, useState } from "react";
@@ -14,7 +15,7 @@ import { usePortrait } from "@/lib/hooks/usePortrait";
 import { useReducedMotion } from "@/lib/hooks/useReducedMotion";
 
 import type { HeroStill, HeroStills } from "../mappers";
-import { hasIntroPlayed } from "../session";
+import { hasIntroPlayed, isPaused, setPaused } from "../session";
 import { useHeroEdge } from "../useHeroEdge";
 import { useHeroIntro, useStillRotation } from "../useHeroIntro";
 import { useHeroWatched } from "../useHeroWatched";
@@ -37,7 +38,7 @@ const HIDDEN_SCENE_OPACITY = 0.001;
  *
  * Mesh / rim playground controls live at `/concepts/logo-playground`.
  */
-export function HomeHero({ landscape, portrait }: HeroStills) {
+export function HomeHero({ landscape, portrait, labels }: HeroStills & { labels: { pause: string; play: string } }) {
   const portraitScreen = usePortrait();
   const slides = useMemo(() => toSlides(landscape, portrait), [landscape, portrait]);
   const {
@@ -60,9 +61,16 @@ export function HomeHero({ landscape, portrait }: HeroStills) {
   // The stills hold while the hero is scrolled away or the tab is hidden: the scene only draws when they move.
   const layer = useRef<HTMLDivElement>(null);
   const watched = useHeroWatched(layer);
-  // Reduced motion holds the still the hero opened on (WCAG 2.2.2): the rotation never starts by itself.
+  // Reduced motion holds the still the hero opened on (WCAG 2.2.2): the rotation never starts by itself. Otherwise the
+  // visitor can pause it.
   const reduced = useReducedMotion();
-  const index = useStillRotation(stillKeys, introDone && watched && !reduced);
+  const [paused, setPausedState] = useState(isPaused);
+  const moving = introDone && !reduced;
+  const toggle = () => {
+    setPaused(!paused);
+    setPausedState(!paused);
+  };
+  const index = useStillRotation(stillKeys, moving && watched, paused);
   const current = slides.length > 0 ? index % slides.length : 0;
   // The desktop rail's labels sit on the still's left edge; only a bright one darkens it.
   const images = useRef<(HTMLImageElement | null)[]>([]);
@@ -122,6 +130,8 @@ export function HomeHero({ landscape, portrait }: HeroStills) {
         />
       </div>
 
+      <PauseButton show={moving} count={slides.length} paused={paused} onToggle={toggle} labels={labels} />
+
       {sceneTier && (
         <SceneBoundary onError={onFail}>
           {/* Never `fixed`: WebKit tints its bars from a viewport-sized fixed layer over a canvas, which hides the photo behind them. Lifted above the splash while it fades, then dropped back under the nav once the intro has settled. Hidden until the
@@ -159,6 +169,37 @@ export function HomeHero({ landscape, portrait }: HeroStills) {
         </SceneBoundary>
       )}
     </>
+  );
+}
+
+/**
+ * Bottom right, clear of the rail on the left. The round Scrim chip is what holds the icon at 3:1 against the brightest
+ * still (white on 55% black over white is about 4.7:1).
+ */
+function PauseButton({
+  show,
+  count,
+  paused,
+  onToggle,
+  labels,
+}: {
+  /** Nothing to pause before the intro is over or under reduced motion (the stills already hold). */
+  show: boolean;
+  count: number;
+  paused: boolean;
+  onToggle: () => void;
+  labels: { pause: string; play: string };
+}) {
+  if (!show || count < 2) return null;
+  return (
+    <button
+      type="button"
+      aria-label={paused ? labels.play : labels.pause}
+      onClick={onToggle}
+      className="absolute right-5 bottom-6 grid size-11 cursor-pointer place-items-center rounded-full bg-scrim/55 text-on-image transition-colors hover:bg-scrim/70 md:right-10 md:bottom-10"
+    >
+      {paused ? <Play aria-hidden className="size-5" /> : <Pause aria-hidden className="size-5" />}
+    </button>
   );
 }
 

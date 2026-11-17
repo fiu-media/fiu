@@ -69,7 +69,8 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
 }
 
 async function CmsHero({ lang }: { lang: Locale }) {
-  const stills = await getHomeStills(lang);
+  const [stills, { home }] = await Promise.all([getHomeStills(lang), getDictionary(lang)]);
+  const labels = { pause: home.pauseStills, play: home.playStills };
   // The glass logo's WebGL scene can't draw until its first still has loaded. Start that download
   // with the HTML, not after the scene's code has mounted. `crossOrigin` must match the texture
   // loader's request (anonymous CORS) or the browser won't reuse the preloaded response. The scene draws the
@@ -80,7 +81,7 @@ async function CmsHero({ lang }: { lang: Locale }) {
   ] as const) {
     if (still) preload(still.src, { as: "image", crossOrigin: "anonymous", media });
   }
-  return <HomeHero {...stills} />;
+  return <HomeHero {...stills} labels={labels} />;
 }
 
 /** Home's fold, under the hero. Reads draft mode, so it streams in. */

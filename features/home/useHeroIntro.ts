@@ -118,19 +118,19 @@ export function useHeroIntro(hasStills: boolean) {
 const ROTATE_SECONDS = 6;
 
 /**
- * Which of `keys` (one per still) is showing, moving on every ROTATE_SECONDS while `enabled`. Held until the intro is over so a
+ * Which of `keys` (one per still) is showing, moving on every ROTATE_SECONDS while `enabled` and not `paused` (by the visitor). Held until the intro is over so a
  * still crossfade (and its extra rendering) never lands mid-spin, and while nobody can see the hero (`useHeroWatched`). A hero that mounts again (a language switch) opens on the
  * still that was showing, found by its key because another language's set may be ordered differently.
  */
-export function useStillRotation(keys: string[], enabled: boolean) {
+export function useStillRotation(keys: string[], enabled: boolean, paused = false) {
   const count = keys.length;
   const [index, setIndex] = useState(() => Math.max(0, keys.indexOf(getStill() ?? "")));
   useEffect(() => {
     // One still (or none) has nothing to move on to.
-    if (!enabled || count < 2) return;
+    if (!enabled || paused || count < 2) return;
     const id = window.setInterval(() => setIndex((i) => (i + 1) % count), ROTATE_SECONDS * 1000);
     return () => window.clearInterval(id);
-  }, [enabled, count]);
+  }, [enabled, paused, count]);
   // Only a move is recorded, not a mount: a hero that mounts again opens on the still that was carried over, and must
   // not overwrite it with its own first one before it has found it.
   const shown = useRef(index);
