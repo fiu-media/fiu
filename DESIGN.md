@@ -246,7 +246,7 @@ The room is flat. Pages, slides, cards and fields have no drop shadows and no to
 
 ## Shapes
 
-The shapes are soft and rounded, but never bubbly. Pills are fully round. Form controls have 16px corners, cards and inline media (stills, portraits, team photo, rental gallery) 24px, and large glass panels 28px. Small thumbnails have 12px corners. Full-bleed footage has no corners at all; it runs to the screen edge. The 2px country flags in the phone field are the only near-square shape. The round focus dot (3px) and the round count badge are the only purely decorative circles.
+The shapes are soft and rounded, but never bubbly. Pills are fully round. Form controls have 16px corners, cards and inline media (portraits, team photo, rental gallery) 24px, and large glass panels 28px. Small tiles share the control step at 16px (the stills grid, and the project covers in Home's reel). Small thumbnails have 12px corners (the 48px talent thumbnail on touch screens). Full-bleed footage has no corners at all; it runs to the screen edge. The 2px country flags in the phone field are the only near-square shape. The round focus dot (3px) and the round count badge are the only purely decorative circles.
 
 ## Components
 

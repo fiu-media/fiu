@@ -92,7 +92,7 @@ export function NameIndex({
                 image={item.image}
                 alt=""
                 sizes="48px"
-                className="hidden size-12 shrink-0 rounded-lg max-md:block pointer-coarse:block"
+                className="hidden size-12 shrink-0 rounded-xl max-md:block pointer-coarse:block"
               />
             )}
             {/* `truncate` clips overflow, and the display italic's descenders (g, y) hang below a one-em line box.
