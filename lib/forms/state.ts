@@ -3,6 +3,11 @@ import type { SubmissionResult } from "@conform-to/react/future";
 /** Error codes the server returns; the client maps them to localised copy (`dict.forms.errors`). */
 const FORM_ERROR_CODES = [
   "required",
+  "nameRequired",
+  "emailRequired",
+  "startDateRequired",
+  "endDateRequired",
+  "messageRequired",
   "invalid",
   "emailInvalid",
   "phoneInvalid",

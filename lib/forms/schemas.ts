@@ -18,17 +18,24 @@ export const MAX_LEAD_DAYS = 730;
 export const MAX_HIRE_DAYS = 365;
 
 // Conform turns empty inputs into `undefined`, so "required" means a missing value and nothing else:
-// a too-long value must not borrow the same message.
-const missing = (otherwise?: string) => (issue: { input?: unknown }) => (issue.input === undefined ? "required" : otherwise);
+// a too-long value must not borrow the same message. Each required field passes its own code; "required" is the fallback.
+const missing =
+  (otherwise?: string, code = "required") =>
+  (issue: { input?: unknown }) =>
+    issue.input === undefined ? code : otherwise;
 
-const text = (max: number) => z.string({ error: missing() }).trim().max(max, "tooLong");
-const required = (max: number) => text(max).min(1, "required");
+const text = (max: number, code?: string) =>
+  z
+    .string({ error: missing(undefined, code) })
+    .trim()
+    .max(max, "tooLong");
+const required = (max: number, code: string) => text(max, code).min(1, code);
 const optionalText = (max: number) => text(max).optional().default("");
 
 // Accented letters and internationalised domains are fine (`séan@exämple.ie`); see lib/email/address.ts.
 // Typed text can arrive decomposed (e + combining accent), so it is composed (NFC) before it is checked or stored.
 const email = z
-  .string({ error: missing("emailInvalid") })
+  .string({ error: missing("emailInvalid", "emailRequired") })
   .trim()
   .transform((value) => value.normalize("NFC"))
   .pipe(z.string().max(limits.email, { error: "tooLong", abort: true }).refine(isEmailAddress, "emailInvalid"));
@@ -44,7 +51,7 @@ const phone = z
   // Canonical E.164: "+353 0871234567" (a trunk 0 typed after the code) is stored as "+353871234567".
   .transform((value) => (value === "" ? value : (parsePhoneNumberFromString(value)?.number ?? value)));
 
-const isoDate = z.iso.date({ error: missing("dateInvalid") });
+const isoDate = (code: string) => z.iso.date({ error: missing("dateInvalid", code) });
 
 const lines = z
   .array(z.object({ itemId: z.string().min(1).max(200), qty: z.number().int().min(1).max(MAX_QTY) }))
@@ -80,13 +87,13 @@ export const HIDDEN_FIELDS: readonly string[] = ["lang", "submissionId", "websit
 export const quoteSchema = z
   .object({
     ...common,
-    name: required(limits.name),
+    name: required(limits.name, "nameRequired"),
     email,
     phone,
     company: optionalText(limits.company),
     production: optionalText(limits.production),
-    startDate: isoDate,
-    endDate: isoDate,
+    startDate: isoDate("startDateRequired"),
+    endDate: isoDate("endDateRequired"),
     message: optionalText(limits.message),
     items: basket,
   })
@@ -108,9 +115,9 @@ export const quoteSchema = z
 
 export const contactSchema = z.object({
   ...common,
-  name: required(limits.name),
+  name: required(limits.name, "nameRequired"),
   email,
   phone,
   enquiryType: z.enum(ENQUIRY_TYPES),
-  message: required(limits.message),
+  message: required(limits.message, "messageRequired"),
 });

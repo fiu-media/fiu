@@ -101,7 +101,7 @@ describe("submitContact", () => {
   it("returns field errors and keeps the entered values", async () => {
     const state = await submitContact(idle, form({ message: "", email: "nope" }));
     expect(state).toMatchObject({
-      error: { fieldErrors: { message: ["required"], email: ["emailInvalid"] } },
+      error: { fieldErrors: { message: ["messageRequired"], email: ["emailInvalid"] } },
       submission: { payload: { name: "Aoife", enquiryType: "Talent" } },
     });
     expect(mocks.create).not.toHaveBeenCalled();
