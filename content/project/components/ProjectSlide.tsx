@@ -101,7 +101,7 @@ export function ProjectSlide({
           // Keeps the white logo, filter pills and counter legible over bright covers.
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-x-0 top-0 h-44 bg-gradient-to-b from-scrim/45 to-transparent"
+            className="pointer-events-none absolute inset-x-0 top-0 h-44 bg-gradient-to-b from-scrim/55 to-transparent"
           />
         )}
 
@@ -109,7 +109,8 @@ export function ProjectSlide({
           // Before the player in the DOM, so Tab goes from Stop into the player; z-10 keeps it above it.
           // Not while the slide is full screen: the video has the whole screen, and leaving full screen brings Stop back.
           // On phones the floating menu button sits in the top corner, so Stop goes beneath it.
-          <div className="absolute top-[calc(max(1.25rem,env(safe-area-inset-top))+4rem)] right-4 z-10 md:top-6 md:right-6">
+          // The soft black behind the pill brings its label to 4.5:1 over a white frame (the glass alone dims to 0.88).
+          <div className="absolute top-[calc(max(1.25rem,env(safe-area-inset-top))+4rem)] right-4 z-10 rounded-full bg-scrim/55 shadow-[0_0_1.5rem_0.5rem_rgb(0_0_0/0.4)] md:top-6 md:right-6">
             <GlassPillButton data-stop size="md" onImage onClick={stop}>
               {dict.stop}
             </GlassPillButton>
@@ -180,7 +181,7 @@ function SlideCaption({ Heading, title, titleAttribute, meta, role, href, dict, 
             title
           )}
         </Heading>
-        <p className="mt-1 text-sm text-on-image/80 md:text-base">{meta}</p>
+        <p className="mt-1 text-sm text-on-image md:text-base">{meta}</p>
         {role && <p className="mt-1 text-sm text-on-image/65">{role}</p>}
       </div>
       <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 md:gap-3">
