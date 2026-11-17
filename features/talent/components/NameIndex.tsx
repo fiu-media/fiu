@@ -68,7 +68,8 @@ export function NameIndex({
           <Link
             href={item.href}
             className="group flex items-center gap-4 py-5 transition-opacity duration-300 motion-reduce:transition-none md:py-6"
-            style={{ opacity: active === null || active === i ? 1 : 0.35 }}
+            // 0.6 keeps the other names at 6.4:1 on Ink (AA); a lower value drops them under 3:1.
+            style={{ opacity: active === null || active === i ? 1 : 0.6 }}
             onPointerEnter={(event) => {
               setActive(i);
               place(event.clientX, event.clientY, active === null);
