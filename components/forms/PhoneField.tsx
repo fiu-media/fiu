@@ -1,8 +1,8 @@
 "use client";
 
 import { BaseControl, useControl } from "@conform-to/react/future";
-import * as flags from "country-flag-icons/react/3x2";
 import { type CountryCode, isSupportedCountry } from "libphonenumber-js/min";
+import Image from "next/image";
 import { type ChangeEvent, useLayoutEffect, useRef, useState } from "react";
 
 import { cn } from "@/lib/cn";
@@ -14,8 +14,6 @@ import { chevron, controlClass, FieldFrame, type FieldProps, placeholderClass } 
 /** What an example looks like, as the number input shows it (no trunk 0, no dialling code). */
 const SAMPLE: Partial<Record<CountryCode, string>> = { IE: "(83) 123 4567" };
 
-/** Every flag by country code. A lookup rather than `flags[code]`, since the package has no flag for every code. */
-const FLAGS = new Map(Object.entries(flags));
 /**
  * A phone number: a country select (flag; name and dialling code in the list) and the number itself. The
  * country's dialling code sits in front of the number as plain text, so the number is written without it, and
@@ -65,7 +63,6 @@ export function PhoneField({
     change(next.e164);
   }
 
-  const Flag = FLAGS.get(country);
   const option = ({ code, name }: CountryOption) => (
     <option key={code} value={code}>
       {name} (+{callingCode(code)})
@@ -98,7 +95,14 @@ export function PhoneField({
             {countries.all.map(option)}
           </select>
           {/* Flag, chevron and dialling code are all under the select, so any of them opens the list. */}
-          {Flag && <Flag aria-hidden className="pointer-events-none h-4 w-6 rounded-[2px] ring-1 ring-line" />}
+          {/* Served from public/flags (copied from country-flag-icons by `npm run flags`), so only this one is fetched. */}
+          <Image
+            src={`/flags/${country}.svg`}
+            alt=""
+            width={24}
+            height={16}
+            className="pointer-events-none h-4 w-6 rounded-[2px] ring-1 ring-line"
+          />
           <span aria-hidden className="pointer-events-none flex">
             {chevron}
           </span>
