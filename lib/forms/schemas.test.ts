@@ -31,11 +31,11 @@ describe("quoteSchema", () => {
 
   it("requires a name and a valid email", () => {
     const result = quoteSchema.safeParse({ ...quote, name: "   ", email: "nope" });
-    expect(issueCodes(result)).toEqual(expect.arrayContaining(["name:required", "email:emailInvalid"]));
+    expect(issueCodes(result)).toEqual(expect.arrayContaining(["name:nameRequired", "email:emailInvalid"]));
   });
 
   it("says required only for a missing value, and tooLong for an over-long one", () => {
-    expect(issueCodes(quoteSchema.safeParse({ ...quote, name: undefined }))).toEqual(["name:required"]);
+    expect(issueCodes(quoteSchema.safeParse({ ...quote, name: undefined }))).toEqual(["name:nameRequired"]);
     for (const field of ["name", "company", "production", "message"] as const) {
       const result = quoteSchema.safeParse({ ...quote, [field]: "1".repeat(limits[field] + 1) });
       expect(issueCodes(result)).toContain(`${field}:tooLong`);
@@ -80,8 +80,8 @@ describe("quoteSchema", () => {
 
   it("says required for a missing date and dateInvalid for one that isn't a date", () => {
     expect(issueCodes(quoteSchema.safeParse({ ...quote, startDate: undefined, endDate: undefined }))).toEqual([
-      "startDate:required",
-      "endDate:required",
+      "startDate:startDateRequired",
+      "endDate:endDateRequired",
     ]);
     expect(issueCodes(quoteSchema.safeParse({ ...quote, startDate: "01/12/2026" }))).toEqual(["startDate:dateInvalid"]);
   });
@@ -138,12 +138,12 @@ describe("contactSchema", () => {
 
   it("requires a message and a known enquiry type", () => {
     const result = contactSchema.safeParse({ ...contact, message: " ", enquiryType: "Spam" });
-    expect(issueCodes(result)).toContain("message:required");
+    expect(issueCodes(result)).toContain("message:messageRequired");
     expect(result.success).toBe(false);
   });
 
   it("says required for an empty email and emailInvalid for a malformed or over-long one", () => {
-    expect(issueCodes(contactSchema.safeParse({ ...contact, email: undefined }))).toEqual(["email:required"]);
+    expect(issueCodes(contactSchema.safeParse({ ...contact, email: undefined }))).toEqual(["email:emailRequired"]);
     for (const email of ["nope", "a@b", "a b@c.com", `${"x".repeat(limits.email)}@example.com`]) {
       expect(issueCodes(contactSchema.safeParse({ ...contact, email }))).toHaveLength(1);
     }

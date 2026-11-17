@@ -341,6 +341,11 @@ export const en = {
     errorSummary: "Please check the highlighted fields",
     errors: {
       required: "This field is required.",
+      nameRequired: "What's your name?",
+      emailRequired: "We need an email address to reply to.",
+      startDateRequired: "Choose a pick-up date.",
+      endDateRequired: "Choose a return date.",
+      messageRequired: "Add a message so we know what it's about.",
       invalid: "Please check this value.",
       emailInvalid: "Enter an email address like name@example.com.",
       phoneInvalid: "Enter a valid phone number for the selected country.",
