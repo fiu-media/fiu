@@ -97,10 +97,14 @@ export function NameIndex({
             )}
             {/* `truncate` clips overflow, and the display italic's descenders (g, y) hang below a one-em line box.
               The padding gives them room inside the clip; the negative margin keeps the row height as it was. */}
-            <span className="-my-[0.15em] min-w-0 flex-1 truncate py-[0.15em] font-display text-3xl italic md:text-6xl">
-              {item.title}
-            </span>
-            <span className="shrink-0 text-right text-xs text-fg-muted md:text-sm">{item.meta}</span>
+            {/* On phones the meta stacks under the name so a long roles list can't squeeze the name; from `md` the
+              wrapper drops out (`contents`) and name and meta are the row's flex items again. */}
+            <div className="min-w-0 flex-1 md:contents">
+              <span className="-my-[0.15em] block min-w-0 truncate py-[0.15em] font-display text-3xl italic md:flex-1 md:text-6xl">
+                {item.title}
+              </span>
+              <span className="block text-xs text-fg-muted md:shrink-0 md:text-right md:text-sm">{item.meta}</span>
+            </div>
           </Link>
         </li>
       ))}
