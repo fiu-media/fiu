@@ -359,7 +359,7 @@ export const ga: Dictionary = {
       emailRequired: "Teastaíonn seoladh ríomhphoist uainn le freagra a thabhairt.",
       startDateRequired: "Roghnaigh dáta bailithe.",
       endDateRequired: "Roghnaigh dáta tabhairt ar ais.",
-      messageRequired: "Cuir teachtaireacht leis ionas go mbeidh a fhios againn cad faoi.",
+      messageRequired: "Cuir teachtaireacht leis ionas go mbeidh a fhios againn cad faoi a bhfuil d'fhiosrúchán.",
       invalid: "Seiceáil an luach seo, le do thoil.",
       emailInvalid: "Cuir isteach seoladh ríomhphoist mar name@example.com.",
       phoneInvalid: "Cuir isteach uimhir fhóin bhailí don tír roghnaithe.",
