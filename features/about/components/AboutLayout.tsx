@@ -53,7 +53,7 @@ export function AboutHeroSection({
         <Still still={still} attribute={attributes?.still} />
       </div>
 
-      <section className="relative -mt-[100dvh] flex h-dvh flex-col justify-end bg-gradient-to-t from-scrim/75 via-scrim/20 to-scrim/35 px-5 pb-[max(2.5rem,env(safe-area-inset-bottom))] md:px-10 md:pb-14">
+      <section className="relative -mt-[100dvh] flex h-dvh flex-col justify-end bg-gradient-to-t from-scrim/75 via-scrim/20 to-scrim/55 px-5 pb-[max(2.5rem,env(safe-area-inset-bottom))] md:px-10 md:pb-14">
         <h1
           data-sanity={attributes?.slogan}
           className="max-w-5xl font-display text-5xl leading-[1.02] text-balance italic md:text-8xl"
