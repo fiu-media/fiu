@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "archive": "sh scripts/archive.sh",
     "prebuild": "npm run typegen && npm run flags",
     "build": "next build",
     "check:email-eai": "tsx --env-file=.env.local scripts/check-resend-eai.ts",
