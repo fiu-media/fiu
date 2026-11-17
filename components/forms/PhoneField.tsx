@@ -79,7 +79,7 @@ export function PhoneField({
         className={cn(
           controlClass,
           "composite-field flex items-center py-0 pr-4 pl-3",
-          field.errors ? "border-accent" : "border-line",
+          field.errors ? "border-accent" : "border-control-line",
         )}
       >
         <div className="relative mr-3 flex shrink-0 items-center gap-1.5 border-r border-line pr-3">

@@ -9,6 +9,7 @@ colors:
   text-muted: "#a39da8"
   text-quiet: "rgb(242 238 232 / 0.5)"
   line: "rgb(255 255 255 / 0.12)"
+  control-line: "rgb(255 255 255 / 0.35)"
   skeleton: "#24222a"
   signal-red: "#ff5a6e"
   on-signal: "#0c0b0d"
@@ -177,8 +178,9 @@ The chrome uses near-black, warm off-white and greys only. The one colour accent
 
 - **Raised Ink** (`surface-raised`): the fill of form controls, rental cards, image placeholders and the error summary. It shows a control is there; it doesn't put content on a layer.
 - **Screen White** (`text`): headings and body text on dark.
-- **Muted Grey** (`text-muted`): intros, taglines, footer, optional-field hints, the rail's inactive labels (at 60% white), placeholders at 70%.
-- **Hairline** (`line`): 12% white rules. Control borders, the rail's edge, rows in the talent index.
+- **Muted Grey** (`text-muted`): intros, taglines, footer, optional-field hints, the rail's inactive labels (at 60% white), placeholders.
+- **Control Edge** (`control-line`): 35% white (50% of the text colour in the light scheme), 3.1:1 on Ink. The border of every form control, so its boundary holds 3:1 (SC 1.4.11).
+- **Hairline** (`line`): 12% white rules. The rail's edge, rows in the talent index.
 - **Skeleton** (`skeleton`): loading blocks, pulsing only when motion is allowed.
 - **On Image** (`on-image`): type and marks over footage: slide titles and captions (80% for meta lines, 65% for roles), the About slogan, the lightbox, progress ticks. Over footage the scheme never applies, so this is always white.
 - **Scrim** (`scrim`): the black that darkens footage under anything placed on it: caption gradients (75% at the foot), the top-of-frame fade on slides (45%), the phone bar's fade (50%), lightbox and drawer backdrops.
@@ -268,8 +270,8 @@ Quiet acrylic, tactile under the hand.
 
 ### Inputs / Fields
 
-- **Style:** Raised Ink fill, 1px Hairline border, 16px corners, 12px by 16px padding, 1rem text. The label sits above in 0.875rem 500; "(optional)" follows it in Muted Grey.
-- **Placeholder:** a real example of what to type ("Aoife Murphy", "name@example.com") in Muted Grey at 70%. Empty date fields use the same grey.
+- **Style:** Raised Ink fill, 1px Control Edge border, 16px corners, 12px by 16px padding, 1rem text. The label sits above in 0.875rem 500; "(optional)" follows it in Muted Grey.
+- **Placeholder:** a real example of what to type ("Aoife Murphy", "name@example.com") in Muted Grey (6.86:1 on the field fill). Empty date fields use the same grey.
 - **Focus:** the global 2px Focus Blue ring, offset 3px.
 - **Error:** the border turns Signal Red and a Signal Red message appears below it. An error summary panel (Raised Ink, Signal Red border, 16px corners) leads the form after a failed submit.
 - **Select:** the native arrow is replaced by a small rotated-square chevron at 50% white, also used on the phone field's country picker.

@@ -62,8 +62,8 @@ type Props = {
  * How every placeholder looks: an example of what to type, muted. The browser's own placeholders (an empty date's
  * "dd/mm/yyyy") are given the same colour, so the form doesn't show two different greys.
  */
-export const placeholderClass = "placeholder:text-fg-muted/70";
-const emptyDateClass = "[&[data-empty]:not(:focus)]:text-fg-muted/70";
+export const placeholderClass = "placeholder:text-fg-muted";
+const emptyDateClass = "[&[data-empty]:not(:focus)]:text-fg-muted";
 
 /** The down chevron on every control that opens a list: the select and the phone's country. */
 export const chevron = <span aria-hidden className="size-1.5 -translate-y-px rotate-45 border-r border-b border-fg/50" />;
@@ -120,7 +120,7 @@ export function Field({
   // A date needs about 11 characters, so on a phone two fit side by side if the padding is trimmed.
   const className = cn(
     controlClass,
-    error ? "border-accent" : "border-line",
+    error ? "border-accent" : "border-control-line",
     type === "date" && cn("min-w-0 px-3 sm:px-4", emptyDateClass),
   );
   const shared = {
