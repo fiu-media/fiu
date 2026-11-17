@@ -12,7 +12,7 @@
     "email:dev": "email dev --dir emails",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "knip": "knip",
+    "knip": "SKIP_ENV_VALIDATION=1 knip",
     "prelint": "npm run typegen && next typegen",
     "lint": "eslint . --max-warnings=0",
     "prepare": "husky",
