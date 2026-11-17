@@ -18,6 +18,7 @@ colors:
   glass-tint-strong: "rgb(255 255 255 / 0.07)"
   glass-edge: "rgb(255 255 255 / 0.24)"
   on-image: "#ffffff"
+  logo-light-warm: "#fff8f0"
   scrim: "#000000"
 typography:
   display:
@@ -183,6 +184,7 @@ The chrome uses near-black, warm off-white and greys only. The one colour accent
 - **Hairline** (`line`): 12% white rules. The rail's edge, rows in the talent index.
 - **Skeleton** (`skeleton`): loading blocks, pulsing only when motion is allowed.
 - **On Image** (`on-image`): type and marks over footage: slide titles and captions (full white for meta lines, 65% for roles), the About slogan, the lightbox, progress ticks. Over footage the scheme never applies, so this is always white.
+- **Logo Light** (`logo-light-warm`): the warm tint of one point light in the 3D logo scene (`features/logo/config/presets.ts`). It is a colour of light in the WebGL render, never a fill, border or text colour in the interface.
 - **Scrim** (`scrim`): the black that darkens footage under anything placed on it: caption gradients (75% at the foot), the top-of-frame fade on slides and About's still (55%, under the phone bar and slide counter), lightbox and drawer backdrops.
 - **Focus Blue** (`focus-blue`): the 2px focus ring, offset 3px, on every focusable element. Composite fields (phone, combobox) ring the whole field instead of the inner input.
 

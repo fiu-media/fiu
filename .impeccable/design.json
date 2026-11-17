@@ -237,6 +237,20 @@
           "oklch(100% 0 0)"
         ]
       },
+      "logo-light-warm": {
+        "role": "neutral",
+        "displayName": "Logo Light",
+        "tonalRamp": [
+          "oklch(15% 0.004 71)",
+          "oklch(25% 0.005 71)",
+          "oklch(35% 0.007 71)",
+          "oklch(48% 0.009 71)",
+          "oklch(60% 0.01 71)",
+          "oklch(72% 0.01 71)",
+          "oklch(84% 0.011 71)",
+          "oklch(98% 0.013 71)"
+        ]
+      },
       "scrim": {
         "role": "neutral",
         "displayName": "Scrim",
