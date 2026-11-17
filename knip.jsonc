@@ -8,6 +8,7 @@
   "ignore": ["public/**"],
   // `setup` runs the globally installed Vercel CLI.
   "ignoreBinaries": ["vercel"],
+  // Its flag SVGs are copied into public/flags by `npm run flags`; no code imports the package.
   // turbo.json configures Turborepo, which Vercel runs for builds. Nothing here imports or calls the package.
-  "ignoreDependencies": ["turbo"],
+  "ignoreDependencies": ["country-flag-icons", "turbo"],
 }

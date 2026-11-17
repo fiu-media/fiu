@@ -9,18 +9,24 @@ export function swipeStep(distance: number, threshold: number) {
 /** Pointer handlers that turn a sideways swipe of at least `threshold` px into `onStep(1 | -1)`. */
 export function useSwipe(onStep: (direction: 1 | -1) => void, threshold: number) {
   const from = useRef<number | null>(null);
+  const down = useRef(new Set<number>());
 
   return {
     onPointerDown: (event: PointerEvent) => {
-      from.current = event.clientX;
+      down.current.add(event.pointerId);
+      // A second finger is a pinch, not a swipe.
+      from.current = down.current.size > 1 ? null : event.clientX;
     },
     onPointerUp: (event: PointerEvent) => {
+      down.current.delete(event.pointerId);
       if (from.current === null) return;
       const step = swipeStep(event.clientX - from.current, threshold);
       from.current = null;
-      if (step !== 0) onStep(step);
+      // Once the page is pinch-zoomed a sideways drag pans it instead.
+      if (step !== 0 && (window.visualViewport?.scale ?? 1) <= 1) onStep(step);
     },
-    onPointerCancel: () => {
+    onPointerCancel: (event: PointerEvent) => {
+      down.current.delete(event.pointerId);
       from.current = null;
     },
     // Without this the browser starts dragging the image instead of reporting the swipe.

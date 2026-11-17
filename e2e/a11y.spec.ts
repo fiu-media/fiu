@@ -3,14 +3,16 @@ import { expect, type Page, test } from "@playwright/test";
 
 import { en } from "../lib/i18n/dictionaries/en";
 import { format } from "../lib/i18n/format";
-import { featuredTalent, rentalItems } from "./fixtures/data";
+import { featuredTalent, project, rentalItems } from "./fixtures/data";
 import { clickUntil, skipWithoutRentals, waitForAnimations, waitForImagesAndFonts } from "./helpers";
 
 /**
  * Axe's automated rules catch roughly a third of WCAG problems, so a pass is a floor, not a
  * verdict (manual review lives in #11). Any violation fails the test.
  */
-const PAGES = ["/about", "/work", "/talent", "/contact", "/contact?type=Talent", "/privacy"];
+const PAGES = ["/about", "/work", `/work/${project.slug}`, "/talent", "/contact", "/contact?type=Talent", "/privacy"];
+// Irish: Contact (labels and the form), Work (a cinematic page); Home is below. Longer or missing accessible names show up here.
+const GA_PAGES = ["/ga/contact", "/ga/work"];
 
 async function audit(page: Page, path: string, open?: (page: Page) => Promise<void>) {
   await page.goto(path);
@@ -26,7 +28,7 @@ async function audit(page: Page, path: string, open?: (page: Page) => Promise<vo
   ).toEqual([]);
 }
 
-for (const path of PAGES) {
+for (const path of [...PAGES, ...GA_PAGES]) {
   test(`axe: ${path}`, async ({ page }) => {
     await audit(page, path);
   });
@@ -39,6 +41,17 @@ test.describe("home", () => {
 
   test("axe: /", async ({ page }) => {
     await audit(page, "/");
+  });
+
+  test("axe: /ga", async ({ page }) => {
+    await audit(page, "/ga");
+  });
+});
+
+test("axe: the not-found page", async ({ page }) => {
+  await audit(page, "/work/no-such-project", async (page) => {
+    // The project streams in behind Suspense, so the 404 replaces the placeholder after the load.
+    await expect(page.getByRole("heading", { level: 1, name: "Page not found" })).toBeVisible();
   });
 });
 
@@ -61,6 +74,15 @@ test.describe("with a dialog open", () => {
       await clickUntil(page.getByRole("button", { name: en.nav.menu }), () => expect(dialog).toBeVisible({ timeout: 1000 }));
       // Let the content's fade-in finish, so contrast is measured on the final colours.
       await waitForAnimations(dialog);
+    });
+  });
+
+  test("axe: the stills lightbox", async ({ page }) => {
+    await audit(page, `/work/${project.slug}`, async (page) => {
+      await clickUntil(page.getByRole("button", { name: /^View still 1 of \d+$/ }), () =>
+        expect(page.getByRole("dialog")).toBeVisible({ timeout: 1000 }),
+      );
+      await waitForAnimations(page.getByRole("dialog"));
     });
   });
 

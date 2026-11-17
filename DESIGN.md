@@ -18,6 +18,7 @@ colors:
   glass-tint-strong: "rgb(255 255 255 / 0.07)"
   glass-edge: "rgb(255 255 255 / 0.24)"
   on-image: "#ffffff"
+  logo-light-warm: "#fff8f0"
   scrim: "#000000"
 typography:
   display:
@@ -183,7 +184,9 @@ The chrome uses near-black, warm off-white and greys only. The one colour accent
 - **Hairline** (`line`): 12% white rules. The rail's edge, rows in the talent index.
 - **Skeleton** (`skeleton`): loading blocks, pulsing only when motion is allowed.
 - **On Image** (`on-image`): type and marks over footage: slide titles and captions (full white for meta lines, 65% for roles), the About slogan, the lightbox, progress ticks. Over footage the scheme never applies, so this is always white.
+- **Logo Light** (`logo-light-warm`): the warm tint of one point light in the 3D logo scene (`features/logo/config/presets.ts`). It is a colour of light in the WebGL render, never a fill, border or text colour in the interface.
 - **Scrim** (`scrim`): the black that darkens footage under anything placed on it: caption gradients (75% at the foot), the top-of-frame fade on slides and About's still (55%, under the phone bar and slide counter), lightbox and drawer backdrops.
+- **Lamp Amber and Lamp Rose** (`lamp-amber`, `lamp-rose`): the two lights on the 404 and nothing else; see The 404 Lamps Rule.
 - **Focus Blue** (`focus-blue`): the 2px focus ring, offset 3px, on every focusable element. Composite fields (phone, combobox) ring the whole field instead of the inner input.
 
 ### Named Rules
@@ -191,6 +194,8 @@ The chrome uses near-black, warm off-white and greys only. The one colour accent
 **The Footage Is the Colour Rule.** Colour on screen comes from the films and stills. The chrome stays Ink, white and grey. Signal Red marks an error or a count and nothing else: no red links, no red buttons, no red decoration.
 
 **The Scrim Rule.** Nothing light sits on footage without a Scrim under it, and the Scrim is light falling off, never a band: soft gradients that fade to nothing, no hard edges, no opaque strips. Text over imagery must hold 4.5:1 against the brightest frame it can land on, and icons 3:1; the scrim, not a text shadow, is what guarantees it. Where the footage is usually dark enough on its own, the Scrim can be adaptive: measured per still and applied only to the frames that need it (the rail over Home's hero, see Navigation).
+
+**The 404 Lamps Rule.** The 404 is the one place colour appears without footage: two blurred lights, Lamp Amber (`lamp-amber`, `#d6a06e`, 50% at the centre) and Lamp Rose (`lamp-rose`, `#c4786e`, 32%), drift slowly behind the text on loops of 32s and 47s (held still under reduced motion) over a dark foot fade. It stands in for the footage a missing page does not have, and the warmth is deliberate. These are the only gradient blobs on the site and the only colours outside Ink, white, grey and Signal Red: do not copy them to another page or add a third.
 
 **The Light-Dark Rule.** Every colour token is declared with `light-dark()` and re-declared on each `[data-surface]` element, so a surface can be pinned to light without any JS. New colours follow the same pattern; never hard-code a dark-only value on an adaptive surface.
 
@@ -246,7 +251,7 @@ The room is flat. Pages, slides, cards and fields have no drop shadows and no to
 
 ## Shapes
 
-The shapes are soft and rounded, but never bubbly. Pills are fully round. Form controls have 16px corners, cards and inline media (stills, portraits, team photo, rental gallery) 24px, and large glass panels 28px. Small thumbnails have 12px corners. Full-bleed footage has no corners at all; it runs to the screen edge. The 2px country flags in the phone field are the only near-square shape. The round focus dot (3px) and the round count badge are the only purely decorative circles.
+The shapes are soft and rounded, but never bubbly. Pills are fully round. Form controls have 16px corners, cards and inline media (portraits, team photo, rental gallery) 24px, and large glass panels 28px. Small tiles share the control step at 16px (the stills grid, and the project covers in Home's reel). Small thumbnails have 12px corners (the 48px talent thumbnail on touch screens). Full-bleed footage has no corners at all; it runs to the screen edge. The 2px country flags in the phone field are the only near-square shape. The round focus dot (3px) and the round count badge are the only purely decorative circles.
 
 ## Components
 

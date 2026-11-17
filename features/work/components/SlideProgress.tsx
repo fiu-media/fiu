@@ -61,7 +61,7 @@ export function SlideProgress({
     <>
       <div
         className={cn(
-          "pointer-events-none fixed inset-x-0 top-0 z-20 pt-[max(1.25rem,env(safe-area-inset-top))] max-md:pt-[calc(max(1.25rem,env(safe-area-inset-top))+3.25rem)]",
+          "pointer-events-none fixed inset-x-0 top-0 z-20 pt-[max(1.25rem,env(safe-area-inset-top))] no-rail:pt-[calc(max(1.25rem,env(safe-area-inset-top))+3.25rem)]",
           railLeft,
         )}
       >
@@ -92,8 +92,10 @@ export function SlideProgress({
                   <span
                     aria-hidden
                     className={cn(
-                      "h-0.5 rounded-full bg-on-image shadow-[0_0_6px_rgb(0_0_0/0.5)] transition-[width,opacity] duration-300 motion-reduce:transition-none",
-                      i === current ? "w-6 opacity-100" : "w-3 opacity-45 group-hover:opacity-90 group-focus-visible:opacity-90",
+                      "h-0.5 w-6 origin-right rounded-full bg-on-image shadow-[0_0_6px_rgb(0_0_0/0.5)] transition-[transform,opacity] duration-300 motion-reduce:transition-none",
+                      i === current
+                        ? "scale-x-100 opacity-100"
+                        : "scale-x-50 opacity-45 group-hover:opacity-90 group-focus-visible:opacity-90",
                     )}
                   />
                   <span
