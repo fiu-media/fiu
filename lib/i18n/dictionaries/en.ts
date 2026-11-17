@@ -24,6 +24,8 @@ export const en = {
   home: {
     aboutCta: "About Us",
     workCta: "All work",
+    pauseStills: "Pause the background photos",
+    playStills: "Play the background photos",
   },
   slides: {
     label: "{title}, {index} of {total}",
