@@ -19,3 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: actions/dependency-review-action@v5
+        with:
+          # picomatch ReDoS: every release up to the latest (4.0.7) is affected and none is patched yet. It only comes
+          # in through dev tooling (chokidar, vite, vitest, knip). Remove once a fixed picomatch is published.
+          allow-ghsas: GHSA-fc5q-39xc-vjpf
