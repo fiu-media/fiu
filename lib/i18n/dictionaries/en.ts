@@ -50,6 +50,8 @@ export const en = {
     play: "Play",
     playTitle: "Play {title}",
     stop: "Stop video",
+    failed: "The film didn’t load.",
+    watchOnVimeo: "Watch it on Vimeo",
   },
   privacy: {
     title: "Privacy",

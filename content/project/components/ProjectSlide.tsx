@@ -10,7 +10,7 @@ import { GlassPillButton, GlassPillLink } from "@/components/ui/Glass";
 import { cn } from "@/lib/cn";
 import { useReducedMotion } from "@/lib/hooks/useReducedMotion";
 import { format } from "@/lib/i18n/format";
-import { parseVimeo, vimeoEmbedUrl } from "@/lib/vimeo";
+import { parseVimeo, vimeoEmbedUrl, type VimeoRef, vimeoWatchUrl } from "@/lib/vimeo";
 import type { SizedImage } from "@/sanity/lib/image";
 
 import { VIMEO_FRAME_STYLE } from "../video/frame";
@@ -43,7 +43,14 @@ export type ProjectSlideProps = {
   previewLoopUrl?: string | null | undefined;
   /** The first slide loads eagerly; the rest are lazy. */
   priority?: boolean | undefined;
-  dict: { play: string; playTitle: string; stop: string; view?: string | undefined };
+  dict: {
+    play: string;
+    playTitle: string;
+    stop: string;
+    failed: string;
+    watchOnVimeo: string;
+    view?: string | undefined;
+  };
 };
 
 /**
@@ -72,7 +79,7 @@ export function ProjectSlide({
 
   const video = parseVimeo(vimeoUrl);
   const loop = parseVimeo(previewLoopUrl);
-  const { playing, revealed, fullscreen, tapInPlayer, playFullscreenNatively, play, stop, setPlayerFrame, onScreen } =
+  const { playing, failed, revealed, fullscreen, tapInPlayer, playFullscreenNatively, play, stop, setPlayerFrame, onScreen } =
     usePlayback(root, {
       video,
       slug,
@@ -146,11 +153,13 @@ export function ProjectSlide({
           />
         )}
 
-        {playing && !revealed && (
+        {playing && !revealed && !failed && (
           <div aria-hidden className="pointer-events-none absolute inset-0 grid place-items-center bg-scrim/30">
             <div className="size-10 animate-spin rounded-full border-2 border-on-image/25 border-t-on-image motion-reduce:animate-none" />
           </div>
         )}
+
+        {failed && video && <FilmFailed video={video} dict={dict} />}
       </div>
     </FullBleedSlide>
   );
@@ -204,6 +213,22 @@ function SlideCaption({ Heading, title, titleAttribute, meta, role, href, dict, 
           </GlassPillButton>
         )}
       </div>
+    </div>
+  );
+}
+
+/** Over the still when the player never loaded its film. If the film loads after all, it goes away and the player shows through. */
+function FilmFailed({ video, dict }: { video: VimeoRef; dict: Pick<ProjectSlideProps["dict"], "failed" | "watchOnVimeo"> }) {
+  return (
+    <div
+      role="alert"
+      className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-scrim/70 px-6 text-center text-on-image"
+    >
+      <p className="font-display text-2xl italic md:text-4xl">{dict.failed}</p>
+      <GlassPillLink href={vimeoWatchUrl(video)} target="_blank" rel="noopener noreferrer" size="lg" onImage>
+        {dict.watchOnVimeo}
+        <span aria-hidden>→</span>
+      </GlassPillLink>
     </div>
   );
 }

@@ -14,6 +14,7 @@ import {
   turnForVideo,
   unlockOrientation,
 } from "./fullscreen";
+import { useLoadFailure } from "./useLoadFailure";
 import { useVimeoPlayer } from "./useVimeoPlayer";
 import { runVimeoShortcut } from "./vimeoShortcuts";
 
@@ -71,6 +72,7 @@ export function usePlayback(
   const [playFullscreenNatively, setPlayFullscreenNatively] = useState(false);
   // Where sound needs a tap in the player, it doesn't autoplay: its own play button is shown, and that tap plays with sound.
   const [tapInPlayer, setTapInPlayer] = useState(false);
+  const { failed, reset: resetFailure, markLoaded, markError } = useLoadFailure(playing);
 
   const play = useCallback(() => {
     if (!video) return;
@@ -78,29 +80,34 @@ export function usePlayback(
     setPlaying(true);
     setTapInPlayer(needsTapInPlayer());
     triedUnmute.current = false;
+    resetFailure();
     if (!matches(UPRIGHT_TOUCH)) return;
     // Held upright, a wide video fills a third of the screen. Full screen, turned sideways, it fills all of it.
     // This has to happen in the tap's own handler, before the player exists, so it is the slide that goes full screen.
     const slide = rootRef.current;
     if (slide?.requestFullscreen) void slide.requestFullscreen().catch(() => {});
     else setPlayFullscreenNatively(true);
-  }, [video, rootRef, slug]);
+  }, [video, rootRef, slug, resetFailure]);
   const reveal = useCallback(() => setRevealed(true), []);
   const stop = useCallback(() => {
     setPlaying(false);
     setRevealed(false);
     setPlayFullscreenNatively(false);
     setTapInPlayer(false);
+    resetFailure();
     if (fullscreenElement() === rootRef.current) void exitFullscreen();
     unlockOrientation();
     // The player is gone; put keyboard focus back where it came from.
     requestAnimationFrame(() => rootRef.current?.querySelector<HTMLButtonElement>("[data-play]")?.focus());
-  }, [rootRef]);
+  }, [rootRef, resetFailure]);
 
   // A playing video pauses when its slide scrolls away, keeping its place, and stays mounted.
   const player = useVimeoPlayer(playerFrame, {
+    loaded: markLoaded,
+    error: markError,
     // Not `play`: Vimeo fires that before the first frame, while its own spinner is still up.
     playing: () => {
+      markLoaded();
       reveal();
       // After playback has started: unmuting a video that hasn't begun would stop its autoplay.
       if (player.current && !triedUnmute.current) {
@@ -213,7 +220,9 @@ export function usePlayback(
 
   return {
     playing,
-    revealed,
+    failed,
+    // The player stays hidden behind the failure message.
+    revealed: revealed && !failed,
     fullscreen,
     tapInPlayer,
     playFullscreenNatively,

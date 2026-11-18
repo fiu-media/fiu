@@ -54,6 +54,8 @@ export const ga: Dictionary = {
     play: "Seinn",
     playTitle: "Seinn {title}",
     stop: "Stad an físeán",
+    failed: "Níor luchtaigh an scannán.",
+    watchOnVimeo: "Féach air ar Vimeo",
   },
   privacy: {
     title: "Príobháideachas",
