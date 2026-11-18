@@ -6,6 +6,7 @@ import { PortableText } from "next-sanity";
 import { Suspense } from "react";
 
 import { BackLink } from "@/components/ui/BackLink";
+import { Cut, cutName } from "@/components/ui/Cut";
 import { DetailList } from "@/components/ui/DetailList";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ProjectSlide, ProjectStills } from "@/content/project";
@@ -62,6 +63,8 @@ async function Project({ params }: Pick<PageProps<"/[lang]/work/[slug]">, "param
         />
       )}
       <ProjectSlide
+        // A new hero for each project, not the last one updated, so "next project" can carry its title into it.
+        key={slug}
         as="h1"
         // Short of a full screen, so the page content shows beneath it: this is a page to scroll, not another slide.
         className="h-[78dvh]"
@@ -72,7 +75,8 @@ async function Project({ params }: Pick<PageProps<"/[lang]/work/[slug]">, "param
       />
 
       <div className={cn("mx-auto max-w-6xl space-y-16 pt-10 pb-16 md:pt-12 md:pb-24", pageGutter)}>
-        <BackLink href={href(lang, routes.work())}>{work.back}</BackLink>
+        {/* Lands on this project's slide, so the hero can carry back into it. */}
+        <BackLink href={`${href(lang, routes.work())}#${slug}`}>{work.back}</BackLink>
 
         {(hasDescription || credits.length > 0 || hasStills) && (
           // One grid so credits can sit beside the description on wide screens and after the stills on narrow ones.
@@ -114,10 +118,13 @@ async function Project({ params }: Pick<PageProps<"/[lang]/work/[slug]">, "param
         )}
 
         {next && (
-          <Link href={next.href} className="group flex items-end justify-between gap-6 border-t border-line pt-8">
+          <Link href={next.href} prefetch className="group flex items-end justify-between gap-6 border-t border-line pt-8">
             <span>
               <span className="eyebrow">{work.next}</span>
-              <span className="mt-1 block font-display text-3xl italic md:text-5xl">{next.title}</span>
+              {/* Becomes the next page's title, so the name rises into the hero as it loads. */}
+              <Cut name={cutName.title(next.slug)} text>
+                <span className="mt-1 block font-display text-3xl italic md:text-5xl">{next.title}</span>
+              </Cut>
             </span>
             <ArrowRight
               aria-hidden

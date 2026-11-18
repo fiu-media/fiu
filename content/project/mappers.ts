@@ -105,7 +105,7 @@ export function nextProject(order: PROJECT_ORDER_QUERY_RESULT, slug: string, lan
   const position = order.findIndex((project) => project.slug === slug);
   if (order.length < 2 || position < 0) return null;
   const next = at(order, (position + 1) % order.length);
-  return { title: next.title, href: href(lang, routes.project(next.slug)) };
+  return { title: next.title, slug: next.slug, href: href(lang, routes.project(next.slug)) };
 }
 
 /** One project's page: the hero slide, the text, who made it, the stills and where to go next. */
