@@ -5,6 +5,7 @@ import { X } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 
+import { GlassPillButton } from "@/components/ui/Glass";
 import { SizedImg } from "@/components/ui/SizedImg";
 import { StepButton } from "@/components/ui/StepButton";
 import { at } from "@/lib/at";
@@ -144,7 +145,7 @@ function Lightbox({
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Backdrop className="fixed inset-0 z-50 bg-scrim/95 transition-opacity duration-300 data-ending-style:opacity-0 data-starting-style:opacity-0 motion-reduce:transition-none" />
+        <Dialog.Backdrop className="fixed inset-0 z-50 bg-scrim transition-opacity duration-300 data-ending-style:opacity-0 data-starting-style:opacity-0 motion-reduce:transition-none" />
         <Dialog.Popup
           onKeyDown={onKeyDown}
           className="fixed inset-0 z-50 flex flex-col text-on-image transition-opacity duration-300 outline-none data-ending-style:opacity-0 data-starting-style:opacity-0 motion-reduce:transition-none"
@@ -154,10 +155,7 @@ function Lightbox({
             <p aria-live="polite" className="text-sm text-on-image/80 tabular-nums">
               {format(dict.stillCounter, { n: index + 1, total: stills.length })}
             </p>
-            <Dialog.Close
-              aria-label={dict.closeStill}
-              className="grid size-11 cursor-pointer place-items-center rounded-full bg-on-image/10 hover:bg-on-image/20"
-            >
+            <Dialog.Close aria-label={dict.closeStill} render={<GlassPillButton onImage className="size-11 px-0" />}>
               <X aria-hidden className="size-5" />
             </Dialog.Close>
           </div>

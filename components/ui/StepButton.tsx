@@ -1,16 +1,13 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
+import { GlassPillButton } from "@/components/ui/Glass";
 import { cn } from "@/lib/cn";
 
-// `light` sits over a dark backdrop (the stills lightbox); `dark` sits over a bright photo (the rental gallery).
+// `light` is glass over a dark backdrop (the stills lightbox); `dark` is a solid disc over a bright photo (the rental gallery).
 const tones = {
-  light: {
-    base: "bg-on-image/10 hover:bg-on-image/20 max-md:bg-scrim/40",
-    left: "left-2 md:left-6",
-    right: "right-2 md:right-6",
-  },
+  light: { base: "size-11 px-0", left: "left-2 md:left-6", right: "right-2 md:right-6" },
   dark: {
-    base: "bg-ink/70 text-paper transition-colors hover:bg-ink",
+    base: "grid size-11 cursor-pointer place-items-center rounded-full bg-ink/70 text-paper transition-colors hover:bg-ink",
     left: "left-3",
     right: "right-3",
   },
@@ -29,18 +26,15 @@ export function StepButton({
   onClick: () => void;
 }) {
   const look = tones[tone];
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={label}
-      className={cn(
-        "absolute top-1/2 grid size-11 -translate-y-1/2 cursor-pointer place-items-center rounded-full",
-        look.base,
-        look[side],
-      )}
-    >
-      {side === "left" ? <ChevronLeft aria-hidden className="size-5" /> : <ChevronRight aria-hidden className="size-5" />}
+  const className = cn("absolute top-1/2 -translate-y-1/2", look.base, look[side]);
+  const icon = side === "left" ? <ChevronLeft aria-hidden className="size-5" /> : <ChevronRight aria-hidden className="size-5" />;
+  return tone === "light" ? (
+    <GlassPillButton onImage onClick={onClick} aria-label={label} className={className}>
+      {icon}
+    </GlassPillButton>
+  ) : (
+    <button type="button" onClick={onClick} aria-label={label} className={className}>
+      {icon}
     </button>
   );
 }
