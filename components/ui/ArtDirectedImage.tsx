@@ -89,8 +89,10 @@ export function ArtDirectedImage({
     <picture>
       <source media={PORTRAIT} srcSet={tall.srcSet} sizes={tall.sizes} width={tall.width} height={tall.height} />
       {}
+      {/* The <img> names the file the screen shows too: React preloads an image from its own srcset on client
+          navigations, and the landscape file there would be an extra download that holds the new page back. */}
       <img
-        {...wide}
+        {...(portraitScreen ? tall : wide)}
         ref={imgRef}
         alt={alt ?? (portraitScreen ? portrait.alt : landscape.alt)}
         style={{ ...wide.style, ...vars, ...style }}

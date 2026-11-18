@@ -172,11 +172,11 @@ describe("nextProject", () => {
   ];
 
   it("is the project after this one", () => {
-    expect(nextProject(order, "a", "en")).toEqual({ title: "B", href: "/work/b" });
+    expect(nextProject(order, "a", "en")).toEqual({ title: "B", slug: "b", href: "/work/b" });
   });
 
   it("wraps round to the first project", () => {
-    expect(nextProject(order, "c", "ga")).toEqual({ title: "A", href: "/ga/work/a" });
+    expect(nextProject(order, "c", "ga")).toEqual({ title: "A", slug: "a", href: "/ga/work/a" });
   });
 
   it("is null when this is the only project or it isn't listed", () => {
@@ -230,7 +230,7 @@ describe("toProject", () => {
     expect(page.descriptionAttribute).toContain("path=description");
     expect(page.stills.landscape).toHaveLength(1);
     expect(page.stills.portrait).toEqual([]);
-    expect(page.next).toEqual({ title: "B", href: "/work/b" });
+    expect(page.next).toEqual({ title: "B", slug: "b", href: "/work/b" });
   });
 });
 
