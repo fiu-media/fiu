@@ -1,4 +1,4 @@
-# Stop dev/e2e servers still running from this workspace, then delete everything `npm run setup` created
+# Stop dev/e2e servers still running from this workspace, then delete everything `pnpm run setup` created
 # (plus .next): archived workspaces stay on disk (restorable) and node_modules alone is ~1.8G.
 for pid in $(lsof -nP -iTCP -sTCP:LISTEN -t | sort -u); do
   cwd=$(lsof -a -p "$pid" -d cwd -Fn 2>/dev/null | sed -n 's/^n//p')

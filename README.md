@@ -5,13 +5,13 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 With the [Vercel CLI](https://vercel.com/docs/cli) installed and logged in (`vercel login`), set everything up in one go:
 
 ```bash
-npm run setup   # npm install, vercel link, vercel env pull (overwrites .env.local), npm run typegen
+pnpm run setup   # pnpm install, vercel link, vercel env pull (overwrites .env.local), pnpm run typegen
 ```
 
 First, run the development server:
 
 ```bash
-npm run dev
+pnpm run dev
 # or
 yarn dev
 # or
@@ -26,7 +26,7 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 
 ## Studio
 
-The Studio is hosted by Sanity at https://fiu.sanity.studio (it opens inside the Sanity dashboard), not in this app. It auto-updates its Sanity packages (`deployment.autoUpdates` in `sanity.cli.ts`), but our schemas, structure and plugins only change when it is deployed: `.github/workflows/deploy-studio.yml` does that on every merge to `main` that touches `sanity/` or `content/`, using the `SANITY_AUTH_TOKEN` secret (a project token with the `deploy-studio` role). To deploy by hand: `npx sanity deploy`.
+The Studio is hosted by Sanity at https://fiu.sanity.studio (it opens inside the Sanity dashboard), not in this app. It auto-updates its Sanity packages (`deployment.autoUpdates` in `sanity.cli.ts`), but our schemas, structure and plugins only change when it is deployed: `.github/workflows/deploy-studio.yml` does that on every merge to `main` that touches `sanity/` or `content/`, using the `SANITY_AUTH_TOKEN` secret (a project token with the `deploy-studio` role). To deploy by hand: `pnpm exec sanity deploy`.
 
 - It is built by Sanity's tooling, so it reads `sanity/studio-env.ts` (`SANITY_STUDIO_*` variables) rather than `@/env`. Keep `next/*`, `server-only` and `@/` imports out of everything `sanity.config.ts` pulls in: `sanity/schema/`, `sanity/studio/` and every `content/*/schema.ts`. Use relative imports there, and no React DOM.
 - Presentation previews the live site (`previewOrigin` in `sanity/studio-env.ts`). The site's draft-mode route sets partitioned cookies, so the preview works inside the Studio's frame.
@@ -51,7 +51,7 @@ Every content module and feature area has an `index.ts` that re-exports what oth
 
 ### Dependency rules
 
-`eslint.config.mjs` enforces these on every `npm run lint` (and so in CI and the pre-commit hook). A layer may import itself and anything it is allowed to import in the table; the lint message names the rule that was broken.
+`eslint.config.mjs` enforces these on every `pnpm run lint` (and so in CI and the pre-commit hook). A layer may import itself and anything it is allowed to import in the table; the lint message names the rule that was broken.
 
 | From                                                              | May import                                                                                    | May not import                                               |
 | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
@@ -74,13 +74,13 @@ The rules check the `@/` form of an import; a relative `../../features/x` betwee
 
 ## Sanity types
 
-The types of Sanity query results are generated from the schema and the `defineQuery` queries in `content/<type>/queries.ts`. `sanity.types.ts` and `sanity/extract.json` are not committed: `npm run typegen` creates them, and `npm run setup`, `predev`, `prebuild` and `pretypecheck` run it automatically (so Vercel builds and CI generate them too). It needs `NEXT_PUBLIC_SANITY_PROJECT_ID` and `NEXT_PUBLIC_SANITY_DATASET` (any values will do), which the CLI reads from `.env.local`.
+The types of Sanity query results are generated from the schema and the `defineQuery` queries in `content/<type>/queries.ts`. `sanity.types.ts` and `sanity/extract.json` are not committed: `pnpm run typegen` creates them, and `pnpm run setup`, `predev`, `prebuild` and `pretypecheck` run it automatically (so Vercel builds and CI generate them too). It needs `NEXT_PUBLIC_SANITY_PROJECT_ID` and `NEXT_PUBLIC_SANITY_DATASET` (any values will do), which the CLI reads from `.env.local`.
 
-After changing a schema or a query, `npm run typecheck` shows what breaks. TypeGen evaluates queries statically, so build them from string literals and the generic helpers in `sanity/lib/groq.ts` (called with literal arguments), not from arbitrary expressions.
+After changing a schema or a query, `pnpm run typecheck` shows what breaks. TypeGen evaluates queries statically, so build them from string literals and the generic helpers in `sanity/lib/groq.ts` (called with literal arguments), not from arbitrary expressions.
 
 ## Emails
 
-The notification emails are React Email components in `emails/`, rendered by `lib/email/templates.tsx` and sent through Resend (`lib/email/send.ts`). Their copy comes from `dict.emails`. `npm run email:dev` starts a preview server with sample data; keep `server-only` and `@/` imports out of `emails/` so it can load them.
+The notification emails are React Email components in `emails/`, rendered by `lib/email/templates.tsx` and sent through Resend (`lib/email/send.ts`). Their copy comes from `dict.emails`. `pnpm run email:dev` starts a preview server with sample data; keep `server-only` and `@/` imports out of `emails/` so it can load them.
 
 ## Environment variables
 
@@ -148,19 +148,19 @@ Things to know:
 ## Tests
 
 ```bash
-npm test          # Vitest unit tests: logic, schemas, server actions (Sanity, BotID and Resend mocked)
-npm run test:e2e  # Playwright + axe against a production build
+pnpm test          # Vitest unit tests: logic, schemas, server actions (Sanity, BotID and Resend mocked)
+pnpm run test:e2e  # Playwright + axe against a production build
 ```
 
 Unit tests sit next to the code they cover (`*.test.ts`) and need no setup.
 
-The e2e tests drive a real browser through the quote request, the contact form and the mobile menu, walk the keyboard path (the skip link, the rail, the contact form), and run axe on the public pages. They run against the `dev` Sanity dataset and don't depend on what is in it: the suite creates the content it needs (rental items, talent, a project and their photos, all with ids starting `e2e-`, listed in `e2e/fixtures/data.ts`), acts on that, and removes it again. They submit real forms, so they need `.env.local` with `NEXT_PUBLIC_SANITY_DATASET=dev` and an Editor token in `SANITY_API_WRITE_TOKEN`. First time only: `npx playwright install chromium`.
+The e2e tests drive a real browser through the quote request, the contact form and the mobile menu, walk the keyboard path (the skip link, the rail, the contact form), and run axe on the public pages. They run against the `dev` Sanity dataset and don't depend on what is in it: the suite creates the content it needs (rental items, talent, a project and their photos, all with ids starting `e2e-`, listed in `e2e/fixtures/data.ts`), acts on that, and removes it again. They submit real forms, so they need `.env.local` with `NEXT_PUBLIC_SANITY_DATASET=dev` and an Editor token in `SANITY_API_WRITE_TOKEN`. First time only: `pnpm exec playwright install chromium`.
 
 ```bash
-npm run test:e2e   # seeds the content, builds the site, starts it, runs the tests, then cleans up
+pnpm run test:e2e   # seeds the content, builds the site, starts it, runs the tests, then cleans up
 ```
 
-- The content is written before `next build`, because the pages read it at build time and keep it until Sanity reports a change. That is why Playwright's web server command (`npm run e2e:serve`) seeds, builds and starts in that order, and why a server that is already running is never reused: it wouldn't have this run's content.
+- The content is written before `next build`, because the pages read it at build time and keep it until Sanity reports a change. That is why Playwright's web server command (`pnpm run e2e:serve`) seeds, builds and starts in that order, and why a server that is already running is never reused: it wouldn't have this run's content.
 - Tests use the fixtures by slug (`rentalItems.multi.slug`, `featuredTalent.path`, ...) and never "the first item on the page". Add what a new test needs to `e2e/fixtures/data.ts` and `documents.ts`.
 - `e2e/fixtures/cleanup.ts` removes the fixtures, the images they uploaded (labelled `e2e-fixture`) and the submissions the tests made, and nothing else. It also runs before seeding, so a crashed run's leftovers don't pile up. It, and the seeding, refuse any dataset except `dev` (or `dev-…`).
 
@@ -172,7 +172,7 @@ npm run test:e2e   # seeds the content, builds the site, starts it, runs the tes
 
 ## Formatting and class names
 
-Prettier formats everything (`npm run format`; CI runs `npm run format:check`, and lint-staged formats staged files on commit). `prettier-plugin-tailwindcss` sorts Tailwind classes, including those inside `cn()`.
+Prettier formats everything (`pnpm run format`; CI runs `pnpm run format:check`, and lint-staged formats staged files on commit). `prettier-plugin-tailwindcss` sorts Tailwind classes, including those inside `cn()`.
 
 Compose class names with `cn()` from `lib/cn.ts` (clsx + tailwind-merge). In a shared component, `cn("base classes", className)` lets the caller's classes win over the defaults, so pass `size-10 px-0` rather than `size-10! px-0!`.
 

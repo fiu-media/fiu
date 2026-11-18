@@ -95,7 +95,7 @@ export function PhoneField({
             {countries.all.map(option)}
           </select>
           {/* Flag, chevron and dialling code are all under the select, so any of them opens the list. */}
-          {/* Served from public/flags (copied from country-flag-icons by `npm run flags`), so only this one is fetched. */}
+          {/* Served from public/flags (copied from country-flag-icons by `pnpm run flags`), so only this one is fetched. */}
           <Image
             src={`/flags/${country}.svg`}
             alt=""

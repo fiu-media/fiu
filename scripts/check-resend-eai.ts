@@ -2,8 +2,8 @@
  * Asks Resend whether it accepts internationalised email addresses, so the answer in
  * lib/email/address.ts (`toDeliverable`) can be checked against the real API rather than reports.
  *
- *   npm run check:email-eai                       # Resend's own test inbox, with and without an accent
- *   npm run check:email-eai -- you@exämple.de     # also your own IDN address, as Unicode and as punycode
+ *   pnpm run check:email-eai                       # Resend's own test inbox, with and without an accent
+ *   pnpm run check:email-eai -- you@exämple.de     # also your own IDN address, as Unicode and as punycode
  *
  * Each case is a real API call that sends one small test email. The `delivered@resend.dev` cases
  * go to Resend's simulator and never reach anyone's inbox. Needs RESEND_API_KEY and

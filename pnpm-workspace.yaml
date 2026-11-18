@@ -1,0 +1,12 @@
+# esbuild and fsevents work without their install scripts.
+allowBuilds:
+  esbuild: false
+  fsevents: false
+
+overrides:
+  # @vercel/frameworks (via sanity) pins js-yaml 3.13.1, which has high-severity advisories; 3.15.2 is the 3.x fix.
+  js-yaml@3.13.1: 3.15.2
+  # The same for these older copies pulled in by sanity's CLI and @react-email/ui; each is bumped to a patched release.
+  smol-toml@1.5.2: 1.9.1
+  minimatch@10.2.6: 11.0.9
+  next@16.4.3: 16.4.6

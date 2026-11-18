@@ -4,7 +4,7 @@
  * exists (including edits made in the Studio) is left exactly as it is. Image uploads are
  * de-duplicated by hash.
  *
- *   npm run seed
+ *   pnpm run seed
  *
  * Needs NEXT_PUBLIC_SANITY_PROJECT_ID, NEXT_PUBLIC_SANITY_DATASET and an Editor-role
  * SANITY_API_WRITE_TOKEN in .env.local.

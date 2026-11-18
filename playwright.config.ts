@@ -32,7 +32,7 @@ export default defineConfig({
   use: { baseURL, trace: "on-first-retry" },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   webServer: {
-    command: "npm run e2e:serve",
+    command: "pnpm run e2e:serve",
     url: baseURL,
     // Seeding and building come first, so this waits for the whole build.
     timeout: 15 * 60_000,

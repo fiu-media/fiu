@@ -2,7 +2,7 @@
  * Mirrors production's content into the `dev` dataset, so dev is a realistic copy to test against.
  * Safe to re-run. It only ever writes to dev; production is read (exported) and never changed.
  *
- *   npm run sync:dev
+ *   pnpm run sync:dev
  *
  * What it does:
  *  1. exports production, then keeps only content documents (no system documents, no preview

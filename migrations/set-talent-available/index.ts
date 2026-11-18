@@ -5,8 +5,8 @@ import { at, defineMigration, setIfMissing } from "sanity/migrate";
  * this gives them the default, so they are valid in the Studio and offered on the contact form as before.
  * Drafts and published documents, in every language, are all patched. Run once per dataset:
  *
- *   npx sanity migration run set-talent-available --dataset dev                # dry run: shows what would change
- *   npx sanity migration run set-talent-available --dataset dev --no-dry-run   # applies it
+ *   pnpm exec sanity migration run set-talent-available --dataset dev                # dry run: shows what would change
+ *   pnpm exec sanity migration run set-talent-available --dataset dev --no-dry-run   # applies it
  */
 export default defineMigration({
   title: "Set `available` on talent that don't have it",
