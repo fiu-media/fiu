@@ -95,4 +95,5 @@ export const project = {
   slug: `${FIXTURE_PREFIX}project`,
   stills: ["a", "b", "c"],
   cover: "d",
+  vimeoUrl: "https://vimeo.com/1",
 } as const;

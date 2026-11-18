@@ -24,6 +24,11 @@ export function parseVimeo(url: string | null | undefined): VimeoRef | null {
   return { id, hash };
 }
 
+/** The film's page on vimeo.com (with the privacy hash, so unlisted films open too). */
+export function vimeoWatchUrl({ id, hash }: VimeoRef): string {
+  return `https://vimeo.com/${id}${hash ? `/${hash}` : ""}`;
+}
+
 type EmbedOptions = {
   autoplay?: boolean | undefined;
   background?: boolean | undefined;

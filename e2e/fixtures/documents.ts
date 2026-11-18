@@ -81,6 +81,7 @@ export function fixtureDocuments(assetFor: (key: PhotoKey) => string): Doc[] {
     type: ref(projectType.id),
     client: "E2E Client",
     year: 2026,
+    vimeoUrl: project.vimeoUrl,
     coverStill: image(project.cover),
     stills: project.stills.map(arrayImage),
     description: [paragraph("description", "A test project.")],

@@ -76,4 +76,20 @@ test.describe("project page", () => {
     await page.goto("/work/no-such-project");
     await expect(page.getByRole("heading", { level: 1, name: "Page not found" })).toBeVisible();
   });
+
+  test("a film that never loads shows the site's own message, with Stop and a link to Vimeo", async ({ page }) => {
+    await page.route("https://player.vimeo.com/**", (route) => route.abort());
+    await page.clock.install();
+    await page.goto(`/work/${project.slug}`);
+
+    await page.getByRole("button", { name: format(en.vimeo.playTitle, { title: project.title }) }).click();
+    await page.clock.fastForward(15_000);
+
+    const alert = page.getByRole("alert").filter({ hasText: en.vimeo.failed });
+    await expect(alert).toBeVisible();
+    await expect(alert.getByRole("link", { name: en.vimeo.watchOnVimeo })).toHaveAttribute("href", project.vimeoUrl);
+
+    await page.getByRole("button", { name: en.vimeo.stop }).click();
+    await expect(alert).toBeHidden();
+  });
 });
