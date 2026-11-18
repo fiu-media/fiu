@@ -48,6 +48,29 @@ test.describe("project page", () => {
     await expect(stills.first()).toBeFocused();
   });
 
+  test("Back closes the lightbox, and closing it with Escape leaves no history entry behind", async ({ page }) => {
+    await page.goto("/work");
+    await viewProject(page).click();
+    await expect(page).toHaveURL(new RegExp(`/work/${project.slug}$`));
+
+    const stills = page.getByRole("button", { name: /^View still \d+ of \d+$/ });
+    const dialog = page.getByRole("dialog");
+
+    // Stepping between stills adds no entries, so one Back closes it.
+    await stills.first().click();
+    await page.keyboard.press("ArrowRight");
+    await page.goBack();
+    await expect(dialog).toHaveCount(0);
+    await expect(page).toHaveURL(new RegExp(`/work/${project.slug}$`));
+
+    // Escape pops the entry it pushed, so Back then leaves the project.
+    await stills.first().click();
+    await page.keyboard.press("Escape");
+    await expect(dialog).toHaveCount(0);
+    await page.goBack();
+    await expect(page).toHaveURL(/\/work$/);
+  });
+
   test("an unknown project shows the not-found page", async ({ page }) => {
     // The project streams in behind Suspense, so the status is already 200 by the time it turns out to be missing.
     await page.goto("/work/no-such-project");
