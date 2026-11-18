@@ -324,7 +324,9 @@ export const en = {
     successTitle: "Message sent",
     successBody: "Thanks for getting in touch. We've sent a copy to your email, and we'll reply as soon as we can.",
     successBodyNoEmail: "Thanks for getting in touch. We can't email a copy to that address, but we'll reply as soon as we can.",
-    directHeading: "Or reach us directly",
+    submitNote: "We'll email you a copy of your message.",
+    privacyLink: "How we use your details",
+    directHeading: "Reach us directly",
   },
   forms: {
     // Labels and example text both forms (contact, quote) share.

@@ -338,7 +338,9 @@ export const ga: Dictionary = {
       "Go raibh maith agat as dul i dteagmháil linn. Sheolamar cóip chuig do ríomhphost, agus freagróimid chomh luath agus is féidir linn.",
     successBodyNoEmail:
       "Go raibh maith agat as dul i dteagmháil linn. Ní féidir linn cóip a sheoladh chuig an seoladh sin, ach freagróimid chomh luath agus is féidir linn.",
-    directHeading: "Nó déan teagmháil linn go díreach",
+    submitNote: "Seolfaimid cóip de do theachtaireacht chuig do ríomhphost.",
+    privacyLink: "Conas a úsáidimid do shonraí",
+    directHeading: "Déan teagmháil linn go díreach",
   },
   forms: {
     fields: {

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { type SubmitEvent, useEffect, useRef } from "react";
 
@@ -16,6 +17,7 @@ import { CONTACT_PARAMS, contactPrefill } from "@/lib/forms/prefill";
 import { contactSchema, ENQUIRY_TYPES, limits } from "@/lib/forms/schemas";
 import type { Locale } from "@/lib/i18n/config";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
+import { href, routes } from "@/lib/routes";
 
 import { submitContact } from "./actions";
 
@@ -120,6 +122,12 @@ function ContactFormFields({ lang, dict, countries }: Props) {
 
       <div>
         <SubmitButton pending={pending}>{pending ? forms.fields.sending : contact.submit}</SubmitButton>
+        <p className="mt-3 text-sm text-fg-muted">
+          {contact.submitNote}{" "}
+          <Link href={href(lang, routes.privacy())} className="link-inline">
+            {contact.privacyLink}
+          </Link>
+        </p>
       </div>
     </Form>
   );
