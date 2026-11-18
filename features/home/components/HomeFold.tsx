@@ -135,7 +135,7 @@ export function HomeFold({ about, team, teamAttribute, contacts, projects, workH
                 {about.gloss}
               </p>
             )}
-            <div lang={about.summaryLang}>{about.summary}</div>
+            {about.summary && <div lang={about.summaryLang}>{about.summary}</div>}
           </div>
           {contacts}
           <GlassPillLink href={about.href} onImage>
