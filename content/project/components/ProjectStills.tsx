@@ -3,7 +3,7 @@
 import { Dialog } from "@base-ui/react/dialog";
 import { X } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { SizedImg } from "@/components/ui/SizedImg";
 import { StepButton } from "@/components/ui/StepButton";
@@ -35,6 +35,23 @@ export function ProjectStills({ landscape, portrait, dict }: { landscape: Still[
   const [view, setView] = useState<{ set: "landscape" | "portrait"; index: number; open: boolean } | null>(null);
   const stills = view ? (view.set === "portrait" ? portrait : landscape) : [];
 
+  // An open lightbox owns one history entry, so Back closes it instead of leaving the page. Stepping between stills
+  // doesn't touch history.
+  const pushed = useRef(false);
+  useEffect(() => {
+    const onPop = () => {
+      pushed.current = false;
+      setView((v) => v && { ...v, open: false });
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+  const open = (set: "landscape" | "portrait", index: number) => {
+    window.history.pushState(null, "");
+    pushed.current = true;
+    setView({ set, index, open: true });
+  };
+
   return (
     <>
       {landscape.length > 0 && (
@@ -42,7 +59,7 @@ export function ProjectStills({ landscape, portrait, dict }: { landscape: Still[
           set="landscape"
           stills={landscape}
           dict={dict}
-          onOpen={(index) => setView({ set: "landscape", index, open: true })}
+          onOpen={(index) => open("landscape", index)}
           className={cn("grid-cols-1 sm:grid-cols-2 lg:grid-cols-3", portrait.length > 0 && "portrait:hidden")}
           frame="aspect-video"
           sizes="(min-width: 1152px) 360px, (min-width: 640px) 45vw, 100vw"
@@ -53,7 +70,7 @@ export function ProjectStills({ landscape, portrait, dict }: { landscape: Still[
           set="portrait"
           stills={portrait}
           dict={dict}
-          onOpen={(index) => setView({ set: "portrait", index, open: true })}
+          onOpen={(index) => open("portrait", index)}
           className={cn("hidden grid-cols-2 md:grid-cols-3 portrait:grid", landscape.length === 0 && "max-md:grid")}
           frame="aspect-[9/16]"
           sizes="(min-width: 768px) 30vw, 50vw"
@@ -62,7 +79,11 @@ export function ProjectStills({ landscape, portrait, dict }: { landscape: Still[
       {view && (
         <Lightbox
           open={view.open}
-          onOpenChange={(open) => setView({ ...view, open })}
+          onOpenChange={(open) => {
+            setView({ ...view, open });
+            // Closed by the button or Esc: drop the entry we pushed (its popstate then finds nothing left to close).
+            if (!open && pushed.current) window.history.back();
+          }}
           stills={stills}
           index={view.index}
           onIndex={(index) => setView({ ...view, index })}
