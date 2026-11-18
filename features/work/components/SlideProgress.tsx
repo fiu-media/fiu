@@ -34,15 +34,20 @@ export function SlideProgress({
   goTo: string;
   children?: ReactNode;
 }) {
-  const [current, setCurrent] = useState(0);
+  const [current, setCurrent] = useState<number | null>(null);
 
   useEffect(() => {
     const slides = document.querySelectorAll<HTMLElement>(`#${containerId} > [aria-roledescription="slide"]`);
+    const inView = new Set<number>();
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
-          if (entry.isIntersecting) setCurrent([...slides].findIndex((slide) => slide === entry.target));
+          const index = [...slides].findIndex((slide) => slide === entry.target);
+          if (entry.isIntersecting) inView.add(index);
+          else inView.delete(index);
         }
+        // No slide half in view (the header is showing) means no current slide.
+        setCurrent([...inView].at(-1) ?? null);
       },
       { threshold: 0.5 },
     );
@@ -70,8 +75,14 @@ export function SlideProgress({
             {children}
           </div>
           {total > 1 && (
-            <p aria-hidden className="shrink-0 text-sm text-on-image tabular-nums [text-shadow:0_1px_6px_rgb(0_0_0/0.45)]">
-              {current + 1} / {total}
+            <p
+              aria-hidden
+              className={cn(
+                "shrink-0 text-sm text-on-image tabular-nums transition-opacity duration-300 [text-shadow:0_1px_6px_rgb(0_0_0/0.45)] motion-reduce:transition-none",
+                current === null && "opacity-0",
+              )}
+            >
+              {(current ?? 0) + 1} / {total}
             </p>
           )}
         </div>
