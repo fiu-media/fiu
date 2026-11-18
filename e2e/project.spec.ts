@@ -10,7 +10,7 @@ const { work } = en;
 const viewProject = (page: Page) => page.getByRole("link", { name: `${work.view}: ${project.title}`, exact: true });
 
 test.describe("project page", () => {
-  test('"View project" on Our Work opens that project, and "All work" goes back', async ({ page }) => {
+  test('"View project" on Our Work opens that project, and "All work" goes back to its slide', async ({ page }) => {
     await page.goto("/work");
     // The slides stream in behind a placeholder.
     const link = viewProject(page);
@@ -20,8 +20,10 @@ test.describe("project page", () => {
     await expect(page).toHaveURL(new RegExp(`/work/${project.slug}$`));
     await expect(page.getByRole("heading", { level: 1, name: project.title })).toBeVisible();
 
+    // Back lands on this project's slide, so the hero can carry back into it.
     await page.getByRole("link", { name: work.back }).click();
-    await expect(page).toHaveURL(/\/work$/);
+    await expect(page).toHaveURL(new RegExp(`/work#${project.slug}$`));
+    await expect(viewProject(page)).toBeInViewport();
   });
 
   test("a still opens in a lightbox that steps with the arrow keys and closes with Escape", async ({ page }) => {

@@ -20,10 +20,12 @@ export function FullBleedScroll({ label, id, children }: { label: string; id?: s
 
 /** One screen of a FullBleedScroll. Put full-bleed media inside and a caption at the bottom. */
 export function FullBleedSlide({
+  id,
   label,
   className,
   children,
 }: {
+  id?: string | undefined;
   /** Accessible name, e.g. "Solas, 2 of 5". */
   label: string;
   className?: string | undefined;
@@ -31,6 +33,7 @@ export function FullBleedSlide({
 }) {
   return (
     <section
+      id={id}
       aria-roledescription="slide"
       aria-label={label}
       className={cn("relative isolate h-dvh snap-start snap-always overflow-hidden bg-ink text-on-image", className)}

@@ -221,6 +221,8 @@ export function usePlayback(
   return {
     playing,
     failed,
+    // Waiting on the player, with its spinner over the still.
+    loading: playing && !revealed && !failed,
     // The player stays hidden behind the failure message.
     revealed: revealed && !failed,
     fullscreen,

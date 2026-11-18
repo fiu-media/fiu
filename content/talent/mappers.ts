@@ -13,7 +13,7 @@ export const PORTRAIT_WIDTH = 1200;
 const joinRoles = (roles: string[] | null | undefined) => (roles ?? []).join(", ");
 
 /** One row of the roster index. Has the shape of the `NameIndex` row, which lives in the talent feature. */
-export type RosterItem = { title: string; meta: string; href: string; image: SizedImage | null };
+export type RosterItem = { title: string; meta: string; href: string; slug: string; image: SizedImage | null };
 
 /** The roster as index rows: name, roles on the right, a link to the person's page. */
 export function toRosterItems(people: TALENT_QUERY_RESULT, lang: Locale): RosterItem[] {
@@ -21,6 +21,7 @@ export function toRosterItems(people: TALENT_QUERY_RESULT, lang: Locale): Roster
     title: person.name,
     meta: joinRoles(person.roles),
     href: href(lang, routes.person(person.slug)),
+    slug: person.slug,
     image: person.portrait ? toSizedImage(person.portrait, PORTRAIT_INDEX_WIDTH) : null,
   }));
 }
