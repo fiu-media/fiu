@@ -79,3 +79,15 @@ jobs:
       # sanity.types.ts is generated and gitignored; without it knip reports every import of it as unresolved.
       - run: pnpm run typegen
       - run: pnpm run knip
+
+  impeccable:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 26
+      # Pinned so a new detector release can't start failing unrelated PRs. Reads .impeccable/config.json for ignores.
+      # Exits non-zero on findings; --github turns them into inline PR annotations.
+      - run: pnpm dlx impeccable@4.9.2 detect --github .
