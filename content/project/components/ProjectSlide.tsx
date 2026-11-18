@@ -34,6 +34,8 @@ export type ProjectSlideProps = {
   href?: string | undefined;
   /** Heading level for the title: the project's own page makes it the page's `<h1>`. */
   as?: "h1" | "h2" | undefined;
+  /** The slide's element id, so a link can land on it (`/work#slug`, the project page's way back). */
+  anchor?: string | null | undefined;
   /** Overrides the slide's size (the project page's hero is shorter than a screen). */
   className?: string | undefined;
   image: SizedImage | null;
@@ -60,6 +62,7 @@ export function ProjectSlide({
   role,
   href,
   as: Heading = "h2",
+  anchor,
   className,
   image,
   mobileImage,
@@ -82,11 +85,12 @@ export function ProjectSlide({
   const showLoop = loop !== null && onScreen && !playing && !reducedMotion;
 
   return (
-    <FullBleedSlide label={label} className={className}>
-      <div ref={root} tabIndex={-1} className="absolute inset-0 outline-none">
-        {/* The same still on the project page's hero, so opening a project carries the frame into it. The frame is
-            the shared box: a <picture> is inline and has no size of its own to carry. */}
-        <Cut name={cutName.still(slug)}>
+    <FullBleedSlide id={anchor ?? undefined} label={label} className={className}>
+      {/* The whole frame (still, scrims, pills) is shared with the project page's hero, so opening a project carries
+          it there as one piece; the title, meta and Play pill travel on their own above it. */}
+      {/* A slide is cropped tighter than the hero (it is taller), so arriving here the hero's wider frame carries in. */}
+      <Cut name={cutName.still(slug)} hold={Heading !== "h1"}>
+        <div ref={root} tabIndex={-1} className="absolute inset-0 outline-none">
           <div className="absolute inset-0 bg-bg-raised">
             {image && (
               <ArtDirectedImage
@@ -98,66 +102,66 @@ export function ProjectSlide({
               />
             )}
           </div>
-        </Cut>
 
-        {showLoop && <PreviewLoop src={vimeoEmbedUrl(loop, { background: true })} title={title} />}
+          {showLoop && <PreviewLoop src={vimeoEmbedUrl(loop, { background: true })} title={title} />}
 
-        {!playing && (
-          // Keeps the white logo, filter pills and counter legible over bright covers.
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-x-0 top-0 h-44 bg-gradient-to-b from-scrim/55 to-transparent"
-          />
-        )}
+          {!playing && (
+            // Keeps the white logo, filter pills and counter legible over bright covers.
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-x-0 top-0 h-44 bg-gradient-to-b from-scrim/55 to-transparent"
+            />
+          )}
 
-        {playing && !fullscreen && (
-          // Before the player in the DOM, so Tab goes from Stop into the player; z-10 keeps it above it.
-          // Not while the slide is full screen: the video has the whole screen, and leaving full screen brings Stop back.
-          // On phones the floating menu button sits in the top corner, so Stop goes beneath it.
-          // The soft black behind the pill brings its label to 4.5:1 over a white frame (the glass alone dims to 0.88).
-          <div className="absolute top-[calc(max(1.25rem,env(safe-area-inset-top))+4rem)] right-4 z-10 rounded-full bg-scrim/55 shadow-[0_0_1.5rem_0.5rem_rgb(0_0_0/0.4)] md:top-6 md:right-6">
-            <GlassPillButton data-stop size="md" onImage onClick={stop}>
-              {dict.stop}
-            </GlassPillButton>
-          </div>
-        )}
+          {playing && !fullscreen && (
+            // Before the player in the DOM, so Tab goes from Stop into the player; z-10 keeps it above it.
+            // Not while the slide is full screen: the video has the whole screen, and leaving full screen brings Stop back.
+            // On phones the floating menu button sits in the top corner, so Stop goes beneath it.
+            // The soft black behind the pill brings its label to 4.5:1 over a white frame (the glass alone dims to 0.88).
+            <div className="absolute top-[calc(max(1.25rem,env(safe-area-inset-top))+4rem)] right-4 z-10 rounded-full bg-scrim/55 shadow-[0_0_1.5rem_0.5rem_rgb(0_0_0/0.4)] md:top-6 md:right-6">
+              <GlassPillButton data-stop size="md" onImage onClick={stop}>
+                {dict.stop}
+              </GlassPillButton>
+            </div>
+          )}
 
-        {playing && video ? (
-          <iframe
-            ref={setPlayerFrame}
-            src={vimeoEmbedUrl(video, {
-              autoplay: !tapInPlayer,
-              playsinline: playFullscreenNatively ? false : undefined,
-            })}
-            title={title}
-            allow="autoplay; fullscreen; picture-in-picture"
-            allowFullScreen
-            style={VIMEO_FRAME_STYLE}
-            className={cn(
-              "absolute inset-0 size-full border-0 bg-scrim transition-opacity duration-500 motion-reduce:transition-none",
-              revealed ? "opacity-100" : "opacity-0",
-            )}
-          />
-        ) : (
-          <SlideCaption
-            Heading={Heading}
-            slug={slug}
-            title={title}
-            titleAttribute={titleAttribute}
-            meta={meta}
-            role={role}
-            href={href}
-            dict={dict}
-            onPlay={video ? play : undefined}
-          />
-        )}
+          {playing && video ? (
+            <iframe
+              ref={setPlayerFrame}
+              src={vimeoEmbedUrl(video, {
+                autoplay: !tapInPlayer,
+                playsinline: playFullscreenNatively ? false : undefined,
+              })}
+              title={title}
+              allow="autoplay; fullscreen; picture-in-picture"
+              allowFullScreen
+              style={VIMEO_FRAME_STYLE}
+              className={cn(
+                "absolute inset-0 size-full border-0 bg-scrim transition-opacity duration-500 motion-reduce:transition-none",
+                revealed ? "opacity-100" : "opacity-0",
+              )}
+            />
+          ) : (
+            <SlideCaption
+              Heading={Heading}
+              slug={slug}
+              title={title}
+              titleAttribute={titleAttribute}
+              meta={meta}
+              role={role}
+              href={href}
+              dict={dict}
+              onPlay={video ? play : undefined}
+            />
+          )}
 
-        {playing && !revealed && (
-          <div aria-hidden className="pointer-events-none absolute inset-0 grid place-items-center bg-scrim/30">
-            <div className="size-10 animate-spin rounded-full border-2 border-on-image/25 border-t-on-image motion-reduce:animate-none" />
-          </div>
-        )}
-      </div>
+          {playing && !revealed && (
+            <div aria-hidden className="pointer-events-none absolute inset-0 grid place-items-center bg-scrim/30">
+              <div className="size-10 animate-spin rounded-full border-2 border-on-image/25 border-t-on-image motion-reduce:animate-none" />
+            </div>
+          )}
+        </div>
+      </Cut>
     </FullBleedSlide>
   );
 }
@@ -178,7 +182,7 @@ function SlideCaption({ Heading, slug, title, titleAttribute, meta, role, href, 
       )}
     >
       <div className="min-w-0">
-        <Cut name={cutName.title(slug)} text>
+        <Cut name={cutName.title(slug)} text hold={Heading !== "h1"}>
           <Heading data-sanity={titleAttribute} className="font-display text-4xl text-balance italic md:text-7xl">
             {href ? (
               <Link href={href} prefetch className="hover:underline focus-visible:underline">
@@ -190,7 +194,7 @@ function SlideCaption({ Heading, slug, title, titleAttribute, meta, role, href, 
           </Heading>
         </Cut>
         {/* Travels with the title, so the caption moves as one line rather than fading in under it. */}
-        <Cut name={cutName.meta(slug)} text>
+        <Cut name={cutName.meta(slug)} text hold={Heading !== "h1"}>
           <p className="mt-1 text-sm text-on-image md:text-base">{meta}</p>
         </Cut>
         {role && <p className="mt-1 text-sm text-on-image/65">{role}</p>}
@@ -203,17 +207,19 @@ function SlideCaption({ Heading, slug, title, titleAttribute, meta, role, href, 
           </GlassPillLink>
         )}
         {onPlay && (
-          <GlassPillButton
-            data-play
-            size="lg"
-            onImage
-            onClick={onPlay}
-            aria-label={format(dict.playTitle, { title })}
-            className="shrink-0"
-          >
-            <Play aria-hidden fill="currentColor" className="size-4" />
-            <span className="max-sm:sr-only">{dict.play}</span>
-          </GlassPillButton>
+          <Cut name={cutName.play(slug)}>
+            <GlassPillButton
+              data-play
+              size="lg"
+              onImage
+              onClick={onPlay}
+              aria-label={format(dict.playTitle, { title })}
+              className="shrink-0"
+            >
+              <Play aria-hidden fill="currentColor" className="size-4" />
+              <span className="max-sm:sr-only">{dict.play}</span>
+            </GlassPillButton>
+          </Cut>
         )}
       </div>
     </div>

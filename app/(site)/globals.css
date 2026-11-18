@@ -678,15 +678,16 @@ main:focus {
   pointer-events: none;
 }
 ::view-transition-group(.cut),
+::view-transition-group(.cut-hold),
 ::view-transition-group(.cut-text),
+::view-transition-group(.cut-text-hold),
 ::view-transition-group(.cut-fade) {
   animation-duration: 640ms;
   animation-timing-function: cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 /*
- * Only the arriving snapshot is drawn. The two ends crop a still (or wrap a title) differently, so crossfading them
- * would double the image; one snapshot growing into place stays one object. A still fills the moving frame without
- * stretching; a line of type scales by its height and is never cropped.
+ * Only the arriving snapshot is drawn. The two ends crop a still (or set a name) differently, so crossfading them
+ * would double it; one snapshot growing into place stays one object. A still fills the moving frame without stretching.
  */
 ::view-transition-old(.cut),
 ::view-transition-old(.cut-text) {
@@ -698,10 +699,65 @@ main:focus {
   height: 100%;
   object-fit: cover;
 }
+/*
+ * Arriving at a tighter crop (a slide, from the hero), the wider frame it came from carries in instead, and the
+ * slide's own fades in over the last stretch, where the two have all but met; so neither end jumps.
+ */
+::view-transition-old(.cut-hold),
+::view-transition-new(.cut-hold) {
+  height: 100%;
+  object-fit: cover;
+}
+::view-transition-old(.cut-hold) {
+  animation: none;
+}
+::view-transition-new(.cut-hold) {
+  mix-blend-mode: normal;
+  animation-name: cut-meet;
+}
+@keyframes cut-meet {
+  0%,
+  70% {
+    opacity: 0;
+  }
+}
+/* Keep the frame to its own box: WebKit otherwise lets the cover spill past it, under the rail. */
+::view-transition-group(.cut),
+::view-transition-group(.cut-hold) {
+  overflow: clip;
+}
+/*
+ * Type fits inside the moving box on the caption's baseline, never cropped or blown past it. Arriving at a slide, the
+ * caption keeps the hero's wrapping until the last stretch and only then settles into the slide's, as it lands.
+ */
+::view-transition-new(.cut-text),
+::view-transition-old(.cut-text-hold),
+::view-transition-new(.cut-text-hold) {
+  height: 100%;
+  object-fit: contain;
+  object-position: left bottom;
+}
 ::view-transition-new(.cut-text) {
   animation: none;
-  width: auto;
-  height: 100%;
+}
+::view-transition-old(.cut-text-hold),
+::view-transition-new(.cut-text-hold) {
+  mix-blend-mode: normal;
+}
+::view-transition-old(.cut-text-hold) {
+  animation-name: cut-leave;
+}
+::view-transition-new(.cut-text-hold) {
+  animation-name: cut-meet;
+}
+@keyframes cut-leave {
+  0%,
+  70% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
 }
 /* A portrait has the same crop at both ends, so it can crossfade; that is how it fades out into a hidden preview. */
 ::view-transition-old(.cut-fade),

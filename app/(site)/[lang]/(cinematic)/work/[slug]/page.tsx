@@ -75,7 +75,8 @@ async function Project({ params }: Pick<PageProps<"/[lang]/work/[slug]">, "param
       />
 
       <div className={cn("mx-auto max-w-6xl space-y-16 pt-10 pb-16 md:pt-12 md:pb-24", pageGutter)}>
-        <BackLink href={href(lang, routes.work())}>{work.back}</BackLink>
+        {/* Lands on this project's slide, so the hero can carry back into it. */}
+        <BackLink href={`${href(lang, routes.work())}#${slug}`}>{work.back}</BackLink>
 
         {(hasDescription || credits.length > 0 || hasStills) && (
           // One grid so credits can sit beside the description on wide screens and after the stills on narrow ones.
