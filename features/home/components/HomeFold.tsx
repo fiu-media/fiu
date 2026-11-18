@@ -6,6 +6,7 @@ import { GlassPillLink } from "@/components/ui/Glass";
 import { SizedImg } from "@/components/ui/SizedImg";
 import { type Team, TeamFigure } from "@/content/siteSettings";
 import { cn } from "@/lib/cn";
+import type { Locale } from "@/lib/i18n/config";
 import { pageGutter } from "@/lib/rail";
 import type { SizedImage } from "@/sanity/lib/image";
 
@@ -13,6 +14,9 @@ import type { SizedImage } from "@/sanity/lib/image";
 type FoldAbout = {
   slogan: string;
   gloss: string | null;
+  /** Set on the gloss and summary when they are not in the page's language (an untranslated fallback). */
+  glossLang?: Locale | undefined;
+  summaryLang?: Locale | undefined;
   /** One paragraph, already rendered. */
   summary: ReactNode;
   still: SizedImage;
@@ -126,8 +130,12 @@ export function HomeFold({ about, team, teamAttribute, contacts, projects, workH
             {about.slogan}
           </h2>
           <div className="space-y-4 text-base leading-relaxed text-fg/85 md:text-lg">
-            {about.gloss && <p className="text-fg">{about.gloss}</p>}
-            {about.summary}
+            {about.gloss && (
+              <p lang={about.glossLang} className="text-fg">
+                {about.gloss}
+              </p>
+            )}
+            {about.summary && <div lang={about.summaryLang}>{about.summary}</div>}
           </div>
           {contacts}
           <GlassPillLink href={about.href} onImage>

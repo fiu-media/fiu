@@ -46,7 +46,8 @@ const SITE_SETTINGS_FIELDS = `
 
 /**
  * Everything the site reads from Site settings, in one query: each field falls back to the default language's, and an
- * image falls back as a whole (a translation with no asset shows the default language's).
+ * image falls back as a whole (a translation with no asset shows the default language's). `fallbackFields` names the
+ * visible text fields that came from the default language, so pages can mark them with its `lang`.
  */
 export const SITE_SETTINGS_QUERY = defineQuery(`{
   "cur": *[_type == "siteSettings" && language == $lang][0]{ ${SITE_SETTINGS_FIELDS} },
@@ -71,6 +72,21 @@ export const SITE_SETTINGS_QUERY = defineQuery(`{
   "contactTagline": coalesce(cur.contactTagline, fb.contactTagline),
   "seoTitle": coalesce(cur.seoTitle, fb.seoTitle),
   "seoDescription": coalesce(cur.seoDescription, fb.seoDescription),
+  "fallbackFields": array::compact([
+    select(!defined(cur.sloganGloss) && defined(fb.sloganGloss) => "sloganGloss"),
+    select(!defined(cur.manifesto) && defined(fb.manifesto) => "manifesto"),
+    select(!defined(cur.teamCaption) && defined(fb.teamCaption) => "teamCaption"),
+    select(!defined(cur.rentalsIntro) && defined(fb.rentalsIntro) => "rentalsIntro"),
+    select(!defined(cur.quoteIntro) && defined(fb.quoteIntro) => "quoteIntro"),
+    select(!defined(cur.contactIntro) && defined(fb.contactIntro) => "contactIntro"),
+    select(!defined(cur.workIntro) && defined(fb.workIntro) => "workIntro"),
+    select(!defined(cur.talentIntro) && defined(fb.talentIntro) => "talentIntro"),
+    select(!defined(cur.aboutTagline) && defined(fb.aboutTagline) => "aboutTagline"),
+    select(!defined(cur.workTagline) && defined(fb.workTagline) => "workTagline"),
+    select(!defined(cur.talentTagline) && defined(fb.talentTagline) => "talentTagline"),
+    select(!defined(cur.rentalsTagline) && defined(fb.rentalsTagline) => "rentalsTagline"),
+    select(!defined(cur.contactTagline) && defined(fb.contactTagline) => "contactTagline")
+  ]),
   "seoImage": select(defined(cur.seoImage.asset) => cur.seoImage, fb.seoImage),
   "aboutStill": select(defined(cur.aboutStill.asset) => cur.aboutStill, fb.aboutStill),
   "teamStill": select(defined(cur.teamStill.asset) => cur.teamStill, fb.teamStill)

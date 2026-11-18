@@ -30,6 +30,7 @@ const settings = (extra: Partial<SITE_SETTINGS_QUERY_RESULT> = {}): SITE_SETTING
   seoImage: null,
   aboutStill: null,
   teamStill: null,
+  fallbackFields: [],
   ...extra,
 });
 
@@ -41,6 +42,11 @@ describe("toSiteSettings", () => {
   it("derives the Instagram handle and keeps the link", () => {
     const { instagram } = toSiteSettings(settings({ instagram: "https://www.instagram.com/fiumedia/" })).contact;
     expect(instagram).toEqual({ href: "https://www.instagram.com/fiumedia/", handle: "@fiumedia" });
+  });
+
+  it("maps the fallback fields to the default language, for `lang` attributes", () => {
+    const { fallbackLang } = toSiteSettings(settings({ fallbackFields: ["workIntro"] }));
+    expect(fallbackLang).toEqual({ workIntro: "en" });
   });
 
   it("reports nothing the editors haven't set", () => {

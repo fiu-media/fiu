@@ -19,6 +19,8 @@ export async function getAbout(lang: Locale): Promise<AboutLayoutProps> {
     slogan: slogan ?? dict.about.title,
     ...(slogan && { sloganLang: "ga" as const }),
     gloss: sloganGloss ?? null,
+    glossLang: settings.fallbackLang.sloganGloss,
+    manifestoLang: settings.fallbackLang.manifesto,
     scrollLabel: dict.common.scrollDown,
     manifesto: manifesto?.length ? <PortableText value={manifesto} /> : null,
     contacts: <ContactLinks variant="list" contact={settings.contact} labels={dict.contactLinks} />,

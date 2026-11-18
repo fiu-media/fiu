@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: PageProps<"/[lang]/contact">)
 
 export default async function ContactPage({ params }: PageProps<"/[lang]/contact">) {
   const lang = await getLocale(params);
-  const [{ contact, forms, common }, { contactTagline, contactIntro }] = await Promise.all([
+  const [{ contact, forms, common }, { contactTagline, contactIntro, fallbackLang }] = await Promise.all([
     getDictionary(lang),
     getSiteSettings(lang, { draft: false }),
   ]);
@@ -32,7 +32,9 @@ export default async function ContactPage({ params }: PageProps<"/[lang]/contact
       <PageHeader
         title={contact.title}
         tagline={contactTagline}
+        taglineLang={fallbackLang.contactTagline}
         intro={contactIntro}
+        introLang={fallbackLang.contactIntro}
         className="order-1 lg:order-none lg:col-start-1 lg:row-start-1"
       />
       <div className="order-3 lg:order-none lg:col-start-1 lg:row-start-2">
