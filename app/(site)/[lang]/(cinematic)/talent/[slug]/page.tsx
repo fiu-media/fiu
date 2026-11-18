@@ -5,6 +5,7 @@ import { PortableText } from "next-sanity";
 import { Suspense } from "react";
 
 import { BackLink } from "@/components/ui/BackLink";
+import { Cut, cutName } from "@/components/ui/Cut";
 import { FullBleedScroll } from "@/components/ui/FullBleedScroll";
 import { SizedImg } from "@/components/ui/SizedImg";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -63,12 +64,14 @@ async function Profile({ params }: Pick<PageProps<"/[lang]/talent/[slug]">, "par
         <div className="mx-auto grid max-w-6xl items-center gap-8 md:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] md:gap-14 lg:min-h-[calc(100dvh-10rem)]">
           <div data-sanity={attrs.portrait}>
             {portrait ? (
-              <SizedImg
-                image={portrait}
-                sizes="(min-width: 768px) 42vw, 100vw"
-                priority
-                className="aspect-[4/5] w-full rounded-3xl"
-              />
+              <Cut name={cutName.portrait(personSlug)} fade>
+                <SizedImg
+                  image={portrait}
+                  sizes="(min-width: 768px) 42vw, 100vw"
+                  priority
+                  className="aspect-[4/5] w-full rounded-3xl"
+                />
+              </Cut>
             ) : (
               <div className="grid aspect-[4/5] w-full place-items-center rounded-3xl bg-bg-raised text-sm text-fg-muted">
                 {talent.noPortrait}
@@ -80,7 +83,9 @@ async function Profile({ params }: Pick<PageProps<"/[lang]/talent/[slug]">, "par
             <header>
               {roles && <p className="eyebrow">{roles}</p>}
               <h1 data-sanity={attrs.name} className="mt-2 font-display text-5xl text-balance italic md:text-7xl">
-                {name}
+                <Cut name={cutName.name(personSlug)} text>
+                  <span>{name}</span>
+                </Cut>
               </h1>
             </header>
             {bio && bio.length > 0 && (

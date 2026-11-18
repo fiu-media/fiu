@@ -114,6 +114,7 @@ async function Projects({ lang, searchParams }: { lang: Locale; searchParams: Se
           <ProjectSlide
             key={id}
             {...slide}
+            anchor={slide.slug}
             label={format(slideCopy.label, { title: slide.title, index: i + 1, total: slides.length })}
             priority={i === 0}
             dict={{ ...vimeo, view: work.view }}
