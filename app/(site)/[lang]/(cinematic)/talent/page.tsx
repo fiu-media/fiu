@@ -21,13 +21,20 @@ export async function generateMetadata({ params }: PageProps<"/[lang]/talent">):
 
 export default async function TalentPage({ params }: PageProps<"/[lang]/talent">) {
   const lang = await getLocale(params);
-  const [{ talent, common }, { talentTagline, talentIntro }] = await Promise.all([
+  const [{ talent, common }, { talentTagline, talentIntro, fallbackLang }] = await Promise.all([
     getDictionary(lang),
     getSiteSettings(lang, { draft: false }),
   ]);
   return (
     <PageShell className={cn(floatingBarInset, pageTop)}>
-      <PageHeader title={talent.title} tagline={talentTagline} intro={talentIntro} className="mb-10" />
+      <PageHeader
+        title={talent.title}
+        tagline={talentTagline}
+        taglineLang={fallbackLang.talentTagline}
+        intro={talentIntro}
+        introLang={fallbackLang.talentIntro}
+        className="mb-10"
+      />
       {/* Reads draft mode, so it streams in behind the static heading. */}
       <Suspense fallback={<IndexSkeleton label={common.loading} />}>
         <Roster lang={lang} />

@@ -22,7 +22,14 @@ export default async function RentalsPage({ params }: PageProps<"/[lang]/rentals
   const [{ rentals, common }, settings] = await Promise.all([getDictionary(lang), getSiteSettings(lang, { draft: false })]);
   return (
     <PageShell>
-      <PageHeader title={rentals.title} tagline={settings.rentalsTagline} intro={settings.rentalsIntro} className="mb-10" />
+      <PageHeader
+        title={rentals.title}
+        tagline={settings.rentalsTagline}
+        taglineLang={settings.fallbackLang.rentalsTagline}
+        intro={settings.rentalsIntro}
+        introLang={settings.fallbackLang.rentalsIntro}
+        className="mb-10"
+      />
       {/* Reads draft mode, so it streams in behind the static heading. */}
       <Suspense fallback={<CatalogueSkeleton label={common.loading} />}>
         <Catalogue lang={lang} />

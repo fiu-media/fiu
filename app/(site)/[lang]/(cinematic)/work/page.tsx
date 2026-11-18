@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: PageProps<"/[lang]/work">): P
 
 export default async function WorkPage({ params, searchParams }: PageProps<"/[lang]/work">) {
   const lang = await getLocale(params);
-  const [{ work, common }, { workTagline, workIntro }] = await Promise.all([
+  const [{ work, common }, { workTagline, workIntro, fallbackLang }] = await Promise.all([
     getDictionary(lang),
     getSiteSettings(lang, { draft: false }),
   ]);
@@ -37,7 +37,13 @@ export default async function WorkPage({ params, searchParams }: PageProps<"/[la
       {/* The gutter is inside the max-width box, as on the other pages, so the title lines up with theirs. */}
       <header className={cn("snap-start pb-10 md:pb-12", floatingBarInset, pageTop)}>
         <div className={cn("mx-auto max-w-6xl", pageGutter)}>
-          <PageHeader title={work.title} tagline={workTagline} intro={workIntro} />
+          <PageHeader
+            title={work.title}
+            tagline={workTagline}
+            taglineLang={fallbackLang.workTagline}
+            intro={workIntro}
+            introLang={fallbackLang.workIntro}
+          />
           <Suspense fallback={<FiltersSkeleton />}>
             <Filters lang={lang} searchParams={searchParams} />
           </Suspense>
