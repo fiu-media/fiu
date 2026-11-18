@@ -91,7 +91,8 @@ function Nav({ lang, items, homeHref, labels, onImage, overFootage, pathname }: 
       <aside
         ref={rail}
         className={cn(
-          "fixed inset-y-0 left-0 z-30 hidden flex-col items-center gap-8 border-r border-line pt-[max(1.75rem,env(safe-area-inset-top))] pb-7 pl-[env(safe-area-inset-left)] rail:flex",
+          // Named so it stays put above a still carried between pages (the cut, globals.css).
+          "fixed inset-y-0 left-0 z-30 hidden flex-col items-center gap-8 border-r border-line pt-[max(1.75rem,env(safe-area-inset-top))] pb-7 pl-[env(safe-area-inset-left)] [view-transition-name:site-rail] rail:flex",
           railWidth,
           // Over Home's hero: a letter halo, and edge light only behind bright stills (`rail-halo` in globals.css).
           overFootage
@@ -125,7 +126,7 @@ function Nav({ lang, items, homeHref, labels, onImage, overFootage, pathname }: 
       {/* On cinematic pages the bar floats over the content; on adaptive pages it takes its own row. */}
       <header
         className={cn(
-          "z-30 flex items-center justify-between px-[max(1.25rem,env(safe-area-inset-left))] pt-[max(1.25rem,env(safe-area-inset-top))] pr-[max(1.25rem,env(safe-area-inset-right))] pb-4 rail:hidden",
+          "z-30 flex items-center justify-between px-[max(1.25rem,env(safe-area-inset-left))] pt-[max(1.25rem,env(safe-area-inset-top))] pr-[max(1.25rem,env(safe-area-inset-right))] pb-4 [view-transition-name:site-bar] rail:hidden",
           onImage ? "absolute inset-x-0 top-0" : "relative",
           // Over footage, a soft scrim behind the logo and the Menu button keeps them legible against a bright sky.
           overFootage
