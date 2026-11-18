@@ -1,5 +1,5 @@
 import { emailForDisplay } from "@/lib/email/display";
-import type { Locale } from "@/lib/i18n/config";
+import { defaultLocale, type Locale } from "@/lib/i18n/config";
 import { instagramHandle } from "@/lib/instagram";
 import type { SITE_SETTINGS_QUERY_RESULT } from "@/sanity.types";
 import { fetchContent } from "@/sanity/lib/fetch";
@@ -14,12 +14,17 @@ export type SiteContact = {
 };
 
 /** Site settings as pages use them: the query's fields, with the two contact fields folded into `contact`. */
-export type SiteSettings = Omit<SITE_SETTINGS_QUERY_RESULT, "contactEmail" | "instagram"> & { contact: SiteContact };
+export type SiteSettings = Omit<SITE_SETTINGS_QUERY_RESULT, "contactEmail" | "instagram" | "fallbackFields"> & {
+  contact: SiteContact;
+  /** The language of each text field that fell back to the default language's, for its `lang` attribute. Fields in the page's own language are absent. */
+  fallbackLang: Partial<Record<keyof SITE_SETTINGS_QUERY_RESULT, Locale>>;
+};
 
 /** The query's result as a view model. Kept apart from the fetch so it can be tested without the cache boundary. */
-export function toSiteSettings({ contactEmail, instagram, ...rest }: SITE_SETTINGS_QUERY_RESULT): SiteSettings {
+export function toSiteSettings({ contactEmail, instagram, fallbackFields, ...rest }: SITE_SETTINGS_QUERY_RESULT): SiteSettings {
   return {
     ...rest,
+    fallbackLang: Object.fromEntries(fallbackFields.map((field) => [field, defaultLocale])),
     contact: {
       email: contactEmail ? emailForDisplay(contactEmail) : null,
       instagram: instagram ? { href: instagram, handle: instagramHandle(instagram) } : null,

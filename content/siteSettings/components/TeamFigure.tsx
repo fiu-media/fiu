@@ -33,7 +33,11 @@ export function TeamFigure({
       </div>
       <figcaption className="mt-4">
         <span className="font-display text-2xl italic">{team.heading}</span>
-        {team.caption && <span className="mt-1 block text-sm text-fg-muted">{team.caption}</span>}
+        {team.caption && (
+          <span lang={team.captionLang} className="mt-1 block text-sm text-fg-muted">
+            {team.caption}
+          </span>
+        )}
       </figcaption>
     </figure>
   );

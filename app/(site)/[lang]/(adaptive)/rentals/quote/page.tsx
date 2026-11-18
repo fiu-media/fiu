@@ -27,7 +27,12 @@ export default async function QuotePage({ params }: PageProps<"/[lang]/rentals/q
   ]);
   return (
     <PageShell>
-      <PageHeader title={quote.title} intro={settings.quoteIntro} className="mb-10" />
+      <PageHeader
+        title={quote.title}
+        intro={settings.quoteIntro}
+        introLang={settings.fallbackLang.quoteIntro}
+        className="mb-10"
+      />
       {/* QuoteForm reads the link's query (prefill), which needs a boundary to keep the page static. */}
       <Suspense fallback={<QuoteFormSkeleton label={common.loading} />}>
         <QuoteForm lang={lang} dict={{ quote, basket, forms, common, dates }} countries={countryList(lang)} />

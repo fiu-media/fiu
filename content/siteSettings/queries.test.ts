@@ -73,7 +73,7 @@ describe("site settings", () => {
     },
   ];
   // groq-js returns `any`; the annotation says which fields these tests read.
-  type Result = Doc & { aboutStill: { alt: string } | null; teamStill: { alt: string } | null };
+  type Result = Doc & { fallbackFields: string[]; aboutStill: { alt: string } | null; teamStill: { alt: string } | null };
   const fetch = async (lang: string): Promise<Result> => {
     const params = { lang, fallbackLang: "en" };
     return (await evaluate(parse(SITE_SETTINGS_QUERY, { params }), { dataset, params })).get();
@@ -96,6 +96,12 @@ describe("site settings", () => {
     });
     // Fields neither language sets come back null, so the loader's types hold.
     expect(settings.talentIntro).toBeNull();
+  });
+
+  it("names the text fields that fell back, so pages can mark them with the default language", async () => {
+    // `slogan` is the translation's own and `talentIntro` is set by neither, so neither is named.
+    expect((await fetch("ga")).fallbackFields).toEqual(["workIntro"]);
+    expect((await fetch("en")).fallbackFields).toEqual([]);
   });
 
   it("falls back to the default language's image only when the translation has no asset", async () => {

@@ -34,6 +34,8 @@ export async function getHomeFold(lang: Locale): Promise<HomeFoldProps> {
       // The brand line stays Irish in every language, so the dictionary's copy of it is the right fallback.
       slogan: slogan ?? dict.site.description,
       gloss: sloganGloss ?? null,
+      glossLang: settings.fallbackLang.sloganGloss,
+      summaryLang: settings.fallbackLang.manifesto,
       // Only the first paragraph: this is the condensed About.
       summary: manifesto?.length ? <PortableText value={manifesto.slice(0, 1)} /> : null,
       href: href(lang, routes.about()),

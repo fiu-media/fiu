@@ -217,7 +217,7 @@ function SlideCaption({ Heading, slug, title, titleAttribute, meta, role, href, 
               className="shrink-0"
             >
               <Play aria-hidden fill="currentColor" className="size-4" />
-              <span className="max-sm:sr-only">{dict.play}</span>
+              <span className={cn(href && "max-sm:sr-only")}>{dict.play}</span>
             </GlassPillButton>
           </Cut>
         )}

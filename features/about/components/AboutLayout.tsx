@@ -4,6 +4,7 @@ import { SheetFade } from "@/components/ui/HeroFade";
 import { SizedImg } from "@/components/ui/SizedImg";
 import { type Team, TeamFigure } from "@/content/siteSettings";
 import { cn } from "@/lib/cn";
+import type { Locale } from "@/lib/i18n/config";
 import { skipTarget } from "@/lib/skipLink";
 import type { SizedImage } from "@/sanity/lib/image";
 
@@ -16,6 +17,9 @@ export type AboutLayoutProps = {
   /** "ga" when `slogan` is the editor-written Irish line; unset when it is the page-title fallback. */
   sloganLang?: "ga" | undefined;
   gloss: string | null;
+  /** Set on the gloss, manifesto when they are not in the page's language (an untranslated fallback). */
+  glossLang?: Locale | undefined;
+  manifestoLang?: Locale | undefined;
   /** Accessible name of the arrow that scrolls past the first screen. */
   scrollLabel: string;
   manifesto: ReactNode;
@@ -47,9 +51,10 @@ export function AboutHeroSection({
   slogan,
   sloganLang,
   gloss,
+  glossLang,
   scrollLabel,
   attributes,
-}: Pick<AboutLayoutProps, "still" | "slogan" | "sloganLang" | "gloss" | "scrollLabel" | "attributes">) {
+}: Pick<AboutLayoutProps, "still" | "slogan" | "sloganLang" | "gloss" | "glossLang" | "scrollLabel" | "attributes">) {
   return (
     <>
       <div className="sticky top-0 -z-10 h-dvh">
@@ -65,7 +70,11 @@ export function AboutHeroSection({
         >
           {slogan}
         </h1>
-        {gloss && <p className="mt-4 max-w-xl text-base text-on-image/80 md:text-lg">{gloss}</p>}
+        {gloss && (
+          <p lang={glossLang} className="mt-4 max-w-xl text-base text-on-image/80 md:text-lg">
+            {gloss}
+          </p>
+        )}
         <ScrollDownButton label={scrollLabel} />
       </section>
     </>
@@ -82,6 +91,8 @@ export function AboutLayoutA({
   slogan,
   sloganLang,
   gloss,
+  glossLang,
+  manifestoLang,
   scrollLabel,
   manifesto,
   contacts,
@@ -91,7 +102,11 @@ export function AboutLayoutA({
   const body = (
     <>
       {manifesto && (
-        <div data-sanity={attributes?.manifesto} className="space-y-6 text-xl leading-relaxed text-fg/90 md:text-2xl">
+        <div
+          lang={manifestoLang}
+          data-sanity={attributes?.manifesto}
+          className="space-y-6 text-xl leading-relaxed text-fg/90 md:text-2xl"
+        >
           {manifesto}
         </div>
       )}
@@ -105,6 +120,7 @@ export function AboutLayoutA({
         slogan={slogan}
         sloganLang={sloganLang}
         gloss={gloss}
+        glossLang={glossLang}
         scrollLabel={scrollLabel}
         attributes={attributes}
       />
