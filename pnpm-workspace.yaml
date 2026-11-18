@@ -1,0 +1,4 @@
+# esbuild and fsevents work without their install scripts.
+allowBuilds:
+  esbuild: false
+  fsevents: false

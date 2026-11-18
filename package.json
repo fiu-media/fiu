@@ -4,33 +4,29 @@
   "private": true,
   "scripts": {
     "archive": "sh scripts/archive.sh",
-    "prebuild": "npm run typegen && npm run flags",
+    "prebuild": "pnpm run typegen && pnpm run flags",
     "build": "next build",
     "check:email-eai": "tsx --env-file=.env.local scripts/check-resend-eai.ts",
-    "predev": "npm run typegen && npm run flags",
+    "predev": "pnpm run typegen && pnpm run flags",
     "dev": "NODE_OPTIONS=--no-experimental-webstorage next dev",
-    "e2e:serve": "tsx e2e/fixtures/seed.ts && npm run build && npm run start",
+    "e2e:serve": "tsx e2e/fixtures/seed.ts && pnpm run build && pnpm run start",
     "email:dev": "email dev --dir emails",
     "flags": "rm -rf public/flags && cp -R node_modules/country-flag-icons/3x2 public/flags",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "knip": "SKIP_ENV_VALIDATION=1 knip",
-    "prelint": "npm run typegen && next typegen",
+    "prelint": "pnpm run typegen && next typegen",
     "lint": "eslint . --max-warnings=0",
     "prepare": "husky",
     "seed": "tsx --env-file=.env.local scripts/seed.ts",
-    "setup": "npm install && vercel link --yes --scope fiu-media --project fiu && vercel env pull --yes && npm run typegen",
+    "setup": "pnpm install && vercel link --yes --scope fiu-media --project fiu && vercel env pull --yes && pnpm run typegen",
     "start": "next start",
     "sync:dev": "tsx --env-file=.env.local scripts/sync-dev.ts",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "pretypecheck": "npm run typegen",
+    "pretypecheck": "pnpm run typegen",
     "typecheck": "next typegen && tsc --noEmit",
     "typegen": "NODE_ENV=development sanity schema extract --enforce-required-fields --force --path=sanity/extract.json && NODE_ENV=development sanity typegen generate"
-  },
-  "allowScripts": {
-    "esbuild": false,
-    "fsevents": false
   },
   "lint-staged": {
     "*.{js,jsx,mjs,ts,tsx}": [
@@ -38,17 +34,6 @@
       "eslint --max-warnings=0 --no-warn-ignored"
     ],
     "*.{css,json,md,yml}": "prettier --write"
-  },
-  "overrides": {
-    "eslint-plugin-import": {
-      "eslint": "$eslint"
-    },
-    "eslint-plugin-jsx-a11y": {
-      "eslint": "$eslint"
-    },
-    "eslint-plugin-react": {
-      "eslint": "$eslint"
-    }
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
@@ -126,5 +111,5 @@
     "typescript-eslint": "^8.72.2",
     "vitest": "^5.1.0"
   },
-  "packageManager": "npm@11.19.1"
+  "packageManager": "pnpm@12.21.0"
 }
