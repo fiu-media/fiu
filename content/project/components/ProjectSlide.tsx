@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRef } from "react";
 
 import { ArtDirectedImage } from "@/components/ui/ArtDirectedImage";
+import { Cut, cutName } from "@/components/ui/Cut";
 import { FullBleedSlide } from "@/components/ui/FullBleedScroll";
 import { GlassPillButton, GlassPillLink } from "@/components/ui/Glass";
 import { cn } from "@/lib/cn";
@@ -83,17 +84,21 @@ export function ProjectSlide({
   return (
     <FullBleedSlide label={label} className={className}>
       <div ref={root} tabIndex={-1} className="absolute inset-0 outline-none">
-        {image ? (
-          <ArtDirectedImage
-            landscape={image}
-            portrait={mobileImage}
-            sizes="100vw"
-            priority={priority}
-            className="absolute inset-0 size-full"
-          />
-        ) : (
-          <div aria-hidden className="absolute inset-0 bg-bg-raised" />
-        )}
+        {/* The same still on the project page's hero, so opening a project carries the frame into it. The frame is
+            the shared box: a <picture> is inline and has no size of its own to carry. */}
+        <Cut name={cutName.still(slug)}>
+          <div className="absolute inset-0 bg-bg-raised">
+            {image && (
+              <ArtDirectedImage
+                landscape={image}
+                portrait={mobileImage}
+                sizes="100vw"
+                priority={priority}
+                className="absolute inset-0 size-full"
+              />
+            )}
+          </div>
+        </Cut>
 
         {showLoop && <PreviewLoop src={vimeoEmbedUrl(loop, { background: true })} title={title} />}
 
@@ -136,6 +141,7 @@ export function ProjectSlide({
         ) : (
           <SlideCaption
             Heading={Heading}
+            slug={slug}
             title={title}
             titleAttribute={titleAttribute}
             meta={meta}
@@ -156,14 +162,14 @@ export function ProjectSlide({
   );
 }
 
-type SlideCaptionProps = Pick<ProjectSlideProps, "title" | "meta" | "titleAttribute" | "role" | "href" | "dict"> & {
+type SlideCaptionProps = Pick<ProjectSlideProps, "slug" | "title" | "meta" | "titleAttribute" | "role" | "href" | "dict"> & {
   Heading: "h1" | "h2";
   /** Set when the project has a video; the Play pill appears with it. */
   onPlay: (() => void) | undefined;
 };
 
 /** The title, meta line and role over the cover, with the "view" and Play pills beside them. */
-function SlideCaption({ Heading, title, titleAttribute, meta, role, href, dict, onPlay }: SlideCaptionProps) {
+function SlideCaption({ Heading, slug, title, titleAttribute, meta, role, href, dict, onPlay }: SlideCaptionProps) {
   return (
     <div
       className={cn(
@@ -172,21 +178,27 @@ function SlideCaption({ Heading, title, titleAttribute, meta, role, href, dict, 
       )}
     >
       <div className="min-w-0">
-        <Heading data-sanity={titleAttribute} className="font-display text-4xl text-balance italic md:text-7xl">
-          {href ? (
-            <Link href={href} className="hover:underline focus-visible:underline">
-              {title}
-            </Link>
-          ) : (
-            title
-          )}
-        </Heading>
-        <p className="mt-1 text-sm text-on-image md:text-base">{meta}</p>
+        <Cut name={cutName.title(slug)} text>
+          <Heading data-sanity={titleAttribute} className="font-display text-4xl text-balance italic md:text-7xl">
+            {href ? (
+              <Link href={href} prefetch className="hover:underline focus-visible:underline">
+                {title}
+              </Link>
+            ) : (
+              title
+            )}
+          </Heading>
+        </Cut>
+        {/* Travels with the title, so the caption moves as one line rather than fading in under it. */}
+        <Cut name={cutName.meta(slug)} text>
+          <p className="mt-1 text-sm text-on-image md:text-base">{meta}</p>
+        </Cut>
         {role && <p className="mt-1 text-sm text-on-image/65">{role}</p>}
       </div>
       <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 md:gap-3">
         {href && dict.view && (
-          <GlassPillLink href={href} size="lg" onImage aria-label={`${dict.view}: ${title}`}>
+          // `prefetch` loads the whole project ahead of the click, so the still can carry straight into its page.
+          <GlassPillLink href={href} prefetch size="lg" onImage aria-label={`${dict.view}: ${title}`}>
             {dict.view}
           </GlassPillLink>
         )}
