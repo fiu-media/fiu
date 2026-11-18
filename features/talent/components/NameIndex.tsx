@@ -2,9 +2,11 @@
 
 import { LazyMotion, m, useSpring } from "motion/react";
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
+import { Cut, cutName } from "@/components/ui/Cut";
 import { SizedImg } from "@/components/ui/SizedImg";
+import { useMediaQuery } from "@/lib/hooks/useMediaQuery";
 import { useReducedMotion } from "@/lib/hooks/useReducedMotion";
 import type { SizedImage } from "@/sanity/lib/image";
 
@@ -13,6 +15,8 @@ export type IndexItem = {
   /** Shown at the right of the row (a talent's roles, a project's type and year). */
   meta: string;
   href: string;
+  /** A person's slug: with it, the name and the preview carry into the heading and portrait on their page. */
+  slug?: string | undefined;
   /** Optional: a row without an image still lists and links. */
   image?: SizedImage | null;
 };
@@ -42,6 +46,13 @@ export function NameIndex({
   const box = useRef<HTMLUListElement>(null);
   const [active, setActive] = useState<number | null>(null);
   const reduced = useReducedMotion();
+  // Where the preview shows (the same break as its `md:pointer-fine:block`).
+  const previewing = useMediaQuery("(min-width: 48rem) and (pointer: fine)", false);
+  // Next keeps a page you leave alive, hidden, and shows it again on Back with its state; it comes back unhovered.
+  useEffect(() => () => setActive(null), []);
+  // The row last opened. Coming back, its name and portrait return to it: the portrait shrinks into the (hidden) preview.
+  const [opened, setOpened] = useState<number | null>(null);
+  const carried = active ?? opened;
   const x = useSpring(0, FOLLOW);
   const y = useSpring(0, FOLLOW);
 
@@ -67,6 +78,8 @@ export function NameIndex({
         <li key={item.href}>
           <Link
             href={item.href}
+            // Loads the whole page ahead of the click, so the name and portrait can carry straight into it.
+            prefetch
             className="group flex items-center gap-4 py-5 transition-opacity duration-300 motion-reduce:transition-none md:py-6"
             // 0.6 keeps the other names at 6.4:1 on Ink (AA); a lower value drops them under 3:1.
             style={{ opacity: active === null || active === i ? 1 : 0.6 }}
@@ -75,6 +88,7 @@ export function NameIndex({
               place(event.clientX, event.clientY, active === null);
             }}
             onPointerMove={(event) => place(event.clientX, event.clientY)}
+            onClick={() => setOpened(i)}
             onBlur={(event) => {
               if (!box.current?.contains(event.relatedTarget)) setActive(null);
             }}
@@ -101,7 +115,11 @@ export function NameIndex({
               wrapper drops out (`contents`) and name and meta are the row's flex items again. */}
             <div className="min-w-0 flex-1 md:contents">
               <span className="-my-[0.15em] block min-w-0 truncate py-[0.15em] font-display text-3xl italic md:flex-1 md:text-6xl">
-                {item.title}
+                {/* Inline, so the shared box is the name's own width rather than the whole row. */}
+                {/* Only alongside its portrait: a name travelling alone would cross the portrait as it fades. */}
+                <Cut name={previewing && i === carried && item.image ? cutName.name(item.slug) : null} text>
+                  <span>{item.title}</span>
+                </Cut>
               </span>
               <span className="block text-xs text-fg-muted md:shrink-0 md:text-right md:text-sm">{item.meta}</span>
             </div>
@@ -119,15 +137,18 @@ export function NameIndex({
         >
           {items.map((item, i) =>
             item.image ? (
-              <SizedImg
-                key={item.href}
-                image={item.image}
-                alt=""
-                fill
-                sizes={`${previewWidth}px`}
-                className="transition-opacity duration-200 motion-reduce:transition-none"
-                style={{ opacity: i === active ? 1 : 0 }}
-              />
+              // Only one preview is shared: the one under the cursor grows into the portrait, and coming back the
+              // portrait shrinks into the opened row's, fading as it goes because that preview is hidden.
+              <Cut key={item.href} name={previewing && i === carried ? cutName.portrait(item.slug) : null} fade>
+                <SizedImg
+                  image={item.image}
+                  alt=""
+                  fill
+                  sizes={`${previewWidth}px`}
+                  className="transition-opacity duration-200 motion-reduce:transition-none"
+                  style={{ opacity: i === active ? 1 : 0 }}
+                />
+              </Cut>
             ) : null,
           )}
         </m.li>

@@ -675,3 +675,126 @@ main:focus {
   color: var(--fg);
   background: var(--bg-raised);
 }
+
+/*
+ * The cut (components/ui/Cut.tsx): a still, title, name or portrait carried from one page into the next while the
+ * rest of the page crossfades under it. It settles on the glass curve, with no overshoot, and is off under reduced
+ * motion. Clicks pass through to the new page while it runs.
+ */
+::view-transition {
+  pointer-events: none;
+}
+::view-transition-group(.cut),
+::view-transition-group(.cut-hold),
+::view-transition-group(.cut-text),
+::view-transition-group(.cut-text-hold),
+::view-transition-group(.cut-fade) {
+  animation-duration: 640ms;
+  animation-timing-function: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+/*
+ * Only the arriving snapshot is drawn. The two ends crop a still (or set a name) differently, so crossfading them
+ * would double it; one snapshot growing into place stays one object. A still fills the moving frame without stretching.
+ */
+::view-transition-old(.cut),
+::view-transition-old(.cut-text) {
+  animation: none;
+  opacity: 0;
+}
+::view-transition-new(.cut) {
+  animation: none;
+  height: 100%;
+  object-fit: cover;
+}
+/*
+ * Arriving at a tighter crop (a slide, from the hero), the wider frame it came from carries in instead, and the
+ * slide's own fades in over the last stretch, where the two have all but met; so neither end jumps.
+ */
+::view-transition-old(.cut-hold),
+::view-transition-new(.cut-hold) {
+  height: 100%;
+  object-fit: cover;
+}
+::view-transition-old(.cut-hold) {
+  animation: none;
+}
+::view-transition-new(.cut-hold) {
+  mix-blend-mode: normal;
+  animation-name: cut-meet;
+}
+@keyframes cut-meet {
+  0%,
+  70% {
+    opacity: 0;
+  }
+}
+/* Keep the frame to its own box: WebKit otherwise lets the cover spill past it, under the rail. */
+::view-transition-group(.cut),
+::view-transition-group(.cut-hold) {
+  overflow: clip;
+}
+/*
+ * Type fits inside the moving box on the caption's baseline, never cropped or blown past it. Arriving at a slide, the
+ * caption keeps the hero's wrapping until the last stretch and only then settles into the slide's, as it lands.
+ */
+::view-transition-new(.cut-text),
+::view-transition-old(.cut-text-hold),
+::view-transition-new(.cut-text-hold) {
+  height: 100%;
+  object-fit: contain;
+  object-position: left bottom;
+}
+::view-transition-new(.cut-text) {
+  animation: none;
+}
+::view-transition-old(.cut-text-hold),
+::view-transition-new(.cut-text-hold) {
+  mix-blend-mode: normal;
+}
+::view-transition-old(.cut-text-hold) {
+  animation-name: cut-leave;
+}
+::view-transition-new(.cut-text-hold) {
+  animation-name: cut-meet;
+}
+@keyframes cut-leave {
+  0%,
+  70% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+/* A portrait has the same crop at both ends, so it can crossfade; that is how it fades out into a hidden preview. */
+::view-transition-old(.cut-fade),
+::view-transition-new(.cut-fade) {
+  height: 100%;
+  object-fit: cover;
+}
+/* A name and its portrait swap sides on the way, so the name passes behind it, whichever way it is going. */
+::view-transition-group(.cut-fade) {
+  z-index: 1;
+}
+/* The rail and the phone bar hold still above whatever is carried across, as they do between pages anyway. */
+::view-transition-group(site-rail),
+::view-transition-group(site-bar),
+::view-transition-new(site-rail),
+::view-transition-new(site-bar) {
+  animation: none;
+}
+::view-transition-group(site-rail),
+::view-transition-group(site-bar) {
+  z-index: 2;
+}
+::view-transition-old(site-rail),
+::view-transition-old(site-bar) {
+  display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
