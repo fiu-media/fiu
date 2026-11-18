@@ -18,6 +18,13 @@
  *     would inherit the parent's already-resolved colours.
  */
 @layer base {
+  /* Body text: avoid a single stranded word on the last line. Utilities (text-balance) still win. */
+  p,
+  li,
+  dd {
+    text-wrap: pretty;
+  }
+
   :root {
     color-scheme: dark;
   }
