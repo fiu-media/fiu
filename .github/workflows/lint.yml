@@ -88,6 +88,6 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: 26
-      # Pinned so a new detector release can't start failing unrelated PRs. Reads .impeccable/config.json for ignores.
+      # Reads .impeccable/config.json for ignores.
       # Exits non-zero on findings; --github turns them into inline PR annotations.
-      - run: pnpm dlx impeccable@4.9.2 detect --github .
+      - run: pnpm dlx impeccable detect --github .
