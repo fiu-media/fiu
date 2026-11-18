@@ -91,7 +91,7 @@ export function Reel({
               className="transition-transform duration-700 ease-out group-hover:scale-[1.03] motion-reduce:transition-none"
             />
           </div>
-          <h3 className="mt-4 font-display text-2xl md:text-3xl">{project.title}</h3>
+          <h3 className="mt-4 font-display text-2xl italic md:text-3xl">{project.title}</h3>
           <p className="mt-1 text-sm text-on-image/60">{project.meta}</p>
         </Link>
       ))}
