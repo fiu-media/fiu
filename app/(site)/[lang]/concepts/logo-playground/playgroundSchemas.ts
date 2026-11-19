@@ -27,6 +27,16 @@ export const playgroundConfigSchema = z.object({
 });
 export type LogoPlaygroundConfig = z.infer<typeof playgroundConfigSchema>;
 
+/** The moving-light experiment's settings; bounds match the playground sliders. */
+export const sweepSettingsSchema = z.object({
+  mode: z.enum(["off", "webgl", "css", "both"]),
+  technique: z.enum(["move", "rotate"]),
+  axis: z.enum(["x", "y", "orbit"]),
+  periodSeconds: z.number().min(8).max(90),
+  amplitude: z.number().min(0.1).max(1),
+});
+export type LogoSweepSettings = z.infer<typeof sweepSettingsSchema>;
+
 /** Pasted full snapshot: only the version, mesh mode and params are required. */
 export const fullImportSchema = z.object({
   version: z.literal(1),
@@ -34,6 +44,7 @@ export const fullImportSchema = z.object({
   rimLook: rimLookSchema.default("light"),
   display: displaySchema.default("live"),
   params: partialGlassParamsSchema,
+  sweep: sweepSettingsSchema.optional(),
 });
 
 export const materialImportSchema = z.object({

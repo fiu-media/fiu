@@ -20,7 +20,9 @@ import {
   type LogoMaterialConfigExport,
   type LogoPartialGlassParams,
   type LogoPlaygroundConfig,
+  type LogoSweepSettings,
   materialImportSchema,
+  sweepSettingsSchema,
 } from "./playgroundSchemas";
 
 function cloneLights(lights: LogoLightsConfig): LogoLightsConfig {
@@ -52,6 +54,7 @@ const CONFIG_FENCE = "fiu-logo-config";
 const MATERIAL_FENCE = "fiu-logo-material";
 const LIGHTING_FENCE = "fiu-logo-lighting";
 const INTERACTION_FENCE = "fiu-logo-interaction";
+const SWEEP_FENCE = "fiu-logo-sweep";
 
 function fence(lang: string, value: unknown): string {
   return [`\`\`\`${lang}`, JSON.stringify(value, null, 2), "```"].join("\n");
@@ -110,8 +113,9 @@ export function resetInteractionParams(params: LogoGlassParams, rimLook: LogoRim
 }
 
 /** Markdown/JSON snapshot of the current playground settings. */
-export function formatConfigExport(config: LogoPlaygroundConfig): string {
-  return fence(CONFIG_FENCE, config);
+/** `sweep` may be the live sweep state: zod keeps only the settings, not its clock. */
+export function formatConfigExport(config: LogoPlaygroundConfig, sweep?: LogoSweepSettings): string {
+  return fence(CONFIG_FENCE, sweep ? { ...config, sweep: sweepSettingsSchema.parse(sweep) } : config);
 }
 
 export function formatMaterialConfigExport(config: LogoPlaygroundConfig): string {
@@ -143,6 +147,10 @@ export function formatInteractionConfigExport(config: LogoPlaygroundConfig): str
     params: pickInteractionParams(config.params),
   };
   return fence(INTERACTION_FENCE, payload);
+}
+
+export function formatSweepConfigExport(sweep: LogoSweepSettings): string {
+  return fence(SWEEP_FENCE, { version: 1, ...sweepSettingsSchema.parse(sweep) });
 }
 
 /** Fill missing param keys from the rim preset (older playground snapshots). */
@@ -177,11 +185,13 @@ function parseJson(raw: string): unknown {
   }
 }
 
-function parseFullConfig(json: unknown): { ok: true; config: LogoPlaygroundConfig } | { ok: false; error: string } {
+function parseFullConfig(
+  json: unknown,
+): { ok: true; config: LogoPlaygroundConfig; sweep: LogoSweepSettings | undefined } | { ok: false; error: string } {
   const result = fullImportSchema.safeParse(json);
   if (!result.success) return { ok: false, error: `Full snapshot: ${formatZodError(result.error)}` };
-  const { version, meshMode, rimLook, display, params } = result.data;
-  return { ok: true, config: { version, meshMode, rimLook, display, params: coalesceParams(params, rimLook) } };
+  const { version, meshMode, rimLook, display, params, sweep } = result.data;
+  return { ok: true, config: { version, meshMode, rimLook, display, params: coalesceParams(params, rimLook) }, sweep };
 }
 
 export function parseConfigExport(text: string): LogoPlaygroundConfig | null {
@@ -192,9 +202,12 @@ export function parseConfigExport(text: string): LogoPlaygroundConfig | null {
   return result.ok ? result.config : null;
 }
 
-export type LogoImportKind = "full" | "material" | "lighting" | "interaction";
+export type LogoImportKind = "full" | "material" | "lighting" | "interaction" | "sweep";
 
-export type LogoImportResult = { ok: true; kind: LogoImportKind; config: LogoPlaygroundConfig } | { ok: false; error: string };
+/** `sweep` is set when the paste carries moving-light settings (a full config or a sweep snapshot). */
+export type LogoImportResult =
+  | { ok: true; kind: LogoImportKind; config: LogoPlaygroundConfig; sweep?: LogoSweepSettings | undefined }
+  | { ok: false; error: string };
 
 /**
  * Apply a copied full or tab-scoped snapshot onto the current playground config.
@@ -217,9 +230,11 @@ export function importPlaygroundConfig(current: LogoPlaygroundConfig, text: stri
           ? "lighting"
           : fence === INTERACTION_FENCE
             ? "interaction"
-            : fence === CONFIG_FENCE || fence === "json" || !fence
-              ? "full"
-              : null;
+            : fence === SWEEP_FENCE
+              ? "sweep"
+              : fence === CONFIG_FENCE || fence === "json" || !fence
+                ? "full"
+                : null;
 
   if (section === "material") {
     const result = materialImportSchema.safeParse(obj);
@@ -264,10 +279,16 @@ export function importPlaygroundConfig(current: LogoPlaygroundConfig, text: stri
     };
   }
 
-  if (section === "full" || (section === null && "params" in obj && "meshMode" in obj)) {
-    const result = parseFullConfig(obj);
-    return result.ok ? { ok: true, kind: "full", config: result.config } : result;
+  if (section === "sweep") {
+    const result = sweepSettingsSchema.safeParse(obj);
+    if (!result.success) return { ok: false, error: `Sweep snapshot: ${formatZodError(result.error)}` };
+    return { ok: true, kind: "sweep", config: current, sweep: result.data };
   }
 
-  return { ok: false, error: "Unrecognized config. Use a fiu-logo-config / material / lighting / interaction snapshot." };
+  if (section === "full" || (section === null && "params" in obj && "meshMode" in obj)) {
+    const result = parseFullConfig(obj);
+    return result.ok ? { ok: true, kind: "full", config: result.config, sweep: result.sweep } : result;
+  }
+
+  return { ok: false, error: "Unrecognized config. Use a fiu-logo-config / material / lighting / interaction / sweep snapshot." };
 }
