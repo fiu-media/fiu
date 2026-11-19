@@ -113,7 +113,7 @@ export const en = {
         {
           name: "Vimeo",
           purpose:
-            "Plays our films and the short previews of them. We ask Vimeo not to track you, and it then blocks its session data and analytics. Your browser still connects to Vimeo when a film or preview loads, and Vimeo sets a few security cookies (listed below).",
+            "Plays our films and the short previews of them. We ask Vimeo not to track you, and it then blocks its session data and analytics. Your browser still connects to Vimeo when a film or preview loads, and also a moment earlier, when you point at or focus a film's Play button, so it starts sooner. Vimeo sets a few security cookies (listed below).",
           links: [
             { label: "Player cookies", href: "https://help.vimeo.com/hc/en-us/articles/26080940921361" },
             { label: "Privacy policy", href: "https://vimeo.com/privacy" },

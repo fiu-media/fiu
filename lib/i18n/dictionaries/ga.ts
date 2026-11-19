@@ -120,7 +120,7 @@ export const ga: Dictionary = {
         {
           name: "Vimeo",
           purpose:
-            "Seinneann sé ár scannáin agus na réamhamhairc ghearra díobh. Iarraimid ar Vimeo gan tú a rianú, agus ansin cuireann sé bac ar a shonraí seisiúin agus ar a anailísíocht. Ceanglaíonn do bhrabhsálaí le Vimeo fós nuair a lódálann scannán nó réamhamharc, agus socraíonn Vimeo roinnt fianán slándála (liostaithe thíos).",
+            "Seinneann sé ár scannáin agus na réamhamhairc ghearra díobh. Iarraimid ar Vimeo gan tú a rianú, agus ansin cuireann sé bac ar a shonraí seisiúin agus ar a anailísíocht. Ceanglaíonn do bhrabhsálaí le Vimeo fós nuair a lódálann scannán nó réamhamharc, agus tamall beag roimhe sin, nuair a dhíríonn tú ar chnaipe Seinn scannáin nó nuair a chuireann tú fócas air, ionas go dtosóidh sé níos luaithe. Socraíonn Vimeo roinnt fianán slándála (liostaithe thíos).",
           links: [
             { label: "Fianáin an tseinnteora", href: "https://help.vimeo.com/hc/en-us/articles/26080940921361" },
             { label: "Beartas príobháideachais", href: "https://vimeo.com/privacy" },

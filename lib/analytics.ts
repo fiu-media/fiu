@@ -10,6 +10,8 @@ type Events = {
   "Contact Submitted": { enquiryType: EnquiryType };
   "Quote Submitted": { itemCount: number };
   "Film Played": { slug: string };
+  /** Milliseconds from pressing Play to the first frame, and whether Vimeo was warmed up beforehand. */
+  "Film Started": { slug: string; ms: number; warmed: boolean };
   "Outbound Link": { destination: "instagram" | "email" };
 };
 

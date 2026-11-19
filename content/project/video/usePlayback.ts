@@ -1,5 +1,6 @@
 import type Player from "@vimeo/player";
 import { type RefObject, useCallback, useEffect, useRef, useState } from "react";
+import { preconnect } from "react-dom";
 
 import { trackEvent } from "@/lib/analytics";
 import { matches } from "@/lib/hooks/useMediaQuery";
@@ -29,6 +30,30 @@ const FULLSCREEN_EXIT_GRACE_MS = 500;
 const FULLSCREEN_SETTLE_MS = 1000;
 /** How long a browser gets to pause a video it won't let play with sound, before we conclude it hasn't. */
 const UNMUTE_SETTLE_MS = 400;
+
+/** The player page, and the CDN its scripts load from. Video segments come from per-video hosts we can't know ahead. */
+const VIMEO_HOSTS = ["https://player.vimeo.com", "https://f.vimeocdn.com"];
+
+let warmedUp = false;
+
+/**
+ * Warms up what Play will need, when the viewer shows intent (hover, focus, touch): connections to Vimeo, and the
+ * Player SDK chunk. Both are hints and fetches the browser caches, so repeating them costs nothing.
+ */
+function warmUp() {
+  if (warmedUp) return;
+  warmedUp = true;
+  for (const host of VIMEO_HOSTS) preconnect(host);
+  void import("@vimeo/player").catch(() => {});
+}
+
+/** Reports the time from Play to the first frame, once per press. */
+function trackStarted(slug: string | null | undefined, played: { current: { at: number; warmed: boolean } | null }) {
+  if (played.current && slug) {
+    trackEvent("Film Started", { slug, ms: Math.round(performance.now() - played.current.at), warmed: played.current.warmed });
+  }
+  played.current = null;
+}
 
 /**
  * Vimeo starts an autoplaying video muted on many phones, and the viewer tapped Play, so they want sound. But a
@@ -67,6 +92,8 @@ export function usePlayback(
   // Whether the slide itself (not just the Vimeo frame) is full screen. Its Stop button then needs no room for the menu.
   // Unmuting is tried once per play: pausing and resuming the video after a refusal would otherwise start it over.
   const triedUnmute = useRef(false);
+  // When Play was pressed, and whether the connection was warmed first: the film's time-to-first-frame is reported.
+  const playedAt = useRef<{ at: number; warmed: boolean } | null>(null);
   const [fullscreen, setFullscreen] = useState(false);
   // iPhones can't take an element full screen; their player goes full screen itself when asked not to play inline.
   const [playFullscreenNatively, setPlayFullscreenNatively] = useState(false);
@@ -77,6 +104,7 @@ export function usePlayback(
   const play = useCallback(() => {
     if (!video) return;
     if (slug) trackEvent("Film Played", { slug });
+    playedAt.current = { at: performance.now(), warmed: warmedUp };
     setPlaying(true);
     setTapInPlayer(needsTapInPlayer());
     triedUnmute.current = false;
@@ -109,6 +137,7 @@ export function usePlayback(
     playing: () => {
       markLoaded();
       reveal();
+      trackStarted(slug, playedAt);
       // After playback has started: unmuting a video that hasn't begun would stop its autoplay.
       if (player.current && !triedUnmute.current) {
         triedUnmute.current = true;
@@ -229,6 +258,7 @@ export function usePlayback(
     tapInPlayer,
     playFullscreenNatively,
     play,
+    warm: warmUp,
     stop,
     setPlayerFrame,
     playerFrame,

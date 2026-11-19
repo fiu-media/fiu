@@ -92,6 +92,7 @@ export function ProjectSlide({
     tapInPlayer,
     playFullscreenNatively,
     play,
+    warm,
     stop,
     setPlayerFrame,
     onScreen,
@@ -170,6 +171,7 @@ export function ProjectSlide({
               href={href}
               dict={dict}
               onPlay={video ? play : undefined}
+              onWarm={warm}
             />
           )}
 
@@ -190,10 +192,12 @@ type SlideCaptionProps = Pick<ProjectSlideProps, "slug" | "title" | "meta" | "ti
   Heading: "h1" | "h2";
   /** Set when the project has a video; the Play pill appears with it. */
   onPlay: (() => void) | undefined;
+  /** Called when the viewer shows intent to play (hover, focus, touch), to warm up the player. */
+  onWarm: () => void;
 };
 
 /** The title, meta line and role over the cover, with the "view" and Play pills beside them. */
-function SlideCaption({ Heading, slug, title, titleAttribute, meta, role, href, dict, onPlay }: SlideCaptionProps) {
+function SlideCaption({ Heading, slug, title, titleAttribute, meta, role, href, dict, onPlay, onWarm }: SlideCaptionProps) {
   return (
     <div
       className={cn(
@@ -233,6 +237,9 @@ function SlideCaption({ Heading, slug, title, titleAttribute, meta, role, href, 
               size="lg"
               onImage
               onClick={onPlay}
+              onPointerEnter={onWarm}
+              onFocus={onWarm}
+              onTouchStart={onWarm}
               aria-label={format(dict.playTitle, { title })}
               className="shrink-0"
             >
