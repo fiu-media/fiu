@@ -1,3 +1,4 @@
+import { LIGHT_LIGHTS } from "./lightLights";
 import type {
   LogoGlassParams,
   LogoInteractionParams,
@@ -223,46 +224,28 @@ const SHARED_POINTS: LogoPointLightConfig[] = [
   }),
 ];
 
-function lightsFor(rimLook: LogoRimLook): LogoLightsConfig {
-  const rear =
-    rimLook === "light"
-      ? soft({
-          id: "rear",
-          label: "Rear fill",
-          enabled: true,
-          kind: "disc",
-          x: 0,
-          y: 0,
-          z: -7,
-          scaleX: 14,
-          scaleY: 14,
-          scaleZ: 14,
-          intensity: 1.6,
-          mixWhite: 0.35,
-          lift: 0.65,
-        })
-      : soft({
-          id: "rear",
-          label: "Rear fill",
-          enabled: true,
-          kind: "disc",
-          x: 0,
-          y: 0,
-          z: -7,
-          scaleX: 14,
-          scaleY: 14,
-          scaleZ: 14,
-          intensity: 0.8,
-          mixWhite: 0,
-          lift: 0.35,
-        });
+function darkLights(): LogoLightsConfig {
+  const rear = soft({
+    id: "rear",
+    label: "Rear fill",
+    enabled: true,
+    kind: "disc",
+    x: 0,
+    y: 0,
+    z: -7,
+    scaleX: 14,
+    scaleY: 14,
+    scaleZ: 14,
+    intensity: 0.8,
+    mixWhite: 0,
+    lift: 0.35,
+  });
 
-  const sidesEnabled = rimLook === "light";
   const sides: LogoSoftLightConfig[] = [
     soft({
       id: "side-left",
       label: "Side left",
-      enabled: sidesEnabled,
+      enabled: false,
       kind: "disc",
       x: -9,
       y: 1.5,
@@ -277,7 +260,7 @@ function lightsFor(rimLook: LogoRimLook): LogoLightsConfig {
     soft({
       id: "side-right",
       label: "Side right",
-      enabled: sidesEnabled,
+      enabled: false,
       kind: "disc",
       x: 9,
       y: 0.5,
@@ -292,7 +275,7 @@ function lightsFor(rimLook: LogoRimLook): LogoLightsConfig {
     soft({
       id: "side-top",
       label: "Side top",
-      enabled: sidesEnabled,
+      enabled: false,
       kind: "disc",
       x: 0,
       y: 8,
@@ -307,7 +290,7 @@ function lightsFor(rimLook: LogoRimLook): LogoLightsConfig {
     soft({
       id: "side-bottom",
       label: "Side bottom",
-      enabled: sidesEnabled,
+      enabled: false,
       kind: "disc",
       x: 0,
       y: -8,
@@ -331,19 +314,19 @@ const LIGHT_PARAMS: LogoGlassParams = {
   backsideThickness: 1,
   thickness: 0.55,
   ior: 1.49,
-  chromaticAberration: 0.68,
+  chromaticAberration: 1.2,
   anisotropicBlur: 0.18,
   distortion: 0.43,
   distortionScale: 1,
   roughness: 0,
-  clearcoat: 0.22,
+  clearcoat: 0.13,
   clearcoatRoughness: 0,
-  specularIntensity: 0.1,
+  specularIntensity: 0.25,
   envMapIntensity: 2.5,
-  backsideEnvMapIntensity: 1.85,
+  backsideEnvMapIntensity: 4,
   attenuationDistance: 5.8,
   samples: 24,
-  glowSat: 0.77,
+  glowSat: 0.76,
   glowLift: 0,
   glowLMin: 0.52,
   glowLMax: 0.88,
@@ -351,7 +334,7 @@ const LIGHT_PARAMS: LogoGlassParams = {
   backside: true,
   ...INTERACTION_DEFAULTS,
   dragSensitivity: 0.0065,
-  lights: lightsFor("light"),
+  lights: LIGHT_LIGHTS,
 };
 
 const DARK_PARAMS: LogoGlassParams = {
@@ -377,7 +360,7 @@ const DARK_PARAMS: LogoGlassParams = {
   extrude: null,
   backside: true,
   ...INTERACTION_DEFAULTS,
-  lights: lightsFor("dark"),
+  lights: darkLights(),
 };
 
 export const LOGO_PARAM_PRESETS: Record<LogoRimLook, LogoGlassParams> = {

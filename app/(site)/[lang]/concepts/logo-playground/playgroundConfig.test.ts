@@ -7,6 +7,7 @@ import {
   formatInteractionConfigExport,
   formatLightingConfigExport,
   formatMaterialConfigExport,
+  formatSweepConfigExport,
   importPlaygroundConfig,
   parseConfigExport,
   presetConfig,
@@ -162,5 +163,33 @@ describe("importPlaygroundConfig", () => {
       expect(parsed).not.toBeNull();
       expect(parsed).not.toHaveProperty("extra");
     });
+  });
+});
+
+describe("moving light (sweep) snapshots", () => {
+  const sweep = { mode: "both", technique: "move", axis: "orbit", periodSeconds: 30, amplitude: 0.5 } as const;
+
+  it("includes the sweep in Copy all and imports it back, dropping the clock fields", () => {
+    const text = formatConfigExport(current, { ...sweep, origin: 123, pausedAt: null } as typeof sweep);
+    expect(text).not.toContain("origin");
+    expect(importPlaygroundConfig(current, text)).toMatchObject({ ok: true, kind: "full", sweep });
+  });
+
+  it("imports a standalone sweep snapshot without touching the config", () => {
+    const result = importPlaygroundConfig(current, formatSweepConfigExport(sweep));
+    expect(result).toMatchObject({ ok: true, kind: "sweep", config: current, sweep });
+  });
+
+  it("still imports a full config with no sweep", () => {
+    expect(importPlaygroundConfig(current, formatConfigExport(current))).toMatchObject({
+      ok: true,
+      kind: "full",
+      sweep: undefined,
+    });
+  });
+
+  it("rejects out-of-range sweep values", () => {
+    const bad = `\`\`\`fiu-logo-sweep\n${JSON.stringify({ ...sweep, periodSeconds: 500 })}\n\`\`\``;
+    expect(importPlaygroundConfig(current, bad)).toMatchObject({ ok: false });
   });
 });

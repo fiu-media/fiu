@@ -26,6 +26,7 @@ import {
   formatInteractionConfigExport,
   formatLightingConfigExport,
   formatMaterialConfigExport,
+  formatSweepConfigExport,
   importPlaygroundConfig,
   type LogoImportKind,
   presetConfig,
@@ -105,7 +106,7 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
   const [rotate, setRotate] = useState(true);
   const [sceneReady, setSceneReady] = useState(false);
   const [failed, setFailed] = useState(false);
-  const [copied, setCopied] = useState<"full" | SectionTab | null>(null);
+  const [copied, setCopied] = useState<"full" | "sweep" | SectionTab | null>(null);
   const [panelOpen, setPanelOpen] = useState(true);
   const [perf, setPerf] = useState<LogoPerfStats | null>(null);
   const [importOpen, setImportOpen] = useState(false);
@@ -134,6 +135,12 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
     () => (importPreview?.ok ? diffConfigs(config, importPreview.config, DIFF_LABELS) : null),
     [config, importPreview],
   );
+  const imported = importPreview?.ok ? importPreview.sweep : undefined;
+  const sweepChanges = imported
+    ? Object.entries(imported)
+        .filter(([key, value]) => sweep.state[key as keyof typeof imported] !== value)
+        .map(([key, value]) => `${key} ${String(sweep.state[key as keyof typeof imported])} → ${String(value)}`)
+    : [];
   const pinPreview = useMemo(
     () => (pinText.trim() ? importPlaygroundConfig(presetConfig(config.rimLook, config.meshMode), pinText) : null),
     [config.rimLook, config.meshMode, pinText],
@@ -236,7 +243,7 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
     }));
   }, []);
 
-  const writeClipboard = async (kind: "full" | SectionTab, payload: string) => {
+  const writeClipboard = async (kind: "full" | "sweep" | SectionTab, payload: string) => {
     try {
       await navigator.clipboard.writeText(payload);
       setCopied(kind);
@@ -246,7 +253,7 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
     }
   };
 
-  const copyFullConfig = () => writeClipboard("full", formatConfigExport(config));
+  const copyFullConfig = () => writeClipboard("full", formatConfigExport(config, sweep.state));
 
   const applyImport = () => {
     const result = importPreview;
@@ -257,6 +264,7 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
     }
     setConfig(result.config);
     setLoaded(result.config.params);
+    if (result.sweep) sweep.patch(result.sweep);
     setImportStatus(importSuccessLabel(result.kind));
     setImportText("");
     window.setTimeout(() => setImportStatus(null), 2200);
@@ -439,6 +447,9 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
                       {(importPreview.config.meshMode !== config.meshMode || importPreview.config.display !== config.display) && (
                         <p className="text-[11px] text-amber-300">Mesh or display changes, so the scene will remount.</p>
                       )}
+                      {sweepChanges.length > 0 && (
+                        <p className="text-[11px] text-white/70">Moving light: {sweepChanges.join(", ")}</p>
+                      )}
                       <LogoDiffView diff={importDiff} emptyText="This import matches the current config." />
                     </div>
                   )}
@@ -447,9 +458,9 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
                       size="sm"
                       onImage
                       onClick={applyImport}
-                      disabled={!importDiff || importDiff.entries.length === 0}
+                      disabled={!importDiff || importDiff.entries.length + sweepChanges.length === 0}
                     >
-                      {importDiff ? `Apply (${importDiff.entries.length})` : "Apply"}
+                      {importDiff ? `Apply (${importDiff.entries.length + sweepChanges.length})` : "Apply"}
                     </GlassPillButton>
                     <GlassPillButton
                       size="sm"
@@ -640,7 +651,8 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
 
                   <Section title="Moving light">
                     <p className="mb-2 text-[11px] leading-snug text-white/55">
-                      Slowly sweeps a light across the scene (issue #51). Not part of the exported config.
+                      Slowly sweeps a light across the scene (issue #51). Included in Copy all / Import; Copy sweep exports just
+                      these settings.
                     </p>
                     <PillRow>
                       {SWEEP_MODES.map((m) => (
@@ -657,6 +669,15 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
                     </PillRow>
                     {sweep.state.mode !== "off" && (
                       <div className="mt-3 space-y-3">
+                        <PillRow>
+                          <GlassPillButton
+                            size="sm"
+                            onImage
+                            onClick={() => writeClipboard("sweep", formatSweepConfigExport(sweep.state))}
+                          >
+                            {copied === "sweep" ? "Copied" : "Copy sweep"}
+                          </GlassPillButton>
+                        </PillRow>
                         <PillRow>
                           {SWEEP_AXES.map((a) => (
                             <GlassPillButton
@@ -720,7 +741,8 @@ export function LogoPlayground({ stills }: { stills: PlaygroundStill[] }) {
             <p className="border-t border-white/10 px-4 py-2 text-[11px] leading-snug text-white/45">
               Snapshot copy exports <code className="text-white/70">fiu-logo-material</code>,{" "}
               <code className="text-white/70">fiu-logo-lighting</code>, or{" "}
-              <code className="text-white/70">fiu-logo-interaction</code>. Copy all / Import use{" "}
+              <code className="text-white/70">fiu-logo-interaction</code> (the moving light copies as{" "}
+              <code className="text-white/70">fiu-logo-sweep</code>). Copy all (with the moving light) / Import use{" "}
               <code className="text-white/70">fiu-logo-config</code> (or a tab snapshot).
             </p>
           </aside>
