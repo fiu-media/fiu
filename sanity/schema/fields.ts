@@ -21,12 +21,17 @@ export const defaultLanguageReference = (type: string) => ({
   options: { filter: "language == $language", filterParams: { language: defaultLocale } },
 });
 
-/** Written by @sanity/document-internationalization; editors never touch it. */
+/**
+ * Written by @sanity/document-internationalization for translations; editors never touch it. New documents default to
+ * the default language: the orderable lists create them without one, and every query and list filters on `language`,
+ * so a document with none is invisible.
+ */
 export const languageField = defineField({
   name: "language",
   type: "string",
   readOnly: true,
   hidden: true,
+  initialValue: defaultLocale,
 });
 
 export const slugField = (source: string) =>
